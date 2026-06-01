@@ -6,8 +6,43 @@ from typing import Dict, Any, Callable, Optional
 import inspect
 import logging
 import sys
-from ._concept import Concept
+from ._concept import Concept, FORM_TYPES, COUPLING_SIGNATURES
 from ._reference import Reference, cross_product
+
+
+def _validate_uncertainty(concept: Concept):
+    ref = concept.reference
+    if ref is None or ref.form_payload is None:
+        raise ValueError(f"Concept '{concept.name}' has typed form but no reference payload")
+    uncertainty = ref.form_payload.get("uncertainty")
+    if not isinstance(uncertainty, dict):
+        raise ValueError(f"Concept '{concept.name}' uncertainty must be a dict")
+    if not uncertainty.get("present"):
+        raise ValueError(f"Concept '{concept.name}' missing uncertainty.present=true")
+    score = uncertainty.get("score")
+    if not isinstance(score, (int, float)) or not (0.0 <= float(score) <= 1.0):
+        raise ValueError(f"Concept '{concept.name}' uncertainty.score must be in [0,1]")
+
+
+def _validate_threshold_category(concept: Concept):
+    ref = concept.reference
+    if ref is None or ref.form_payload is None:
+        raise ValueError(f"Concept '{concept.name}' has threshold_category form but no payload")
+    payload = ref.form_payload
+    for field in ("witness", "binary_outcome", "category_label"):
+        if field not in payload:
+            raise ValueError(f"Concept '{concept.name}' threshold_category missing '{field}'")
+
+
+def validate_typed_form(concept: Concept):
+    if concept.form_type is None:
+        return
+    if concept.form_type not in FORM_TYPES:
+        raise ValueError(f"Concept '{concept.name}' has unknown form_type '{concept.form_type}'")
+    if concept.form_type == "threshold_category":
+        _validate_uncertainty(concept)
+        _validate_threshold_category(concept)
+
 
 # Configure logging
 def setup_logging(level=logging.INFO, log_file=None):
@@ -81,6 +116,11 @@ class Inference:
         self.function_concept: Concept = function_concept
         self.context_concepts: Optional[list[Concept]] = context_concepts
         self.sequence_name = sequence_name
+
+        # typed cortex: validate typed form invariants before any step runs
+        for concept in filter(None, [self.concept_to_infer, self.function_concept] + (self.value_concepts or []) + (self.context_concepts or [])):
+            validate_typed_form(concept)
+
         # Instance-specific step registry
         self._step_registry = {}
         self._initialize_steps()
