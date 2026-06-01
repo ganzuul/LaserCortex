@@ -160,10 +160,22 @@ class CheckpointManager:
             if has_data:
                 # Save signature for this concept
                 concept_signatures[concept_name] = concept_entry.get_signature()
-                
+
+                typed = {}
+                if concept_entry.concept and concept_entry.concept.reference is not None:
+                    rp = getattr(concept_entry.concept.reference, 'form_payload', None)
+                    if rp:
+                        typed = {
+                            "form_type": concept_entry.concept.form_type,
+                            "form_schema_version": concept_entry.concept.form_schema_version,
+                            "coupling_signature": concept_entry.concept.coupling_signature,
+                            "form_payload": rp,
+                        }
+
                 completed_concepts_data[concept_name] = {
                     "reference_data": ref_data,
-                    "reference_axis_names": ref_axes
+                    "reference_axis_names": ref_axes,
+                    "typed_cortex": typed,
                 }
         
         state_data["completed_concepts"] = completed_concepts_data
