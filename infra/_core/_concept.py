@@ -2,6 +2,26 @@ from ._reference import Reference
 from typing import Optional
 import uuid
 
+
+#
+# LaserCortex: typed cortex additions
+#
+FORM_TYPES = {
+    "threshold_category": "Literalist threshold-to-category decision with reified predicate witness.",
+    "category_refactor": "Versioned category revision preserving path facts.",
+    "risk_assessment": "Composite risk evaluation over one or more witnesses.",
+    "topological_equivalence": "Hypothesis comparison over witness sets.",
+    "narrative_justification": "Human-auditable explanation of a decision chain.",
+}
+
+COUPLING_SIGNATURES = {
+    "commutative",
+    "non-commutative",
+    "non-associative",
+    "commutative-associative",
+}
+
+
 # Type classification
 TYPE_CLASS_SYNTACTICAL = "syntactical"
 TYPE_CLASS_SEMANTICAL = "semantical"
@@ -73,11 +93,14 @@ CONCEPT_TYPES = {
     "({})": {"description": "functional_imperative", "type_class": TYPE_CLASS_SEMANTICAL},  # Alternative syntax
     "::({})": {"description": "functional_imperative", "type_class": TYPE_CLASS_SEMANTICAL},
     "[]": {"description": "relation", "type_class": TYPE_CLASS_SEMANTICAL},
+    
     ":S:": {"description": "subject", "type_class": TYPE_CLASS_SEMANTICAL},
     
     # Input/Output concepts (SYNTACTICAL)
-    ":>:": {"description": "input", "type_class": TYPE_CLASS_SYNTACTICAL},
-    ":<:": {"description": "output", "type_class": TYPE_CLASS_SYNTACTICAL},
+    
+    ":>": {"description": "input", "type_class": TYPE_CLASS_SYNTACTICAL},
+    
+    ":<": {"description": "output", "type_class": TYPE_CLASS_SYNTACTICAL},
     
     # Template and placeholder types (SYNTACTICAL)
     "{}?": {"description": "object_placeholder", "type_class": TYPE_CLASS_SYNTACTICAL},
@@ -109,17 +132,33 @@ def normalize_type(type_str: str) -> str:
 
 
 class Concept:
-    def __init__(self, name, context="", axis_name: Optional[str] = None, reference: Optional[Reference] = None, type="{}", natural_name: Optional[str] = None):
+    def __init__(self, name, context="", axis_name: Optional[str] = None, reference: Optional[Reference] = None, type="{}", natural_name: Optional[str] = None, form_type: Optional[str] = None, form_schema_version: Optional[str] = None, coupling_signature: Optional[str] = None):
         if type not in CONCEPT_TYPES:
             raise ValueError(f"Invalid concept type. Must be one of: {list(CONCEPT_TYPES.keys())}")
             
         self.name = name
         self.type = type
+        self.form_type = form_type
+        self.form_schema_version = form_schema_version
+        self.coupling_signature = coupling_signature
         self.context = context
         self.axis_name = axis_name if axis_name else name
         self.natural_name = natural_name if natural_name else self.axis_name
         self.reference: Optional[Reference] = reference
         self.id = str(uuid.uuid4())  # Generate unique identification number
+
+        self._validate_form_metadata()
+    
+    def _validate_form_metadata(self):
+        if self.form_type is not None:
+            if self.form_type not in FORM_TYPES:
+                raise ValueError(f"Invalid form_type. Must be one of: {list(FORM_TYPES.keys())}")
+            if self.form_schema_version is None:
+                raise ValueError("form_schema_version is required when form_type is set")
+            if self.coupling_signature is None:
+                raise ValueError("coupling_signature is required when form_type is set")
+            if self.coupling_signature not in COUPLING_SIGNATURES:
+                raise ValueError(f"Invalid coupling_signature. Must be one of: {COUPLING_SIGNATURES}")
     
     def copy(self):
         """Creates a copy of the concept with a new ID and a deep copy of the reference."""
@@ -129,7 +168,10 @@ class Concept:
             context=self.context,
             axis_name=self.axis_name,
             reference=new_reference,
-            type=self.type
+            type=self.type,
+            form_type=self.form_type,
+            form_schema_version=self.form_schema_version,
+            coupling_signature=self.coupling_signature,
         )
         return new_concept
     
@@ -268,5 +310,4 @@ if __name__ == "__main__":
         print()
 
     test_concept_simplified()
-
 

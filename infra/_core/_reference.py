@@ -29,7 +29,8 @@ def get_dev_mode() -> bool:
     return _DEV_MODE
 
 class Reference:
-    def __init__(self, axes, shape, initial_value=None, skip_value="@#SKIP#@"):
+    def __init__(self, axes, shape, initial_value=None, skip_value="@#SKIP#@", form_payload: Optional[dict] = None):
+        # typed cortex: optional typed form payload alongside tensor data
         if len(axes) != len(set(axes)):
             raise ValueError("Axes must be unique")
         if len(axes) != len(shape):
@@ -38,6 +39,7 @@ class Reference:
         self.shape: tuple[int, ...] = tuple(shape)
         self.skip_value: str = skip_value
         self.data: list[Any] = self._create_nested_list(shape, initial_value)
+        self.form_payload: Optional[dict] = form_payload
 
     def copy(self):
         """
@@ -50,7 +52,8 @@ class Reference:
             axes=self.axes.copy(),
             shape=self.shape,
             initial_value=None,
-            skip_value=self.skip_value
+            skip_value=self.skip_value,
+            form_payload=copy.deepcopy(self.form_payload) if self.form_payload else None,
         )
         new_ref.data = copy.deepcopy(self.data)
         return new_ref
