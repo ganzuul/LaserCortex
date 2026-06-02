@@ -14,27 +14,36 @@ def input_references(inference: Inference, states: States) -> States:
     apply_injected_filters(inference, states)
     if inference.function_concept:
         states.function[0].concept = ConceptInfoLite(
-            id=inference.function_concept.id,
-            name=inference.function_concept.name,
-            type=inference.function_concept.type,
-            context=inference.function_concept.context,
-            axis_name=inference.function_concept.axis_name,
-            natural_name=inference.function_concept.natural_name,
+            id=getattr(inference.function_concept, "id", None),
+            name=getattr(inference.function_concept, "name", None),
+            type=getattr(inference.function_concept, "type", None),
+            context=getattr(inference.function_concept, "context", None),
+            axis_name=getattr(inference.function_concept, "axis_name", None),
+            natural_name=getattr(inference.function_concept, "natural_name", None),
         )
-        states.function[0].reference = inference.function_concept.reference.copy()
+        # Reference may be absent (provisional / bootstrap case).
+        ref = getattr(inference.function_concept, "reference", None)
+        if ref is not None:
+            states.function[0].reference = ref.copy()
 
     # Store the concept_to_infer in the 'inference' record for the IR step.
+    ir_inference_record = next((r for r in states.inference if r.step_name == "IR"), None)
+    if ir_inference_record is None:
+        ir_inference_record = ReferenceRecordLite(step_name="IR")
+        states.inference.append(ir_inference_record)
     if inference.concept_to_infer:
-        ir_inference_record = next((r for r in states.inference if r.step_name == "IR"), None)
-        if ir_inference_record:
-            ir_inference_record.concept = ConceptInfoLite(
-                id=inference.concept_to_infer.id,
-                name=inference.concept_to_infer.name,
-                type=inference.concept_to_infer.type,
-                context=inference.concept_to_infer.context,
-                axis_name=inference.concept_to_infer.axis_name,
-                natural_name=inference.concept_to_infer.natural_name,
-            )
+        ir_inference_record.concept = ConceptInfoLite(
+            id=inference.concept_to_infer.id,
+            name=inference.concept_to_infer.name,
+            type=inference.concept_to_infer.type,
+            context=inference.concept_to_infer.context,
+            axis_name=inference.concept_to_infer.axis_name,
+            natural_name=inference.concept_to_infer.natural_name,
+        )
+        # Preserve acquisition reference when present.
+        ref = getattr(inference.concept_to_infer, "reference", None)
+        if ref is not None:
+            ir_inference_record.reference = ref.copy()
 
     for vc in inference.value_concepts or []:
         states.values.append(

@@ -26,15 +26,45 @@ def typed_validation_kernel(inference: Any, states: Any) -> Any:
         _ = validate_typed_form(inference.function_concept)
     for vc in list(getattr(inference, "value_concepts", None) or []):
         if not _is_authorized(vc):
-            # remove unauthorized from running value set
             inference.value_concepts = [
                 c for c in inference.value_concepts if c is not vc
             ]
-    # currently a hard stop on empty values — representative of "exclusion
-    # from tensor" by empty operator set; adjust once OR step is wired.
-    if not getattr(inference, "value_concepts", []):
-        pass
+
+    concept = getattr(inference, "concept_to_infer", None)
+    decision = _build_decision(concept)
+    states.workspace["category_decision"] = decision
     return states
+
+
+def _get_payload(concept):
+    ref = getattr(concept, "reference", None)
+    return ref.form_payload if ref and ref.form_payload else {}
+
+
+def _build_decision(concept):
+    payload = _get_payload(concept)
+    authorized = _is_authorized(concept)
+    if not authorized:
+        return {
+            "authorized": False,
+            "witness": None,
+            "binary_outcome": None,
+            "path_valid": None,
+            "step": "TVK",
+            "field": None,
+        }
+    witness = payload.get("witness")
+    binary_outcome = payload.get("binary_outcome")
+    if not isinstance(binary_outcome, bool):
+        binary_outcome = bool(binary_outcome)
+    return {
+        "authorized": True,
+        "witness": witness,
+        "binary_outcome": binary_outcome,
+        "path_valid": True,
+        "step": "TVK",
+        "field": payload.get("category_label"),
+    }
 
 
 def _is_authorized(concept: Concept) -> bool:
