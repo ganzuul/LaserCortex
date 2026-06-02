@@ -7,6 +7,7 @@ This module provides five main sequence types:
 - quantifying: Quantification-based inference sequence (IWI-IR-GR-QR-OR-OWI)
 - imperative: Complex imperative inference sequence (IWI-IR-MFP-MVP-TVA-TIP-MIA-OR-OWI)
 - assigning: Assignment-based inference sequence (IWI-IR-AR-OR-OWI)
+- judgement_typed: Typed-cortex credential sequence (IR-TVK-OR)
 """
 
 # Import setup functions from each sequence module
@@ -27,6 +28,7 @@ from .imperative_python import set_up_imperative_python_demo, configure_imperati
 from .judgement_python import set_up_judgement_python_demo, configure_judgement_python_demo
 from .imperative_python_indirect import set_up_imperative_python_indirect_demo, configure_imperative_python_indirect_demo
 from .judgement_python_indirect import set_up_judgement_python_indirect_demo, configure_judgement_python_indirect_demo
+from .judgement_typed import set_up_judgement_typed, configure_judgement_typed
 
 
 # Export all setup and configuration functions
@@ -90,4 +92,8 @@ __all__ = [
     # Judgement python sequence
     "set_up_judgement_python_demo",
     "configure_judgement_python_demo",
+
+    # Judgement typed sequence
+    "set_up_judgement_typed",
+    "configure_judgement_typed",
 ]

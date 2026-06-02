@@ -23,6 +23,7 @@ from infra._agent._sequences.imperative_python_indirect import set_up_imperative
 from infra._agent._sequences.judgement_python_indirect import set_up_judgement_python_indirect_demo, configure_judgement_python_indirect_demo
 from infra._agent._sequences.imperative_in_composition import set_up_imperative_in_composition_demo, configure_imperative_in_composition_demo
 from infra._agent._sequences.judgement_in_composition import set_up_judgement_in_composition_demo, configure_judgement_in_composition_demo
+from infra._agent._sequences.judgement_typed import set_up_judgement_typed, configure_judgement_typed
 from infra._states._imperative_states import States as ImperativeStates
 from infra._states._grouping_states import States as GroupingStates
 from infra._states._quantifying_states import States as QuantifyingStates
@@ -150,6 +151,7 @@ class AgentFrame():
             set_up_judgement_python_indirect_demo(self)
             set_up_imperative_in_composition_demo(self)
             set_up_judgement_in_composition_demo(self)
+            set_up_judgement_typed(self)
         elif self.AgentFrameModel == "composition":
             logger.info("Setting up composition sequences: simple, imperative (composition), judgement (composition), grouping, quantifying, looping, assigning, timing")
             set_up_simple_demo(self)
@@ -217,6 +219,9 @@ class AgentFrame():
             elif inference_sequence == "judgement_in_composition":
                 logger.info("Configuring judgement_in_composition demo sequence")
                 configure_judgement_in_composition_demo(self, inference_instance, judgement_in_composition_methods)
+            elif inference_sequence == "judgement_typed":
+                logger.info("Configuring judgement_typed demo sequence")
+                configure_judgement_typed(self, inference_instance, {})
             else:
                 logger.warning(f"Unknown inference sequence: {inference_sequence}")
         elif self.AgentFrameModel == "composition":
