@@ -1,19 +1,88 @@
 -- EMLRegistry.lean - Minimal working version
 -- Binding layer: neural router index <-> EML inductive tree type
 -- 
--- This module implements the **Tamari lattice contraction** formalization
--- as a **governed grammar** with monotonic provenance.
+-- =========================================================================
+-- SEMANTIC EXPLANATION: What This Formalization Actually Means
+-- =========================================================================
 -- 
--- Conceptual mapping (from KB):
--- - EMLTree = inductive syntax tree (governed grammar term)
--- - contracts_one = single right-rotation step (primitive grammar rewrite)
--- - contracts_to = reflexive-transitive closure (multi-step evolution path)
--- - rightComb = minimum element / normal form (equilibrium attractor)
--- - node_of_rightCombs_contracts_to_rightComb = composition lemma (key algebraic property)
--- - contracts_to_rightComb = main theorem (every configuration has temporal evolution to equilibrium)
+-- This module formalizes the **Tamari lattice contraction** as the algebraic
+-- shadow of a deeper physical structure: the **associator barrier** that
+-- stabilizes nuclear isomers (Topological Isomer Hypothesis, Section 2.3).
 -- 
--- This follows the AlphaProof Nexus incremental proving strategy:
--- 1. Minimal core types → 2. Theorem statements → 3. Incremental proof filling → 4. Compile after each step
+-- PHYSICAL NARRATIVE (from topological_isomer_hypothesis.md):
+-- ----------------------------------------------------------
+-- The split-octonion algebra 𝕆′ has a split boundary between the associative
+-- sector (e₀–e₃) and the non-associative sector (e₄–e₇). The ground state of
+-- ¹⁸⁰Ta lives in the associative sector; the isomeric state ¹⁸⁰ᵐTa crosses
+-- into the non-associative sector. The transition requires "untying the
+-- associator knot" — reversing the associator (a,b,c) = (ab)c - a(bc) that
+-- binds the isomeric configuration.
+-- 
+-- The M-theory R-flux result (Blumenhagen et al. 2010–2014) proves the
+-- associator is a physical field: [x^i, x^j, x^k] = ℏ R^ijk. The BLG 3-algebra
+-- corroborates: extended objects require ternary brackets, escalating from
+-- binary commutators (rank-2) to ternary associators (rank-3).
+-- 
+-- The Hefford-Wilson BV-category construction (Section 4.1) provides the
+-- categorical framework: StEnv(C) has objects as intervention-context pairs
+-- (P, P′, η), with connectives ⊗ (spacelike), ◁ (timelike), ⅋ (indefinite
+-- causal structure). The topological barrier is the obstruction of the
+-- evaluation map η across the non-associative sector.
+-- 
+-- HOW THE TAMARI LATTICE ENCODES THIS:
+-- ------------------------------------
+-- The Tamari lattice Tₙ is the poset of binary trees with n internal nodes,
+-- ordered by right rotation (the associator move): (a • b) • c → a • (b • c).
+-- 
+-- In our encoding:
+--   • EMLTree        = binary tree syntax (the algebraic term)
+--   • contracts_one  = single right rotation = one associator application
+--   • contracts_to   = reflexive-transitive closure = evolution path
+--   • rightComb n    = right-comb tree = associative normal form (e₀–e₃ sector)
+--   • Node t₁ t₂     = non-associative composition (crossing the split boundary)
+-- 
+-- The theorem node_of_rightCombs_contracts_to_rightComb states:
+--   "Two equilibrium subsystems (right-combs of sizes a, b) composed via Node
+--    evolve to the equilibrium of the combined system (right-comb of size a+b+1)."
+-- 
+-- This is the **composition law for the associative sector**: the attractor
+-- is closed under the non-associative composition, with the rotation step
+-- providing the explicit associator unwinding.
+-- 
+-- The main theorem contracts_to_rightComb states:
+--   "Every configuration has a temporal evolution path to equilibrium."
+-- 
+-- This is the **second law of thermodynamics in Tamari form**: the right-comb
+-- is the unique minimum element (ground state / equilibrium attractor), and
+-- every state contracts to it. The path is the **audit trail** with monotonic
+-- provenance (Law 2: path_valid never reverts).
+-- 
+-- KB CONCEPTUAL MAPPING:
+-- ----------------------
+-- | Lean Construct              | KB Noun                           | Role in Physical Narrative                          |
+-- |-----------------------------|-----------------------------------|-----------------------------------------------------|
+-- | EMLTree                     | governed grammar syntax tree      | Algebraic term in split-octonion basis              |
+-- | contracts_one (rotate)      | primitive coupling signature      | Single associator application (a,b,c)               |
+-- | contracts_to                | audit trail / evolution path      | Monotonic provenance (witness layer, Law 2)         |
+-- | rightComb                   | equilibrium attractor             | Ground state in associative sector (e₀–e₃)          |
+-- | Node                        | non-associative composition       | Crossing the split boundary (e₄–e₇ involvement)     |
+-- | contracts_to_node_left/right| path validity monotonicity (Law 2)| Witness layer preservation under composition        |
+-- | TypeRegistry                | cortex-registry interface         | Neural binding address → EMLTree (typed cortex)     |
+-- 
+-- PROOF STRUCTURE (AlphaProof Nexus incremental strategy):
+-- -------------------------------------------------------
+-- 1. Minimal core types (EMLTree, contracts_one, contracts_to, rightComb) ✓
+-- 2. Theorem statements with semantic comments ✓
+-- 3. Lifting lemmas (monotonicity of evolution paths under Node) - TODO
+-- 4. Composition lemma (node_of_rightCombs_contracts_to_rightComb) - structure complete
+-- 5. Main convergence theorem (contracts_to_rightComb) - TODO
+-- 6. Compile after each step ✓
+-- 
+-- This follows the AlphaProof Nexus incremental proving strategy documented
+-- in skills/incremental_proving_strategy.md: "One lemma at a time. Never
+-- add more than one sorry per iteration. Let Lean errors guide the next step."
+-- 
+-- =========================================================================
 
 namespace EMLRegistry
 
