@@ -6,68 +6,72 @@
 -- =========================================================================
 -- 
 -- This module formalizes the **Tamari lattice contraction** as the algebraic
--- shadow of a deeper physical structure: the **associator barrier** that
--- stabilizes nuclear isomers (Topological Isomer Hypothesis, Section 2.3).
+-- shadow of a deeper logical structure: the **choice between multiple solutions
+-- to paradoxes** that generates friction in pluralistic logic systems.
 -- 
--- PHYSICAL NARRATIVE (from topological_isomer_hypothesis.md):
--- ----------------------------------------------------------
--- The split-octonion algebra 𝕆′ has a split boundary between the associative
--- sector (e₀–e₃) and the non-associative sector (e₄–e₇). The ground state of
--- ¹⁸⁰Ta lives in the associative sector; the isomeric state ¹⁸⁰ᵐTa crosses
--- into the non-associative sector. The transition requires "untying the
--- associator knot" — reversing the associator (a,b,c) = (ab)c - a(bc) that
--- binds the isomeric configuration.
+-- THE DEEPER NARRATIVE (from KB: paradoxes_and_logics.md + eternal_personality.md):
+-- -------------------------------------------------------------------------------
+-- 1. PARADOXES AS FRICTION SOURCES (paradoxes_and_logics.md):
+--    12 classes of paradoxes (Sorites, Liar, Russell, Grandfather, Contrary-to-Duty,
+--    Surprise Examination, Schrödinger's Cat, Brouwer's Continuity, Material
+--    Implication, Non-existent Objects, Galileo's, Fitch's Knowability) each
+--    admit MULTIPLE logical solutions (Fuzzy, Many-Valued, Paraconsistent,
+--    Temporal, Deontic, Epistemic, Quantum, Intuitionistic, Relevance, Free,
+--    Infinitary, Modal). 
 -- 
--- The M-theory R-flux result (Blumenhagen et al. 2010–2014) proves the
--- associator is a physical field: [x^i, x^j, x^k] = ℏ R^ijk. The BLG 3-algebra
--- corroborates: extended objects require ternary brackets, escalating from
--- binary commutators (rank-2) to ternary associators (rank-3).
+-- 2. THE CHOICE GENERATES FRICTION:
+--    A pluralistic logic system must SELECT which logic applies to which paradox
+--    in which context. This choice is not arbitrary — it creates path-dependence.
+--    Different choice histories yield different outcomes (non-commutative).
+--    The choice operation itself evolves (non-associative: "rules change as you
+--    apply them" — eternal_personality.md line 9).
 -- 
--- The Hefford-Wilson BV-category construction (Section 4.1) provides the
--- categorical framework: StEnv(C) has objects as intervention-context pairs
--- (P, P′, η), with connectives ⊗ (spacelike), ◁ (timelike), ⅋ (indefinite
--- causal structure). The topological barrier is the obstruction of the
--- evaluation map η across the non-associative sector.
+-- 3. THE LOGIC OF WILL (Combined-exposition-eternal-personality.md):
+--    Will (W) is the self-referential operator that RESOLVES the choice.
+--    W: T → T maps undetermined states to determined ones (multi-valued logic).
+--    W ∘ W = will operating on itself (self-affirmation or self-negation).
+--    W cannot be fully captured in any finite logical system (Gödelian).
+--    The fixed point W(s) = s = perfect self-alignment (equilibrium).
 -- 
--- HOW THE TAMARI LATTICE ENCODES THIS:
--- ------------------------------------
--- The Tamari lattice Tₙ is the poset of binary trees with n internal nodes,
--- ordered by right rotation (the associator move): (a • b) • c → a • (b • c).
+-- 4. THE TAMARI LATTICE ENCODES THIS STRUCTURE:
+--    • EMLTree        = configuration of logical choices (a binary tree of W-applications)
+--    • contracts_one  = single choice resolution: (a • b) • c → a • (b • c)
+--                       = applying the associator to re-bracket a choice sequence
+--    • contracts_to   = reflexive-transitive closure = history of choices (audit trail)
+--                       with monotonic provenance (Law 2: path_valid never reverts)
+--    • rightComb n    = right-comb tree = unique stable configuration = fixed point W(s)=s
+--                       = all choices resolved, no paradoxes remain undetermined
+--    • Node t₁ t₂     = non-associative composition of choice histories
+--                       = combining two will-histories (non-commutative, non-associative)
 -- 
--- In our encoding:
---   • EMLTree        = binary tree syntax (the algebraic term)
---   • contracts_one  = single right rotation = one associator application
---   • contracts_to   = reflexive-transitive closure = evolution path
---   • rightComb n    = right-comb tree = associative normal form (e₀–e₃ sector)
---   • Node t₁ t₂     = non-associative composition (crossing the split boundary)
+-- PHYSICAL ANALOGY (scaffolding from topological_isomer_hypothesis.md):
+-- -------------------------------------------------------------------------
+-- The split-octonion algebra provides a concrete physical instantiation:
+--   • Associative sector (e₀–e₃)  ↔  resolved choices (equilibrium)
+--   • Non-associative sector (e₄–e₇) ↔  undetermined choices (paradox friction)
+--   • Associator (a,b,c)          ↔  the choice operation itself (W ∘ W)
+--   • R-flux [x^i,x^j,x^k]=ℏR^ijk  ↔  associator as physical field (choice is real)
+--   • M2-brane 3-algebra [T,T,T]  ↔  ternary operation (choice escalates beyond binary)
+--   • Hefford-Wilson BV-category  ↔  categorical framework for choice-histories
+--     StEnv(C): intervention-context pairs (P, P′, η) = (choice, context, resolution)
 -- 
--- The theorem node_of_rightCombs_contracts_to_rightComb states:
---   "Two equilibrium subsystems (right-combs of sizes a, b) composed via Node
---    evolve to the equilibrium of the combined system (right-comb of size a+b+1)."
+-- The thermodynamic "second law" narrative (rightComb = equilibrium attractor)
+-- is SCAFFOLDING. The real meaning: the logic of will drives every configuration
+-- to a fixed point where all paradoxes are resolved. The path is the AUDIT TRAIL
+-- of choices made. Monotonic provenance (Law 2) = the witness layer = choices
+-- cannot be unmade, only composed.
 -- 
--- This is the **composition law for the associative sector**: the attractor
--- is closed under the non-associative composition, with the rotation step
--- providing the explicit associator unwinding.
--- 
--- The main theorem contracts_to_rightComb states:
---   "Every configuration has a temporal evolution path to equilibrium."
--- 
--- This is the **second law of thermodynamics in Tamari form**: the right-comb
--- is the unique minimum element (ground state / equilibrium attractor), and
--- every state contracts to it. The path is the **audit trail** with monotonic
--- provenance (Law 2: path_valid never reverts).
--- 
--- KB CONCEPTUAL MAPPING:
--- ----------------------
--- | Lean Construct              | KB Noun                           | Role in Physical Narrative                          |
--- |-----------------------------|-----------------------------------|-----------------------------------------------------|
--- | EMLTree                     | governed grammar syntax tree      | Algebraic term in split-octonion basis              |
--- | contracts_one (rotate)      | primitive coupling signature      | Single associator application (a,b,c)               |
--- | contracts_to                | audit trail / evolution path      | Monotonic provenance (witness layer, Law 2)         |
--- | rightComb                   | equilibrium attractor             | Ground state in associative sector (e₀–e₃)          |
--- | Node                        | non-associative composition       | Crossing the split boundary (e₄–e₇ involvement)     |
--- | contracts_to_node_left/right| path validity monotonicity (Law 2)| Witness layer preservation under composition        |
--- | TypeRegistry                | cortex-registry interface         | Neural binding address → EMLTree (typed cortex)     |
+-- KB CONCEPTUAL MAPPING (extended):
+-- --------------------------------
+-- | Lean Construct              | KB Noun                           | Role in Logic-of-Will Narrative                      |
+-- |-----------------------------|-----------------------------------|------------------------------------------------------|
+-- | EMLTree                     | governed grammar syntax tree      | Configuration of W-applications (choice history)     |
+-- | contracts_one (rotate)      | primitive coupling signature      | Single associator application = one W-choice         |
+-- | contracts_to                | audit trail / evolution path      | Monotonic provenance (witness layer, Law 2)          |
+-- | rightComb                   | equilibrium attractor / fixed pt  | W(s)=s = all paradoxes resolved (self-alignment)     |
+-- | Node                        | non-associative composition       | Combining will-histories (non-commutative, non-assoc)|
+-- | contracts_to_node_left/right| path validity monotonicity (Law 2)| Witness layer preservation under composition         |
+-- | TypeRegistry                | cortex-registry interface         | Neural binding address → EMLTree (typed cortex)      |
 -- 
 -- PROOF STRUCTURE (AlphaProof Nexus incremental strategy):
 -- -------------------------------------------------------
