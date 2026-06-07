@@ -170,7 +170,13 @@ theorem contracts_to_node_right {l r r' : EMLTree} (h : contracts_to r r') :
 -- Transitivity of contracts_to: if s → t and t → u, then s → u
 -- This is the **audit trail composition** - paths concatenate monotonically
 theorem contracts_to_trans {s t u : EMLTree} (h₁ : contracts_to s t) (h₂ : contracts_to t u) :
-    contracts_to s u := by sorry
+    contracts_to s u := by
+  induction h₁ with
+  | refl t' =>
+    exact h₂
+  | step s' t' u' h_one h_to ih =>
+    have h_mid : contracts_to t' u := ih h₂
+    exact contracts_to.step s' t' u h_one h_mid
 
 -- Right-comb: the minimum element in Tamari order
 -- **Equilibrium attractor** / normal form - the "second law" destination
