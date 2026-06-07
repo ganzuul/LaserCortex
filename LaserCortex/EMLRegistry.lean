@@ -127,12 +127,50 @@ inductive contracts_to : EMLTree → EMLTree → Prop where
 -- **Path validity monotonicity** (Law 2): evolution paths compose covariantly
 -- This is the **witness layer** preservation - the audit trail extends monotonically
 theorem contracts_to_node_left {l l' r : EMLTree} (h : contracts_to l l') :
-    contracts_to (.Node l r) (.Node l' r) := by sorry
+    contracts_to (.Node l r) (.Node l' r) := by
+  have h_main : contracts_to (.Node l r) (.Node l' r) := by
+    -- Use well-founded recursion on the proof term size
+    have h₁ : ∀ {l l' r : EMLTree} (h : contracts_to l l'), contracts_to (.Node l r) (.Node l' r) := by
+      intro l l' r h
+      induction h using contracts_to.recOn with
+      | refl t => exact contracts_to.refl (.Node t r)
+      | step s t u h_one h_to ih =>
+        have h_to' : contracts_to (.Node t r) (.Node u r) := ih
+        have h_one' : contracts_one (.Node s r) (.Node t r) := contracts_one.left s t r h_one
+        exact contracts_to.step (.Node s r) (.Node t r) (.Node u r) h_one' h_to'
+    exact h₁ h
+  exact h_main
 
 -- Lifting lemma: contracts_to is preserved under Node on the right
 -- **Path validity monotonicity** (Law 2): evolution paths compose covariantly
+-- This is the **witness layer** preservation - the audit trail extends monotonically
+-- 
+-- SEMANTIC NOTE: In the logic-of-will interpretation:
+--   • contracts_one.left  = FORESIGHT / PREDICTION: choice in left subtree (active will)
+--     propagates to whole composition. "I decide how to bracket future choices."
+--   • contracts_one.right = HINDSIGHT / BACKPROPAGATION: choice in right subtree 
+--     (resolving past context) propagates to whole. "I resolve how past choices 
+--     bracket with current context."
+--   The non-commutativity of left vs right = temporal asymmetry of will.
+--   The non-associativity = choice operation evolves as it is applied.
 theorem contracts_to_node_right {l r r' : EMLTree} (h : contracts_to r r') :
-    contracts_to (.Node l r) (.Node l r') := by sorry
+    contracts_to (.Node l r) (.Node l r') := by
+  have h_main : contracts_to (.Node l r) (.Node l r') := by
+    have h₁ : ∀ {l r r' : EMLTree} (h : contracts_to r r'), contracts_to (.Node l r) (.Node l r') := by
+      intro l r r' h
+      induction h using contracts_to.recOn with
+      | refl t => exact contracts_to.refl (.Node l t)
+      | step s t u h_one h_to ih =>
+        have h_to' : contracts_to (.Node l t) (.Node l u) := ih
+        have h_one' : contracts_one (.Node l s) (.Node l t) := contracts_one.right l s t h_one
+        exact contracts_to.step (.Node l s) (.Node l t) (.Node l u) h_one' h_to'
+    exact h₁ h
+  exact h_main
+
+-- Transitivity of contracts_to: if s → t and t → u, then s → u
+-- This is the **audit trail composition** - paths concatenate monotonically
+theorem contracts_to_trans {s t u : EMLTree} (h₁ : contracts_to s t) (h₂ : contracts_to t u) :
+    contracts_to s u := by sorry
 
 -- Right-comb: the minimum element in Tamari order
 -- **Equilibrium attractor** / normal form - the "second law" destination
@@ -276,6 +314,66 @@ The proof will proceed by structural induction on the tree, using the
 -/
 theorem contracts_to_rightComb (t : EMLTree) :
     contracts_to t (rightComb t.size) := by
-  sorry
+  induction t using EMLTree.recOn with
+  | Leaf =>
+    -- Base case: Leaf has size 0, rightComb 0 = Leaf
+    simp [EMLTree.size, rightComb]
+    <;> exact contracts_to.refl _
+  | Node l r ih_l ih_r =>
+    -- Inductive case: Node l r has size 1 + l.size + r.size
+    -- rightComb (1 + l.size + r.size) = Node Leaf (rightComb (l.size + r.size))
+    have h₁ : rightComb (1 + l.size + r.size) = EMLTree.Node .Leaf (rightComb (l.size + r.size)) := by
+      have h₂ : 1 + l.size + r.size = (l.size + r.size) + 1 := by
+        simp [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+        <;>
+        (try omega) <;>
+        (try simp_all [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]) <;>
+        (try omega)
+        <;>
+        (try
+          {
+            induction l.size with
+            | zero => simp_all [Nat.add_assoc]
+            | succ n ih => simp_all [Nat.add_assoc, Nat.succ_eq_add_one]
+            <;> omega
+          })
+      rw [h₂]
+      simp [rightComb]
+      <;> simp_all [rightComb]
+      <;>
+      (try omega) <;>
+      (try simp_all [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]) <;>
+      (try omega)
+    
+    -- Step 1: By IH, l → rightComb l.size and r → rightComb r.size
+    -- Lift these through Node to get: Node l r → Node (rightComb l.size) (rightComb r.size)
+    have h_lift_l : contracts_to (EMLTree.Node l r) (EMLTree.Node (rightComb l.size) r) :=
+      contracts_to_node_left ih_l
+    have h_lift_r : contracts_to (EMLTree.Node (rightComb l.size) r) (EMLTree.Node (rightComb l.size) (rightComb r.size)) :=
+      contracts_to_node_right ih_r
+    
+    -- Step 2: Combine the two lifts: Node l r → Node (rightComb l.size) (rightComb r.size)
+    have h_lift_both : contracts_to (EMLTree.Node l r) (EMLTree.Node (rightComb l.size) (rightComb r.size)) :=
+      contracts_to_trans h_lift_l h_lift_r
+    
+    -- Step 3: Use composition lemma: Node (rightComb l.size) (rightComb r.size) → rightComb (1 + l.size + r.size)
+    have h_compose : contracts_to (EMLTree.Node (rightComb l.size) (rightComb r.size)) (rightComb (1 + l.size + r.size)) :=
+      node_of_rightCombs_contracts_to_rightComb l.size r.size
+    
+    -- Step 4: Compose everything: Node l r → rightComb (1 + l.size + r.size)
+    have h_final : contracts_to (EMLTree.Node l r) (rightComb (1 + l.size + r.size)) :=
+      contracts_to_trans h_lift_both h_compose
+    
+    -- Step 5: Simplify size calculation
+    simp [EMLTree.size] at h_final ⊢
+    <;>
+    (try simp_all [rightComb]) <;>
+    (try exact h_final) <;>
+    (try
+      {
+        rw [h₁] at *
+        <;> simp_all [EMLTree.size, rightComb]
+        <;> try omega
+      })
 
 end EMLRegistry
