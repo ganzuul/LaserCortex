@@ -1,0 +1,1 @@
+Let discuss tool usage. Can we test via https://github.com/oOo0oOo/lean-lsp-mcp instead of churning the .lean file with edits? We also have https://github.com/cameronfreer/lean4-skills linked in /home/nos/labware/LaserCortex/.agents/skills/lean4 so we should have the tooling we need. Can you examine these and find out how to avoid churn by properly extending the harness?

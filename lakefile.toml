@@ -1,0 +1,13 @@
+name = "LaserCortex"
+version = "0.1.0"
+defaultTargets = ["lasercortex"]
+
+[[lean_lib]]
+name = "LaserCortex"
+
+[[lean_exe]]
+name = "lasercortex"
+root = "Main"
+
+[dependencies]
+mathlib = { git = "https://github.com/leanprover-community/mathlib4.git" }
