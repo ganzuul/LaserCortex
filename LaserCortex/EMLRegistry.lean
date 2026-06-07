@@ -382,4 +382,77 @@ theorem contracts_to_rightComb (t : EMLTree) :
         <;> try omega
       })
 
+-- ================================================================
+-- SECTION 3: Witness-Skeptic Game Types
+-- ================================================================
+
+/-- The 12 paradox-resolving logics from the Logic of Will.
+  Each corresponds to a family of paradoxes and a type of choice. -/
+inductive LogicType : Type where
+  | fuzzy          -- Sorites, Ship of Theseus (vague predicates)
+  | manyValued     -- Liar, Curry (truth-value gaps)
+  | paraconsistent -- Russell, Barber (inconsistent concepts)
+  | temporal        -- Grandfather, Newcomb (time/decision)
+  | deontic         -- Contrary-to-Duty (obligation conflicts)
+  | epistemic       -- Surprise Examination (knowledge/belief)
+  | quantum         -- Schrödinger's Cat, EPR (superposition)
+  | intuitionistic  -- Brouwer's Continuity (constructive existence)
+  | relevance       -- Material Implication (relevant connection)
+  | free            -- Non-existent objects (empty reference)
+  | infinitary      -- Galileo's, Hilbert's Hotel (infinity)
+  | modal           -- Fitch's Knowability, Buridan's Bridge (necessity)
+  deriving DecidableEq, Repr
+
+/-- Pentagonator distance: minimum forced expansions remaining.
+  0 = at equilibrium (rightComb reached).
+  1 = one logic-type transition away (most productive state).
+  k = k nested transitions needed. -/
+def PentagonatorDistance := Nat
+
+/-- Generate all single-step `contracts_one` successors of a tree.
+  Each successor corresponds to one right rotation at some depth. -/
+def contracts_one_successors : EMLTree → List EMLTree
+  | .Leaf => []
+  | .Node (.Node a b) c =>
+    -- Direct rotation at this node
+    .Node a (.Node b c) ::
+    -- Possible rotations in the left subtree
+    (contracts_one_successors a).map (λ a' => .Node a' (.Node b c)) ++
+    -- Possible rotations in the middle subtree
+    (contracts_one_successors b).map (λ b' => .Node a (.Node b' c)) ++
+    -- Possible rotations in the right subtree
+    (contracts_one_successors c).map (λ c' => .Node (.Node a b) c')
+  | .Node l r =>
+    (contracts_one_successors l).map (λ l' => .Node l' r) ++
+    (contracts_one_successors r).map (λ r' => .Node l r')
+
+/-- Decide `contracts_to s t` by bounded DFS over the contraction graph.
+  Termination: the set of trees of size `s.size` is finite, so the search
+  eventually exhausts all reachable trees. -/
+partial def decidable_contracts_to (s t : EMLTree) : Bool :=
+  if s.size ≠ t.size then false
+  else
+    let rec go (current : EMLTree) (visited : List EMLTree) : Bool :=
+      if current = t then true
+      else if visited.contains current then false
+      else
+        contracts_one_successors current |>.any (λ next => go next (current :: visited))
+    go s []
+
+/-- A CortexCertificate is the quench witness — a proof-carrying
+  audit trail showing that a tree reaches its equilibrium. -/
+structure CortexCertificate where
+  source : EMLTree
+  target : EMLTree
+  proof  : contracts_to source target
+
+/-- certify: issue a CortexCertificate for any tree.
+  This is the **quench witness** from the Witness-Skeptic game:
+  the Witness produces a valid path to equilibrium, and the Skeptic
+  can verify it by checking the certificate's proof. -/
+def certify (t : EMLTree) : CortexCertificate where
+  source := t
+  target := rightComb t.size
+  proof  := contracts_to_rightComb t
+
 end EMLRegistry
