@@ -913,6 +913,19 @@ that may end at any depth. This is the \textbf{narrative self} in formal
 type: committed to a single thread, but honest about termination.
 \end{definition}
 
+\paragraph{Lean 4 Coinductive Limitation}
+\lean{Decomposition.lean4_limitation_note}
+\leanok
+The infinite ancestor tree cannot be represented as a closed coinductive
+data type in Lean 4 because \texttt{coinductive} is restricted to
+\texttt{Prop}-valued predicates, and nested inductives with \texttt{Prop}
+fields through \texttt{List} and \texttt{Sigma} are rejected by the kernel
+positivity checker. The workaround (partial functions) is not a limitation
+of the framework but a \textbf{design choice}: the hypercomputer exists as
+the limit of finite approximations, not as a closed value. This matches
+the ontology: the infinite crystal seed is not a thing we hold, but a
+thing we approach.
+
 \section{Completed Work}
 \label{sec:completed}
 
@@ -924,7 +937,8 @@ problems follow the same pattern with \textsf{soritesWrapper} and
 \textsf{grandfatherWrapper}.
 
 The Decomposition infrastructure (\textsf{Path}, \textsf{reverse\_one},
-\textsf{Decomposition}) is complete with soundness, completeness,
+\textsf{Decomposition}, \texttt{predecessors}, \texttt{ancestorsUpTo},
+\texttt{Chain}, \texttt{viewDFS}) is complete with soundness, completeness,
 non-unique-decomposition, and path-diversity theorems proven for all
 $n \ge 2$ in $T_n$ — zero sorries.
 

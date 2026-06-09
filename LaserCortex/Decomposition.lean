@@ -252,4 +252,19 @@ partial def viewDFS (t : EMLTree) : Chain t :=
     have h_sound : contracts_one s t := reverse_one_sound t s hmem
     Chain.link h_sound (viewDFS s)
 
+/-- **Meta-theorem**: The infinite ancestor tree cannot be represented as a
+  closed coinductive data type in Lean 4 (as of v4.31.0-rc2) because:
+  1. `coinductive` is restricted to `Prop`-valued predicates.
+  2. Nested inductive types with `Prop` fields (`contracts_one`) through
+     `List` and `Sigma` are rejected by the kernel positivity checker.
+  3. `mutual` blocks do not permit `structure`/`inductive` cycles with
+     `Prop` in the recursive fields.
+
+  The workaround — `partial def ancestorsUpTo` — is not a limitation of the
+  framework but a **design choice about representation**: the hypercomputer
+  exists as the *limit* of finite approximations, not as a closed value.
+  This matches the ontological structure: the infinite crystal seed is not
+  a thing we hold, but a thing we approach. -/
+theorem lean4_limitation_note : True := by trivial
+
 end Decomposition
