@@ -51,14 +51,8 @@ jobs:
       - name: Install leanblueprint
         run: pip install leanblueprint
 
-      - name: Debug file structure
-        run: ls -la blueprint/src/ blueprint/src/macros/
-
       - name: Build blueprint web
-        run: |
-          mkdir -p blueprint/web
-          plastex -c plastex.cfg web.tex
-        working-directory: ./blueprint/src
+        run: leanblueprint web
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
