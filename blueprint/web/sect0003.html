@@ -86,23 +86,26 @@
   <a href="sect0003.html#a0000000018"><span class="toc_ref">3.3</span> <span class="toc_entry">Prototype: Fuzzy Logic Wrapper</span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#a0000000019"><span class="toc_ref">3.4</span> <span class="toc_entry">Nested Wrappers (Stacked Collapse)</span></a>
+  <a href="sect0003.html#a0000000019"><span class="toc_ref">3.4</span> <span class="toc_entry">Meta-Paradox: The Sorry as a First-Class Problem</span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#a0000000020"><span class="toc_ref">3.5</span> <span class="toc_entry">The Very Big Box</span></a>
+  <a href="sect0003.html#a0000000020"><span class="toc_ref">3.5</span> <span class="toc_entry">Nested Wrappers (Stacked Collapse)</span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#sec:missing"><span class="toc_ref">3.6</span> <span class="toc_entry">Missing Work</span></a>
+  <a href="sect0003.html#a0000000021"><span class="toc_ref">3.6</span> <span class="toc_entry">The Very Big Box</span></a>
+ </li>
+<li class="">
+  <a href="sect0003.html#sec:missing"><span class="toc_ref">3.7</span> <span class="toc_entry">Missing Work</span></a>
   <span class="expand-toc">▶</span>
   <ul class="sub-toc-2">
      <li class="">
-  <a href="sect0003.html#a0000000021"><span class="toc_ref">3.6.1</span> <span class="toc_entry">Sorries in <span class="sffamily">LogicTypes.lean</span></span></a>
+  <a href="sect0003.html#a0000000022"><span class="toc_ref">3.7.1</span> <span class="toc_entry">Sorries in <span class="sffamily">LogicTypes.lean</span></span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#a0000000022"><span class="toc_ref">3.6.2</span> <span class="toc_entry">Stubs in <span class="sffamily">LiarParadox.lean</span></span></a>
+  <a href="sect0003.html#a0000000023"><span class="toc_ref">3.7.2</span> <span class="toc_entry">Meta-Paradoxes in <span class="sffamily">LiarParadox.lean</span></span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#a0000000023"><span class="toc_ref">3.6.3</span> <span class="toc_entry">Blocking Graph</span></a>
+  <a href="sect0003.html#a0000000024"><span class="toc_ref">3.7.3</span> <span class="toc_entry">Blocking Graph</span></a>
  </li>
 
   </ul>
@@ -431,12 +434,209 @@
 
   </div>
 </div>
-<div class="definition_thmwrapper theorem-style-definition" id="def:classical_liar">
+<h1 id="a0000000019">3.4 Meta-Paradox: The Sorry as a First-Class Problem</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:metaparadox">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
     <span class="definition_thmlabel">32</span>
+    <span class="definition_thmtitle">Meta-Paradox</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#def:metaparadox">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:problemclass">Definition 27</a></li>
+          
+          <li><a href="sect0003.html#def:problem">Definition 28</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.missingProofParadox" class="lean_decl">LiarParadox.missingProofParadox</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    A <span class="sffamily">Problem</span> of class \(\mathsf{metaParadox}\) constructed from any existing Problem and LogicType whose proof is missing. The Liar says “this sentence is false” — a truth-value it cannot supply. The missing resolution says “this contraction is missing” — a proof it cannot supply. Both are self-referential gaps: the framework refers to its own incompleteness. The <span class="sffamily">sorry</span> in <span class="sffamily">fuzzyLiar.proof</span> IS the evidence of this meta-paradox. It is not a placeholder to be filled later — it is the manifestation of the framework’s current incompleteness, stated as a first-class Problem. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:fuzzy_missing">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">33</span>
+    <span class="definition_thmtitle">Fuzzy Missing Proof</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#def:fuzzy_missing">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:metaparadox">Definition 32</a></li>
+          
+          <li><a href="sect0003.html#def:fuzzy_liar">Definition 31</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.fuzzyMissingProof" class="lean_decl">LiarParadox.fuzzyMissingProof</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    The meta-paradox arising from the missing Fuzzy <span class="sffamily">LogicContraction</span>. Its resolution is to fill the <span class="sffamily">sorry</span> in <span class="sffamily">LogicTypes.LogicContraction(.Fuzzy)</span>. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:missing_all">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">34</span>
+    <span class="definition_thmtitle">All Missing Contractions</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#def:missing_all">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:metaparadox">Definition 32</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.missingContractions" class="lean_decl">LiarParadox.missingContractions</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    The list of 11 meta-paradoxes, one for each non-Classical logic type whose <span class="sffamily">LogicContraction</span> is undefined. Each is a concrete blocker for the Very Big Box product. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:classical_liar">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">35</span>
     <span class="definition_thmtitle">Classical Liar</span>
     <div class="thm_header_extras">
 
@@ -499,13 +699,13 @@
 
   </div>
 </div>
-<h1 id="a0000000019">3.4 Nested Wrappers (Stacked Collapse)</h1>
+<h1 id="a0000000020">3.5 Nested Wrappers (Stacked Collapse)</h1>
 <div class="definition_thmwrapper theorem-style-definition" id="def:tower">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">33</span>
+    <span class="definition_thmlabel">36</span>
     <span class="definition_thmtitle">Tower</span>
     <div class="thm_header_extras">
 
@@ -561,7 +761,7 @@
   </div>
   <div class="definition_thmcontent">
   <p>    A sequence of logic-wrapped problems, each collapsing the previous layer’s output. Implements the nested wrapper pattern from Lumo section B: </p>
-<div class="displaymath" id="a0000000024">
+<div class="displaymath" id="a0000000025">
   \[  \begin{array}{c} \text{Layer 3 (Quantum): liar\_ superposition} \\ \downarrow \\ \text{Layer 2 (Intuitionistic): proof\_ of\_ quantum\_ state} \\ \downarrow \\ \text{Layer 1 (Fuzzy): confidence\_ in\_ proof} \\ \downarrow \\ \text{Layer 0 (Classical): assertion\_ value} \end{array}  \]
 </div>
 <p> Each layer’s logic type is tracked via a dependent pair \(\Sigma lt,\  \mathsf{WrappedProblem}\  p\  lt\). The total cost is the sum of per-layer costs. </p>
@@ -573,7 +773,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">34</span>
+    <span class="definition_thmlabel">37</span>
     <span class="definition_thmtitle">Liar Tower</span>
     <div class="thm_header_extras">
 
@@ -597,9 +797,9 @@
         
         <ul class="uses">
           
-          <li><a href="sect0003.html#def:tower">Definition 33</a></li>
+          <li><a href="sect0003.html#def:tower">Definition 36</a></li>
           
-          <li><a href="sect0003.html#def:classical_liar">Definition 32</a></li>
+          <li><a href="sect0003.html#def:classical_liar">Definition 35</a></li>
           
           <li><a href="sect0003.html#def:fuzzy_liar">Definition 31</a></li>
           
@@ -636,16 +836,16 @@
 
   </div>
 </div>
-<h1 id="a0000000020">3.5 The Very Big Box</h1>
+<h1 id="a0000000021">3.6 The Very Big Box</h1>
 <p>The Very Big Box is the product space </p>
-<div class="displaymath" id="a0000000025">
+<div class="displaymath" id="a0000000026">
   \[  \mathcal{V} = \prod _{c \in \mathsf{ProblemClass}}\  \prod _{lt \in \mathsf{suitableLogics}(c)} \mathsf{WrappedProblem}(\mathsf{problem}(c),\  lt)  \]
 </div>
 <p> where each coordinate is a problem in a specific logic and the Tower construction provides the nesting structure. Currently only the Liar (\(c = \mathsf{selfReference}\)) is populated, and only its Classical wrapper is fully proven. The remaining coordinates represent the <b class="bfseries">real friction</b>: every cell in this product that lacks a proof is a concrete blocker. </p>
-<h1 id="sec:missing">3.6 Missing Work</h1>
+<h1 id="sec:missing">3.7 Missing Work</h1>
 
 <p>The following definitions and theorems are stated but not yet implemented. They represent the <b class="bfseries">real friction</b> in the framework — the Liar Paradox is defined and its Classical resolution is proven, but cross-logic analysis cannot proceed until these pieces are populated. </p>
-<h2 id="a0000000021">3.6.1 Sorries in <span class="sffamily">LogicTypes.lean</span></h2>
+<h2 id="a0000000022">3.7.1 Sorries in <span class="sffamily">LogicTypes.lean</span></h2>
 <ul class="itemize">
   <li><p><b class="bfseries"><span class="sffamily">LogicContraction</span></b> for Fuzzy, ManyValued, Paraconsistent, Temporal, Deontic, Epistemic, Quantum, Intuitionistic, Relevance, Free, Infinitary, Modal — only Classical is defined (as the Tamari contraction from EMLRegistry). </p>
 </li>
@@ -654,20 +854,20 @@
   <li><p><b class="bfseries"><span class="sffamily">logic_contracts_to_normal_form</span></b> for non-Classical logics — the theorem is stated but only the Classical case is proven. </p>
 </li>
 </ul>
-<h2 id="a0000000022">3.6.2 Stubs in <span class="sffamily">LiarParadox.lean</span></h2>
+<h2 id="a0000000023">3.7.2 Meta-Paradoxes in <span class="sffamily">LiarParadox.lean</span></h2>
 <ul class="itemize">
-  <li><p><b class="bfseries"><span class="sffamily">fuzzyLiar.proof</span></b> — a \(\mathsf{sorry}\); blocked by the missing Fuzzy <span class="sffamily">LogicContraction</span>. </p>
+  <li><p><b class="bfseries"><span class="sffamily">fuzzyLiar.proof</span></b> — a \(\mathsf{sorry}\); blocked by the missing Fuzzy <span class="sffamily">LogicContraction</span>. This sorry is formalized as a first-class meta-paradox in <span class="sffamily">fuzzyMissingProof</span>. </p>
 </li>
-  <li><p><b class="bfseries"><span class="sffamily">contractionCost</span></b> in the old version — the new <span class="sffamily">WrappedProblem</span> structure encodes cost directly; non-Classical costs are \(0\) because no logic-specific contraction exists to measure. </p>
+  <li><p><b class="bfseries"><span class="sffamily">missingContractions</span></b> — the 11 meta-paradoxes arising from all non-Classical missing <span class="sffamily">LogicContraction</span> definitions. Each is a concrete cell in the Very Big Box product that cannot yet be filled. </p>
 </li>
   <li><p><b class="bfseries">Non-Classical wrappers</b> for the Liar — ManyValued, Paraconsistent, Intuitionistic, etc. are not yet defined; each requires its logic’s <span class="sffamily">LogicContraction</span> and <span class="sffamily">LogicNormalForm</span>. </p>
 </li>
-  <li><p><b class="bfseries">Other problem classes</b> — only \(\mathsf{selfReference}\) (the Liar) is instantiated as a <span class="sffamily">Problem</span>. The other 11 classes have problems that are not yet defined. </p>
+  <li><p><b class="bfseries">Other problem classes</b> — only \(\mathsf{selfReference}\) and \(\mathsf{metaParadox}\) are instantiated as <span class="sffamily">Problem</span>s. The other 10 classes have problems that are not yet defined. </p>
 </li>
 </ul>
-<h2 id="a0000000023">3.6.3 Blocking Graph</h2>
+<h2 id="a0000000024">3.7.3 Blocking Graph</h2>
 <p>The dependencies among missing work: </p>
-<div class="displaymath" id="a0000000026">
+<div class="displaymath" id="a0000000027">
   \[  \begin{array}{c} \text{LogicContraction (12 non-Classical)} \\ \downarrow \\ \text{LogicNormalForm (12 non-Classical)} \\ \downarrow \\ \text{logic\_ contracts\_ to\_ normal\_ form} \\ \downarrow \\ \text{WrappedProblem proofs for Fuzzy, ManyValued, \dots } \\ \downarrow \\ \text{Tower layers beyond Classical} \qquad \text{Other Problem classes} \end{array}  \]
 </div>
 <p>Every missing piece in the chain below <span class="sffamily">LogicContraction</span> is blocked by it. The Liar formalization makes this blocking structure explicit: previously the sorries in <span class="sffamily">LogicTypes.lean</span> were abstract “to be filled later” — now they are concrete dependencies of the Very Big Box product. </p>

@@ -29,6 +29,9 @@ LiarParadox.Problem
 LiarParadox.WrappedProblem
 LiarParadox.liarProblem
 LiarParadox.fuzzyLiar
+LiarParadox.missingProofParadox
+LiarParadox.fuzzyMissingProof
+LiarParadox.missingContractions
 LiarParadox.classicalLiar
 LiarParadox.Tower
 LiarParadox.liarTower

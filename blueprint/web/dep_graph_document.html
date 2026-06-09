@@ -164,7 +164,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">32</span><span class="definition_thmtitle">Classical Liar</span></div>
+      <span class="definition_thmlabel">35</span><span class="definition_thmtitle">Classical Liar</span></div>
     <div class="thm_thmcontent"><p>    The Liar wrapped in Classical logic. Cost \(\Phi = 0\) (at equilibrium). Proven using \(\mathsf{contracts\_ to\_ rightComb}\): the symmetric tree contracts to \(\mathsf{rightComb}(3)\) in finitely many steps. </p>
 </div>
 
@@ -303,6 +303,36 @@
 
 
     
+    <div class="dep-modal-container" id="def:fuzzy_missing_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:fuzzy_missing" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">33</span><span class="definition_thmtitle">Fuzzy Missing Proof</span></div>
+    <div class="thm_thmcontent"><p>    The meta-paradox arising from the missing Fuzzy <span class="sffamily">LogicContraction</span>. Its resolution is to fill the <span class="sffamily">sorry</span> in <span class="sffamily">LogicTypes.LogicContraction(.Fuzzy)</span>. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#def:fuzzy_missing">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.fuzzyMissingProof">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
     <div class="dep-modal-container" id="def:liar_problem_modal">
       <div class="dep-modal-content">
           <button class="dep-closebtn">
@@ -344,7 +374,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">34</span><span class="definition_thmtitle">Liar Tower</span></div>
+      <span class="definition_thmlabel">37</span><span class="definition_thmtitle">Liar Tower</span></div>
     <div class="thm_thmcontent"><p>    A four-layer prototype tower alternating Classical and Fuzzy wrappers. Demonstrates the stacked collapse pattern; the full tower with Quantum, Intuitionistic, Fuzzy, and Classical layers is not yet populated because non-Classical <span class="sffamily">LogicContraction</span>s are missing. </p>
 </div>
 
@@ -533,6 +563,66 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LogicTypes.MetaContractsTo">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:metaparadox_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:metaparadox" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">32</span><span class="definition_thmtitle">Meta-Paradox</span></div>
+    <div class="thm_thmcontent"><p>    A <span class="sffamily">Problem</span> of class \(\mathsf{metaParadox}\) constructed from any existing Problem and LogicType whose proof is missing. The Liar says “this sentence is false” — a truth-value it cannot supply. The missing resolution says “this contraction is missing” — a proof it cannot supply. Both are self-referential gaps: the framework refers to its own incompleteness. The <span class="sffamily">sorry</span> in <span class="sffamily">fuzzyLiar.proof</span> IS the evidence of this meta-paradox. It is not a placeholder to be filled later — it is the manifestation of the framework’s current incompleteness, stated as a first-class Problem. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#def:metaparadox">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.missingProofParadox">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:missing_all_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:missing_all" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">34</span><span class="definition_thmtitle">All Missing Contractions</span></div>
+    <div class="thm_thmcontent"><p>    The list of 11 meta-paradoxes, one for each non-Classical logic type whose <span class="sffamily">LogicContraction</span> is undefined. Each is a concrete blocker for the Very Big Box product. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#def:missing_all">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.missingContractions">Lean</a>
     
     
   
@@ -765,9 +855,9 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">33</span><span class="definition_thmtitle">Tower</span></div>
+      <span class="definition_thmlabel">36</span><span class="definition_thmtitle">Tower</span></div>
     <div class="thm_thmcontent"><p>    A sequence of logic-wrapped problems, each collapsing the previous layer’s output. Implements the nested wrapper pattern from Lumo section B: </p>
-<div class="displaymath" id="a0000000024">
+<div class="displaymath" id="a0000000025">
   \[  \begin{array}{c} \text{Layer 3 (Quantum): liar\_ superposition} \\ \downarrow \\ \text{Layer 2 (Intuitionistic): proof\_ of\_ quantum\_ state} \\ \downarrow \\ \text{Layer 1 (Fuzzy): confidence\_ in\_ proof} \\ \downarrow \\ \text{Layer 0 (Classical): assertion\_ value} \end{array}  \]
 </div>
 <p> Each layer’s logic type is tracked via a dependent pair \(\Sigma lt,\  \mathsf{WrappedProblem}\  p\  lt\). The total cost is the sum of per-layer costs. </p>
@@ -1112,7 +1202,7 @@ graphContainer.graphviz({useWorker: true})
     .width(width)
     .height(height)
     .fit(true)
-    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	"def:router"	[color=green,		fillcolor="#B0ECA3",		label=router,		shape=box,		style=filled];	"def:registry"	[color=green,		fillcolor="#B0ECA3",		label=registry,		shape=box,		style=filled];	"def:router" -> "def:registry"	[style=dashed];	"def:classical_liar"	[color=green,		fillcolor="#B0ECA3",		label=classical_liar,		shape=box,		style=filled];	"def:liar_tower"	[color=green,		fillcolor="#B0ECA3",		label=liar_tower,		shape=box,		style=filled];	"def:classical_liar" -> "def:liar_tower"	[style=dashed];	"lem:size_one"	[color=green,		label=size_one,		shape=ellipse];	"lem:size_multi"	[color=green,		label=size_multi,		shape=ellipse];	"lem:size_one" -> "lem:size_multi"	[style=dashed];	"def:problemclass"	[color=green,		fillcolor="#B0ECA3",		label=problemclass,		shape=box,		style=filled];	"def:problem"	[color=green,		fillcolor="#B0ECA3",		label=problem,		shape=box,		style=filled];	"def:problemclass" -> "def:problem"	[style=dashed];	"def:liar_problem"	[color=green,		fillcolor="#B0ECA3",		label=liar_problem,		shape=box,		style=filled];	"def:problem" -> "def:liar_problem"	[style=dashed];	"def:wrapped"	[color=green,		fillcolor="#B0ECA3",		label=wrapped,		shape=box,		style=filled];	"def:problem" -> "def:wrapped"	[style=dashed];	"def:liar_problem" -> "def:classical_liar"	[style=dashed];	"def:fuzzy_liar"	[color=blue,		fillcolor="#A3D6FF",		label=fuzzy_liar,		shape=box,		style=filled];	"def:liar_problem" -> "def:fuzzy_liar"	[style=dashed];	"def:fuzzy_liar" -> "def:liar_tower"	[style=dashed];	"def:wrapped" -> "def:classical_liar"	[style=dashed];	"def:wrapped" -> "def:fuzzy_liar"	[style=dashed];	"def:tower"	[color=green,		fillcolor="#B0ECA3",		label=tower,		shape=box,		style=filled];	"def:wrapped" -> "def:tower"	[style=dashed];	"def:size"	[color=green,		fillcolor="#B0ECA3",		label=size,		shape=box,		style=filled];	"def:size" -> "lem:size_one"	[style=dashed];	"thm:contracts_to_rightComb"	[color=green,		label=contracts_to_rightComb,		shape=ellipse];	"def:size" -> "thm:contracts_to_rightComb"	[style=dashed];	"thm:contracts_to_rightComb" -> "def:classical_liar"	[style=dashed];	"thm:logic_contracts"	[color=blue,		label=logic_contracts,		shape=ellipse];	"thm:contracts_to_rightComb" -> "thm:logic_contracts"	[style=dashed];	"def:certify"	[color=green,		fillcolor="#B0ECA3",		label=certify,		shape=box,		style=filled];	"thm:contracts_to_rightComb" -> "def:certify"	[style=dashed];	"def:contracts_one"	[color=green,		fillcolor="#B0ECA3",		label=contracts_one,		shape=box,		style=filled];	"def:contracts_one" -> "lem:size_one"	[style=dashed];	"def:contracts_to"	[color=green,		fillcolor="#B0ECA3",		label=contracts_to,		shape=box,		style=filled];	"def:contracts_one" -> "def:contracts_to"	[style=dashed];	"def:contracts_to" -> "lem:size_multi"	[style=dashed];	"lem:node_left"	[color=green,		label=node_left,		shape=ellipse];	"def:contracts_to" -> "lem:node_left"	[style=dashed];	"lem:node_right"	[color=green,		label=node_right,		shape=ellipse];	"def:contracts_to" -> "lem:node_right"	[style=dashed];	"def:certificate"	[color=green,		fillcolor="#B0ECA3",		label=certificate,		shape=box,		style=filled];	"def:contracts_to" -> "def:certificate"	[style=dashed];	"def:logiccontraction"	[color=green,		fillcolor="#B0ECA3",		label=logiccontraction,		shape=box,		style=filled];	"def:contracts_to" -> "def:logiccontraction"	[style=dashed];	"lem:trans"	[color=green,		label=trans,		shape=ellipse];	"def:contracts_to" -> "lem:trans"	[style=dashed];	"lem:node_left" -> "thm:contracts_to_rightComb"	[style=dashed];	"lem:node_rightcombs"	[color=green,		label=node_rightcombs,		shape=ellipse];	"lem:node_rightcombs" -> "thm:contracts_to_rightComb"	[style=dashed];	"lem:node_right" -> "lem:node_rightcombs"	[style=dashed];	"def:certificate" -> "def:certify"	[style=dashed];	"def:logiccontraction" -> "def:wrapped"	[style=dashed];	"def:logiccontraction" -> "thm:logic_contracts"	[style=dashed];	"def:translation"	[color=green,		fillcolor="#B0ECA3",		label=translation,		shape=box,		style=filled];	"def:logiccontraction" -> "def:translation"	[style=dashed];	"lem:trans" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:tower" -> "def:liar_tower"	[style=dashed];	"def:metacontracts"	[color=green,		fillcolor="#B0ECA3",		label=metacontracts,		shape=box,		style=filled];	"def:translation" -> "def:metacontracts"	[style=dashed];	"def:cdstep"	[color=green,		fillcolor="#B0ECA3",		label=cdstep,		shape=box,		style=filled];	"def:split"	[color=green,		fillcolor="#B0ECA3",		label=split,		shape=box,		style=filled];	"def:rightComb"	[color=green,		fillcolor="#B0ECA3",		label=rightComb,		shape=box,		style=filled];	"def:rightComb" -> "lem:node_rightcombs"	[style=dashed];	"def:rightComb" -> "def:certificate"	[style=dashed];	"def:logicnormal"	[color=green,		fillcolor="#B0ECA3",		label=logicnormal,		shape=box,		style=filled];	"def:rightComb" -> "def:logicnormal"	[style=dashed];	"def:logicnormal" -> "thm:logic_contracts"	[style=dashed];	"def:logictype"	[color=green,		fillcolor="#B0ECA3",		label=logictype,		shape=box,		style=filled];	"def:logictype" -> "def:problem"	[style=dashed];	"def:logictype" -> "def:logiccontraction"	[style=dashed];	"def:logictype" -> "def:cdstep"	[style=dashed];	"def:logictype" -> "def:split"	[style=dashed];	"def:logictype" -> "def:logicnormal"	[style=dashed];	"def:logicclass"	[color=green,		fillcolor="#B0ECA3",		label=logicclass,		shape=box,		style=filled];	"def:logictype" -> "def:logicclass"	[style=dashed];	"def:logictree"	[color=green,		fillcolor="#B0ECA3",		label=logictree,		shape=box,		style=filled];	"def:logictype" -> "def:logictree"	[style=dashed];	"def:emltree"	[color=green,		fillcolor="#B0ECA3",		label=emltree,		shape=box,		style=filled];	"def:emltree" -> "def:registry"	[style=dashed];	"def:emltree" -> "def:problem"	[style=dashed];	"def:emltree" -> "def:size"	[style=dashed];	"def:emltree" -> "def:contracts_one"	[style=dashed];	"def:emltree" -> "def:rightComb"	[style=dashed];	"def:emltree" -> "def:logictree"	[style=dashed];}`)
+    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	"def:router"	[color=green,		fillcolor="#B0ECA3",		label=router,		shape=box,		style=filled];	"def:registry"	[color=green,		fillcolor="#B0ECA3",		label=registry,		shape=box,		style=filled];	"def:router" -> "def:registry"	[style=dashed];	"lem:size_one"	[color=green,		label=size_one,		shape=ellipse];	"lem:size_multi"	[color=green,		label=size_multi,		shape=ellipse];	"lem:size_one" -> "lem:size_multi"	[style=dashed];	"def:problemclass"	[color=green,		fillcolor="#B0ECA3",		label=problemclass,		shape=box,		style=filled];	"def:problem"	[color=green,		fillcolor="#B0ECA3",		label=problem,		shape=box,		style=filled];	"def:problemclass" -> "def:problem"	[style=dashed];	"def:liar_problem"	[color=green,		fillcolor="#B0ECA3",		label=liar_problem,		shape=box,		style=filled];	"def:problem" -> "def:liar_problem"	[style=dashed];	"def:metaparadox"	[color=green,		fillcolor="#B0ECA3",		label=metaparadox,		shape=box,		style=filled];	"def:problem" -> "def:metaparadox"	[style=dashed];	"def:wrapped"	[color=green,		fillcolor="#B0ECA3",		label=wrapped,		shape=box,		style=filled];	"def:problem" -> "def:wrapped"	[style=dashed];	"def:fuzzy_liar"	[color=blue,		fillcolor="#A3D6FF",		label=fuzzy_liar,		shape=box,		style=filled];	"def:liar_problem" -> "def:fuzzy_liar"	[style=dashed];	"def:classical_liar"	[color=green,		fillcolor="#B0ECA3",		label=classical_liar,		shape=box,		style=filled];	"def:liar_problem" -> "def:classical_liar"	[style=dashed];	"def:fuzzy_missing"	[color=green,		fillcolor="#B0ECA3",		label=fuzzy_missing,		shape=box,		style=filled];	"def:fuzzy_liar" -> "def:fuzzy_missing"	[style=dashed];	"def:liar_tower"	[color=green,		fillcolor="#B0ECA3",		label=liar_tower,		shape=box,		style=filled];	"def:fuzzy_liar" -> "def:liar_tower"	[style=dashed];	"def:classical_liar" -> "def:liar_tower"	[style=dashed];	"def:metaparadox" -> "def:fuzzy_missing"	[style=dashed];	"def:missing_all"	[color=green,		fillcolor="#B0ECA3",		label=missing_all,		shape=box,		style=filled];	"def:metaparadox" -> "def:missing_all"	[style=dashed];	"def:wrapped" -> "def:fuzzy_liar"	[style=dashed];	"def:wrapped" -> "def:classical_liar"	[style=dashed];	"def:tower"	[color=green,		fillcolor="#B0ECA3",		label=tower,		shape=box,		style=filled];	"def:wrapped" -> "def:tower"	[style=dashed];	"def:size"	[color=green,		fillcolor="#B0ECA3",		label=size,		shape=box,		style=filled];	"def:size" -> "lem:size_one"	[style=dashed];	"thm:contracts_to_rightComb"	[color=green,		label=contracts_to_rightComb,		shape=ellipse];	"def:size" -> "thm:contracts_to_rightComb"	[style=dashed];	"thm:contracts_to_rightComb" -> "def:classical_liar"	[style=dashed];	"thm:logic_contracts"	[color=blue,		label=logic_contracts,		shape=ellipse];	"thm:contracts_to_rightComb" -> "thm:logic_contracts"	[style=dashed];	"def:certify"	[color=green,		fillcolor="#B0ECA3",		label=certify,		shape=box,		style=filled];	"thm:contracts_to_rightComb" -> "def:certify"	[style=dashed];	"def:contracts_one"	[color=green,		fillcolor="#B0ECA3",		label=contracts_one,		shape=box,		style=filled];	"def:contracts_one" -> "lem:size_one"	[style=dashed];	"def:contracts_to"	[color=green,		fillcolor="#B0ECA3",		label=contracts_to,		shape=box,		style=filled];	"def:contracts_one" -> "def:contracts_to"	[style=dashed];	"def:contracts_to" -> "lem:size_multi"	[style=dashed];	"lem:node_left"	[color=green,		label=node_left,		shape=ellipse];	"def:contracts_to" -> "lem:node_left"	[style=dashed];	"lem:node_right"	[color=green,		label=node_right,		shape=ellipse];	"def:contracts_to" -> "lem:node_right"	[style=dashed];	"def:certificate"	[color=green,		fillcolor="#B0ECA3",		label=certificate,		shape=box,		style=filled];	"def:contracts_to" -> "def:certificate"	[style=dashed];	"def:logiccontraction"	[color=green,		fillcolor="#B0ECA3",		label=logiccontraction,		shape=box,		style=filled];	"def:contracts_to" -> "def:logiccontraction"	[style=dashed];	"lem:trans"	[color=green,		label=trans,		shape=ellipse];	"def:contracts_to" -> "lem:trans"	[style=dashed];	"lem:node_left" -> "thm:contracts_to_rightComb"	[style=dashed];	"lem:node_rightcombs"	[color=green,		label=node_rightcombs,		shape=ellipse];	"lem:node_rightcombs" -> "thm:contracts_to_rightComb"	[style=dashed];	"lem:node_right" -> "lem:node_rightcombs"	[style=dashed];	"def:certificate" -> "def:certify"	[style=dashed];	"def:logiccontraction" -> "def:wrapped"	[style=dashed];	"def:logiccontraction" -> "thm:logic_contracts"	[style=dashed];	"def:translation"	[color=green,		fillcolor="#B0ECA3",		label=translation,		shape=box,		style=filled];	"def:logiccontraction" -> "def:translation"	[style=dashed];	"lem:trans" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:tower" -> "def:liar_tower"	[style=dashed];	"def:metacontracts"	[color=green,		fillcolor="#B0ECA3",		label=metacontracts,		shape=box,		style=filled];	"def:translation" -> "def:metacontracts"	[style=dashed];	"def:cdstep"	[color=green,		fillcolor="#B0ECA3",		label=cdstep,		shape=box,		style=filled];	"def:split"	[color=green,		fillcolor="#B0ECA3",		label=split,		shape=box,		style=filled];	"def:rightComb"	[color=green,		fillcolor="#B0ECA3",		label=rightComb,		shape=box,		style=filled];	"def:rightComb" -> "lem:node_rightcombs"	[style=dashed];	"def:rightComb" -> "def:certificate"	[style=dashed];	"def:logicnormal"	[color=green,		fillcolor="#B0ECA3",		label=logicnormal,		shape=box,		style=filled];	"def:rightComb" -> "def:logicnormal"	[style=dashed];	"def:logicnormal" -> "thm:logic_contracts"	[style=dashed];	"def:logictype"	[color=green,		fillcolor="#B0ECA3",		label=logictype,		shape=box,		style=filled];	"def:logictype" -> "def:problem"	[style=dashed];	"def:logictype" -> "def:logiccontraction"	[style=dashed];	"def:logictype" -> "def:cdstep"	[style=dashed];	"def:logictype" -> "def:split"	[style=dashed];	"def:logictype" -> "def:logicnormal"	[style=dashed];	"def:logicclass"	[color=green,		fillcolor="#B0ECA3",		label=logicclass,		shape=box,		style=filled];	"def:logictype" -> "def:logicclass"	[style=dashed];	"def:logictree"	[color=green,		fillcolor="#B0ECA3",		label=logictree,		shape=box,		style=filled];	"def:logictype" -> "def:logictree"	[style=dashed];	"def:emltree"	[color=green,		fillcolor="#B0ECA3",		label=emltree,		shape=box,		style=filled];	"def:emltree" -> "def:registry"	[style=dashed];	"def:emltree" -> "def:problem"	[style=dashed];	"def:emltree" -> "def:size"	[style=dashed];	"def:emltree" -> "def:contracts_one"	[style=dashed];	"def:emltree" -> "def:rightComb"	[style=dashed];	"def:emltree" -> "def:logictree"	[style=dashed];}`)
     .on("end", interactive);
 
 latexLabelEscaper = function(label) {

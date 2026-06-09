@@ -306,6 +306,42 @@ This is the WfCA prototype: a problem in superposition (all truth values $[0,1]$
 collapses to the unique fixed point under the Fuzzy contraction rule.
 \end{definition}
 
+\section{Meta-Paradox: The Sorry as a First-Class Problem}
+
+\begin{definition}[Meta-Paradox]
+\label{def:metaparadox}
+\lean{LiarParadox.missingProofParadox}
+\leanok
+\uses{def:problemclass, def:problem}
+A \textsf{Problem} of class $\mathsf{metaParadox}$ constructed from any
+existing Problem and LogicType whose proof is missing.
+The Liar says ``this sentence is false'' --- a truth-value it cannot supply.
+The missing resolution says ``this contraction is missing'' --- a proof it cannot supply.
+Both are self-referential gaps: the framework refers to its own incompleteness.
+The \textsf{sorry} in \textsf{fuzzyLiar.proof} IS the evidence of this meta-paradox.
+It is not a placeholder to be filled later --- it is the manifestation of the
+framework's current incompleteness, stated as a first-class Problem.
+\end{definition}
+
+\begin{definition}[Fuzzy Missing Proof]
+\label{def:fuzzy_missing}
+\lean{LiarParadox.fuzzyMissingProof}
+\leanok
+\uses{def:metaparadox, def:fuzzy_liar}
+The meta-paradox arising from the missing Fuzzy \textsf{LogicContraction}.
+Its resolution is to fill the \textsf{sorry} in \textsf{LogicTypes.LogicContraction(.Fuzzy)}.
+\end{definition}
+
+\begin{definition}[All Missing Contractions]
+\label{def:missing_all}
+\lean{LiarParadox.missingContractions}
+\leanok
+\uses{def:metaparadox}
+The list of 11 meta-paradoxes, one for each non-Classical logic type
+whose \textsf{LogicContraction} is undefined.
+Each is a concrete blocker for the Very Big Box product.
+\end{definition}
+
 \begin{definition}[Classical Liar]
 \label{def:classical_liar}
 \lean{LiarParadox.classicalLiar}
@@ -385,19 +421,20 @@ but cross-logic analysis cannot proceed until these pieces are populated.
     the theorem is stated but only the Classical case is proven.
 \end{itemize}
 
-\subsection{Stubs in \textsf{LiarParadox.lean}}
+\subsection{Meta-Paradoxes in \textsf{LiarParadox.lean}}
 
 \begin{itemize}
   \item \textbf{\textsf{fuzzyLiar.proof}} --- a $\mathsf{sorry}$; blocked by the missing
-    Fuzzy \textsf{LogicContraction}.
-  \item \textbf{\textsf{contractionCost}} in the old version --- the new \textsf{WrappedProblem}
-    structure encodes cost directly; non-Classical costs are $0$ because
-    no logic-specific contraction exists to measure.
+    Fuzzy \textsf{LogicContraction}. This sorry is formalized as a first-class
+    meta-paradox in \textsf{fuzzyMissingProof}.
+  \item \textbf{\textsf{missingContractions}} --- the 11 meta-paradoxes arising from
+    all non-Classical missing \textsf{LogicContraction} definitions.
+    Each is a concrete cell in the Very Big Box product that cannot yet be filled.
   \item \textbf{Non-Classical wrappers} for the Liar --- ManyValued, Paraconsistent,
-    Intuitionistic, etc. are not yet defined; each requires its logic's
+    Intuitionistic, etc.\ are not yet defined; each requires its logic's
     \textsf{LogicContraction} and \textsf{LogicNormalForm}.
-  \item \textbf{Other problem classes} --- only $\mathsf{selfReference}$ (the Liar)
-    is instantiated as a \textsf{Problem}. The other 11 classes have problems
+  \item \textbf{Other problem classes} --- only $\mathsf{selfReference}$ and $\mathsf{metaParadox}$
+    are instantiated as \textsf{Problem}s. The other 10 classes have problems
     that are not yet defined.
 \end{itemize}
 

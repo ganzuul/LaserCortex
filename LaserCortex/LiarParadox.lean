@@ -21,6 +21,7 @@ inductive ProblemClass : Type where
   | emptyReference      -- Non-existent objects (native: Free)
   | infinity            -- Galileo's, Hilbert's Hotel (native: Infinitary)
   | modality            -- Fitch's Knowability (native: Modal)
+  | metaParadox         -- Missing proof / incomplete framework (native: Classical)
   deriving DecidableEq, Repr
 
 /-- A problem: a logical puzzle encoded as a family of trees,
@@ -75,6 +76,38 @@ def liarProblem : Problem := {
     | _ => symmetricTree
   normalForm := λ _ => rightComb 3
 }
+
+-- ================================================================
+-- Meta-Paradox: The Sorry as a First-Class Problem
+-- ================================================================
+
+/-- A meta-paradox: a WrappedProblem whose proof cannot be filled
+  is itself a logical problem.
+
+  The Liar says "this sentence is false" — a truth-value it cannot supply.
+  The missing resolution says "this contraction is missing" — a proof it cannot supply.
+  Both are self-referential gaps: the framework refers to its own incompleteness.
+
+  The `sorry` in `fuzzyLiar.proof` IS the evidence of this meta-paradox.
+  It is not a placeholder to be filled later — it is the manifestation of
+  the framework's current incompleteness, stated as a first-class Problem. -/
+def missingProofParadox (p : Problem) (lt : LogicTypes.LogicType) : Problem := {
+  cls := .metaParadox
+  name := "Missing " ++ lt.name ++ " proof for " ++ p.name
+  suitableLogics := [lt]
+  tree := λ _ => p.tree lt
+  normalForm := λ _ => p.normalForm lt
+}
+
+/-- The Fuzzy Liar's missing proof as a meta-paradox.
+  The problem: the Fuzzy LogicContraction is not defined in LogicTypes.lean.
+  The resolution: fill the `sorry` in LogicTypes.LogicContraction (.Fuzzy). -/
+def fuzzyMissingProof : Problem := missingProofParadox liarProblem (.Fuzzy)
+
+/-- The missing LogicContraction definitions for all non-Classical logics
+  as a family of meta-paradoxes. -/
+def missingContractions : List Problem :=
+  liarProblem.suitableLogics.filter (λ lt => lt ≠ .Classical) |>.map (missingProofParadox liarProblem)
 
 -- ================================================================
 -- Prototype: Fuzzy Logic Wrapper
