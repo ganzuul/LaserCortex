@@ -866,6 +866,53 @@ This proves that \textbf{intent is not uniquely determined by outcome} ---
 multiple reasoning chains can connect the same evidence to the same verdict.
 \end{theorem}
 
+\section{The Hypercomputer: Infinite Ancestor Enumeration}
+
+\begin{definition}[Predecessors]
+\label{def:predecessors}
+\lean{Decomposition.predecessors}
+\leanok
+\uses{def:reverse_one}
+The immediate predecessor sources of a target tree $\mathsf{predecessors}(t) = \mathsf{reverse\_one}(t)$.
+Soundness is maintained as a separate theorem $\mathsf{predecessors\_sound}$:
+if $s \in \mathsf{predecessors}(t)$ then $\mathsf{contracts\_one}\ s\ t$.
+\end{definition}
+
+\begin{definition}[Chain]
+\label{def:chain}
+\lean{Decomposition.Chain}
+\leanok
+\uses{def:contracts_one}
+A finite chain of contraction steps from an ancestor to a target.
+$\mathsf{Chain.tip}\ t$ is the empty chain (the present moment without a
+reconstructed past). $\mathsf{Chain.link}\ h\ r$ prepends a contraction step.
+\end{definition}
+
+\begin{definition}[Ancestors Up To Depth $n$]
+\label{def:ancestorsUpTo}
+\lean{Decomposition.ancestorsUpTo}
+\leanok
+\uses{def:predecessors}
+Enumerate all ancestor sources up to depth $n$ via DFS, returning a flat list.
+This is the \textbf{hypercomputer in function form}: the infinite tree of all
+possible pasts is present as the limit of $\mathsf{ancestorsUpTo}\ t\ n$ as
+$n \to \infty$. No single data structure holds the whole tree; instead the
+recursion is explicit in the partial function, and every finite approximation
+is immediately available. ``Instant lookup'' = calling this function with
+any depth $n$.
+\end{definition}
+
+\begin{definition}[DFS View]
+\label{def:viewDFS}
+\lean{Decomposition.viewDFS}
+\leanok
+\uses{def:chain, def:predecessors}
+A $\mathsf{viewDFS}$ is a single lineage (DFS) extracted from the ancestor
+space by always following the first predecessor. Returns a $\mathsf{Chain}$
+that may end at any depth. This is the \textbf{narrative self} in formal
+type: committed to a single thread, but honest about termination.
+\end{definition}
+
 \section{Completed Work}
 \label{sec:completed}
 

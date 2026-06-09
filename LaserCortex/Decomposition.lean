@@ -201,4 +201,55 @@ theorem path_diversity : ∃ (s t : EMLTree) (p₁ p₂ : Path s t), p₁ ≠ p�
     exact h_len_ne this
   exact ⟨t1, t5, path1, path2, h_ne⟩
 
+/-- The immediate predecessor sources of a target tree, as a plain list.
+
+  This is the local, one-step lookup. Soundness is maintained as a separate
+  theorem: `predecessors_sound`. -/
+def predecessors (t : EMLTree) : List EMLTree :=
+  reverse_one t
+
+theorem predecessors_sound (t s : EMLTree) (h : s ∈ predecessors t) : contracts_one s t :=
+  reverse_one_sound t s h
+
+/-- A finite chain of contraction steps from an ancestor to a target.
+  Unlike the length-indexed `View`, `Chain` terminates at any depth.
+
+  `Chain.tip` is the empty chain at any node (the present moment without
+  a reconstructed past). `Chain.link` prepends a contraction step. -/
+inductive Chain : EMLTree → Type where
+  | tip (t : EMLTree) : Chain t
+  | link {s t : EMLTree} (h : contracts_one s t) (rest : Chain s) : Chain t
+  deriving Nonempty
+
+/-- Enumerate all ancestors up to depth `n` via DFS, returning a list of
+  source trees at each depth.
+
+  This is the **hypercomputer in function form**: the infinite tree of all
+  possible pasts is present as the *limit* of `ancestorsUpTo t n` as `n → ∞`.
+  No single data structure holds the whole tree; instead the recursion is
+  explicit in the function, and every finite approximation is immediately
+  available. "Instant lookup" = calling this function with any depth. -/
+partial def ancestorsUpTo (t : EMLTree) : Nat → List EMLTree
+  | 0 => []
+  | n + 1 =>
+    let cur := predecessors t
+    let rec go : List EMLTree → List EMLTree
+      | [] => []
+      | (s :: ss) => ancestorsUpTo s n ++ go ss
+    cur ++ go cur
+
+/-- Extract a **DFS view** (single lineage, committed, narrative) by always
+  following the first predecessor at each step.
+
+  Returns a finite chain (may end at any depth). -/
+partial def viewDFS (t : EMLTree) : Chain t :=
+  match h : reverse_one t with
+  | [] => Chain.tip t
+  | (s :: _) =>
+    have hmem : s ∈ reverse_one t := by
+      rw [h]
+      simp
+    have h_sound : contracts_one s t := reverse_one_sound t s hmem
+    Chain.link h_sound (viewDFS s)
+
 end Decomposition
