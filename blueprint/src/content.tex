@@ -241,84 +241,129 @@ The normal form for each logic type. For Classical logic this is \textsf{rightCo
 For any logic type $lt$ and tree $t$, $\mathsf{LogicContraction}\ lt\ t\ (\mathsf{LogicNormalForm}\ lt\ t.\mathsf{size})$.
 Currently proven for Classical logic; other cases are placeholders.
 \end{theorem}
-\chapter{Liar Paradox: The Hard Test Case}
+\chapter{Problem Classes and the Very Big Box}
 
-\section{Canonical Encoding}
+\section{Paradox Taxonomy}
 
-\begin{definition}[Liar Tree]
-\label{def:liar}
-\lean{LiarParadox.liar}
+\begin{definition}[Problem Class]
+\label{def:problemclass}
+\lean{LiarParadox.ProblemClass}
 \leanok
-\uses{def:emltree}
-The canonical Liar sentence: a size-3 symmetric tree
+An inductive type enumerating 12 paradox classes, each with a native logic type:
+self-reference (ManyValued), vagueness (Fuzzy), inconsistent definition (Paraconsistent),
+temporal decision (Temporal), deontic (Deontic), epistemic (Epistemic),
+quantum superposition (Quantum), constructive (Intuitionistic), relevance (Relevance),
+empty reference (Free), infinity (Infinitary), modality (Modal).
+\end{definition}
+
+\begin{definition}[Problem]
+\label{def:problem}
+\lean{LiarParadox.Problem}
+\leanok
+\uses{def:problemclass, def:logictype, def:emltree}
+A structure parameterized by a problem class, a name, a list of suitable logics,
+a tree family $\mathsf{LogicType} \to \mathsf{EMLTree}$ (the paradox as encoded in each logic),
+and a normal form family $\mathsf{LogicType} \to \mathsf{EMLTree}$ (the resolution target for each logic).
+\end{definition}
+
+\begin{definition}[Wrapped Problem]
+\label{def:wrapped}
+\lean{LiarParadox.WrappedProblem}
+\leanok
+\uses{def:problem, def:logiccontraction}
+The WfCA collapse rule: pairs a Problem with a LogicType.
+Records the tree (problem as interpreted in this logic), target (normal form),
+cost (pentagonator distance $\Phi$), and proof (contraction path).
+A problem's \textbf{superposition} of possible resolutions collapses to the
+definite outcome given by the logic type's contraction rule.
+\end{definition}
+
+\section{The Liar as a Problem Instance}
+
+\begin{definition}[Liar Problem]
+\label{def:liar_problem}
+\lean{LiarParadox.liarProblem}
+\leanok
+\uses{def:problem, def:problemclass}
+The Liar Paradox stated as a \textsf{Problem} of class $\mathsf{selfReference}$.
+Its tree is the size-3 symmetric tree $\mathsf{Node}(\mathsf{Node}(\mathsf{Leaf},\ \mathsf{Leaf}),\ \mathsf{Node}(\mathsf{Leaf},\ \mathsf{Leaf}))$
+for most logics, except ManyValued which uses a size-2 left-comb encoding the
+three-valued disjunction $\mathsf{True} \lor \mathsf{False} \lor \mathsf{Undefined}$.
+All logics target $\mathsf{rightComb}(3)$ as the normal form.
+\end{definition}
+
+\section{Prototype: Fuzzy Logic Wrapper}
+
+\begin{definition}[Fuzzy Liar]
+\label{def:fuzzy_liar}
+\lean{LiarParadox.fuzzyLiar}
+\uses{def:wrapped, def:liar_problem}
+The Liar wrapped in Fuzzy logic. The fixed point $\neg 0.5 = 0.5$ gives
+pentagonator distance $\Phi = 1$ (one collapse step). 
+\textbf{Status:} The proof is a \textsf{sorry} placeholder because the Fuzzy
+\hyperref[def:logiccontraction]{\textsf{LogicContraction}} is not yet defined.
+This is the WfCA prototype: a problem in superposition (all truth values $[0,1]$)
+collapses to the unique fixed point under the Fuzzy contraction rule.
+\end{definition}
+
+\begin{definition}[Classical Liar]
+\label{def:classical_liar}
+\lean{LiarParadox.classicalLiar}
+\leanok
+\uses{def:wrapped, def:liar_problem, thm:contracts_to_rightComb}
+The Liar wrapped in Classical logic. Cost $\Phi = 0$ (at equilibrium).
+Proven using $\mathsf{contracts\_to\_rightComb}$: the symmetric tree contracts
+to $\mathsf{rightComb}(3)$ in finitely many steps.
+\end{definition}
+
+\section{Nested Wrappers (Stacked Collapse)}
+
+\begin{definition}[Tower]
+\label{def:tower}
+\lean{LiarParadox.Tower}
+\leanok
+\uses{def:wrapped}
+A sequence of logic-wrapped problems, each collapsing the previous layer's output.
+Implements the nested wrapper pattern from Lumo section B:
 \[
-\mathsf{Node}(\mathsf{Node}(\mathsf{Leaf},\ \mathsf{Leaf}),\ \mathsf{Node}(\mathsf{Leaf},\ \mathsf{Leaf}))
+\begin{array}{c}
+\text{Layer 3 (Quantum): liar\_superposition} \\
+\downarrow \\
+\text{Layer 2 (Intuitionistic): proof\_of\_quantum\_state} \\
+\downarrow \\
+\text{Layer 1 (Fuzzy): confidence\_in\_proof} \\
+\downarrow \\
+\text{Layer 0 (Classical): assertion\_value}
+\end{array}
 \]
-encoding the self-referential equation $L = \neg L$ via repeated bracketing.
-Each leaf pair is structurally identical, so neither bracketing dominates ---
-the paradox is that rotation can pass the ``hot potato'' back and forth indefinitely.
+Each layer's logic type is tracked via a dependent pair $\Sigma lt,\ \mathsf{WrappedProblem}\ p\ lt$.
+The total cost is the sum of per-layer costs.
 \end{definition}
 
-\begin{theorem}[Liar Contracts to Right-Comb]
-\label{thm:liar_contracts}
-\lean{LiarParadox.liar_contracts_to_rightComb}
+\begin{definition}[Liar Tower]
+\label{def:liar_tower}
+\lean{LiarParadox.liarTower}
 \leanok
-\uses{def:emltree, thm:contracts_to_rightComb}
+\uses{def:tower, def:classical_liar, def:fuzzy_liar}
+A four-layer prototype tower alternating Classical and Fuzzy wrappers.
+Demonstrates the stacked collapse pattern; the full tower with Quantum,
+Intuitionistic, Fuzzy, and Classical layers is not yet populated because
+non-Classical \textsf{LogicContraction}s are missing.
+\end{definition}
+
+\section{The Very Big Box}
+
+The Very Big Box is the product space
 \[
-\mathsf{liar} \longrightarrow \mathsf{rightComb}(3)
+\mathcal{V} = \prod_{c \in \mathsf{ProblemClass}}\ \prod_{lt \in \mathsf{suitableLogics}(c)}
+\mathsf{WrappedProblem}(\mathsf{problem}(c),\ lt)
 \]
-The Liar reaches equilibrium under Classical Tamari contraction, as a special case of the general theorem.
-\end{theorem}
-
-\section{Confluence}
-
-\begin{theorem}[Classical Confluence of the Liar]
-\label{thm:liar_confluence_classical}
-\lean{LiarParadox.liar_confluence_classical}
-\leanok
-\uses{def:liar, def:contracts_to, def:rightComb, lem:size_multi, thm:contracts_to_rightComb}
-If $\mathsf{liar} \to t$ then $t \to \mathsf{rightComb}(3)$.
-All Classical contraction paths from the Liar converge to the unique minimum of $T_3$.
-\end{theorem}
-
-\begin{theorem}[Cross-Logic Confluence of the Liar (Placeholder)]
-\label{thm:liar_confluence_cross}
-\lean{LiarParadox.liar_confluence_cross}
-\uses{def:logictype, def:logiccontraction, def:liar}
-If $\mathsf{liar} \to_{lt_1} t_1$ and $\mathsf{liar} \to_{lt_2} t_2$, there exists a translation between $t_1$ and $t_2$.
-This is the \textbf{open universe} property: different logics produce different normal forms,
-connected by translations but not necessarily equal.
-\textbf{Status:} Returns $\mathsf{True}$ as a placeholder. The real proof requires
-\hyperref[sec:missing]{logic-specific contraction relations}, which are not yet defined.
-\end{theorem}
-
-\section{Emergent Distance and Friction}
-
-\begin{definition}[Contraction Cost]
-\label{def:contraction_cost}
-\lean{LiarParadox.contractionCost}
-\uses{def:logictype, def:emltree}
-The pentagonator distance $\Phi(lt, t)$ for resolving tree $t$ under logic type $lt$.
-\textbf{Status:} Stub returning 0 for all logics. A proper implementation requires
-a shortest-path search over the contraction graph for each logic type.
-\end{definition}
-
-\begin{definition}[Friction Lagrangian]
-\label{def:friction_lagrangian}
-\lean{LiarParadox.frictionLagrangian}
-\uses{def:contraction_cost}
-The action functional $L(lt, t) = \Phi(lt, t)$ evaluated on a single
-(logic type, tree) pair. \textbf{Status:} Currently identical to \textsf{contractionCost};
-the full infinite-series form with commutator and associator derivatives is not yet formalized.
-\end{definition}
-
-\begin{definition}[Optimal Resolution]
-\label{def:optimal}
-\lean{LiarParadox.optimalResolution}
-\uses{def:logictype, def:friction_lagrangian}
-The logic type minimizing the Friction Lagrangian for a given tree.
-\textbf{Status:} Returns $\mathsf{Classical}$ unconditionally. Requires real cost data.
-\end{definition}
+where each coordinate is a problem in a specific logic and the
+Tower construction provides the nesting structure. Currently only
+the Liar ($c = \mathsf{selfReference}$) is populated, and only its
+Classical wrapper is fully proven. The remaining coordinates represent
+the \textbf{real friction}: every cell in this product that lacks a proof
+is a concrete blocker.
 
 \section{Missing Work}
 \label{sec:missing}
@@ -343,15 +388,17 @@ but cross-logic analysis cannot proceed until these pieces are populated.
 \subsection{Stubs in \textsf{LiarParadox.lean}}
 
 \begin{itemize}
-  \item \textbf{\textsf{contractionCost}} --- returns 0 for all logics.
-    Needs a bounded shortest-path search over the contraction graph of each logic type,
-    analogous to $\mathsf{decidable\_contracts\_to}$ but cost-weighted.
-  \item \textbf{\textsf{frictionLagrangian}} --- currently the identity on cost.
-    The full form $\sum_k \mu_k [e^{\alpha_k C^{(k)}} - \beta_k \ln(1 + (A^{(k)})^2)]$
-    with coupling $\sum_k \nu_k (C^{(k)} A^{(k+1)} - A^{(k)} C^{(k+1)})$ is not yet formalized.
-  \item \textbf{\textsf{optimalResolution}} --- returns Classical unconditionally.
-  \item \textbf{\textsf{liar\_confluence\_cross}} --- returns $\mathsf{True}$; the real proof
-    depends on the missing \textsf{LogicContraction} definitions.
+  \item \textbf{\textsf{fuzzyLiar.proof}} --- a $\mathsf{sorry}$; blocked by the missing
+    Fuzzy \textsf{LogicContraction}.
+  \item \textbf{\textsf{contractionCost}} in the old version --- the new \textsf{WrappedProblem}
+    structure encodes cost directly; non-Classical costs are $0$ because
+    no logic-specific contraction exists to measure.
+  \item \textbf{Non-Classical wrappers} for the Liar --- ManyValued, Paraconsistent,
+    Intuitionistic, etc. are not yet defined; each requires its logic's
+    \textsf{LogicContraction} and \textsf{LogicNormalForm}.
+  \item \textbf{Other problem classes} --- only $\mathsf{selfReference}$ (the Liar)
+    is instantiated as a \textsf{Problem}. The other 11 classes have problems
+    that are not yet defined.
 \end{itemize}
 
 \subsection{Blocking Graph}
@@ -366,15 +413,15 @@ The dependencies among missing work:
 \downarrow \\
 \text{logic\_contracts\_to\_normal\_form} \\
 \downarrow \\
-\text{LiarParadox.contractionCost} \quad \text{LiarParadox.liar\_confluence\_cross} \\
+\text{WrappedProblem proofs for Fuzzy, ManyValued, \dots} \\
 \downarrow \\
-\text{LiarParadox.frictionLagrangian} \quad \text{LiarParadox.partitionFunction}
+\text{Tower layers beyond Classical} \qquad \text{Other Problem classes}
 \end{array}
 \]
 
 Every missing piece in the chain below \textsf{LogicContraction} is blocked by it.
 The Liar formalization makes this blocking structure explicit: previously the sorries
 in \textsf{LogicTypes.lean} were abstract ``to be filled later'' --- now they are concrete
-dependencies of the Liar's cross-logic analysis.
+dependencies of the Very Big Box product.
 
 \endinput

@@ -12,7 +12,7 @@
 <meta name="generator" content="plasTeX" />
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Liar Paradox: The Hard Test Case</title>
+<title>Problem Classes and the Very Big Box</title>
 <link rel="prev" href="sect0002.html" title="Logic Types: Pluralistic Reasoning Framework" />
 <link rel="up" href="index.html" title="LaserCortex" />
 <link rel="stylesheet" href="styles/theme-white.css" />
@@ -73,30 +73,36 @@
   </ul>
  </li>
 <li class=" active current">
-  <a href="sect0003.html"><span class="toc_ref">3</span> <span class="toc_entry">Liar Paradox: The Hard Test Case</span></a>
+  <a href="sect0003.html"><span class="toc_ref">3</span> <span class="toc_entry">Problem Classes and the Very Big Box</span></a>
   <span class="expand-toc">▼</span>
   <ul class="sub-toc-1 active">
      <li class="">
-  <a href="sect0003.html#a0000000016"><span class="toc_ref">3.1</span> <span class="toc_entry">Canonical Encoding</span></a>
+  <a href="sect0003.html#a0000000016"><span class="toc_ref">3.1</span> <span class="toc_entry">Paradox Taxonomy</span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#a0000000017"><span class="toc_ref">3.2</span> <span class="toc_entry">Confluence</span></a>
+  <a href="sect0003.html#a0000000017"><span class="toc_ref">3.2</span> <span class="toc_entry">The Liar as a Problem Instance</span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#a0000000018"><span class="toc_ref">3.3</span> <span class="toc_entry">Emergent Distance and Friction</span></a>
+  <a href="sect0003.html#a0000000018"><span class="toc_ref">3.3</span> <span class="toc_entry">Prototype: Fuzzy Logic Wrapper</span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#sec:missing"><span class="toc_ref">3.4</span> <span class="toc_entry">Missing Work</span></a>
+  <a href="sect0003.html#a0000000019"><span class="toc_ref">3.4</span> <span class="toc_entry">Nested Wrappers (Stacked Collapse)</span></a>
+ </li>
+<li class="">
+  <a href="sect0003.html#a0000000020"><span class="toc_ref">3.5</span> <span class="toc_entry">The Very Big Box</span></a>
+ </li>
+<li class="">
+  <a href="sect0003.html#sec:missing"><span class="toc_ref">3.6</span> <span class="toc_entry">Missing Work</span></a>
   <span class="expand-toc">▶</span>
   <ul class="sub-toc-2">
      <li class="">
-  <a href="sect0003.html#a0000000019"><span class="toc_ref">3.4.1</span> <span class="toc_entry">Sorries in <span class="sffamily">LogicTypes.lean</span></span></a>
+  <a href="sect0003.html#a0000000021"><span class="toc_ref">3.6.1</span> <span class="toc_entry">Sorries in <span class="sffamily">LogicTypes.lean</span></span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#a0000000020"><span class="toc_ref">3.4.2</span> <span class="toc_entry">Stubs in <span class="sffamily">LiarParadox.lean</span></span></a>
+  <a href="sect0003.html#a0000000022"><span class="toc_ref">3.6.2</span> <span class="toc_entry">Stubs in <span class="sffamily">LiarParadox.lean</span></span></a>
  </li>
 <li class="">
-  <a href="sect0003.html#a0000000021"><span class="toc_ref">3.4.3</span> <span class="toc_entry">Blocking Graph</span></a>
+  <a href="sect0003.html#a0000000023"><span class="toc_ref">3.6.3</span> <span class="toc_entry">Blocking Graph</span></a>
  </li>
 
   </ul>
@@ -113,15 +119,15 @@
 
 
 <div class="main-text">
-<h1 id="a0000000004">3 Liar Paradox: The Hard Test Case</h1>
-<h1 id="a0000000016">3.1 Canonical Encoding</h1>
-<div class="definition_thmwrapper theorem-style-definition" id="def:liar">
+<h1 id="a0000000004">3 Problem Classes and the Very Big Box</h1>
+<h1 id="a0000000016">3.1 Paradox Taxonomy</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:problemclass">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
     <span class="definition_thmlabel">27</span>
-    <span class="definition_thmtitle">Liar Tree</span>
+    <span class="definition_thmtitle">Problem Class</span>
     <div class="thm_header_extras">
 
     
@@ -129,28 +135,8 @@
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0003.html#def:liar">#</a>
+    <a class="icon proof" href="sect0003.html#def:problemclass">#</a>
     
-    
-    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
-</button>
-        <div class="modal-container">
-      <div class="modal-content">
-        <header>
-          <h1>Uses</h1>
-          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        </header>
-        
-        <ul class="uses">
-          
-          <li><a href="sect0001.html#def:emltree">Definition 1</a></li>
-          
-        </ul>
-    
-      </div>
-    </div>
-
     
     
     <button class="modal lean">L∃∀N</button>
@@ -164,7 +150,7 @@
         
         <ul class="uses">
           
-          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liar" class="lean_decl">LiarParadox.liar</a></li>
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.ProblemClass" class="lean_decl">LiarParadox.ProblemClass</a></li>
           
         </ul>
     
@@ -175,21 +161,17 @@
         </div>
   </div>
   <div class="definition_thmcontent">
-  <p>    The canonical Liar sentence: a size-3 symmetric tree </p>
-<div class="displaymath" id="a0000000022">
-  \[  \mathsf{Node}(\mathsf{Node}(\mathsf{Leaf},\  \mathsf{Leaf}),\  \mathsf{Node}(\mathsf{Leaf},\  \mathsf{Leaf}))  \]
-</div>
-<p> encoding the self-referential equation \(L = \neg L\) via repeated bracketing. Each leaf pair is structurally identical, so neither bracketing dominates — the paradox is that rotation can pass the “hot potato” back and forth indefinitely. </p>
+  <p>   An inductive type enumerating 12 paradox classes, each with a native logic type: self-reference (ManyValued), vagueness (Fuzzy), inconsistent definition (Paraconsistent), temporal decision (Temporal), deontic (Deontic), epistemic (Epistemic), quantum superposition (Quantum), constructive (Intuitionistic), relevance (Relevance), empty reference (Free), infinity (Infinitary), modality (Modal). </p>
 
   </div>
 </div>
-<div class="theorem_thmwrapper theorem-style-plain" id="thm:liar_contracts">
-  <div class="theorem_thmheading">
-    <span class="theorem_thmcaption">
-    Theorem
+<div class="definition_thmwrapper theorem-style-definition" id="def:problem">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
     </span>
-    <span class="theorem_thmlabel">28</span>
-    <span class="theorem_thmtitle">Liar Contracts to Right-Comb</span>
+    <span class="definition_thmlabel">28</span>
+    <span class="definition_thmtitle">Problem</span>
     <div class="thm_header_extras">
 
     
@@ -197,7 +179,7 @@
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0003.html#thm:liar_contracts">#</a>
+    <a class="icon proof" href="sect0003.html#def:problem">#</a>
     
     
     <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
@@ -212,152 +194,11 @@
         
         <ul class="uses">
           
-          <li><a href="sect0001.html#def:emltree">Definition 1</a></li>
-          
-          <li><a href="sect0001.html#thm:contracts_to_rightComb">Theorem 12</a></li>
-          
-        </ul>
-    
-      </div>
-    </div>
-
-    
-    
-    <button class="modal lean">L∃∀N</button>
-        <div class="modal-container">
-      <div class="modal-content">
-        <header>
-          <h1>Lean declarations</h1>
-          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        </header>
-        
-        <ul class="uses">
-          
-          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liar_contracts_to_rightComb" class="lean_decl">LiarParadox.liar_contracts_to_rightComb</a></li>
-          
-        </ul>
-    
-      </div>
-    </div>
-
-    
-        </div>
-  </div>
-  <div class="theorem_thmcontent">
-  
-<div class="displaymath" id="a0000000023">
-  \[  \mathsf{liar} \longrightarrow \mathsf{rightComb}(3)  \]
-</div>
-<p> The Liar reaches equilibrium under Classical Tamari contraction, as a special case of the general theorem. </p>
-
-  </div>
-</div>
-<h1 id="a0000000017">3.2 Confluence</h1>
-<div class="theorem_thmwrapper theorem-style-plain" id="thm:liar_confluence_classical">
-  <div class="theorem_thmheading">
-    <span class="theorem_thmcaption">
-    Theorem
-    </span>
-    <span class="theorem_thmlabel">29</span>
-    <span class="theorem_thmtitle">Classical Confluence of the Liar</span>
-    <div class="thm_header_extras">
-
-    
-    ✓
-        </div>
-    <div class="thm_header_hidden_extras">
-
-    <a class="icon proof" href="sect0003.html#thm:liar_confluence_classical">#</a>
-    
-    
-    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
-</button>
-        <div class="modal-container">
-      <div class="modal-content">
-        <header>
-          <h1>Uses</h1>
-          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        </header>
-        
-        <ul class="uses">
-          
-          <li><a href="sect0003.html#def:liar">Definition 27</a></li>
-          
-          <li><a href="sect0001.html#def:contracts_to">Definition 4</a></li>
-          
-          <li><a href="sect0001.html#def:rightComb">Definition 5</a></li>
-          
-          <li><a href="sect0001.html#lem:size_multi">Lemma 10</a></li>
-          
-          <li><a href="sect0001.html#thm:contracts_to_rightComb">Theorem 12</a></li>
-          
-        </ul>
-    
-      </div>
-    </div>
-
-    
-    
-    <button class="modal lean">L∃∀N</button>
-        <div class="modal-container">
-      <div class="modal-content">
-        <header>
-          <h1>Lean declarations</h1>
-          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        </header>
-        
-        <ul class="uses">
-          
-          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liar_confluence_classical" class="lean_decl">LiarParadox.liar_confluence_classical</a></li>
-          
-        </ul>
-    
-      </div>
-    </div>
-
-    
-        </div>
-  </div>
-  <div class="theorem_thmcontent">
-  <p>    If \(\mathsf{liar} \to t\) then \(t \to \mathsf{rightComb}(3)\). All Classical contraction paths from the Liar converge to the unique minimum of \(T_3\). </p>
-
-  </div>
-</div>
-<div class="theorem_thmwrapper theorem-style-plain" id="thm:liar_confluence_cross">
-  <div class="theorem_thmheading">
-    <span class="theorem_thmcaption">
-    Theorem
-    </span>
-    <span class="theorem_thmlabel">30</span>
-    <span class="theorem_thmtitle">Cross-Logic Confluence of the Liar (Placeholder)</span>
-    <div class="thm_header_extras">
-
-        </div>
-    <div class="thm_header_hidden_extras">
-
-    <a class="icon proof" href="sect0003.html#thm:liar_confluence_cross">#</a>
-    
-    
-    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
-</button>
-        <div class="modal-container">
-      <div class="modal-content">
-        <header>
-          <h1>Uses</h1>
-          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        </header>
-        
-        <ul class="uses">
+          <li><a href="sect0003.html#def:problemclass">Definition 27</a></li>
           
           <li><a href="sect0002.html#def:logictype">Definition 17</a></li>
           
-          <li><a href="sect0002.html#def:logiccontraction">Definition 20</a></li>
-          
-          <li><a href="sect0003.html#def:liar">Definition 27</a></li>
+          <li><a href="sect0001.html#def:emltree">Definition 1</a></li>
           
         </ul>
     
@@ -377,7 +218,7 @@
         
         <ul class="uses">
           
-          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liar_confluence_cross" class="lean_decl">LiarParadox.liar_confluence_cross</a></li>
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.Problem" class="lean_decl">LiarParadox.Problem</a></li>
           
         </ul>
     
@@ -387,25 +228,158 @@
     
         </div>
   </div>
-  <div class="theorem_thmcontent">
-  <p>    If \(\mathsf{liar} \to _{lt_1} t_1\) and \(\mathsf{liar} \to _{lt_2} t_2\), there exists a translation between \(t_1\) and \(t_2\). This is the <b class="bfseries">open universe</b> property: different logics produce different normal forms, connected by translations but not necessarily equal. <b class="bfseries">Status:</b> Returns \(\mathsf{True}\) as a placeholder. The real proof requires <a href="#." >logic-specific contraction relations</a>, which are not yet defined. </p>
+  <div class="definition_thmcontent">
+  <p>    A structure parameterized by a problem class, a name, a list of suitable logics, a tree family \(\mathsf{LogicType} \to \mathsf{EMLTree}\) (the paradox as encoded in each logic), and a normal form family \(\mathsf{LogicType} \to \mathsf{EMLTree}\) (the resolution target for each logic). </p>
 
   </div>
 </div>
-<h1 id="a0000000018">3.3 Emergent Distance and Friction</h1>
-<div class="definition_thmwrapper theorem-style-definition" id="def:contraction_cost">
+<div class="definition_thmwrapper theorem-style-definition" id="def:wrapped">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">29</span>
+    <span class="definition_thmtitle">Wrapped Problem</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#def:wrapped">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:problem">Definition 28</a></li>
+          
+          <li><a href="sect0002.html#def:logiccontraction">Definition 20</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.WrappedProblem" class="lean_decl">LiarParadox.WrappedProblem</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    The WfCA collapse rule: pairs a Problem with a LogicType. Records the tree (problem as interpreted in this logic), target (normal form), cost (pentagonator distance \(\Phi \)), and proof (contraction path). A problem’s <b class="bfseries">superposition</b> of possible resolutions collapses to the definite outcome given by the logic type’s contraction rule. </p>
+
+  </div>
+</div>
+<h1 id="a0000000017">3.2 The Liar as a Problem Instance</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:liar_problem">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">30</span>
+    <span class="definition_thmtitle">Liar Problem</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#def:liar_problem">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:problem">Definition 28</a></li>
+          
+          <li><a href="sect0003.html#def:problemclass">Definition 27</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liarProblem" class="lean_decl">LiarParadox.liarProblem</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    The Liar Paradox stated as a <span class="sffamily">Problem</span> of class \(\mathsf{selfReference}\). Its tree is the size-3 symmetric tree \(\mathsf{Node}(\mathsf{Node}(\mathsf{Leaf},\  \mathsf{Leaf}),\  \mathsf{Node}(\mathsf{Leaf},\  \mathsf{Leaf}))\) for most logics, except ManyValued which uses a size-2 left-comb encoding the three-valued disjunction \(\mathsf{True} \lor \mathsf{False} \lor \mathsf{Undefined}\). All logics target \(\mathsf{rightComb}(3)\) as the normal form. </p>
+
+  </div>
+</div>
+<h1 id="a0000000018">3.3 Prototype: Fuzzy Logic Wrapper</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:fuzzy_liar">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
     <span class="definition_thmlabel">31</span>
-    <span class="definition_thmtitle">Contraction Cost</span>
+    <span class="definition_thmtitle">Fuzzy Liar</span>
     <div class="thm_header_extras">
 
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0003.html#def:contraction_cost">#</a>
+    <a class="icon proof" href="sect0003.html#def:fuzzy_liar">#</a>
     
     
     <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
@@ -420,9 +394,9 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#def:logictype">Definition 17</a></li>
+          <li><a href="sect0003.html#def:wrapped">Definition 29</a></li>
           
-          <li><a href="sect0001.html#def:emltree">Definition 1</a></li>
+          <li><a href="sect0003.html#def:liar_problem">Definition 30</a></li>
           
         </ul>
     
@@ -442,7 +416,7 @@
         
         <ul class="uses">
           
-          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.contractionCost" class="lean_decl">LiarParadox.contractionCost</a></li>
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.fuzzyLiar" class="lean_decl">LiarParadox.fuzzyLiar</a></li>
           
         </ul>
     
@@ -453,23 +427,25 @@
         </div>
   </div>
   <div class="definition_thmcontent">
-  <p>    The pentagonator distance \(\Phi (lt, t)\) for resolving tree \(t\) under logic type \(lt\). <b class="bfseries">Status:</b> Stub returning 0 for all logics. A proper implementation requires a shortest-path search over the contraction graph for each logic type. </p>
+  <p>    The Liar wrapped in Fuzzy logic. The fixed point \(\neg 0.5 = 0.5\) gives pentagonator distance \(\Phi = 1\) (one collapse step). <b class="bfseries">Status:</b> The proof is a <span class="sffamily">sorry</span> placeholder because the Fuzzy <a href="#." ><span class="sffamily">LogicContraction</span></a> is not yet defined. This is the WfCA prototype: a problem in superposition (all truth values \([0,1]\)) collapses to the unique fixed point under the Fuzzy contraction rule. </p>
 
   </div>
 </div>
-<div class="definition_thmwrapper theorem-style-definition" id="def:friction_lagrangian">
+<div class="definition_thmwrapper theorem-style-definition" id="def:classical_liar">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
     <span class="definition_thmlabel">32</span>
-    <span class="definition_thmtitle">Friction Lagrangian</span>
+    <span class="definition_thmtitle">Classical Liar</span>
     <div class="thm_header_extras">
 
+    
+    ✓
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0003.html#def:friction_lagrangian">#</a>
+    <a class="icon proof" href="sect0003.html#def:classical_liar">#</a>
     
     
     <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
@@ -484,7 +460,11 @@
         
         <ul class="uses">
           
-          <li><a href="sect0003.html#def:contraction_cost">Definition 31</a></li>
+          <li><a href="sect0003.html#def:wrapped">Definition 29</a></li>
+          
+          <li><a href="sect0003.html#def:liar_problem">Definition 30</a></li>
+          
+          <li><a href="sect0001.html#thm:contracts_to_rightComb">Theorem 12</a></li>
           
         </ul>
     
@@ -504,7 +484,7 @@
         
         <ul class="uses">
           
-          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.frictionLagrangian" class="lean_decl">LiarParadox.frictionLagrangian</a></li>
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.classicalLiar" class="lean_decl">LiarParadox.classicalLiar</a></li>
           
         </ul>
     
@@ -515,23 +495,26 @@
         </div>
   </div>
   <div class="definition_thmcontent">
-  <p>    The action functional \(L(lt, t) = \Phi (lt, t)\) evaluated on a single (logic type, tree) pair. <b class="bfseries">Status:</b> Currently identical to <span class="sffamily">contractionCost</span>; the full infinite-series form with commutator and associator derivatives is not yet formalized. </p>
+  <p>    The Liar wrapped in Classical logic. Cost \(\Phi = 0\) (at equilibrium). Proven using \(\mathsf{contracts\_ to\_ rightComb}\): the symmetric tree contracts to \(\mathsf{rightComb}(3)\) in finitely many steps. </p>
 
   </div>
 </div>
-<div class="definition_thmwrapper theorem-style-definition" id="def:optimal">
+<h1 id="a0000000019">3.4 Nested Wrappers (Stacked Collapse)</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:tower">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
     <span class="definition_thmlabel">33</span>
-    <span class="definition_thmtitle">Optimal Resolution</span>
+    <span class="definition_thmtitle">Tower</span>
     <div class="thm_header_extras">
 
+    
+    ✓
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0003.html#def:optimal">#</a>
+    <a class="icon proof" href="sect0003.html#def:tower">#</a>
     
     
     <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
@@ -546,9 +529,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#def:logictype">Definition 17</a></li>
-          
-          <li><a href="sect0003.html#def:friction_lagrangian">Definition 32</a></li>
+          <li><a href="sect0003.html#def:wrapped">Definition 29</a></li>
           
         </ul>
     
@@ -568,7 +549,7 @@
         
         <ul class="uses">
           
-          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.optimalResolution" class="lean_decl">LiarParadox.optimalResolution</a></li>
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.Tower" class="lean_decl">LiarParadox.Tower</a></li>
           
         </ul>
     
@@ -579,14 +560,92 @@
         </div>
   </div>
   <div class="definition_thmcontent">
-  <p>    The logic type minimizing the Friction Lagrangian for a given tree. <b class="bfseries">Status:</b> Returns \(\mathsf{Classical}\) unconditionally. Requires real cost data. </p>
+  <p>    A sequence of logic-wrapped problems, each collapsing the previous layer’s output. Implements the nested wrapper pattern from Lumo section B: </p>
+<div class="displaymath" id="a0000000024">
+  \[  \begin{array}{c} \text{Layer 3 (Quantum): liar\_ superposition} \\ \downarrow \\ \text{Layer 2 (Intuitionistic): proof\_ of\_ quantum\_ state} \\ \downarrow \\ \text{Layer 1 (Fuzzy): confidence\_ in\_ proof} \\ \downarrow \\ \text{Layer 0 (Classical): assertion\_ value} \end{array}  \]
+</div>
+<p> Each layer’s logic type is tracked via a dependent pair \(\Sigma lt,\  \mathsf{WrappedProblem}\  p\  lt\). The total cost is the sum of per-layer costs. </p>
 
   </div>
 </div>
-<h1 id="sec:missing">3.4 Missing Work</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:liar_tower">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">34</span>
+    <span class="definition_thmtitle">Liar Tower</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#def:liar_tower">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:tower">Definition 33</a></li>
+          
+          <li><a href="sect0003.html#def:classical_liar">Definition 32</a></li>
+          
+          <li><a href="sect0003.html#def:fuzzy_liar">Definition 31</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liarTower" class="lean_decl">LiarParadox.liarTower</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    A four-layer prototype tower alternating Classical and Fuzzy wrappers. Demonstrates the stacked collapse pattern; the full tower with Quantum, Intuitionistic, Fuzzy, and Classical layers is not yet populated because non-Classical <span class="sffamily">LogicContraction</span>s are missing. </p>
+
+  </div>
+</div>
+<h1 id="a0000000020">3.5 The Very Big Box</h1>
+<p>The Very Big Box is the product space </p>
+<div class="displaymath" id="a0000000025">
+  \[  \mathcal{V} = \prod _{c \in \mathsf{ProblemClass}}\  \prod _{lt \in \mathsf{suitableLogics}(c)} \mathsf{WrappedProblem}(\mathsf{problem}(c),\  lt)  \]
+</div>
+<p> where each coordinate is a problem in a specific logic and the Tower construction provides the nesting structure. Currently only the Liar (\(c = \mathsf{selfReference}\)) is populated, and only its Classical wrapper is fully proven. The remaining coordinates represent the <b class="bfseries">real friction</b>: every cell in this product that lacks a proof is a concrete blocker. </p>
+<h1 id="sec:missing">3.6 Missing Work</h1>
 
 <p>The following definitions and theorems are stated but not yet implemented. They represent the <b class="bfseries">real friction</b> in the framework — the Liar Paradox is defined and its Classical resolution is proven, but cross-logic analysis cannot proceed until these pieces are populated. </p>
-<h2 id="a0000000019">3.4.1 Sorries in <span class="sffamily">LogicTypes.lean</span></h2>
+<h2 id="a0000000021">3.6.1 Sorries in <span class="sffamily">LogicTypes.lean</span></h2>
 <ul class="itemize">
   <li><p><b class="bfseries"><span class="sffamily">LogicContraction</span></b> for Fuzzy, ManyValued, Paraconsistent, Temporal, Deontic, Epistemic, Quantum, Intuitionistic, Relevance, Free, Infinitary, Modal — only Classical is defined (as the Tamari contraction from EMLRegistry). </p>
 </li>
@@ -595,23 +654,23 @@
   <li><p><b class="bfseries"><span class="sffamily">logic_contracts_to_normal_form</span></b> for non-Classical logics — the theorem is stated but only the Classical case is proven. </p>
 </li>
 </ul>
-<h2 id="a0000000020">3.4.2 Stubs in <span class="sffamily">LiarParadox.lean</span></h2>
+<h2 id="a0000000022">3.6.2 Stubs in <span class="sffamily">LiarParadox.lean</span></h2>
 <ul class="itemize">
-  <li><p><b class="bfseries"><span class="sffamily">contractionCost</span></b> — returns 0 for all logics. Needs a bounded shortest-path search over the contraction graph of each logic type, analogous to \(\mathsf{decidable\_ contracts\_ to}\) but cost-weighted. </p>
+  <li><p><b class="bfseries"><span class="sffamily">fuzzyLiar.proof</span></b> — a \(\mathsf{sorry}\); blocked by the missing Fuzzy <span class="sffamily">LogicContraction</span>. </p>
 </li>
-  <li><p><b class="bfseries"><span class="sffamily">frictionLagrangian</span></b> — currently the identity on cost. The full form \(\sum _k \mu _k [e^{\alpha _k C^{(k)}} - \beta _k \ln (1 + (A^{(k)})^2)]\) with coupling \(\sum _k \nu _k (C^{(k)} A^{(k+1)} - A^{(k)} C^{(k+1)})\) is not yet formalized. </p>
+  <li><p><b class="bfseries"><span class="sffamily">contractionCost</span></b> in the old version — the new <span class="sffamily">WrappedProblem</span> structure encodes cost directly; non-Classical costs are \(0\) because no logic-specific contraction exists to measure. </p>
 </li>
-  <li><p><b class="bfseries"><span class="sffamily">optimalResolution</span></b> — returns Classical unconditionally. </p>
+  <li><p><b class="bfseries">Non-Classical wrappers</b> for the Liar — ManyValued, Paraconsistent, Intuitionistic, etc. are not yet defined; each requires its logic’s <span class="sffamily">LogicContraction</span> and <span class="sffamily">LogicNormalForm</span>. </p>
 </li>
-  <li><p><b class="bfseries"><span class="sffamily">liar_confluence_cross</span></b> — returns \(\mathsf{True}\); the real proof depends on the missing <span class="sffamily">LogicContraction</span> definitions. </p>
+  <li><p><b class="bfseries">Other problem classes</b> — only \(\mathsf{selfReference}\) (the Liar) is instantiated as a <span class="sffamily">Problem</span>. The other 11 classes have problems that are not yet defined. </p>
 </li>
 </ul>
-<h2 id="a0000000021">3.4.3 Blocking Graph</h2>
+<h2 id="a0000000023">3.6.3 Blocking Graph</h2>
 <p>The dependencies among missing work: </p>
-<div class="displaymath" id="a0000000024">
-  \[  \begin{array}{c} \text{LogicContraction (12 non-Classical)} \\ \downarrow \\ \text{LogicNormalForm (12 non-Classical)} \\ \downarrow \\ \text{logic\_ contracts\_ to\_ normal\_ form} \\ \downarrow \\ \text{LiarParadox.contractionCost} \quad \text{LiarParadox.liar\_ confluence\_ cross} \\ \downarrow \\ \text{LiarParadox.frictionLagrangian} \quad \text{LiarParadox.partitionFunction} \end{array}  \]
+<div class="displaymath" id="a0000000026">
+  \[  \begin{array}{c} \text{LogicContraction (12 non-Classical)} \\ \downarrow \\ \text{LogicNormalForm (12 non-Classical)} \\ \downarrow \\ \text{logic\_ contracts\_ to\_ normal\_ form} \\ \downarrow \\ \text{WrappedProblem proofs for Fuzzy, ManyValued, \dots } \\ \downarrow \\ \text{Tower layers beyond Classical} \qquad \text{Other Problem classes} \end{array}  \]
 </div>
-<p>Every missing piece in the chain below <span class="sffamily">LogicContraction</span> is blocked by it. The Liar formalization makes this blocking structure explicit: previously the sorries in <span class="sffamily">LogicTypes.lean</span> were abstract “to be filled later” — now they are concrete dependencies of the Liar’s cross-logic analysis. </p>
+<p>Every missing piece in the chain below <span class="sffamily">LogicContraction</span> is blocked by it. The Liar formalization makes this blocking structure explicit: previously the sorries in <span class="sffamily">LogicTypes.lean</span> were abstract “to be filled later” — now they are concrete dependencies of the Very Big Box product. </p>
 
 
 </div> <!--main-text -->
