@@ -10,3 +10,4 @@ import LaserCortex.RussellsParadox
 import LaserCortex.LogicMonad
 import LaserCortex.InstitutionalClosure
 import LaserCortex.DecisionComposition
+import LaserCortex.Decomposition

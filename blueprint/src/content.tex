@@ -355,29 +355,19 @@ the normalization pipeline is a projection. Re-processing an already-
 normalized history yields the same norm.
 \end{theorem}
 
-\begin{theorem}[Monad Structure is Invariant]
-\label{thm:monad_invariant}
-\lean{LogicMonad.monad_structure_invariant}
-\leanok
-\uses{def:logic_specific_monad, def:logic_monad}
-The forgetful functor from $\mathsf{LogicMonad}\ \mathsf{lt}$ to $\mathsf{LogicM}$
-is an isomorphism of monads for any $\mathsf{lt}$. Only the normalization
-(\textsf{LogicContraction}) changes between logics.
-\end{theorem}
-
 \section{Decision Composition API}
 
 \begin{definition}[Gate]
 \label{def:gate}
 \lean{DecisionComposition.Gate}
 \leanok
-\uses{def:logic_contraction}
+\uses{def:logiccontraction}
 A Gate is a binary decision predicate indexed by a logic modality:
 $\mathsf{Gate} = (\mathsf{name} : \mathsf{String}) \times
 (\mathsf{modality} : \mathsf{LogicType}) \times
 (\mathsf{check} : \mathsf{EMLTree} \to \mathsf{Prop})$.
 Every logic type gives rise to a Gate via $\mathsf{ofLogicType}$,
-and every tree passes any such gate (by \Cref{thm:logic_contracts}).
+and every tree passes any such gate (by \ref{thm:logic_contracts}).
 \end{definition}
 
 \begin{definition}[Decision]
@@ -401,6 +391,15 @@ $\mathsf{compose} : \mathsf{Decision\ gates} \to \mathsf{Gate}
 \to \mathsf{Decision\ (g :: gates)}$.
 The return type is strictly richer than the input type:
 a gate is added to the type-level history.
+\end{definition}
+
+\begin{definition}[Left-Comb Normal Form]
+\label{def:leftComb}
+\lean{EMLRegistry.leftComb}
+\leanok
+\uses{def:emltree}
+The mirror image of $\mathsf{rightComb}$: $\mathsf{leftComb}(0) = \mathsf{Leaf}$ and $\mathsf{leftComb}(n+1) = \mathsf{Node}(\mathsf{leftComb}(n),\ \mathsf{Leaf})$.
+Unlike $\mathsf{rightComb}$, this is not the equilibrium attractor — it represents a fully left-associative configuration.
 \end{definition}
 
 \begin{definition}[LogicPipeline]
@@ -713,6 +712,160 @@ The cost $\Phi(\text{Sorites}, \text{lt})$, equal to $\textsf{cdStep}(\text{lt})
 $\textsf{soritesCost}(\text{lt}) \le \textsf{cdStep}(\text{lt})$ for every logic type.
 \end{theorem}
 
+\section{Decomposition: Ontological Underdetermination}
+
+\begin{definition}[Path]
+\label{def:path}
+\lean{Decomposition.Path}
+\leanok
+\uses{def:contracts_one}
+A witness of a contraction path through the Tamari lattice:
+$\mathsf{Path}\ s\ t$ is an inductive sequence of
+$\mathsf{contracts\_one}$ steps from $s$ to $t$.
+\begin{itemize}
+  \item $\mathsf{nil}$ --- the trivial path (reflexivity).
+  \item $\mathsf{cons}\ h\_one\ p$ --- prepend a single contraction step to an existing path.
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Path Soundness]
+\label{thm:path_soundness}
+\lean{Decomposition.Path.to_contracts_to}
+\leanok
+\uses{def:path, def:contracts_to}
+For any path $p : \mathsf{Path}\ s\ t$, we have $\mathsf{contracts\_to}\ s\ t$.
+The path provides constructive evidence for the existence of a contraction sequence.
+\end{theorem}
+
+\begin{definition}[Path Length]
+\label{def:path_length}
+\lean{Decomposition.Path.length}
+\leanok
+\uses{def:path}
+The number of contraction steps in a path:
+$\mathsf{length}(\mathsf{nil}) = 0$,
+$\mathsf{length}(\mathsf{cons}\ h\_one\ p) = 1 + \mathsf{length}(p)$.
+\end{definition}
+
+\begin{definition}[Path Concatenation]
+\label{def:path_append}
+\lean{Decomposition.Path.append}
+\leanok
+\uses{def:path}
+Concatenates two compatible paths: $\mathsf{append} : \mathsf{Path}\ s\ t \to \mathsf{Path}\ t\ u \to \mathsf{Path}\ s\ u$.
+\end{definition}
+
+\section{Reverse Contraction: Generating Predecessors}
+
+\begin{definition}[Reverse One]
+\label{def:reverse_one}
+\lean{Decomposition.reverse_one}
+\leanok
+\uses{def:contracts_one, def:emltree}
+Generates all immediate predecessors of a tree under $\mathsf{contracts\_one}$.
+For a target tree $t$, $\mathsf{reverse\_one}(t)$ is a list of all $s$ such that
+$s \to t$ in one step. Three structural cases:
+\begin{itemize}
+  \item $\mathsf{Leaf}$ has no predecessors.
+  \item $\mathsf{Node}\ l\ (\mathsf{Node}\ r_1\ r_2)$: the rotation target plus
+    predecessors from reversing the left and right subtrees.
+  \item $\mathsf{Node}\ l\ r$ (right child not a Node): predecessors from
+    reversing the left and right subtrees only.
+\end{itemize}
+This is the core de-composition primitive: given an outcome, what could have
+immediately preceded it?
+\end{definition}
+
+\begin{theorem}[Reverse One Soundness]
+\label{thm:reverse_one_sound}
+\lean{Decomposition.reverse_one_sound}
+\leanok
+\uses{def:reverse_one, def:contracts_one}
+If $s \in \mathsf{reverse\_one}(t)$ then $\mathsf{contracts\_one}\ s\ t$.
+Every generated predecessor is a valid immediate prior configuration.
+\end{theorem}
+
+\begin{theorem}[Reverse One Completeness]
+\label{thm:reverse_one_complete}
+\lean{Decomposition.reverse_one_complete}
+\leanok
+\uses{def:reverse_one, def:contracts_one}
+If $\mathsf{contracts\_one}\ s\ t$ then $s \in \mathsf{reverse\_one}(t)$.
+Every valid immediate predecessor is generated.
+\end{theorem}
+
+\section{Decomposition Structure}
+
+\begin{definition}[Decomposition]
+\label{def:decomposition}
+\lean{Decomposition.Decomposition}
+\leanok
+\uses{def:contracts_to}
+For a target tree $\mathsf{target}$, a $\mathsf{Decomposition}$ pairs a
+$\mathsf{source}$ with a proof $\mathsf{contracts\_to}\ \mathsf{source}\ \mathsf{target}$.
+This is the \textbf{ontological unit} of de-composition: an outcome together with
+a specific prior configuration that could have produced it.
+\end{definition}
+
+\begin{theorem}[Left-Comb Size]
+\label{thm:leftcomb_size}
+\lean{Decomposition.leftComb_size}
+\leanok
+\uses{def:rightComb}
+$\mathsf{size}(\mathsf{leftComb}\ n) = n$.
+\end{theorem}
+
+\begin{theorem}[Right-Comb Size]
+\label{thm:rightcomb_size}
+\lean{Decomposition.rightComb_size}
+\leanok
+\uses{def:rightComb}
+$\mathsf{size}(\mathsf{rightComb}\ n) = n$.
+\end{theorem}
+
+\begin{theorem}[Right-Comb vs Left-Comb]
+\label{thm:rightcomb_ne_leftcomb}
+\lean{Decomposition.rightComb_ne_leftComb}
+\leanok
+\uses{def:rightComb, def:leftComb}
+For $n \ge 2$, $\mathsf{rightComb}\ n \neq \mathsf{leftComb}\ n$.
+The two canonical trees of size $n$ are distinct in the Tamari lattice.
+\end{theorem}
+
+\begin{theorem}[Non-Unique Decomposition]
+\label{thm:non_unique_decomposition}
+\lean{Decomposition.non_unique_decomposition}
+\leanok
+\uses{def:decomposition, def:rightComb, thm:rightcomb_ne_leftcomb}
+For $n \ge 2$, the target $\mathsf{rightComb}\ n$ has at least two distinct
+Decompositions with different sources:
+\[
+\exists d_1\ d_2 : \mathsf{Decomposition}(\mathsf{rightComb}\ n),\ d_1.\mathsf{source} \neq d_2.\mathsf{source}.
+\]
+This is the core ontological result: \textbf{the past is underdetermined by the
+present}. The same outcome (rightComb $n$) admits multiple evidential histories
+(rightComb $n$ itself and leftComb $n$, among others).
+\end{theorem}
+
+\begin{theorem}[Path Diversity]
+\label{thm:path_diversity}
+\lean{Decomposition.path_diversity}
+\leanok
+\uses{def:path, def:contracts_one, thm:rightcomb_ne_leftcomb}
+There exist two distinct paths between the same source-target pair in $T_3$:
+\[
+\exists s\ t\ (p_1\ p_2 : \mathsf{Path}\ s\ t),\ p_1 \neq p_2.
+\]
+Explicitly, $\mathsf{leftComb}\ 3 \to \mathsf{rightComb}\ 3$ has two
+distinct maximal chains in the Tamari lattice:
+\begin{itemize}
+  \item $((ab)c)d \to (a(bc))d \to a((bc)d) \to a(b(cd))$ (3 steps)
+  \item $((ab)c)d \to (ab)(cd) \to a(b(cd))$ (2 steps)
+\end{itemize}
+This proves that \textbf{intent is not uniquely determined by outcome} ---
+multiple reasoning chains can connect the same evidence to the same verdict.
+\end{theorem}
+
 \section{Completed Work}
 \label{sec:completed}
 
@@ -722,6 +875,11 @@ for all 13 logic types. The Liar problem has a complete \textsf{WrappedProblem}
 for each suitable logic via \textsf{liarWrapper}. The Sorites and Grandfather
 problems follow the same pattern with \textsf{soritesWrapper} and
 \textsf{grandfatherWrapper}.
+
+The Decomposition infrastructure (\textsf{Path}, \textsf{reverse\_one},
+\textsf{Decomposition}) is complete with soundness, completeness,
+non-unique-decomposition, and path-diversity theorems proven for all
+$n \ge 2$ in $T_n$ — zero sorries.
 
 The Friction Lagrangian $\mathcal{L}_{\text{friction}}$ is computed from the
 full Liar tower. The blocking chain for the Liar is fully resolved.
@@ -739,8 +897,17 @@ full Liar tower. The blocking chain for the Liar is fully resolved.
     nested composition (temporal $\to$ fuzzy $\to$ deontic $\to$ self-recognition).
     Full \textsf{LogicTranslation} instances between adjacent logics remain.
   \item \textbf{Shortest-path cost} --- the $\Phi$ cost currently equals
-    $\textsf{cdStep}$ by definition; a BFS algorithm over \textsf{contracts\_to}
+    $\textsf{cdStep}$ by definition; a BFS algorithm over $\textsf{reverse\_one}$
     would compute the actual PentagonatorDistance.
+  \item \textbf{Ancestor enumeration} --- $\mathsf{reverse\_one}$ can be iterated
+    to produce $\mathsf{ancestorsBounded}$, a bounded BFS generating all distinct
+    sources for a given target with $\mathsf{Path}$ witnesses.
+  \item \textbf{Path cost} --- a $\mathsf{pathCost}\ lt\ p$ function summing
+    $\mathsf{cdStep}$ per logic type along a path, enabling cross-logic cost
+    comparison for the same reasoning chain.
+  \item \textbf{Decision decomposition} --- extend the DecisionComposition API
+    with $\mathsf{decisionDecompositions}$ that enumerates all prior decisions
+    that could compose to a given decision.
   \item \textbf{Regularization axis} --- the institutional closure sketch
     uses placeholder normalization; the full endless/eternal/infinite/boundless
     hierarchy must be formalized to compute real costs.
@@ -755,7 +922,7 @@ how many contraction steps are required to resolve it.
 \label{def:liar_cost}
 \lean{LiarParadox.liarCost}
 \leanok
-\uses{def:liar}
+\uses{def:liar_problem}
 The cost $\Phi(\text{Liar}, \text{lt})$ to resolve the Liar under logic \textsf{lt}.
 Conjectured to equal the Cayley--Dickson step.
 \end{definition}
@@ -773,7 +940,7 @@ For Classical and Fuzzy the bound is tight (equality).
 \label{def:liar_wrapper}
 \lean{LiarParadox.liarWrapper}
 \leanok
-\uses{def:liar, def:liar_cost}
+\uses{def:liar_problem, def:liar_cost}
 For any logic \textsf{lt}, constructs the \textsf{WrappedProblem} with
 $\textsf{cost} = \textsf{liarCost}(\text{lt})$. Fills all 12 mail slots.
 \end{definition}

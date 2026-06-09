@@ -103,17 +103,26 @@
   <a href="sect0002.html#a0000000025"><span class="toc_ref">2.14</span> <span class="toc_entry">Sorites as a Problem Instance</span></a>
  </li>
 <li class="">
-  <a href="sect0002.html#sec:completed"><span class="toc_ref">2.15</span> <span class="toc_entry">Completed Work</span></a>
+  <a href="sect0002.html#a0000000026"><span class="toc_ref">2.15</span> <span class="toc_entry">Decomposition: Ontological Underdetermination</span></a>
+ </li>
+<li class="">
+  <a href="sect0002.html#a0000000027"><span class="toc_ref">2.16</span> <span class="toc_entry">Reverse Contraction: Generating Predecessors</span></a>
+ </li>
+<li class="">
+  <a href="sect0002.html#a0000000028"><span class="toc_ref">2.17</span> <span class="toc_entry">Decomposition Structure</span></a>
+ </li>
+<li class="">
+  <a href="sect0002.html#sec:completed"><span class="toc_ref">2.18</span> <span class="toc_entry">Completed Work</span></a>
   <span class="expand-toc">▶</span>
   <ul class="sub-toc-2">
      <li class="">
-  <a href="sect0002.html#a0000000026"><span class="toc_ref">2.15.1</span> <span class="toc_entry">Remaining Work</span></a>
+  <a href="sect0002.html#a0000000029"><span class="toc_ref">2.18.1</span> <span class="toc_entry">Remaining Work</span></a>
  </li>
 <li class="">
-  <a href="sect0002.html#a0000000027"><span class="toc_ref">2.15.2</span> <span class="toc_entry">Liar Cost: Hardness Measure</span></a>
+  <a href="sect0002.html#a0000000030"><span class="toc_ref">2.18.2</span> <span class="toc_entry">Liar Cost: Hardness Measure</span></a>
  </li>
 <li class="">
-  <a href="sect0002.html#a0000000028"><span class="toc_ref">2.15.3</span> <span class="toc_entry">Friction Lagrangian</span></a>
+  <a href="sect0002.html#a0000000031"><span class="toc_ref">2.18.3</span> <span class="toc_entry">Friction Lagrangian</span></a>
  </li>
 
   </ul>
@@ -1260,13 +1269,14 @@
 
   </div>
 </div>
-<div class="theorem_thmwrapper theorem-style-plain" id="thm:monad_invariant">
-  <div class="theorem_thmheading">
-    <span class="theorem_thmcaption">
-    Theorem
+<h1 id="a0000000017">2.6 Decision Composition API</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:gate">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
     </span>
-    <span class="theorem_thmlabel">34</span>
-    <span class="theorem_thmtitle">Monad Structure is Invariant</span>
+    <span class="definition_thmlabel">34</span>
+    <span class="definition_thmtitle">Gate</span>
     <div class="thm_header_extras">
 
     
@@ -1274,7 +1284,7 @@
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0002.html#thm:monad_invariant">#</a>
+    <a class="icon proof" href="sect0002.html#def:gate">#</a>
     
     
     <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
@@ -1289,60 +1299,13 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#def:logic_specific_monad">Definition 29</a></li>
-          
-          <li><a href="sect0002.html#def:logic_monad">Definition 27</a></li>
+          <li><a href="sect0002.html#def:logiccontraction">Definition 20</a></li>
           
         </ul>
     
       </div>
     </div>
 
-    
-    
-    <button class="modal lean">L∃∀N</button>
-        <div class="modal-container">
-      <div class="modal-content">
-        <header>
-          <h1>Lean declarations</h1>
-          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        </header>
-        
-        <ul class="uses">
-          
-          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LogicMonad.monad_structure_invariant" class="lean_decl">LogicMonad.monad_structure_invariant</a></li>
-          
-        </ul>
-    
-      </div>
-    </div>
-
-    
-        </div>
-  </div>
-  <div class="theorem_thmcontent">
-  <p>    The forgetful functor from \(\mathsf{LogicMonad}\  \mathsf{lt}\) to \(\mathsf{LogicM}\) is an isomorphism of monads for any \(\mathsf{lt}\). Only the normalization (<span class="sffamily">LogicContraction</span>) changes between logics. </p>
-
-  </div>
-</div>
-<h1 id="a0000000017">2.6 Decision Composition API</h1>
-<div class="definition_thmwrapper theorem-style-definition" id="def:gate">
-  <div class="definition_thmheading">
-    <span class="definition_thmcaption">
-    Definition
-    </span>
-    <span class="definition_thmlabel">35</span>
-    <span class="definition_thmtitle">Gate</span>
-    <div class="thm_header_extras">
-
-    
-    ✓
-        </div>
-    <div class="thm_header_hidden_extras">
-
-    <a class="icon proof" href="sect0002.html#def:gate">#</a>
-    
     
     
     <button class="modal lean">L∃∀N</button>
@@ -1367,7 +1330,7 @@
         </div>
   </div>
   <div class="definition_thmcontent">
-  <p>    A Gate is a binary decision predicate indexed by a logic modality: \(\mathsf{Gate} = (\mathsf{name} : \mathsf{String}) \times (\mathsf{modality} : \mathsf{LogicType}) \times (\mathsf{check} : \mathsf{EMLTree} \to \mathsf{Prop})\). Every logic type gives rise to a Gate via \(\mathsf{ofLogicType}\), and every tree passes any such gate (by ??thm:logic_contracts). </p>
+  <p>    A Gate is a binary decision predicate indexed by a logic modality: \(\mathsf{Gate} = (\mathsf{name} : \mathsf{String}) \times (\mathsf{modality} : \mathsf{LogicType}) \times (\mathsf{check} : \mathsf{EMLTree} \to \mathsf{Prop})\). Every logic type gives rise to a Gate via \(\mathsf{ofLogicType}\), and every tree passes any such gate (by <a href="sect0002.html#thm:logic_contracts">26</a>). </p>
 
   </div>
 </div>
@@ -1376,7 +1339,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">36</span>
+    <span class="definition_thmlabel">35</span>
     <span class="definition_thmtitle">Decision</span>
     <div class="thm_header_extras">
 
@@ -1400,7 +1363,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#def:gate">Definition 35</a></li>
+          <li><a href="sect0002.html#def:gate">Definition 34</a></li>
           
         </ul>
     
@@ -1440,7 +1403,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">37</span>
+    <span class="definition_thmlabel">36</span>
     <span class="definition_thmtitle">Compose</span>
     <div class="thm_header_extras">
 
@@ -1464,7 +1427,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#def:decision">Definition 36</a></li>
+          <li><a href="sect0002.html#def:decision">Definition 35</a></li>
           
         </ul>
     
@@ -1499,6 +1462,70 @@
 
   </div>
 </div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:leftComb">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">37</span>
+    <span class="definition_thmtitle">Left-Comb Normal Form</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:leftComb">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:emltree">Definition 1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/EMLRegistry.leftComb" class="lean_decl">EMLRegistry.leftComb</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    The mirror image of \(\mathsf{rightComb}\): \(\mathsf{leftComb}(0) = \mathsf{Leaf}\) and \(\mathsf{leftComb}(n+1) = \mathsf{Node}(\mathsf{leftComb}(n),\  \mathsf{Leaf})\). Unlike \(\mathsf{rightComb}\), this is not the equilibrium attractor — it represents a fully left-associative configuration. </p>
+
+  </div>
+</div>
 <div class="definition_thmwrapper theorem-style-definition" id="def:logic_pipeline">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
@@ -1528,7 +1555,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#def:gate">Definition 35</a></li>
+          <li><a href="sect0002.html#def:gate">Definition 34</a></li>
           
         </ul>
     
@@ -1594,7 +1621,7 @@
           
           <li><a href="sect0002.html#def:logic_pipeline">Definition 38</a></li>
           
-          <li><a href="sect0002.html#def:decision">Definition 36</a></li>
+          <li><a href="sect0002.html#def:decision">Definition 35</a></li>
           
         </ul>
     
@@ -1660,7 +1687,7 @@
           
           <li><a href="sect0002.html#def:logic_pipeline">Definition 38</a></li>
           
-          <li><a href="sect0002.html#def:decision">Definition 36</a></li>
+          <li><a href="sect0002.html#def:decision">Definition 35</a></li>
           
           <li><a href="sect0002.html#def:institutional_closure">Definition 31</a></li>
           
@@ -2206,7 +2233,7 @@
   </div>
   <div class="definition_thmcontent">
   <p>    A sequence of logic-wrapped problems, each collapsing the previous layer’s output. Implements the nested wrapper pattern from Lumo section B: </p>
-<div class="displaymath" id="a0000000029">
+<div class="displaymath" id="a0000000032">
   \[  \begin{array}{c} \text{Layer 3 (Quantum): liar\_ superposition} \\ \downarrow \\ \text{Layer 2 (Intuitionistic): proof\_ of\_ quantum\_ state} \\ \downarrow \\ \text{Layer 1 (Fuzzy): confidence\_ in\_ proof} \\ \downarrow \\ \text{Layer 0 (Classical): assertion\_ value} \end{array}  \]
 </div>
 <p> Each layer’s logic type is tracked via a dependent pair \(\Sigma lt,\  \mathsf{WrappedProblem}\  p\  lt\). The total cost is the sum of per-layer costs. </p>
@@ -2938,7 +2965,7 @@
 </div>
 <h1 id="a0000000024">2.13 The Very Big Box</h1>
 <p>The Very Big Box is the product space </p>
-<div class="displaymath" id="a0000000030">
+<div class="displaymath" id="a0000000033">
   \[  \mathcal{V} = \prod _{c \in \mathsf{ProblemClass}}\  \prod _{lt \in \mathsf{suitableLogics}(c)} \mathsf{WrappedProblem}(\mathsf{problem}(c),\  lt)  \]
 </div>
 <p> where each coordinate is a problem in a specific logic and the Tower construction provides the nesting structure. Currently four problem classes are populated: \(\mathsf{selfReference}\) (Liar), \(\mathsf{vagueness}\) (Sorites), \(\mathsf{temporalDecision}\) (Grandfather), and \(\mathsf{inconsistentDef}\) (Russell’s). The remaining 9 classes represent the <b class="bfseries">real friction</b>: every cell in this product that lacks a proof is a concrete blocker. </p>
@@ -3042,7 +3069,7 @@
           
           <li><a href="sect0002.html#def:wrapped">Definition 43</a></li>
           
-          <li><a href="sect0002.html#def:liar_wrapper">Definition 67</a></li>
+          <li><a href="sect0002.html#def:liar_wrapper">Definition 80</a></li>
           
         </ul>
     
@@ -3271,29 +3298,919 @@
 
   </div>
 </div>
-<h1 id="sec:completed">2.15 Completed Work</h1>
+<h1 id="a0000000026">2.15 Decomposition: Ontological Underdetermination</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:path">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">65</span>
+    <span class="definition_thmtitle">Path</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:path">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:contracts_one">Definition 3</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.Path" class="lean_decl">Decomposition.Path</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    A witness of a contraction path through the Tamari lattice: \(\mathsf{Path}\  s\  t\) is an inductive sequence of \(\mathsf{contracts\_ one}\) steps from \(s\) to \(t\). </p>
+<ul class="itemize">
+  <li><p>\(\mathsf{nil}\) — the trivial path (reflexivity). </p>
+</li>
+  <li><p>\(\mathsf{cons}\  h\_ one\  p\) — prepend a single contraction step to an existing path. </p>
+</li>
+</ul>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:path_soundness">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">66</span>
+    <span class="theorem_thmtitle">Path Soundness</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:path_soundness">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:path">Definition 65</a></li>
+          
+          <li><a href="sect0001.html#def:contracts_to">Definition 4</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.Path.to_contracts_to" class="lean_decl">Decomposition.Path.to_contracts_to</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    For any path \(p : \mathsf{Path}\  s\  t\), we have \(\mathsf{contracts\_ to}\  s\  t\). The path provides constructive evidence for the existence of a contraction sequence. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:path_length">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">67</span>
+    <span class="definition_thmtitle">Path Length</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:path_length">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:path">Definition 65</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.Path.length" class="lean_decl">Decomposition.Path.length</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    The number of contraction steps in a path: \(\mathsf{length}(\mathsf{nil}) = 0\), \(\mathsf{length}(\mathsf{cons}\  h\_ one\  p) = 1 + \mathsf{length}(p)\). </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:path_append">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">68</span>
+    <span class="definition_thmtitle">Path Concatenation</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:path_append">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:path">Definition 65</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.Path.append" class="lean_decl">Decomposition.Path.append</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    Concatenates two compatible paths: \(\mathsf{append} : \mathsf{Path}\  s\  t \to \mathsf{Path}\  t\  u \to \mathsf{Path}\  s\  u\). </p>
+
+  </div>
+</div>
+<h1 id="a0000000027">2.16 Reverse Contraction: Generating Predecessors</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:reverse_one">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">69</span>
+    <span class="definition_thmtitle">Reverse One</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:reverse_one">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:contracts_one">Definition 3</a></li>
+          
+          <li><a href="sect0001.html#def:emltree">Definition 1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.reverse_one" class="lean_decl">Decomposition.reverse_one</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    Generates all immediate predecessors of a tree under \(\mathsf{contracts\_ one}\). For a target tree \(t\), \(\mathsf{reverse\_ one}(t)\) is a list of all \(s\) such that \(s \to t\) in one step. Three structural cases: </p>
+<ul class="itemize">
+  <li><p>\(\mathsf{Leaf}\) has no predecessors. </p>
+</li>
+  <li><p>\(\mathsf{Node}\  l\  (\mathsf{Node}\  r_1\  r_2)\): the rotation target plus predecessors from reversing the left and right subtrees. </p>
+</li>
+  <li><p>\(\mathsf{Node}\  l\  r\) (right child not a Node): predecessors from reversing the left and right subtrees only. </p>
+</li>
+</ul>
+<p> This is the core de-composition primitive: given an outcome, what could have immediately preceded it? </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:reverse_one_sound">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">70</span>
+    <span class="theorem_thmtitle">Reverse One Soundness</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:reverse_one_sound">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:reverse_one">Definition 69</a></li>
+          
+          <li><a href="sect0001.html#def:contracts_one">Definition 3</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.reverse_one_sound" class="lean_decl">Decomposition.reverse_one_sound</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    If \(s \in \mathsf{reverse\_ one}(t)\) then \(\mathsf{contracts\_ one}\  s\  t\). Every generated predecessor is a valid immediate prior configuration. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:reverse_one_complete">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">71</span>
+    <span class="theorem_thmtitle">Reverse One Completeness</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:reverse_one_complete">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:reverse_one">Definition 69</a></li>
+          
+          <li><a href="sect0001.html#def:contracts_one">Definition 3</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.reverse_one_complete" class="lean_decl">Decomposition.reverse_one_complete</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    If \(\mathsf{contracts\_ one}\  s\  t\) then \(s \in \mathsf{reverse\_ one}(t)\). Every valid immediate predecessor is generated. </p>
+
+  </div>
+</div>
+<h1 id="a0000000028">2.17 Decomposition Structure</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:decomposition">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">72</span>
+    <span class="definition_thmtitle">Decomposition</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:decomposition">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:contracts_to">Definition 4</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.Decomposition" class="lean_decl">Decomposition.Decomposition</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    For a target tree \(\mathsf{target}\), a \(\mathsf{Decomposition}\) pairs a \(\mathsf{source}\) with a proof \(\mathsf{contracts\_ to}\  \mathsf{source}\  \mathsf{target}\). This is the <b class="bfseries">ontological unit</b> of de-composition: an outcome together with a specific prior configuration that could have produced it. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:leftcomb_size">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">73</span>
+    <span class="theorem_thmtitle">Left-Comb Size</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:leftcomb_size">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:rightComb">Definition 5</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.leftComb_size" class="lean_decl">Decomposition.leftComb_size</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    \(\mathsf{size}(\mathsf{leftComb}\  n) = n\). </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:rightcomb_size">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">74</span>
+    <span class="theorem_thmtitle">Right-Comb Size</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:rightcomb_size">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:rightComb">Definition 5</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.rightComb_size" class="lean_decl">Decomposition.rightComb_size</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    \(\mathsf{size}(\mathsf{rightComb}\  n) = n\). </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:rightcomb_ne_leftcomb">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">75</span>
+    <span class="theorem_thmtitle">Right-Comb vs Left-Comb</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:rightcomb_ne_leftcomb">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:rightComb">Definition 5</a></li>
+          
+          <li><a href="sect0002.html#def:leftComb">Definition 37</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.rightComb_ne_leftComb" class="lean_decl">Decomposition.rightComb_ne_leftComb</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    For \(n \ge 2\), \(\mathsf{rightComb}\  n \neq \mathsf{leftComb}\  n\). The two canonical trees of size \(n\) are distinct in the Tamari lattice. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:non_unique_decomposition">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">76</span>
+    <span class="theorem_thmtitle">Non-Unique Decomposition</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:non_unique_decomposition">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:decomposition">Definition 72</a></li>
+          
+          <li><a href="sect0001.html#def:rightComb">Definition 5</a></li>
+          
+          <li><a href="sect0002.html#thm:rightcomb_ne_leftcomb">Theorem 75</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.non_unique_decomposition" class="lean_decl">Decomposition.non_unique_decomposition</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    For \(n \ge 2\), the target \(\mathsf{rightComb}\  n\) has at least two distinct Decompositions with different sources: </p>
+<div class="displaymath" id="a0000000034">
+  \[  \exists d_1\  d_2 : \mathsf{Decomposition}(\mathsf{rightComb}\  n),\  d_1.\mathsf{source} \neq d_2.\mathsf{source}.  \]
+</div>
+<p> This is the core ontological result: <b class="bfseries">the past is underdetermined by the present</b>. The same outcome (rightComb \(n\)) admits multiple evidential histories (rightComb \(n\) itself and leftComb \(n\), among others). </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:path_diversity">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">77</span>
+    <span class="theorem_thmtitle">Path Diversity</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:path_diversity">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:path">Definition 65</a></li>
+          
+          <li><a href="sect0001.html#def:contracts_one">Definition 3</a></li>
+          
+          <li><a href="sect0002.html#thm:rightcomb_ne_leftcomb">Theorem 75</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.path_diversity" class="lean_decl">Decomposition.path_diversity</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    There exist two distinct paths between the same source-target pair in \(T_3\): </p>
+<div class="displaymath" id="a0000000035">
+  \[  \exists s\  t\  (p_1\  p_2 : \mathsf{Path}\  s\  t),\  p_1 \neq p_2.  \]
+</div>
+<p> Explicitly, \(\mathsf{leftComb}\  3 \to \mathsf{rightComb}\  3\) has two distinct maximal chains in the Tamari lattice: </p>
+<ul class="itemize">
+  <li><p>\(((ab)c)d \to (a(bc))d \to a((bc)d) \to a(b(cd))\) (3 steps) </p>
+</li>
+  <li><p>\(((ab)c)d \to (ab)(cd) \to a(b(cd))\) (2 steps) </p>
+</li>
+</ul>
+<p> This proves that <b class="bfseries">intent is not uniquely determined by outcome</b> — multiple reasoning chains can connect the same evidence to the same verdict. </p>
+
+  </div>
+</div>
+<h1 id="sec:completed">2.18 Completed Work</h1>
 
 <p>All <span class="sffamily">LogicContraction</span>, <span class="sffamily">LogicNormalForm</span>, and <span class="sffamily">logic_contracts_to_normal_form</span> definitions are filled and proven for all 13 logic types. The Liar problem has a complete <span class="sffamily">WrappedProblem</span> for each suitable logic via <span class="sffamily">liarWrapper</span>. The Sorites and Grandfather problems follow the same pattern with <span class="sffamily">soritesWrapper</span> and <span class="sffamily">grandfatherWrapper</span>. </p>
+<p>The Decomposition infrastructure (<span class="sffamily">Path</span>, <span class="sffamily">reverse_one</span>, <span class="sffamily">Decomposition</span>) is complete with soundness, completeness, non-unique-decomposition, and path-diversity theorems proven for all \(n \ge 2\) in \(T_n\) — zero sorries. </p>
 <p>The Friction Lagrangian \(\mathcal{L}_{\text{friction}}\) is computed from the full Liar tower. The blocking chain for the Liar is fully resolved. </p>
-<h2 id="a0000000026">2.15.1 Remaining Work</h2>
+<h2 id="a0000000029">2.18.1 Remaining Work</h2>
 <ul class="itemize">
   <li><p><b class="bfseries">Other problem classes</b> — \(\mathsf{selfReference}\) (Liar), \(\mathsf{vagueness}\) (Sorites), \(\mathsf{temporalDecision}\) (Grandfather), and \(\mathsf{inconsistentDef}\) (Russell’s) are instantiated. The other 9 classes (deontic, epistemic, quantum, etc.) need <span class="sffamily">Problem</span> definitions with their own tree families. </p>
 </li>
   <li><p><b class="bfseries">Tower composition</b> — the current towers are flat (all logics stacked). The institutional closure pipeline demonstrates a first step toward nested composition (temporal \(\to \) fuzzy \(\to \) deontic \(\to \) self-recognition). Full <span class="sffamily">LogicTranslation</span> instances between adjacent logics remain. </p>
 </li>
-  <li><p><b class="bfseries">Shortest-path cost</b> — the \(\Phi \) cost currently equals \(\textsf{cdStep}\) by definition; a BFS algorithm over <span class="sffamily">contracts_to</span> would compute the actual PentagonatorDistance. </p>
+  <li><p><b class="bfseries">Shortest-path cost</b> — the \(\Phi \) cost currently equals \(\textsf{cdStep}\) by definition; a BFS algorithm over \(\textsf{reverse\_ one}\) would compute the actual PentagonatorDistance. </p>
+</li>
+  <li><p><b class="bfseries">Ancestor enumeration</b> — \(\mathsf{reverse\_ one}\) can be iterated to produce \(\mathsf{ancestorsBounded}\), a bounded BFS generating all distinct sources for a given target with \(\mathsf{Path}\) witnesses. </p>
+</li>
+  <li><p><b class="bfseries">Path cost</b> — a \(\mathsf{pathCost}\  lt\  p\) function summing \(\mathsf{cdStep}\) per logic type along a path, enabling cross-logic cost comparison for the same reasoning chain. </p>
+</li>
+  <li><p><b class="bfseries">Decision decomposition</b> — extend the DecisionComposition API with \(\mathsf{decisionDecompositions}\) that enumerates all prior decisions that could compose to a given decision. </p>
 </li>
   <li><p><b class="bfseries">Regularization axis</b> — the institutional closure sketch uses placeholder normalization; the full endless/eternal/infinite/boundless hierarchy must be formalized to compute real costs. </p>
 </li>
 </ul>
-<h2 id="a0000000027">2.15.2 Liar Cost: Hardness Measure</h2>
+<h2 id="a0000000030">2.18.2 Liar Cost: Hardness Measure</h2>
 <p>The Liar as perfect anti-coherence (\(X = \neg X\)) gives a hardness measure for each logic: how many contraction steps are required to resolve it. </p>
 <div class="definition_thmwrapper theorem-style-definition" id="def:liar_cost">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">65</span>
+    <span class="definition_thmlabel">78</span>
     <span class="definition_thmtitle">Liar Cost</span>
     <div class="thm_header_extras">
 
@@ -3304,6 +4221,26 @@
 
     <a class="icon proof" href="sect0002.html#def:liar_cost">#</a>
     
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:liar_problem">Definition 44</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
     
     
     <button class="modal lean">L∃∀N</button>
@@ -3337,7 +4274,7 @@
     <span class="theorem_thmcaption">
     Theorem
     </span>
-    <span class="theorem_thmlabel">66</span>
+    <span class="theorem_thmlabel">79</span>
     <span class="theorem_thmtitle">Cost Bound</span>
     <div class="thm_header_extras">
 
@@ -3361,7 +4298,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#def:liar_cost">Definition 65</a></li>
+          <li><a href="sect0002.html#def:liar_cost">Definition 78</a></li>
           
           <li><a href="sect0002.html#def:cdstep">Definition 23</a></li>
           
@@ -3403,7 +4340,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">67</span>
+    <span class="definition_thmlabel">80</span>
     <span class="definition_thmtitle">Generic Liar Wrapper</span>
     <div class="thm_header_extras">
 
@@ -3427,7 +4364,9 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#def:liar_cost">Definition 65</a></li>
+          <li><a href="sect0002.html#def:liar_problem">Definition 44</a></li>
+          
+          <li><a href="sect0002.html#def:liar_cost">Definition 78</a></li>
           
         </ul>
     
@@ -3467,7 +4406,7 @@
     <span class="corollary_thmcaption">
     Corollary
     </span>
-    <span class="corollary_thmlabel">68</span>
+    <span class="corollary_thmlabel">81</span>
     <span class="corollary_thmtitle">Cost Match for Classical</span>
     <div class="thm_header_extras">
 
@@ -3491,7 +4430,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#thm:liar_cost_bound">Theorem 66</a></li>
+          <li><a href="sect0002.html#thm:liar_cost_bound">Theorem 79</a></li>
           
         </ul>
     
@@ -3531,7 +4470,7 @@
     <span class="corollary_thmcaption">
     Corollary
     </span>
-    <span class="corollary_thmlabel">69</span>
+    <span class="corollary_thmlabel">82</span>
     <span class="corollary_thmtitle">Cost Match for Fuzzy</span>
     <div class="thm_header_extras">
 
@@ -3555,7 +4494,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#thm:liar_cost_bound">Theorem 66</a></li>
+          <li><a href="sect0002.html#thm:liar_cost_bound">Theorem 79</a></li>
           
         </ul>
     
@@ -3590,14 +4529,14 @@
 
   </div>
 </div>
-<h2 id="a0000000028">2.15.3 Friction Lagrangian</h2>
+<h2 id="a0000000031">2.18.3 Friction Lagrangian</h2>
 <p>The tower sums costs across all logic layers. The total <b class="bfseries">Friction Lagrangian</b> \(\mathcal{L}_{\text{friction}} = \sum _{\text{lt}} \Phi (\text{Liar}, \text{lt})\) is the total resistance of the logical ecosystem to self-negation. </p>
 <div class="definition_thmwrapper theorem-style-definition" id="def:friction_lagrangian">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">70</span>
+    <span class="definition_thmlabel">83</span>
     <span class="definition_thmtitle">Friction Lagrangian</span>
     <div class="thm_header_extras">
 
@@ -3623,7 +4562,7 @@
           
           <li><a href="sect0002.html#def:liar_tower">Definition 49</a></li>
           
-          <li><a href="sect0002.html#def:liar_cost">Definition 65</a></li>
+          <li><a href="sect0002.html#def:liar_cost">Definition 78</a></li>
           
         </ul>
     
@@ -3659,7 +4598,7 @@
   </div>
 </div>
 <p>With all 12 suitable logics, the Friction Lagrangian converges to a stable value: </p>
-<div class="displaymath" id="a0000000031">
+<div class="displaymath" id="a0000000036">
   \[  \mathcal{L}_{\text{friction}} = \sum _{\text{lt} \in \text{suitableLogics}} \textsf{cdStep}(\text{lt})  \]
 </div>
 <p>This is the “curvature of mind” — the total structural work the system must do to resolve perfect anti-coherence across the full space of logics. </p>
