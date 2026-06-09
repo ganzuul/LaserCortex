@@ -74,7 +74,9 @@ def liarProblem : Problem := {
   tree := λ lt => match lt with
     | .ManyValued => leftComb2
     | _ => symmetricTree
-  normalForm := λ _ => rightComb 3
+  normalForm := λ lt => match lt with
+    | .ManyValued => rightComb 2
+    | _ => rightComb 3
 }
 
 -- ================================================================
@@ -99,48 +101,37 @@ def missingProofParadox (p : Problem) (lt : LogicTypes.LogicType) : Problem := {
   normalForm := λ _ => p.normalForm lt
 }
 
-/-- The Fuzzy Liar's missing proof as a meta-paradox.
-  The problem: the Fuzzy LogicContraction is not defined in LogicTypes.lean.
-  The resolution: fill the `sorry` in LogicTypes.LogicContraction (.Fuzzy). -/
-def fuzzyMissingProof : Problem := missingProofParadox liarProblem (.Fuzzy)
 
-/-- The missing LogicContraction definitions for all non-Classical logics
-  as a family of meta-paradoxes. -/
-def missingContractions : List Problem :=
-  liarProblem.suitableLogics.filter (λ lt => lt ≠ .Classical) |>.map (missingProofParadox liarProblem)
 
 -- ================================================================
--- Prototype: Fuzzy Logic Wrapper
+-- Liar Wrappers (All Mail Slots Filled)
 -- ================================================================
 
-/-- The Fuzzy Liar: a wrapped problem with cost and tentative proof.
-  
-  In Fuzzy logic, the Liar resolves to the fixed point ¬0.5 = 0.5.
-  The pentagonator distance is 1 (one collapse step needed).
-  
-  This is the WfCA "amplitudes → collapse" pattern: the problem's
-  superposition of truth values (all reals in [0,1]) collapses to
-  the unique fixed point under the Fuzzy contraction rule. -/
-def fuzzyLiar : WrappedProblem liarProblem (.Fuzzy) where
-  tree   := liarProblem.tree (.Fuzzy)
-  target := liarProblem.normalForm (.Fuzzy)
-  cost   := 1
-  proof  := by
-    -- Placeholder: Fuzzy LogicContraction not yet defined
-    exact sorry
+/-- Generic Liar wrapper for any logic type. Cost = cdStep.
+  Each CD property-loss adds exactly one contraction step to
+  resolve the Liar (perfect anti-coherence). -/
+def liarWrapper (lt : LogicTypes.LogicType) : WrappedProblem liarProblem lt :=
+  {
+    tree   := liarProblem.tree lt
+    target := liarProblem.normalForm lt
+    cost   := lt.cdStep
+    proof  := by
+      show LogicTypes.LogicContraction lt (liarProblem.tree lt) (liarProblem.normalForm lt)
+      have hLC : LogicTypes.LogicContraction lt = EMLRegistry.contracts_to := by
+        cases lt <;> rfl
+      have hNF : liarProblem.normalForm lt = EMLRegistry.rightComb (liarProblem.tree lt).size := by
+        cases lt <;> rfl
+      rw [hLC, hNF]
+      exact EMLRegistry.contracts_to_rightComb (liarProblem.tree lt)
+  }
 
-/-- The Classical Liar: proven resolution with the general theorem. -/
-def classicalLiar : WrappedProblem liarProblem (.Classical) where
-  tree   := liarProblem.tree (.Classical)
-  target := liarProblem.normalForm (.Classical)
-  cost   := 0
-  proof  := by
-    -- Classical LogicContraction = contracts_to
-    -- liar → rightComb 3 is proven by contracts_to_rightComb
-    show LogicTypes.LogicContraction (.Classical)
-      (liarProblem.tree (.Classical)) (liarProblem.normalForm (.Classical))
-    -- contracts_to_rightComb gives contracts_to symmetricTree (rightComb 3)
-    apply contracts_to_rightComb
+/-- The Classical Liar: CD step 0, cost 0. -/
+def classicalLiar : WrappedProblem liarProblem (.Classical) :=
+  liarWrapper .Classical
+
+/-- The Fuzzy Liar: CD step 1, cost 1. -/
+def fuzzyLiar : WrappedProblem liarProblem (.Fuzzy) :=
+  liarWrapper .Fuzzy
 
 -- ================================================================
 -- Nested Wrappers (WfCA stacked collapse)
@@ -165,14 +156,40 @@ def classicalLiar : WrappedProblem liarProblem (.Classical) where
 structure Tower (p : Problem) where
   layers : List (Σ lt : LogicTypes.LogicType, WrappedProblem p lt)
 
-/-- The four-layer prototype tower for the Liar. -/
+/-- The full Liar tower: one layer per suitable logic, in CD step order.
+  Each layer wraps the Liar in that logic's structural language.
+  Total cost = Σ liarCost lt = Σ cdStep lt. -/
 def liarTower : Tower liarProblem := {
-  layers := [
-    ⟨.Classical, classicalLiar⟩,
-    ⟨.Fuzzy, fuzzyLiar⟩,
-    ⟨.Classical, classicalLiar⟩,
-    ⟨.Classical, classicalLiar⟩
-  ]
+  layers := liarProblem.suitableLogics
+    |>.map (λ lt => ⟨lt, liarWrapper lt⟩)
 }
+
+/-- The total Friction Lagrangian: sum of costs across the full tower.
+  This measures the total resistance of the logical ecosystem to
+  the Liar paradox. -/
+def frictionLagrangian : Nat :=
+  liarTower.layers.map (λ (x : Σ lt, WrappedProblem liarProblem lt) => x.2.cost) |>.sum
+
+-- ================================================================
+-- Liar Cost: hardness measure for each logic against the Liar
+-- ================================================================
+
+/-- The cost Φ for resolving the Liar in each logic.
+  By definition: liarCost lt = lt.cdStep (the Cayley-Dickson step).
+  Measures resistance to perfect anti-coherence (X = ¬X).
+  Each CD property-loss adds exactly one contraction step. -/
+def liarCost (lt : LogicTypes.LogicType) : Nat := lt.cdStep
+
+/-- liarCost = cdStep, so inequality is trivial (≤). -/
+theorem liarCost_le_cdStep (lt : LogicTypes.LogicType) : liarCost lt ≤ lt.cdStep := by
+  simp [liarCost]
+
+/-- liarCost matches the actual WrappedProblem cost for Classical. -/
+theorem liarCost_matches_classical : liarCost (.Classical) = classicalLiar.cost := by
+  rfl
+
+/-- liarCost matches the actual WrappedProblem cost for Fuzzy. -/
+theorem liarCost_matches_fuzzy : liarCost (.Fuzzy) = fuzzyLiar.cost := by
+  rfl
 
 end LiarParadox

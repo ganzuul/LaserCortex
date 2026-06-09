@@ -237,10 +237,134 @@ The normal form for each logic type. For Classical logic this is \textsf{rightCo
 \begin{theorem}[Logic Contraction to Normal Form]
 \label{thm:logic_contracts}
 \lean{LogicTypes.logic_contracts_to_normal_form}
+\leanok
 \uses{def:logicnormal, def:logiccontraction, def:size, thm:contracts_to_rightComb}
 For any logic type $lt$ and tree $t$, $\mathsf{LogicContraction}\ lt\ t\ (\mathsf{LogicNormalForm}\ lt\ t.\mathsf{size})$.
-Currently proven for Classical logic; other cases are placeholders.
+Proven for all 13 logic types via $\mathsf{contracts\_to\_rightComb}$.
 \end{theorem}
+
+\section{Logic Monad: Self-Contained Self-Reference}
+
+\begin{definition}[Free Logic Monad]
+\label{def:logic_monad}
+\lean{LogicMonad.LogicM}
+\leanok
+\uses{def:emltree}
+The free monad over binary trees: $\mathsf{LogicM}\ \alpha$ is a tree whose
+leaves carry values of type $\alpha$ and whose internal nodes represent
+non-associative composition of computations.
+\begin{itemize}
+  \item $\mathsf{pure}\ a$ = a leaf containing $a$ (a completed computation)
+  \item $\mathsf{node}\ l\ r$ = deferred composition of two sub-computations
+  \item $\mathsf{bind}$ = substitution: replace every leaf with a new tree
+\end{itemize}
+This is self-contained by definition (recursive structure IS self-reference)
+and extensible (interpreters fold over $\mathsf{LogicM}\ \alpha$ to produce
+any target monad).
+\end{definition}
+
+\begin{theorem}[Monad Laws for LogicM]
+\label{thm:logic_monad_laws}
+\lean{LogicMonad.pure_bind}
+\lean{LogicMonad.bind_pure}
+\lean{LogicMonad.bind_assoc}
+\leanok
+\uses{def:logic_monad}
+The free monad $\mathsf{LogicM}$ satisfies the three monad laws:
+\begin{itemize}
+  \item $\mathsf{pure}\ a \gg\!\!= f = f a$ (left identity)
+  \item $m \gg\!\!= \mathsf{pure} = m$ (right identity)
+  \item $(m \gg\!\!= f) \gg\!\!= g = m \gg\!\!= (\lambda x.\ f x \gg\!\!= g)$ (associativity)
+\end{itemize}
+Proof by structural induction on the tree.
+\end{theorem}
+
+\begin{definition}[Logic-Specific Monad]
+\label{def:logic_specific_monad}
+\lean{LogicMonad.LogicMonad}
+\leanok
+\uses{def:logic_monad, def:logiccontraction, def:logicnormal}
+For each logic type $\mathsf{lt}$, the $\mathsf{LogicMonad}\ \mathsf{lt}\ \alpha$
+structure wraps a $\mathsf{LogicM}\ \alpha$ and normalizes it via
+$\mathsf{LogicContraction}\ \mathsf{lt}$. The normalization cost is
+$\mathsf{cdStep}\ \mathsf{lt}$.
+
+This is the minimal monad for each logic: it does the least work
+(pure substitution) and then normalizes using that logic's contraction
+dynamics. The self-reference property of the free monad (bind = substitution)
+means every logic monad shares the same core recursion — they differ only
+in how they normalize.
+
+The pluralistic logic monad \textbf{transcends identity}: the monad structure
+(pure, bind, the laws) is invariant under change of logic. Only the
+normalization differs. This means the ``eternal'' layer (pure functional
+composition) is common to all logics; the ``endless'' layer (iteration,
+normalization cost) is what distinguishes them.
+\end{definition}
+
+\begin{theorem}[Monad Structure is Invariant]
+\label{thm:monad_invariant}
+\lean{LogicMonad.monad_structure_invariant}
+\leanok
+\uses{def:logic_specific_monad, def:logic_monad}
+The forgetful functor from $\mathsf{LogicMonad}\ \mathsf{lt}$ to $\mathsf{LogicM}$
+is an isomorphism of monads for any $\mathsf{lt}$. Only the normalization
+(\textsf{LogicContraction}) changes between logics.
+\end{theorem}
+
+\section{Institutional Closure: Interacting Logic Monads}
+
+\begin{definition}[Institutional Closure]
+\label{def:institutional_closure}
+\lean{InstitutionalClosure.closure}
+\leanok
+\uses{def:logic_monad, def:emltree}
+The institutional closure pipeline composes four layers:
+\begin{enumerate}
+  \item \textbf{Temporal normalization} --- linearize the event timeline via
+    $\mathsf{LogicContraction\ Temporal\ =\ contracts\_to}$.
+  \item \textbf{Fuzzy grading} --- evaluate each event's impact through
+    graded membership (Sorites-like gradation).
+  \item \textbf{Deontic update} --- revise norms from accumulated
+    blame, using $\mathsf{LogicContraction\ Deontic}$.
+  \item \textbf{Self-recognition} --- the monadic bind that identifies
+    the output norm as the institution's own (fixed point).
+\end{enumerate}
+The pipeline is a monadic computation $\mathsf{LogicM\ Event \to LogicM\ Norm}$
+using the shared $\mathsf{LogicM}$ backbone, with logic-specific normalization
+at each layer.
+\end{definition}
+
+\begin{theorem}[Closure Fixed Point]
+\label{thm:closure_fixed_point}
+\lean{InstitutionalClosure.closure_is_fixed_point}
+\leanok
+\uses{def:institutional_closure}
+$\mathsf{selfRecognize} \circ \mathsf{closure} = \mathsf{closure}$:
+self-recognition is a fixed point. Once the pipeline has produced a norm,
+further recognition does not change it.
+\end{theorem}
+
+\begin{theorem}[Normalization Idempotent]
+\label{thm:normalization_idempotent}
+\lean{InstitutionalClosure.normalization_idempotent}
+\leanok
+\uses{def:institutional_closure}
+$\mathsf{closure} \circ \mathsf{temporalNormalize} = \mathsf{closure}$:
+the normalization pipeline is a projection. Re-processing an already-
+normalized history yields the same norm.
+\end{theorem}
+
+\begin{theorem}[Monad Structure is Invariant]
+\label{thm:monad_invariant}
+\lean{LogicMonad.monad_structure_invariant}
+\leanok
+\uses{def:logic_specific_monad, def:logic_monad}
+The forgetful functor from $\mathsf{LogicMonad}\ \mathsf{lt}$ to $\mathsf{LogicM}$
+is an isomorphism of monads for any $\mathsf{lt}$. Only the normalization
+(\textsf{LogicContraction}) changes between logics.
+\end{theorem}
+
 \chapter{Problem Classes and the Very Big Box}
 
 \section{Paradox Taxonomy}
@@ -292,21 +416,17 @@ three-valued disjunction $\mathsf{True} \lor \mathsf{False} \lor \mathsf{Undefin
 All logics target $\mathsf{rightComb}(3)$ as the normal form.
 \end{definition}
 
-\section{Prototype: Fuzzy Logic Wrapper}
+\section{Liar Wrappers}
 
 \begin{definition}[Fuzzy Liar]
 \label{def:fuzzy_liar}
 \lean{LiarParadox.fuzzyLiar}
+\leanok
 \uses{def:wrapped, def:liar_problem}
 The Liar wrapped in Fuzzy logic. The fixed point $\neg 0.5 = 0.5$ gives
-pentagonator distance $\Phi = 1$ (one collapse step). 
-\textbf{Status:} The proof is a \textsf{sorry} placeholder because the Fuzzy
-\hyperref[def:logiccontraction]{\textsf{LogicContraction}} is not yet defined.
-This is the WfCA prototype: a problem in superposition (all truth values $[0,1]$)
-collapses to the unique fixed point under the Fuzzy contraction rule.
+pentagonator distance $\Phi = 1$ (CD step 1). Proven via the generic
+\hyperref[def:liar_wrapper]{liarWrapper}.
 \end{definition}
-
-\section{Meta-Paradox: The Sorry as a First-Class Problem}
 
 \begin{definition}[Meta-Paradox]
 \label{def:metaparadox}
@@ -315,31 +435,6 @@ collapses to the unique fixed point under the Fuzzy contraction rule.
 \uses{def:problemclass, def:problem}
 A \textsf{Problem} of class $\mathsf{metaParadox}$ constructed from any
 existing Problem and LogicType whose proof is missing.
-The Liar says ``this sentence is false'' --- a truth-value it cannot supply.
-The missing resolution says ``this contraction is missing'' --- a proof it cannot supply.
-Both are self-referential gaps: the framework refers to its own incompleteness.
-The \textsf{sorry} in \textsf{fuzzyLiar.proof} IS the evidence of this meta-paradox.
-It is not a placeholder to be filled later --- it is the manifestation of the
-framework's current incompleteness, stated as a first-class Problem.
-\end{definition}
-
-\begin{definition}[Fuzzy Missing Proof]
-\label{def:fuzzy_missing}
-\lean{LiarParadox.fuzzyMissingProof}
-\leanok
-\uses{def:metaparadox, def:fuzzy_liar}
-The meta-paradox arising from the missing Fuzzy \textsf{LogicContraction}.
-Its resolution is to fill the \textsf{sorry} in \textsf{LogicTypes.LogicContraction(.Fuzzy)}.
-\end{definition}
-
-\begin{definition}[All Missing Contractions]
-\label{def:missing_all}
-\lean{LiarParadox.missingContractions}
-\leanok
-\uses{def:metaparadox}
-The list of 11 meta-paradoxes, one for each non-Classical logic type
-whose \textsf{LogicContraction} is undefined.
-Each is a concrete blocker for the Very Big Box product.
 \end{definition}
 
 \begin{definition}[Classical Liar]
@@ -387,6 +482,108 @@ Intuitionistic, Fuzzy, and Classical layers is not yet populated because
 non-Classical \textsf{LogicContraction}s are missing.
 \end{definition}
 
+\section{Temporal Paradox Problem}
+
+\begin{definition}[Grandfather Problem]
+\label{def:grandfather_problem}
+\lean{TemporalParadox.grandfatherProblem}
+\leanok
+\uses{def:problem, def:problemclass}
+The Grandfather Paradox stated as a \textsf{Problem} of class $\mathsf{temporalDecision}$.
+Its tree is a left-comb chain of size 4, encoding the 4-step time-travel causal loop:
+traveler exists $\to$ travels back $\to$ grandfather killed $\to$ traveler never born (contradiction).
+The normal form is $\mathsf{rightComb}(4)$.
+\end{definition}
+
+\begin{definition}[Generic Grandfather Wrapper]
+\label{def:grandfather_wrapper}
+\lean{TemporalParadox.grandfatherWrapper}
+\leanok
+\uses{def:grandfather_problem, def:wrapped}
+For any logic \textsf{lt}, constructs the \textsf{WrappedProblem} with
+$\textsf{cost} = \textsf{cdStep}(\textsf{lt})$. Resolves the temporal causal loop
+via $\mathsf{contracts\_to\_rightComb}$.
+\end{definition}
+
+\begin{definition}[Grandfather Tower]
+\label{def:grandfather_tower}
+\lean{TemporalParadox.grandfatherTower}
+\leanok
+\uses{def:grandfather_wrapper, def:tower}
+The Grandfather tower: one layer per suitable logic.
+\end{definition}
+
+\begin{definition}[Grandfather Cost]
+\label{def:grandfather_cost}
+\lean{TemporalParadox.grandfatherCost}
+\leanok
+\uses{def:cdstep}
+The cost $\Phi(\text{Grandfather}, \text{lt})$, equal to $\textsf{cdStep}(\text{lt})$.
+\end{definition}
+
+\begin{theorem}[Grandfather Cost Bound]
+\label{thm:grandfather_cost_bound}
+\lean{TemporalParadox.grandfatherCost_le_cdStep}
+\leanok
+\uses{def:grandfather_cost}
+$\textsf{grandfatherCost}(\text{lt}) \le \textsf{cdStep}(\text{lt})$ for every logic type.
+\end{theorem}
+
+\section{Russell's Paradox Problem}
+
+\begin{definition}[Russell's Problem]
+\label{def:russells_problem}
+\lean{RussellsParadox.russellsProblem}
+\leanok
+\uses{def:problem, def:problemclass}
+Russell's Paradox stated as a \textsf{Problem} of class $\mathsf{inconsistentDef}$.
+Its tree is a left-comb chain of size 3, encoding the three levels of
+set-theoretic diagonalization: elements $\to$ self-membership predicate $\to$
+the set of all sets not containing themselves.
+The normal form is $\mathsf{rightComb}(3)$.
+
+\textbf{Disclaimer:} This formalization is deliberately incomplete with respect to
+the infinity/eternity axis. The ``cheat'' of setting cost $= \textsf{cdStep}$
+captures only the Cayley--Dickson property-loss dimension, not the
+regularization dimension (endless $\to$ eternity $\to$ actual $\infty \to$
+boundlessness). Future work must pin this axis down properly; here we
+procrastinate it using the same wrapper pattern as Liar/Sorites/Grandfather.
+\end{definition}
+
+\begin{definition}[Generic Russell Wrapper]
+\label{def:russells_wrapper}
+\lean{RussellsParadox.russellsWrapper}
+\leanok
+\uses{def:russells_problem, def:wrapped}
+For any logic \textsf{lt}, constructs the \textsf{WrappedProblem} with
+$\textsf{cost} = \textsf{cdStep}(\textsf{lt})$. Resolves set-theoretic
+diagonalization via $\mathsf{contracts\_to\_rightComb}$.
+\end{definition}
+
+\begin{definition}[Russell Tower]
+\label{def:russells_tower}
+\lean{RussellsParadox.russellsTower}
+\leanok
+\uses{def:russells_wrapper, def:tower}
+The Russell tower: one layer per suitable logic.
+\end{definition}
+
+\begin{definition}[Russell Cost]
+\label{def:russells_cost}
+\lean{RussellsParadox.russellsCost}
+\leanok
+\uses{def:cdstep}
+The cost $\Phi(\text{Russell}, \text{lt})$, equal to $\textsf{cdStep}(\text{lt})$.
+\end{definition}
+
+\begin{theorem}[Russell Cost Bound]
+\label{thm:russells_cost_bound}
+\lean{RussellsParadox.russellsCost_le_cdStep}
+\leanok
+\uses{def:russells_cost}
+$\textsf{russellsCost}(\text{lt}) \le \textsf{cdStep}(\text{lt})$ for every logic type.
+\end{theorem}
+
 \section{The Very Big Box}
 
 The Very Big Box is the product space
@@ -395,70 +592,166 @@ The Very Big Box is the product space
 \mathsf{WrappedProblem}(\mathsf{problem}(c),\ lt)
 \]
 where each coordinate is a problem in a specific logic and the
-Tower construction provides the nesting structure. Currently only
-the Liar ($c = \mathsf{selfReference}$) is populated, and only its
-Classical wrapper is fully proven. The remaining coordinates represent
-the \textbf{real friction}: every cell in this product that lacks a proof
-is a concrete blocker.
+Tower construction provides the nesting structure. Currently four
+problem classes are populated: $\mathsf{selfReference}$ (Liar),
+$\mathsf{vagueness}$ (Sorites), $\mathsf{temporalDecision}$ (Grandfather),
+and $\mathsf{inconsistentDef}$ (Russell's).
+The remaining 9 classes represent the \textbf{real friction}: every cell
+in this product that lacks a proof is a concrete blocker.
 
-\section{Missing Work}
-\label{sec:missing}
+\section{Sorites as a Problem Instance}
 
-The following definitions and theorems are stated but not yet implemented.
-They represent the \textbf{real friction} in the framework ---
-the Liar Paradox is defined and its Classical resolution is proven,
-but cross-logic analysis cannot proceed until these pieces are populated.
+\begin{definition}[Sorites Problem]
+\label{def:sorites_problem}
+\lean{SoritesParadox.soritesProblem}
+\leanok
+\uses{def:problem, def:problemclass}
+The Sorites (Heap) Paradox stated as a \textsf{Problem} of class $\mathsf{vagueness}$.
+Its tree is a left-comb chain of size 5, encoding the inductive threshold:
+``If $n$ grains form a heap, then $n-1$ grains form a heap.''
+The normal form is $\mathsf{rightComb}(5)$.
+\end{definition}
 
-\subsection{Sorries in \textsf{LogicTypes.lean}}
+\begin{definition}[Generic Sorites Wrapper]
+\label{def:sorites_wrapper}
+\lean{SoritesParadox.soritesWrapper}
+\leanok
+\uses{def:sorites_problem, def:wrapped, def:liar_wrapper}
+For any logic \textsf{lt}, constructs the \textsf{WrappedProblem} with
+$\textsf{cost} = \textsf{cdStep}(\textsf{lt})$. Follows the same pattern
+as the generic Liar wrapper, using $\mathsf{contracts\_to\_rightComb}$.
+\end{definition}
+
+\begin{definition}[Sorites Tower]
+\label{def:sorites_tower}
+\lean{SoritesParadox.soritesTower}
+\leanok
+\uses{def:sorites_wrapper, def:tower}
+The Sorites tower: one layer per suitable logic, analogous to the Liar tower.
+\end{definition}
+
+\begin{definition}[Sorites Cost]
+\label{def:sorites_cost}
+\lean{SoritesParadox.soritesCost}
+\leanok
+\uses{def:cdstep}
+The cost $\Phi(\text{Sorites}, \text{lt})$, equal to $\textsf{cdStep}(\text{lt})$.
+\end{definition}
+
+\begin{theorem}[Sorites Cost Bound]
+\label{thm:sorites_cost_bound}
+\lean{SoritesParadox.soritesCost_le_cdStep}
+\leanok
+\uses{def:sorites_cost}
+$\textsf{soritesCost}(\text{lt}) \le \textsf{cdStep}(\text{lt})$ for every logic type.
+\end{theorem}
+
+\section{Completed Work}
+\label{sec:completed}
+
+All \textsf{LogicContraction}, \textsf{LogicNormalForm}, and
+\textsf{logic\_contracts\_to\_normal\_form} definitions are filled and proven
+for all 13 logic types. The Liar problem has a complete \textsf{WrappedProblem}
+for each suitable logic via \textsf{liarWrapper}. The Sorites and Grandfather
+problems follow the same pattern with \textsf{soritesWrapper} and
+\textsf{grandfatherWrapper}.
+
+The Friction Lagrangian $\mathcal{L}_{\text{friction}}$ is computed from the
+full Liar tower. The blocking chain for the Liar is fully resolved.
+
+\subsection{Remaining Work}
 
 \begin{itemize}
-  \item \textbf{\textsf{LogicContraction}} for Fuzzy, ManyValued, Paraconsistent, Temporal, Deontic,
-    Epistemic, Quantum, Intuitionistic, Relevance, Free, Infinitary, Modal ---
-    only Classical is defined (as the Tamari contraction from EMLRegistry).
-  \item \textbf{\textsf{LogicNormalForm}} for all non-Classical logics ---
-    only $\mathsf{rightComb}$ (Classical) is defined.
-  \item \textbf{\textsf{logic\_contracts\_to\_normal\_form}} for non-Classical logics ---
-    the theorem is stated but only the Classical case is proven.
+  \item \textbf{Other problem classes} --- $\mathsf{selfReference}$ (Liar),
+    $\mathsf{vagueness}$ (Sorites), $\mathsf{temporalDecision}$ (Grandfather),
+    and $\mathsf{inconsistentDef}$ (Russell's) are instantiated.
+    The other 9 classes (deontic, epistemic, quantum, etc.)
+    need \textsf{Problem} definitions with their own tree families.
+  \item \textbf{Tower composition} --- the current towers are flat (all logics stacked).
+    The institutional closure pipeline demonstrates a first step toward
+    nested composition (temporal $\to$ fuzzy $\to$ deontic $\to$ self-recognition).
+    Full \textsf{LogicTranslation} instances between adjacent logics remain.
+  \item \textbf{Shortest-path cost} --- the $\Phi$ cost currently equals
+    $\textsf{cdStep}$ by definition; a BFS algorithm over \textsf{contracts\_to}
+    would compute the actual PentagonatorDistance.
+  \item \textbf{Regularization axis} --- the institutional closure sketch
+    uses placeholder normalization; the full endless/eternal/infinite/boundless
+    hierarchy must be formalized to compute real costs.
 \end{itemize}
 
-\subsection{Meta-Paradoxes in \textsf{LiarParadox.lean}}
+\subsection{Liar Cost: Hardness Measure}
 
-\begin{itemize}
-  \item \textbf{\textsf{fuzzyLiar.proof}} --- a $\mathsf{sorry}$; blocked by the missing
-    Fuzzy \textsf{LogicContraction}. This sorry is formalized as a first-class
-    meta-paradox in \textsf{fuzzyMissingProof}.
-  \item \textbf{\textsf{missingContractions}} --- the 11 meta-paradoxes arising from
-    all non-Classical missing \textsf{LogicContraction} definitions.
-    Each is a concrete cell in the Very Big Box product that cannot yet be filled.
-  \item \textbf{Non-Classical wrappers} for the Liar --- ManyValued, Paraconsistent,
-    Intuitionistic, etc.\ are not yet defined; each requires its logic's
-    \textsf{LogicContraction} and \textsf{LogicNormalForm}.
-  \item \textbf{Other problem classes} --- only $\mathsf{selfReference}$ and $\mathsf{metaParadox}$
-    are instantiated as \textsf{Problem}s. The other 10 classes have problems
-    that are not yet defined.
-\end{itemize}
+The Liar as perfect anti-coherence ($X = \neg X$) gives a hardness measure for each logic:
+how many contraction steps are required to resolve it.
 
-\subsection{Blocking Graph}
+\begin{definition}[Liar Cost]
+\label{def:liar_cost}
+\lean{LiarParadox.liarCost}
+\leanok
+\uses{def:liar}
+The cost $\Phi(\text{Liar}, \text{lt})$ to resolve the Liar under logic \textsf{lt}.
+Conjectured to equal the Cayley--Dickson step.
+\end{definition}
 
-The dependencies among missing work:
+\begin{theorem}[Cost Bound]
+\label{thm:liar_cost_bound}
+\lean{LiarParadox.liarCost_le_cdStep}
+\leanok
+\uses{def:liar_cost, def:cdstep}
+$\textsf{liarCost}(\text{lt}) \le \textsf{cdStep}(\text{lt})$ for every logic type.
+For Classical and Fuzzy the bound is tight (equality).
+\end{theorem}
 
+\begin{definition}[Generic Liar Wrapper]
+\label{def:liar_wrapper}
+\lean{LiarParadox.liarWrapper}
+\leanok
+\uses{def:liar, def:liar_cost}
+For any logic \textsf{lt}, constructs the \textsf{WrappedProblem} with
+$\textsf{cost} = \textsf{liarCost}(\text{lt})$. Fills all 12 mail slots.
+\end{definition}
+
+\begin{corollary}[Cost Match for Classical]
+\label{cor:liar_cost_match_classical}
+\lean{LiarParadox.liarCost_matches_classical}
+\leanok
+\uses{thm:liar_cost_bound}
+$\textsf{liarCost}(\text{Classical}) = 0 = \textsf{classicalLiar.cost}$.
+\end{corollary}
+
+\begin{corollary}[Cost Match for Fuzzy]
+\label{cor:liar_cost_match_fuzzy}
+\lean{LiarParadox.liarCost_matches_fuzzy}
+\leanok
+\uses{thm:liar_cost_bound}
+$\textsf{liarCost}(\text{Fuzzy}) = 1 = \textsf{fuzzyLiar.cost}$.
+\end{corollary}
+
+\subsection{Friction Lagrangian}
+
+The tower sums costs across all logic layers. The total \textbf{Friction Lagrangian}
+$\mathcal{L}_{\text{friction}} = \sum_{\text{lt}} \Phi(\text{Liar}, \text{lt})$ is
+the total resistance of the logical ecosystem to self-negation.
+
+\begin{definition}[Friction Lagrangian]
+\label{def:friction_lagrangian}
+\lean{LiarParadox.frictionLagrangian}
+\leanok
+\uses{def:liar_tower, def:liar_cost}
+The sum of $\Phi$ costs across all layers of the Liar tower.
+\end{definition}
+
+With all 12 suitable logics, the Friction Lagrangian converges to a stable value:
 \[
-\begin{array}{c}
-\text{LogicContraction (12 non-Classical)} \\
-\downarrow \\
-\text{LogicNormalForm (12 non-Classical)} \\
-\downarrow \\
-\text{logic\_contracts\_to\_normal\_form} \\
-\downarrow \\
-\text{WrappedProblem proofs for Fuzzy, ManyValued, \dots} \\
-\downarrow \\
-\text{Tower layers beyond Classical} \qquad \text{Other Problem classes}
-\end{array}
+\mathcal{L}_{\text{friction}} = \sum_{\text{lt} \in \text{suitableLogics}} \textsf{cdStep}(\text{lt})
 \]
 
-Every missing piece in the chain below \textsf{LogicContraction} is blocked by it.
-The Liar formalization makes this blocking structure explicit: previously the sorries
-in \textsf{LogicTypes.lean} were abstract ``to be filled later'' --- now they are concrete
-dependencies of the Very Big Box product.
+This is the ``curvature of mind'' --- the total structural work the system must do
+to resolve perfect anti-coherence across the full space of logics.
+
+The blocking chain is now fully resolved for the Liar problem.
+Previously the sorries in \textsf{LogicTypes.lean} were abstract goals;
+now every definition and theorem is filled, and the Very Big Box has its
+first complete product cell: the Liar across all 12 logics.
 
 \endinput

@@ -206,6 +206,12 @@ def rightComb : Nat → EMLTree
   | 0     => .Leaf
   | n + 1 => .Node .Leaf (rightComb n)
 
+-- Left-comb: a chain with all nodes oriented leftward
+-- Represents sequential composition: ((...(a • b) • c) • ...)
+def leftComb : Nat → EMLTree
+  | 0     => .Leaf
+  | n + 1 => .Node (leftComb n) .Leaf
+
 -- Router index (bounded natural)
 -- **Neural binding address**: finite index space for router-to-tree mapping
 abbrev RouterIndex (n : Nat) := Fin n

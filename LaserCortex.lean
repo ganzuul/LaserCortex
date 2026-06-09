@@ -4,3 +4,8 @@ import LaserCortex.Basic
 import LaserCortex.EMLRegistry
 import LaserCortex.LiarParadox
 import LaserCortex.LogicTypes
+import LaserCortex.SoritesParadox
+import LaserCortex.TemporalParadox
+import LaserCortex.RussellsParadox
+import LaserCortex.LogicMonad
+import LaserCortex.InstitutionalClosure
