@@ -6,6 +6,8 @@ EMLRegistry.rightComb
 EMLRegistry.contracts_to_node_left
 EMLRegistry.contracts_to_node_right
 EMLRegistry.contracts_to_trans
+EMLRegistry.contracts_one_size_eq
+EMLRegistry.contracts_to_size_eq
 EMLRegistry.node_of_rightCombs_contracts_to_rightComb
 EMLRegistry.contracts_to_rightComb
 EMLRegistry.RouterIndex
@@ -22,3 +24,10 @@ LogicTypes.LogicType.cdStep
 LogicTypes.LogicType.isAssociativeSector
 LogicTypes.LogicNormalForm
 LogicTypes.logic_contracts_to_normal_form
+LiarParadox.liar
+LiarParadox.liar_contracts_to_rightComb
+LiarParadox.liar_confluence_classical
+LiarParadox.liar_confluence_cross
+LiarParadox.contractionCost
+LiarParadox.frictionLagrangian
+LiarParadox.optimalResolution

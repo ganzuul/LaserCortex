@@ -73,6 +73,24 @@ If $s \to t$ and $t \to u$ then $s \to u$.
 Audit trails concatenate monotonically.
 \end{lemma}
 
+\section{Size Invariants}
+
+\begin{lemma}[Size is Preserved by Single-Step Contraction]
+\label{lem:size_one}
+\lean{EMLRegistry.contracts_one_size_eq}
+\leanok
+\uses{def:size, def:contracts_one}
+Rotation rewrites the tree depth but does not change the number of internal nodes.
+\end{lemma}
+
+\begin{lemma}[Size is Preserved by Multi-Step Contraction]
+\label{lem:size_multi}
+\lean{EMLRegistry.contracts_to_size_eq}
+\leanok
+\uses{def:size, def:contracts_to, lem:size_one}
+Contraction paths preserve tree size, establishing that the Tamari lattice $T_n$ is graded by node count $n$.
+\end{lemma}
+
 \section{Main Contraction Theorem}
 
 \begin{lemma}[Node of Right-Combs Contracts to Right-Comb]
@@ -223,4 +241,140 @@ The normal form for each logic type. For Classical logic this is \textsf{rightCo
 For any logic type $lt$ and tree $t$, $\mathsf{LogicContraction}\ lt\ t\ (\mathsf{LogicNormalForm}\ lt\ t.\mathsf{size})$.
 Currently proven for Classical logic; other cases are placeholders.
 \end{theorem}
+\chapter{Liar Paradox: The Hard Test Case}
+
+\section{Canonical Encoding}
+
+\begin{definition}[Liar Tree]
+\label{def:liar}
+\lean{LiarParadox.liar}
+\leanok
+\uses{def:emltree}
+The canonical Liar sentence: a size-3 symmetric tree
+\[
+\mathsf{Node}(\mathsf{Node}(\mathsf{Leaf},\ \mathsf{Leaf}),\ \mathsf{Node}(\mathsf{Leaf},\ \mathsf{Leaf}))
+\]
+encoding the self-referential equation $L = \neg L$ via repeated bracketing.
+Each leaf pair is structurally identical, so neither bracketing dominates ---
+the paradox is that rotation can pass the ``hot potato'' back and forth indefinitely.
+\end{definition}
+
+\begin{theorem}[Liar Contracts to Right-Comb]
+\label{thm:liar_contracts}
+\lean{LiarParadox.liar_contracts_to_rightComb}
+\leanok
+\uses{def:emltree, thm:contracts_to_rightComb}
+\[
+\mathsf{liar} \longrightarrow \mathsf{rightComb}(3)
+\]
+The Liar reaches equilibrium under Classical Tamari contraction, as a special case of the general theorem.
+\end{theorem}
+
+\section{Confluence}
+
+\begin{theorem}[Classical Confluence of the Liar]
+\label{thm:liar_confluence_classical}
+\lean{LiarParadox.liar_confluence_classical}
+\leanok
+\uses{def:liar, def:contracts_to, def:rightComb, lem:size_multi, thm:contracts_to_rightComb}
+If $\mathsf{liar} \to t$ then $t \to \mathsf{rightComb}(3)$.
+All Classical contraction paths from the Liar converge to the unique minimum of $T_3$.
+\end{theorem}
+
+\begin{theorem}[Cross-Logic Confluence of the Liar (Placeholder)]
+\label{thm:liar_confluence_cross}
+\lean{LiarParadox.liar_confluence_cross}
+\uses{def:logictype, def:logiccontraction, def:liar}
+If $\mathsf{liar} \to_{lt_1} t_1$ and $\mathsf{liar} \to_{lt_2} t_2$, there exists a translation between $t_1$ and $t_2$.
+This is the \textbf{open universe} property: different logics produce different normal forms,
+connected by translations but not necessarily equal.
+\textbf{Status:} Returns $\mathsf{True}$ as a placeholder. The real proof requires
+\hyperref[sec:missing]{logic-specific contraction relations}, which are not yet defined.
+\end{theorem}
+
+\section{Emergent Distance and Friction}
+
+\begin{definition}[Contraction Cost]
+\label{def:contraction_cost}
+\lean{LiarParadox.contractionCost}
+\uses{def:logictype, def:emltree}
+The pentagonator distance $\Phi(lt, t)$ for resolving tree $t$ under logic type $lt$.
+\textbf{Status:} Stub returning 0 for all logics. A proper implementation requires
+a shortest-path search over the contraction graph for each logic type.
+\end{definition}
+
+\begin{definition}[Friction Lagrangian]
+\label{def:friction_lagrangian}
+\lean{LiarParadox.frictionLagrangian}
+\uses{def:contraction_cost}
+The action functional $L(lt, t) = \Phi(lt, t)$ evaluated on a single
+(logic type, tree) pair. \textbf{Status:} Currently identical to \textsf{contractionCost};
+the full infinite-series form with commutator and associator derivatives is not yet formalized.
+\end{definition}
+
+\begin{definition}[Optimal Resolution]
+\label{def:optimal}
+\lean{LiarParadox.optimalResolution}
+\uses{def:logictype, def:friction_lagrangian}
+The logic type minimizing the Friction Lagrangian for a given tree.
+\textbf{Status:} Returns $\mathsf{Classical}$ unconditionally. Requires real cost data.
+\end{definition}
+
+\section{Missing Work}
+\label{sec:missing}
+
+The following definitions and theorems are stated but not yet implemented.
+They represent the \textbf{real friction} in the framework ---
+the Liar Paradox is defined and its Classical resolution is proven,
+but cross-logic analysis cannot proceed until these pieces are populated.
+
+\subsection{Sorries in \textsf{LogicTypes.lean}}
+
+\begin{itemize}
+  \item \textbf{\textsf{LogicContraction}} for Fuzzy, ManyValued, Paraconsistent, Temporal, Deontic,
+    Epistemic, Quantum, Intuitionistic, Relevance, Free, Infinitary, Modal ---
+    only Classical is defined (as the Tamari contraction from EMLRegistry).
+  \item \textbf{\textsf{LogicNormalForm}} for all non-Classical logics ---
+    only $\mathsf{rightComb}$ (Classical) is defined.
+  \item \textbf{\textsf{logic\_contracts\_to\_normal\_form}} for non-Classical logics ---
+    the theorem is stated but only the Classical case is proven.
+\end{itemize}
+
+\subsection{Stubs in \textsf{LiarParadox.lean}}
+
+\begin{itemize}
+  \item \textbf{\textsf{contractionCost}} --- returns 0 for all logics.
+    Needs a bounded shortest-path search over the contraction graph of each logic type,
+    analogous to $\mathsf{decidable\_contracts\_to}$ but cost-weighted.
+  \item \textbf{\textsf{frictionLagrangian}} --- currently the identity on cost.
+    The full form $\sum_k \mu_k [e^{\alpha_k C^{(k)}} - \beta_k \ln(1 + (A^{(k)})^2)]$
+    with coupling $\sum_k \nu_k (C^{(k)} A^{(k+1)} - A^{(k)} C^{(k+1)})$ is not yet formalized.
+  \item \textbf{\textsf{optimalResolution}} --- returns Classical unconditionally.
+  \item \textbf{\textsf{liar\_confluence\_cross}} --- returns $\mathsf{True}$; the real proof
+    depends on the missing \textsf{LogicContraction} definitions.
+\end{itemize}
+
+\subsection{Blocking Graph}
+
+The dependencies among missing work:
+
+\[
+\begin{array}{c}
+\text{LogicContraction (12 non-Classical)} \\
+\downarrow \\
+\text{LogicNormalForm (12 non-Classical)} \\
+\downarrow \\
+\text{logic\_contracts\_to\_normal\_form} \\
+\downarrow \\
+\text{LiarParadox.contractionCost} \quad \text{LiarParadox.liar\_confluence\_cross} \\
+\downarrow \\
+\text{LiarParadox.frictionLagrangian} \quad \text{LiarParadox.partitionFunction}
+\end{array}
+\]
+
+Every missing piece in the chain below \textsf{LogicContraction} is blocked by it.
+The Liar formalization makes this blocking structure explicit: previously the sorries
+in \textsf{LogicTypes.lean} were abstract ``to be filled later'' --- now they are concrete
+dependencies of the Liar's cross-logic analysis.
+
 \endinput

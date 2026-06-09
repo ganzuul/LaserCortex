@@ -74,7 +74,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">21</span><span class="definition_thmtitle">CD Step</span></div>
+      <span class="definition_thmlabel">23</span><span class="definition_thmtitle">CD Step</span></div>
     <div class="thm_thmcontent"><p>    Maps logic types to Cayley-Dickson construction steps. </p>
 </div>
 
@@ -104,7 +104,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">13</span><span class="definition_thmtitle">Cortex Certificate</span></div>
+      <span class="definition_thmlabel">15</span><span class="definition_thmtitle">Cortex Certificate</span></div>
     <div class="thm_thmcontent"><p>    A proof-carrying audit trail \(\langle source,\  target,\  proof \rangle \) showing that a tree reaches its equilibrium. </p>
 </div>
 
@@ -134,7 +134,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">14</span><span class="definition_thmtitle">Certify</span></div>
+      <span class="definition_thmlabel">16</span><span class="definition_thmtitle">Certify</span></div>
     <div class="thm_thmcontent"><p>    Issues a <span class="sffamily">CortexCertificate</span> for any tree \(t\), certifying that \(t \to \mathsf{rightComb}(t.\mathsf{size})\). This is the quench witness in the Witness-Skeptic game. </p>
 </div>
 
@@ -142,6 +142,36 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/EMLRegistry.certify">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:contraction_cost_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:contraction_cost" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">31</span><span class="definition_thmtitle">Contraction Cost</span></div>
+    <div class="thm_thmcontent"><p>    The pentagonator distance \(\Phi (lt, t)\) for resolving tree \(t\) under logic type \(lt\). <b class="bfseries">Status:</b> Stub returning 0 for all logics. A proper implementation requires a shortest-path search over the contraction graph for each logic type. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#def:contraction_cost">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.contractionCost">Lean</a>
     
     
   
@@ -243,6 +273,70 @@
 
 
     
+    <div class="dep-modal-container" id="def:friction_lagrangian_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:friction_lagrangian" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">32</span><span class="definition_thmtitle">Friction Lagrangian</span></div>
+    <div class="thm_thmcontent"><p>    The action functional \(L(lt, t) = \Phi (lt, t)\) evaluated on a single (logic type, tree) pair. <b class="bfseries">Status:</b> Currently identical to <span class="sffamily">contractionCost</span>; the full infinite-series form with commutator and associator derivatives is not yet formalized. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#def:friction_lagrangian">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.frictionLagrangian">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:liar_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:liar" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">27</span><span class="definition_thmtitle">Liar Tree</span></div>
+    <div class="thm_thmcontent"><p>    The canonical Liar sentence: a size-3 symmetric tree </p>
+<div class="displaymath" id="a0000000022">
+  \[  \mathsf{Node}(\mathsf{Node}(\mathsf{Leaf},\  \mathsf{Leaf}),\  \mathsf{Node}(\mathsf{Leaf},\  \mathsf{Leaf}))  \]
+</div>
+<p> encoding the self-referential equation \(L = \neg L\) via repeated bracketing. Each leaf pair is structurally identical, so neither bracketing dominates — the paradox is that rotation can pass the “hot potato” back and forth indefinitely. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#def:liar">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liar">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
     <div class="dep-modal-container" id="def:logicclass_modal">
       <div class="dep-modal-content">
           <button class="dep-closebtn">
@@ -254,7 +348,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">16</span><span class="definition_thmtitle">Logic Classification</span></div>
+      <span class="definition_thmlabel">18</span><span class="definition_thmtitle">Logic Classification</span></div>
     <div class="thm_thmcontent"><p>    Classification of logic types as Substructural, Extension, Alternative, Generalization, or Classical. </p>
 </div>
 
@@ -284,7 +378,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">18</span><span class="definition_thmtitle">Logic Contraction</span></div>
+      <span class="definition_thmlabel">20</span><span class="definition_thmtitle">Logic Contraction</span></div>
     <div class="thm_thmcontent"><p>    A type family of contraction relations indexed by <span class="sffamily">LogicType</span>. For Classical logic this is the Tamari contraction from EMLRegistry. </p>
 </div>
 
@@ -314,7 +408,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">23</span><span class="definition_thmtitle">Logic Normal Form</span></div>
+      <span class="definition_thmlabel">25</span><span class="definition_thmtitle">Logic Normal Form</span></div>
     <div class="thm_thmcontent"><p>    The normal form for each logic type. For Classical logic this is <span class="sffamily">rightComb</span>. </p>
 </div>
 
@@ -344,7 +438,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">17</span><span class="definition_thmtitle">Logic Tree</span></div>
+      <span class="definition_thmlabel">19</span><span class="definition_thmtitle">Logic Tree</span></div>
     <div class="thm_thmcontent"><p>    A type family assigning EML trees to each logic type. Currently uniform; extensible to logic-specific tree types. </p>
 </div>
 
@@ -374,7 +468,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">15</span><span class="definition_thmtitle">13 Logic Types</span></div>
+      <span class="definition_thmlabel">17</span><span class="definition_thmtitle">13 Logic Types</span></div>
     <div class="thm_thmcontent"><p>   An inductive type enumerating 13 reasoning paradigms. </p>
 <p>Each handles specific classes of paradoxes as boundary conditions rather than errors. </p>
 </div>
@@ -405,7 +499,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">20</span><span class="definition_thmtitle">Meta-Contraction</span></div>
+      <span class="definition_thmlabel">22</span><span class="definition_thmtitle">Meta-Contraction</span></div>
     <div class="thm_thmcontent"><p>    Cross-logic contraction allowing reasoning that spans multiple logic types via intra-logic contraction, inter-logic translation, and transitivity. </p>
 </div>
 
@@ -413,6 +507,36 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LogicTypes.MetaContractsTo">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:optimal_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:optimal" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">33</span><span class="definition_thmtitle">Optimal Resolution</span></div>
+    <div class="thm_thmcontent"><p>    The logic type minimizing the Friction Lagrangian for a given tree. <b class="bfseries">Status:</b> Returns \(\mathsf{Classical}\) unconditionally. Requires real cost data. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#def:optimal">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.optimalResolution">Lean</a>
     
     
   
@@ -435,7 +559,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">12</span><span class="definition_thmtitle">Type Registry</span></div>
+      <span class="definition_thmlabel">14</span><span class="definition_thmtitle">Type Registry</span></div>
     <div class="thm_thmcontent"><p>    An injective mapping from router indices to EML trees. This is the cortex-registry interface where neural computation meets formal grammar. </p>
 </div>
 
@@ -495,7 +619,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">11</span><span class="definition_thmtitle">Router Index</span></div>
+      <span class="definition_thmlabel">13</span><span class="definition_thmtitle">Router Index</span></div>
     <div class="thm_thmcontent"><p>   A bounded natural number \(\mathsf{Fin}(n)\) serving as a neural binding address. </p>
 </div>
 
@@ -555,7 +679,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">22</span><span class="definition_thmtitle">Split-Octonion Sectors</span></div>
+      <span class="definition_thmlabel">24</span><span class="definition_thmtitle">Split-Octonion Sectors</span></div>
     <div class="thm_thmcontent"><p>    Divides logic types into associative and non-associative sectors of the split-octonion algebra. </p>
 </div>
 
@@ -585,7 +709,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">19</span><span class="definition_thmtitle">Logic Translation</span></div>
+      <span class="definition_thmlabel">21</span><span class="definition_thmtitle">Logic Translation</span></div>
     <div class="thm_thmcontent"><p>    A structure specifying forward and backward maps between logic types with soundness and completeness proofs. </p>
 </div>
 
@@ -675,9 +799,9 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">9</span><span class="lemma_thmtitle">Node of Right-Combs Contracts to Right-Comb</span></div>
+      <span class="lemma_thmlabel">11</span><span class="lemma_thmtitle">Node of Right-Combs Contracts to Right-Comb</span></div>
     <div class="thm_thmcontent"><p>    For any \(a, b : \mathbb {N}\), </p>
-<div class="displaymath" id="a0000000007">
+<div class="displaymath" id="a0000000009">
   \[  \mathsf{Node}(\mathsf{rightComb}(a),\  \mathsf{rightComb}(b)) \longrightarrow \mathsf{rightComb}(1 + a + b).  \]
 </div>
 <p> The equilibrium attractor is closed under non-associative composition. </p>
@@ -687,6 +811,66 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/EMLRegistry.node_of_rightCombs_contracts_to_rightComb">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="lem:size_multi_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="lem:size_multi" style="display: none">
+    <div class="thm_thmheading">
+      <span class="lemma_thmcaption">
+      Lemma
+      </span>
+      <span class="lemma_thmlabel">10</span><span class="lemma_thmtitle">Size is Preserved by Multi-Step Contraction</span></div>
+    <div class="thm_thmcontent"><p>    Contraction paths preserve tree size, establishing that the Tamari lattice \(T_n\) is graded by node count \(n\). </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#lem:size_multi">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/EMLRegistry.contracts_to_size_eq">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="lem:size_one_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="lem:size_one" style="display: none">
+    <div class="thm_thmheading">
+      <span class="lemma_thmcaption">
+      Lemma
+      </span>
+      <span class="lemma_thmlabel">9</span><span class="lemma_thmtitle">Size is Preserved by Single-Step Contraction</span></div>
+    <div class="thm_thmcontent"><p>    Rotation rewrites the tree depth but does not change the number of internal nodes. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#lem:size_one">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/EMLRegistry.contracts_one_size_eq">Lean</a>
     
     
   
@@ -739,9 +923,9 @@
       <span class="theorem_thmcaption">
       Theorem
       </span>
-      <span class="theorem_thmlabel">10</span><span class="theorem_thmtitle">Every Tree Contracts to Right-Comb</span></div>
+      <span class="theorem_thmlabel">12</span><span class="theorem_thmtitle">Every Tree Contracts to Right-Comb</span></div>
     <div class="thm_thmcontent"><p>    For any tree \(t : \mathsf{EMLTree}\), </p>
-<div class="displaymath" id="a0000000008">
+<div class="displaymath" id="a0000000010">
   \[  t \longrightarrow \mathsf{rightComb}(t.\mathsf{size}).  \]
 </div>
 <p> Every configuration has a valid evolution path to the equilibrium attractor indexed by its size. </p>
@@ -751,6 +935,100 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/EMLRegistry.contracts_to_rightComb">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="thm:liar_confluence_classical_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="thm:liar_confluence_classical" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">29</span><span class="theorem_thmtitle">Classical Confluence of the Liar</span></div>
+    <div class="thm_thmcontent"><p>    If \(\mathsf{liar} \to t\) then \(t \to \mathsf{rightComb}(3)\). All Classical contraction paths from the Liar converge to the unique minimum of \(T_3\). </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#thm:liar_confluence_classical">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liar_confluence_classical">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="thm:liar_confluence_cross_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="thm:liar_confluence_cross" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">30</span><span class="theorem_thmtitle">Cross-Logic Confluence of the Liar (Placeholder)</span></div>
+    <div class="thm_thmcontent"><p>    If \(\mathsf{liar} \to _{lt_1} t_1\) and \(\mathsf{liar} \to _{lt_2} t_2\), there exists a translation between \(t_1\) and \(t_2\). This is the <b class="bfseries">open universe</b> property: different logics produce different normal forms, connected by translations but not necessarily equal. <b class="bfseries">Status:</b> Returns \(\mathsf{True}\) as a placeholder. The real proof requires <a href="#." >logic-specific contraction relations</a>, which are not yet defined. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#thm:liar_confluence_cross">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liar_confluence_cross">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="thm:liar_contracts_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="thm:liar_contracts" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">28</span><span class="theorem_thmtitle">Liar Contracts to Right-Comb</span></div>
+    <div class="thm_thmcontent">
+<div class="displaymath" id="a0000000023">
+  \[  \mathsf{liar} \longrightarrow \mathsf{rightComb}(3)  \]
+</div>
+<p> The Liar reaches equilibrium under Classical Tamari contraction, as a special case of the general theorem. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#thm:liar_contracts">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liar_contracts_to_rightComb">Lean</a>
     
     
   
@@ -773,7 +1051,7 @@
       <span class="theorem_thmcaption">
       Theorem
       </span>
-      <span class="theorem_thmlabel">24</span><span class="theorem_thmtitle">Logic Contraction to Normal Form</span></div>
+      <span class="theorem_thmlabel">26</span><span class="theorem_thmtitle">Logic Contraction to Normal Form</span></div>
     <div class="thm_thmcontent"><p>    For any logic type \(lt\) and tree \(t\), \(\mathsf{LogicContraction}\  lt\  t\  (\mathsf{LogicNormalForm}\  lt\  t.\mathsf{size})\). Currently proven for Classical logic; other cases are placeholders. </p>
 </div>
 
@@ -808,7 +1086,7 @@ graphContainer.graphviz({useWorker: true})
     .width(width)
     .height(height)
     .fit(true)
-    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	"def:logicnormal"	[color=green,		fillcolor="#B0ECA3",		label=logicnormal,		shape=box,		style=filled];	"thm:logic_contracts"	[color=blue,		label=logic_contracts,		shape=ellipse];	"def:logicnormal" -> "thm:logic_contracts"	[style=dashed];	"lem:node_rightcombs"	[color=green,		label=node_rightcombs,		shape=ellipse];	"thm:contracts_to_rightComb"	[color=green,		label=contracts_to_rightComb,		shape=ellipse];	"lem:node_rightcombs" -> "thm:contracts_to_rightComb"	[style=dashed];	"thm:contracts_to_rightComb" -> "thm:logic_contracts"	[style=dashed];	"def:certify"	[color=green,		fillcolor="#B0ECA3",		label=certify,		shape=box,		style=filled];	"thm:contracts_to_rightComb" -> "def:certify"	[style=dashed];	"def:size"	[color=green,		fillcolor="#B0ECA3",		label=size,		shape=box,		style=filled];	"def:size" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:contracts_one"	[color=green,		fillcolor="#B0ECA3",		label=contracts_one,		shape=box,		style=filled];	"def:contracts_to"	[color=green,		fillcolor="#B0ECA3",		label=contracts_to,		shape=box,		style=filled];	"def:contracts_one" -> "def:contracts_to"	[style=dashed];	"lem:node_left"	[color=green,		label=node_left,		shape=ellipse];	"def:contracts_to" -> "lem:node_left"	[style=dashed];	"lem:node_right"	[color=green,		label=node_right,		shape=ellipse];	"def:contracts_to" -> "lem:node_right"	[style=dashed];	"def:certificate"	[color=green,		fillcolor="#B0ECA3",		label=certificate,		shape=box,		style=filled];	"def:contracts_to" -> "def:certificate"	[style=dashed];	"def:logiccontraction"	[color=green,		fillcolor="#B0ECA3",		label=logiccontraction,		shape=box,		style=filled];	"def:contracts_to" -> "def:logiccontraction"	[style=dashed];	"lem:trans"	[color=green,		label=trans,		shape=ellipse];	"def:contracts_to" -> "lem:trans"	[style=dashed];	"lem:node_left" -> "thm:contracts_to_rightComb"	[style=dashed];	"lem:node_right" -> "lem:node_rightcombs"	[style=dashed];	"def:certificate" -> "def:certify"	[style=dashed];	"def:logiccontraction" -> "thm:logic_contracts"	[style=dashed];	"def:translation"	[color=green,		fillcolor="#B0ECA3",		label=translation,		shape=box,		style=filled];	"def:logiccontraction" -> "def:translation"	[style=dashed];	"lem:trans" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:cdstep"	[color=green,		fillcolor="#B0ECA3",		label=cdstep,		shape=box,		style=filled];	"def:logictype"	[color=green,		fillcolor="#B0ECA3",		label=logictype,		shape=box,		style=filled];	"def:logictype" -> "def:logicnormal"	[style=dashed];	"def:logictype" -> "def:logiccontraction"	[style=dashed];	"def:logictype" -> "def:cdstep"	[style=dashed];	"def:logicclass"	[color=green,		fillcolor="#B0ECA3",		label=logicclass,		shape=box,		style=filled];	"def:logictype" -> "def:logicclass"	[style=dashed];	"def:split"	[color=green,		fillcolor="#B0ECA3",		label=split,		shape=box,		style=filled];	"def:logictype" -> "def:split"	[style=dashed];	"def:logictree"	[color=green,		fillcolor="#B0ECA3",		label=logictree,		shape=box,		style=filled];	"def:logictype" -> "def:logictree"	[style=dashed];	"def:metacontracts"	[color=green,		fillcolor="#B0ECA3",		label=metacontracts,		shape=box,		style=filled];	"def:translation" -> "def:metacontracts"	[style=dashed];	"def:rightComb"	[color=green,		fillcolor="#B0ECA3",		label=rightComb,		shape=box,		style=filled];	"def:rightComb" -> "def:logicnormal"	[style=dashed];	"def:rightComb" -> "lem:node_rightcombs"	[style=dashed];	"def:rightComb" -> "def:certificate"	[style=dashed];	"def:registry"	[color=green,		fillcolor="#B0ECA3",		label=registry,		shape=box,		style=filled];	"def:emltree"	[color=green,		fillcolor="#B0ECA3",		label=emltree,		shape=box,		style=filled];	"def:emltree" -> "def:size"	[style=dashed];	"def:emltree" -> "def:contracts_one"	[style=dashed];	"def:emltree" -> "def:logictree"	[style=dashed];	"def:emltree" -> "def:rightComb"	[style=dashed];	"def:emltree" -> "def:registry"	[style=dashed];	"def:router"	[color=green,		fillcolor="#B0ECA3",		label=router,		shape=box,		style=filled];	"def:router" -> "def:registry"	[style=dashed];}`)
+    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	"def:router"	[color=green,		fillcolor="#B0ECA3",		label=router,		shape=box,		style=filled];	"def:registry"	[color=green,		fillcolor="#B0ECA3",		label=registry,		shape=box,		style=filled];	"def:router" -> "def:registry"	[style=dashed];	"lem:size_one"	[color=green,		label=size_one,		shape=ellipse];	"lem:size_multi"	[color=green,		label=size_multi,		shape=ellipse];	"lem:size_one" -> "lem:size_multi"	[style=dashed];	"thm:liar_confluence_classical"	[color=green,		label=liar_confluence_classical,		shape=ellipse];	"lem:size_multi" -> "thm:liar_confluence_classical"	[style=dashed];	"def:liar"	[color=green,		fillcolor="#B0ECA3",		label=liar,		shape=box,		style=filled];	"def:liar" -> "thm:liar_confluence_classical"	[style=dashed];	"thm:liar_confluence_cross"	[color=blue,		label=liar_confluence_cross,		shape=ellipse];	"def:liar" -> "thm:liar_confluence_cross"	[style=dashed];	"def:size"	[color=green,		fillcolor="#B0ECA3",		label=size,		shape=box,		style=filled];	"def:size" -> "lem:size_one"	[style=dashed];	"thm:contracts_to_rightComb"	[color=green,		label=contracts_to_rightComb,		shape=ellipse];	"def:size" -> "thm:contracts_to_rightComb"	[style=dashed];	"thm:contracts_to_rightComb" -> "thm:liar_confluence_classical"	[style=dashed];	"thm:logic_contracts"	[color=blue,		label=logic_contracts,		shape=ellipse];	"thm:contracts_to_rightComb" -> "thm:logic_contracts"	[style=dashed];	"def:certify"	[color=green,		fillcolor="#B0ECA3",		label=certify,		shape=box,		style=filled];	"thm:contracts_to_rightComb" -> "def:certify"	[style=dashed];	"thm:liar_contracts"	[color=green,		label=liar_contracts,		shape=ellipse];	"thm:contracts_to_rightComb" -> "thm:liar_contracts"	[style=dashed];	"def:contracts_one"	[color=green,		fillcolor="#B0ECA3",		label=contracts_one,		shape=box,		style=filled];	"def:contracts_one" -> "lem:size_one"	[style=dashed];	"def:contracts_to"	[color=green,		fillcolor="#B0ECA3",		label=contracts_to,		shape=box,		style=filled];	"def:contracts_one" -> "def:contracts_to"	[style=dashed];	"def:contracts_to" -> "lem:size_multi"	[style=dashed];	"lem:node_left"	[color=green,		label=node_left,		shape=ellipse];	"def:contracts_to" -> "lem:node_left"	[style=dashed];	"lem:node_right"	[color=green,		label=node_right,		shape=ellipse];	"def:contracts_to" -> "lem:node_right"	[style=dashed];	"def:certificate"	[color=green,		fillcolor="#B0ECA3",		label=certificate,		shape=box,		style=filled];	"def:contracts_to" -> "def:certificate"	[style=dashed];	"def:logiccontraction"	[color=green,		fillcolor="#B0ECA3",		label=logiccontraction,		shape=box,		style=filled];	"def:contracts_to" -> "def:logiccontraction"	[style=dashed];	"lem:trans"	[color=green,		label=trans,		shape=ellipse];	"def:contracts_to" -> "lem:trans"	[style=dashed];	"lem:node_left" -> "thm:contracts_to_rightComb"	[style=dashed];	"lem:node_rightcombs"	[color=green,		label=node_rightcombs,		shape=ellipse];	"lem:node_rightcombs" -> "thm:contracts_to_rightComb"	[style=dashed];	"lem:node_right" -> "lem:node_rightcombs"	[style=dashed];	"def:certificate" -> "def:certify"	[style=dashed];	"def:logiccontraction" -> "thm:liar_confluence_cross"	[style=dashed];	"def:logiccontraction" -> "thm:logic_contracts"	[style=dashed];	"def:translation"	[color=green,		fillcolor="#B0ECA3",		label=translation,		shape=box,		style=filled];	"def:logiccontraction" -> "def:translation"	[style=dashed];	"lem:trans" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:metacontracts"	[color=green,		fillcolor="#B0ECA3",		label=metacontracts,		shape=box,		style=filled];	"def:contraction_cost"	[color=blue,		fillcolor="#A3D6FF",		label=contraction_cost,		shape=box,		style=filled];	"def:friction_lagrangian"	[label=friction_lagrangian,		shape=box];	"def:contraction_cost" -> "def:friction_lagrangian"	[style=dashed];	"def:optimal"	[label=optimal,		shape=box];	"def:friction_lagrangian" -> "def:optimal"	[style=dashed];	"def:translation" -> "def:metacontracts"	[style=dashed];	"def:cdstep"	[color=green,		fillcolor="#B0ECA3",		label=cdstep,		shape=box,		style=filled];	"def:split"	[color=green,		fillcolor="#B0ECA3",		label=split,		shape=box,		style=filled];	"def:rightComb"	[color=green,		fillcolor="#B0ECA3",		label=rightComb,		shape=box,		style=filled];	"def:rightComb" -> "lem:node_rightcombs"	[style=dashed];	"def:rightComb" -> "def:certificate"	[style=dashed];	"def:logicnormal"	[color=green,		fillcolor="#B0ECA3",		label=logicnormal,		shape=box,		style=filled];	"def:rightComb" -> "def:logicnormal"	[style=dashed];	"def:logicnormal" -> "thm:logic_contracts"	[style=dashed];	"def:logictype"	[color=green,		fillcolor="#B0ECA3",		label=logictype,		shape=box,		style=filled];	"def:logictype" -> "def:logiccontraction"	[style=dashed];	"def:logictype" -> "def:contraction_cost"	[style=dashed];	"def:logictype" -> "def:cdstep"	[style=dashed];	"def:logictype" -> "def:split"	[style=dashed];	"def:logictype" -> "def:logicnormal"	[style=dashed];	"def:logicclass"	[color=green,		fillcolor="#B0ECA3",		label=logicclass,		shape=box,		style=filled];	"def:logictype" -> "def:logicclass"	[style=dashed];	"def:logictree"	[color=green,		fillcolor="#B0ECA3",		label=logictree,		shape=box,		style=filled];	"def:logictype" -> "def:logictree"	[style=dashed];	"def:emltree"	[color=green,		fillcolor="#B0ECA3",		label=emltree,		shape=box,		style=filled];	"def:emltree" -> "def:registry"	[style=dashed];	"def:emltree" -> "def:liar"	[style=dashed];	"def:emltree" -> "def:size"	[style=dashed];	"def:emltree" -> "def:contracts_one"	[style=dashed];	"def:emltree" -> "def:contraction_cost"	[style=dashed];	"def:emltree" -> "def:rightComb"	[style=dashed];	"def:emltree" -> "def:logictree"	[style=dashed];}`)
     .on("end", interactive);
 
 latexLabelEscaper = function(label) {
