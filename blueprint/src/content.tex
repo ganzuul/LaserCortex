@@ -365,7 +365,74 @@ is an isomorphism of monads for any $\mathsf{lt}$. Only the normalization
 (\textsf{LogicContraction}) changes between logics.
 \end{theorem}
 
-\chapter{Problem Classes and the Very Big Box}
+\section{Decision Composition API}
+
+\begin{definition}[Gate]
+\label{def:gate}
+\lean{DecisionComposition.Gate}
+\leanok
+\uses{def:logic_contraction}
+A Gate is a binary decision predicate indexed by a logic modality:
+$\mathsf{Gate} = (\mathsf{name} : \mathsf{String}) \times
+(\mathsf{modality} : \mathsf{LogicType}) \times
+(\mathsf{check} : \mathsf{EMLTree} \to \mathsf{Prop})$.
+Every logic type gives rise to a Gate via $\mathsf{ofLogicType}$,
+and every tree passes any such gate (by \Cref{thm:logic_contracts}).
+\end{definition}
+
+\begin{definition}[Decision]
+\label{def:decision}
+\lean{DecisionComposition.Decision}
+\leanok
+\uses{def:gate}
+A Decision is the refinement type from the specification:
+$\mathsf{Decision\ gates} = \{ d : \mathsf{EMLTree} \mid
+\forall g \in \mathsf{gates},\ g.\mathsf{check}\ d \}$.
+The type parameter $\mathsf{gates}$ IS the channel: downstream
+functions know statically which gates the datum has passed.
+\end{definition}
+
+\begin{definition}[Compose]
+\label{def:compose}
+\lean{DecisionComposition.Decision.compose}
+\leanok
+\uses{def:decision}
+$\mathsf{compose} : \mathsf{Decision\ gates} \to \mathsf{Gate}
+\to \mathsf{Decision\ (g :: gates)}$.
+The return type is strictly richer than the input type:
+a gate is added to the type-level history.
+\end{definition}
+
+\begin{definition}[LogicPipeline]
+\label{def:logic_pipeline}
+\lean{DecisionComposition.LogicPipeline}
+\leanok
+\uses{def:gate}
+A LogicPipeline is a sequence of logic types to run as gates.
+Running it on a tree produces a Decision tagged with all of them.
+The institutional closure is a pipeline with gates Temporal,
+Fuzzy, Deontic.
+\end{definition}
+
+\begin{theorem}[Pipeline Soundness]
+\label{thm:pipeline_soundness}
+\lean{DecisionComposition.closure_sound}
+\leanok
+\uses{def:logic_pipeline, def:decision}
+For any tree and any gate in the closure pipeline,
+$\mathsf{soundness}$ guarantees the gate check holds.
+This is the compile-time contract: the type signature IS the channel.
+\end{theorem}
+
+\begin{theorem}[Decide Soundness]
+\label{thm:decide_soundness}
+\lean{DecisionComposition.decide_sound}
+\leanok
+\uses{def:logic_pipeline, def:decision, def:institutional_closure}
+$\mathsf{decide}$ runs the institutional closure on $\mathsf{LogicM\ Event}$
+and produces a Decision whose datum passes all closure gates.
+The channel is the type: $\mathsf{Decision\ (closurePipeline.gates)}$.
+\end{theorem}
 
 \section{Paradox Taxonomy}
 

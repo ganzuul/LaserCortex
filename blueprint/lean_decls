@@ -34,6 +34,12 @@ InstitutionalClosure.closure
 InstitutionalClosure.closure_is_fixed_point
 InstitutionalClosure.normalization_idempotent
 LogicMonad.monad_structure_invariant
+DecisionComposition.Gate
+DecisionComposition.Decision
+DecisionComposition.Decision.compose
+DecisionComposition.LogicPipeline
+DecisionComposition.closure_sound
+DecisionComposition.decide_sound
 LiarParadox.ProblemClass
 LiarParadox.Problem
 LiarParadox.WrappedProblem
