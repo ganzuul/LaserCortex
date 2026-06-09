@@ -27,6 +27,8 @@ See also:
 
 import LaserCortex.EMLRegistry
 
+export EMLRegistry (contracts_one contracts_to rightComb)
+
 namespace LogicTypes
 
 -- ============================================================================
@@ -193,15 +195,27 @@ def LogicContraction : LogicType → EMLRegistry.EMLTree → EMLRegistry.EMLTree
   | .Infinitary => sorry  -- Coinductive reduction
   | .Modal => sorry  -- Modal reduction
 
-/-- 
-For Classical logic, we have the full contraction hierarchy from EMLRegistry.
--/
-export EMLRegistry (contracts_one contracts_to rightComb)
-
 -- ============================================================================
 -- SECTION 4: Meta-Contraction (Between Logics)
 -- Cross-logic contraction and translation
 -- ============================================================================
+
+/-- 
+Logic translation: formal specification of how to map between logics.
+
+This is the foundation for cross-logic reasoning.
+-/
+structure LogicTranslation (lt1 lt2 : LogicType) (s : EMLRegistry.EMLTree) (t : EMLRegistry.EMLTree) where
+  -- Forward translation: s in lt1 → some tree in lt2
+  forward : EMLRegistry.EMLTree → EMLRegistry.EMLTree
+  -- Backward translation: t in lt2 → some tree in lt1
+  backward : EMLRegistry.EMLTree → EMLRegistry.EMLTree
+  -- Soundness: forward preserves lt1 structure
+  soundness : ∀ x, LogicContraction lt1 x (forward x)
+  -- Completeness: backward preserves lt2 structure
+  completeness : ∀ y, LogicContraction lt2 (backward y) y
+  -- Round-trip properties (optional, for faithful translations)
+  roundTrip : ∀ x, forward (backward (forward x)) = forward x
 
 /-- 
 Meta-contraction: contraction that can cross logic boundaries.
@@ -230,23 +244,6 @@ inductive MetaContractsTo : LogicType → EMLRegistry.EMLTree → LogicType → 
       MetaContractsTo lt1 s lt2 t →
       MetaContractsTo lt2 t lt2 t' →
       MetaContractsTo lt1 s lt2 t'
-
-/-- 
-Logic translation: formal specification of how to map between logics.
-
-This is the foundation for cross-logic reasoning.
--/
-structure LogicTranslation (lt1 lt2 : LogicType) (s : EMLRegistry.EMLTree) (t : EMLRegistry.EMLTree) where
-  -- Forward translation: s in lt1 → some tree in lt2
-  forward : EMLRegistry.EMLTree → EMLRegistry.EMLTree
-  -- Backward translation: t in lt2 → some tree in lt1
-  backward : EMLRegistry.EMLTree → EMLRegistry.EMLTree
-  -- Soundness: forward preserves lt1 structure
-  soundness : ∀ x, LogicContraction lt1 x (forward x)
-  -- Completeness: backward preserves lt2 structure
-  completeness : ∀ y, LogicContraction lt2 (backward y) y
-  -- Round-trip properties (optional, for faithful translations)
-  roundTrip : ∀ x, forward (backward (forward x)) = forward x
 
 -- ============================================================================
 -- SECTION 5: Cayley-Dickson Connection
@@ -309,7 +306,7 @@ This provides a geometric interpretation of logic type composition.
 def LogicType.isAssociativeSector : LogicType → Bool := fun lt =>
   match lt with
   | .Classical | .Fuzzy | .ManyValued | .Temporal | .Deontic | .Epistemic => true
-  | .Quantum | .Intuitionistic | .Relevance | .Free | .Infinitary | .Modal => false
+  | .Paraconsistent | .Quantum | .Intuitionistic | .Relevance | .Free | .Infinitary | .Modal => false
 
 /-- 
 The split boundary: logic types that span both sectors.
@@ -402,7 +399,7 @@ theorem classical_contracts_to_normal_form (t : EMLRegistry.EMLTree) :
 -- The classical composition lemma (from EMLRegistry)
 theorem classical_node_of_rightCombs (a b : Nat) :
     ClassicalContraction
-      (EMLRegistry.Node (ClassicalNormalForm a) (ClassicalNormalForm b))
+      (EMLRegistry.EMLTree.Node (ClassicalNormalForm a) (ClassicalNormalForm b))
       (ClassicalNormalForm (1 + a + b)) :=
   EMLRegistry.node_of_rightCombs_contracts_to_rightComb a b
 

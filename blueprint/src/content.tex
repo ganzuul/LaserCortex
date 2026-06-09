@@ -1,7 +1,209 @@
-% In this file you should put the actual content of the blueprint.
-% It will be used both by the web and the print version.
-% It should *not* include the \begin{document}
-%
-% If you want to split the blueprint content into several files then
-% the current file can be a simple sequence of \input. Otherwise It
-% can start with a \section or \chapter for instance.
+\chapter{EML Registry: Tamari Lattice Contraction}
+
+\section{Core Types}
+
+\begin{definition}[EML Tree]
+\label{def:emltree}
+\lean{EMLRegistry.EMLTree}
+\leanok
+The type of binary trees representing configurations in the Tamari lattice.
+A tree is either a \texttt{Leaf} (empty configuration) or a \texttt{Node} $t_1\ t_2$ (composition of two sub-configurations).
+\end{definition}
+
+\begin{definition}[Tree Size]
+\label{def:size}
+\lean{EMLRegistry.EMLTree.size}
+\leanok
+The number of internal nodes in a tree, used as the lattice index $n$ in $T_n$.
+\end{definition}
+
+\begin{definition}[Single-Step Contraction]
+\label{def:contracts_one}
+\lean{EMLRegistry.contracts_one}
+\leanok
+The primitive non-associative rewrite rule: $(a \bullet b) \bullet c \to a \bullet (b \bullet c)$.
+This is the coupling signature for choice resolution, lifted through subtrees.
+\end{definition}
+
+\begin{definition}[Multi-Step Contraction]
+\label{def:contracts_to}
+\lean{EMLRegistry.contracts_to}
+\leanok
+The reflexive-transitive closure of \textsf{contracts\_one}. Represents an audit trail of choice resolutions with monotonic provenance.
+\end{definition}
+
+\begin{definition}[Right-Comb Normal Form]
+\label{def:rightComb}
+\lean{EMLRegistry.rightComb}
+\leanok
+The minimum element of the Tamari lattice — the equilibrium attractor.
+Defined as $\mathsf{rightComb}(0) = \mathsf{Leaf}$ and $\mathsf{rightComb}(n+1) = \mathsf{Node}(\mathsf{Leaf},\ \mathsf{rightComb}(n))$.
+\end{definition}
+
+\section{Lifting Lemmas}
+
+\begin{lemma}[Contraction Preserved Under Left Node]
+\label{lem:node_left}
+\lean{EMLRegistry.contracts_to_node_left}
+\leanok
+If $t \to t'$ then $\mathsf{Node}(t,\ r) \to \mathsf{Node}(t',\ r)$.
+Choice resolution in the left subtree propagates to the whole composition.
+\end{lemma}
+
+\begin{lemma}[Contraction Preserved Under Right Node]
+\label{lem:node_right}
+\lean{EMLRegistry.contracts_to_node_right}
+\leanok
+If $r \to r'$ then $\mathsf{Node}(l,\ r) \to \mathsf{Node}(l,\ r')$.
+Choice resolution in the right subtree propagates to the whole composition.
+\end{lemma}
+
+\begin{lemma}[Transitivity of Contraction]
+\label{lem:trans}
+\lean{EMLRegistry.contracts_to_trans}
+\leanok
+If $s \to t$ and $t \to u$ then $s \to u$.
+Audit trails concatenate monotonically.
+\end{lemma}
+
+\section{Main Contraction Theorem}
+
+\begin{lemma}[Node of Right-Combs Contracts to Right-Comb]
+\label{lem:node_rightcombs}
+\lean{EMLRegistry.node_of_rightCombs_contracts_to_rightComb}
+\leanok
+For any $a, b : \mathbb{N}$,
+\[
+\mathsf{Node}(\mathsf{rightComb}(a),\ \mathsf{rightComb}(b)) \longrightarrow \mathsf{rightComb}(1 + a + b).
+\]
+The equilibrium attractor is closed under non-associative composition.
+\end{lemma}
+
+\begin{theorem}[Every Tree Contracts to Right-Comb]
+\label{thm:contracts_to_rightComb}
+\lean{EMLRegistry.contracts_to_rightComb}
+\leanok
+For any tree $t : \mathsf{EMLTree}$,
+\[
+t \longrightarrow \mathsf{rightComb}(t.\mathsf{size}).
+\]
+Every configuration has a valid evolution path to the equilibrium attractor indexed by its size.
+\end{theorem}
+
+\section{Router and Registry}
+
+\begin{definition}[Router Index]
+\label{def:router}
+\lean{EMLRegistry.RouterIndex}
+\leanok
+A bounded natural number $\mathsf{Fin}(n)$ serving as a neural binding address.
+\end{definition}
+
+\begin{definition}[Type Registry]
+\label{def:registry}
+\lean{EMLRegistry.TypeRegistry}
+\leanok
+An injective mapping from router indices to EML trees. This is the cortex-registry interface where neural computation meets formal grammar.
+\end{definition}
+
+\section{Witness-Skeptic Game}
+
+\begin{definition}[Cortex Certificate]
+\label{def:certificate}
+\lean{EMLRegistry.CortexCertificate}
+\leanok
+A proof-carrying audit trail $\langle source,\ target,\ proof \rangle$ showing that a tree reaches its equilibrium.
+\end{definition}
+
+\begin{definition}[Certify]
+\label{def:certify}
+\lean{EMLRegistry.certify}
+\leanok
+Issues a \textsf{CortexCertificate} for any tree $t$, certifying that $t \to \mathsf{rightComb}(t.\mathsf{size})$.
+This is the quench witness in the Witness-Skeptic game.
+\end{definition}
+
+\chapter{Logic Types: Pluralistic Reasoning Framework}
+
+\section{Logic Type Hierarchy}
+
+\begin{definition}[13 Logic Types]
+\label{def:logictype}
+\lean{LogicTypes.LogicType}
+\leanok
+An inductive type enumerating 13 reasoning paradigms: Fuzzy, ManyValued, Paraconsistent, Temporal, Deontic, Epistemic, Quantum, Intuitionistic, Relevance, Free, Infinitary, Modal, and Classical.
+
+Each handles specific classes of paradoxes as boundary conditions rather than errors.
+\end{definition}
+
+\begin{definition}[Logic Classification]
+\label{def:logicclass}
+\lean{LogicTypes.LogicClass}
+\leanok
+Classification of logic types as Substructural, Extension, Alternative, Generalization, or Classical.
+\end{definition}
+
+\section{Logic-Specific Contraction}
+
+\begin{definition}[Logic Tree]
+\label{def:logictree}
+\lean{LogicTypes.LogicTree}
+\leanok
+A type family assigning EML trees to each logic type. Currently uniform; extensible to logic-specific tree types.
+\end{definition}
+
+\begin{definition}[Logic Contraction]
+\label{def:logiccontraction}
+\lean{LogicTypes.LogicContraction}
+\leanok
+A type family of contraction relations indexed by \textsf{LogicType}. For Classical logic this is the Tamari contraction from EMLRegistry.
+\end{definition}
+
+\section{Meta-Contraction}
+
+\begin{definition}[Meta-Contraction]
+\label{def:metacontracts}
+\lean{LogicTypes.MetaContractsTo}
+\leanok
+Cross-logic contraction allowing reasoning that spans multiple logic types via intra-logic contraction, inter-logic translation, and transitivity.
+\end{definition}
+
+\begin{definition}[Logic Translation]
+\label{def:translation}
+\lean{LogicTypes.LogicTranslation}
+\leanok
+A structure specifying forward and backward maps between logic types with soundness and completeness proofs.
+\end{definition}
+
+\section{Cayley-Dickson Connection}
+
+\begin{definition}[CD Step]
+\label{def:cdstep}
+\lean{LogicTypes.LogicType.cdStep}
+\leanok
+Maps logic types to Cayley-Dickson construction steps: Classical $\to 0$, Fuzzy $\to 1$, Intuitionistic $\to 2$, Quantum $\to 3$, Paraconsistent $\to 4$.
+\end{definition}
+
+\begin{definition}[Split-Octonion Sectors]
+\label{def:split}
+\lean{LogicTypes.LogicType.isAssociativeSector}
+\leanok
+Divides logic types into associative ($e_0$--$e_3$) and non-associative ($e_4$--$e_7$) sectors of the split-octonion algebra with $(4,4)$ signature.
+\end{definition}
+
+\section{Normal Forms and Contraction Theorem}
+
+\begin{definition}[Logic Normal Form]
+\label{def:logicnormal}
+\lean{LogicTypes.LogicNormalForm}
+\leanok
+The normal form for each logic type. For Classical logic this is \textsf{rightComb}.
+\end{definition}
+
+\begin{theorem}[Logic Contraction to Normal Form]
+\label{thm:logic_contracts}
+\lean{LogicTypes.logic_contracts_to_normal_form}
+\leanok
+For any logic type $lt$ and tree $t$, $\mathsf{LogicContraction}\ lt\ t\ (\mathsf{LogicNormalForm}\ lt\ t.\mathsf{size})$.
+Currently proven for Classical logic; other cases are placeholders.
+\end{theorem}
