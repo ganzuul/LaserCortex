@@ -2,4 +2,5 @@
 -- Import modules here that should be built as part of the library.
 import LaserCortex.Basic
 import LaserCortex.EMLRegistry
+import LaserCortex.LiarParadox
 import LaserCortex.LogicTypes

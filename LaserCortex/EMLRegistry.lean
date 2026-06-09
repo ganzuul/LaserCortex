@@ -178,6 +178,28 @@ theorem contracts_to_trans {s t u : EMLTree} (h₁ : contracts_to s t) (h₂ : c
     have h_mid : contracts_to t' u := ih h₂
     exact contracts_to.step s' t' u h_one h_mid
 
+-- Size is preserved by contracts_one (rotation doesn't change node count)
+theorem contracts_one_size_eq {s t : EMLTree} (h : contracts_one s t) : s.size = t.size := by
+  induction h with
+  | rotate a b c =>
+    simp [EMLTree.size]
+    omega
+  | left l l' r h ih =>
+    simp [EMLTree.size, ih]
+  | right l r r' h ih =>
+    simp [EMLTree.size, ih]
+
+-- Size is preserved by contracts_to (multi-step path)
+theorem contracts_to_size_eq {s t : EMLTree} (h : contracts_to s t) : s.size = t.size := by
+  induction h with
+  | refl t => rfl
+  | step s t u h_one h_to ih =>
+    have h₁ : s.size = t.size := contracts_one_size_eq h_one
+    have h₂ : t.size = u.size := ih
+    calc
+      s.size = t.size := h₁
+      _ = u.size := h₂
+
 -- Right-comb: the minimum element in Tamari order
 -- **Equilibrium attractor** / normal form - the "second law" destination
 def rightComb : Nat → EMLTree
