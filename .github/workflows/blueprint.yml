@@ -51,14 +51,17 @@ jobs:
       - name: Install leanblueprint
         run: pip install leanblueprint
 
+      - name: Debug file structure
+        run: ls -la blueprint/src/ blueprint/src/macros/
+
       - name: Build blueprint web
-        run: leanblueprint web
+        run: |
+          mkdir -p blueprint/web
+          plastex -c plastex.cfg web.tex
+        working-directory: ./blueprint/src
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
-
-      - name: Disable Jekyll
-        run: touch blueprint/web/.nojekyll
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
