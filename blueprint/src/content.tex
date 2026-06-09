@@ -14,6 +14,7 @@ A tree is either a \texttt{Leaf} (empty configuration) or a \texttt{Node} $t_1\ 
 \label{def:size}
 \lean{EMLRegistry.EMLTree.size}
 \leanok
+\uses{def:emltree}
 The number of internal nodes in a tree, used as the lattice index $n$ in $T_n$.
 \end{definition}
 
@@ -21,6 +22,7 @@ The number of internal nodes in a tree, used as the lattice index $n$ in $T_n$.
 \label{def:contracts_one}
 \lean{EMLRegistry.contracts_one}
 \leanok
+\uses{def:emltree}
 The primitive non-associative rewrite rule: $(a \bullet b) \bullet c \to a \bullet (b \bullet c)$.
 This is the coupling signature for choice resolution, lifted through subtrees.
 \end{definition}
@@ -29,6 +31,7 @@ This is the coupling signature for choice resolution, lifted through subtrees.
 \label{def:contracts_to}
 \lean{EMLRegistry.contracts_to}
 \leanok
+\uses{def:contracts_one}
 The reflexive-transitive closure of \textsf{contracts\_one}. Represents an audit trail of choice resolutions with monotonic provenance.
 \end{definition}
 
@@ -36,6 +39,7 @@ The reflexive-transitive closure of \textsf{contracts\_one}. Represents an audit
 \label{def:rightComb}
 \lean{EMLRegistry.rightComb}
 \leanok
+\uses{def:emltree}
 The minimum element of the Tamari lattice — the equilibrium attractor.
 Defined as $\mathsf{rightComb}(0) = \mathsf{Leaf}$ and $\mathsf{rightComb}(n+1) = \mathsf{Node}(\mathsf{Leaf},\ \mathsf{rightComb}(n))$.
 \end{definition}
@@ -46,6 +50,7 @@ Defined as $\mathsf{rightComb}(0) = \mathsf{Leaf}$ and $\mathsf{rightComb}(n+1) 
 \label{lem:node_left}
 \lean{EMLRegistry.contracts_to_node_left}
 \leanok
+\uses{def:contracts_one, def:contracts_to}
 If $t \to t'$ then $\mathsf{Node}(t,\ r) \to \mathsf{Node}(t',\ r)$.
 Choice resolution in the left subtree propagates to the whole composition.
 \end{lemma}
@@ -54,6 +59,7 @@ Choice resolution in the left subtree propagates to the whole composition.
 \label{lem:node_right}
 \lean{EMLRegistry.contracts_to_node_right}
 \leanok
+\uses{def:contracts_one, def:contracts_to}
 If $r \to r'$ then $\mathsf{Node}(l,\ r) \to \mathsf{Node}(l,\ r')$.
 Choice resolution in the right subtree propagates to the whole composition.
 \end{lemma}
@@ -62,6 +68,7 @@ Choice resolution in the right subtree propagates to the whole composition.
 \label{lem:trans}
 \lean{EMLRegistry.contracts_to_trans}
 \leanok
+\uses{def:contracts_to}
 If $s \to t$ and $t \to u$ then $s \to u$.
 Audit trails concatenate monotonically.
 \end{lemma}
@@ -72,6 +79,7 @@ Audit trails concatenate monotonically.
 \label{lem:node_rightcombs}
 \lean{EMLRegistry.node_of_rightCombs_contracts_to_rightComb}
 \leanok
+\uses{def:rightComb, def:contracts_one, def:contracts_to, lem:node_right}
 For any $a, b : \mathbb{N}$,
 \[
 \mathsf{Node}(\mathsf{rightComb}(a),\ \mathsf{rightComb}(b)) \longrightarrow \mathsf{rightComb}(1 + a + b).
@@ -83,6 +91,7 @@ The equilibrium attractor is closed under non-associative composition.
 \label{thm:contracts_to_rightComb}
 \lean{EMLRegistry.contracts_to_rightComb}
 \leanok
+\uses{def:emltree, def:size, def:rightComb, def:contracts_to, lem:node_left, lem:node_right, lem:trans, lem:node_rightcombs}
 For any tree $t : \mathsf{EMLTree}$,
 \[
 t \longrightarrow \mathsf{rightComb}(t.\mathsf{size}).
@@ -103,6 +112,7 @@ A bounded natural number $\mathsf{Fin}(n)$ serving as a neural binding address.
 \label{def:registry}
 \lean{EMLRegistry.TypeRegistry}
 \leanok
+\uses{def:router, def:emltree}
 An injective mapping from router indices to EML trees. This is the cortex-registry interface where neural computation meets formal grammar.
 \end{definition}
 
@@ -112,6 +122,7 @@ An injective mapping from router indices to EML trees. This is the cortex-regist
 \label{def:certificate}
 \lean{EMLRegistry.CortexCertificate}
 \leanok
+\uses{def:contracts_to, def:rightComb}
 A proof-carrying audit trail $\langle source,\ target,\ proof \rangle$ showing that a tree reaches its equilibrium.
 \end{definition}
 
@@ -119,6 +130,7 @@ A proof-carrying audit trail $\langle source,\ target,\ proof \rangle$ showing t
 \label{def:certify}
 \lean{EMLRegistry.certify}
 \leanok
+\uses{def:contracts_to, def:rightComb, def:certificate, thm:contracts_to_rightComb}
 Issues a \textsf{CortexCertificate} for any tree $t$, certifying that $t \to \mathsf{rightComb}(t.\mathsf{size})$.
 This is the quench witness in the Witness-Skeptic game.
 \end{definition}
@@ -131,7 +143,7 @@ This is the quench witness in the Witness-Skeptic game.
 \label{def:logictype}
 \lean{LogicTypes.LogicType}
 \leanok
-An inductive type enumerating 13 reasoning paradigms: Fuzzy, ManyValued, Paraconsistent, Temporal, Deontic, Epistemic, Quantum, Intuitionistic, Relevance, Free, Infinitary, Modal, and Classical.
+An inductive type enumerating 13 reasoning paradigms.
 
 Each handles specific classes of paradoxes as boundary conditions rather than errors.
 \end{definition}
@@ -140,15 +152,15 @@ Each handles specific classes of paradoxes as boundary conditions rather than er
 \label{def:logicclass}
 \lean{LogicTypes.LogicClass}
 \leanok
+\uses{def:logictype}
 Classification of logic types as Substructural, Extension, Alternative, Generalization, or Classical.
 \end{definition}
-
-\section{Logic-Specific Contraction}
 
 \begin{definition}[Logic Tree]
 \label{def:logictree}
 \lean{LogicTypes.LogicTree}
 \leanok
+\uses{def:emltree, def:logictype}
 A type family assigning EML trees to each logic type. Currently uniform; extensible to logic-specific tree types.
 \end{definition}
 
@@ -156,23 +168,24 @@ A type family assigning EML trees to each logic type. Currently uniform; extensi
 \label{def:logiccontraction}
 \lean{LogicTypes.LogicContraction}
 \leanok
+\uses{def:contracts_to, def:logictype}
 A type family of contraction relations indexed by \textsf{LogicType}. For Classical logic this is the Tamari contraction from EMLRegistry.
-\end{definition}
-
-\section{Meta-Contraction}
-
-\begin{definition}[Meta-Contraction]
-\label{def:metacontracts}
-\lean{LogicTypes.MetaContractsTo}
-\leanok
-Cross-logic contraction allowing reasoning that spans multiple logic types via intra-logic contraction, inter-logic translation, and transitivity.
 \end{definition}
 
 \begin{definition}[Logic Translation]
 \label{def:translation}
 \lean{LogicTypes.LogicTranslation}
 \leanok
+\uses{def:logictype, def:logiccontraction}
 A structure specifying forward and backward maps between logic types with soundness and completeness proofs.
+\end{definition}
+
+\begin{definition}[Meta-Contraction]
+\label{def:metacontracts}
+\lean{LogicTypes.MetaContractsTo}
+\leanok
+\uses{def:logiccontraction, def:translation}
+Cross-logic contraction allowing reasoning that spans multiple logic types via intra-logic contraction, inter-logic translation, and transitivity.
 \end{definition}
 
 \section{Cayley-Dickson Connection}
@@ -181,14 +194,16 @@ A structure specifying forward and backward maps between logic types with soundn
 \label{def:cdstep}
 \lean{LogicTypes.LogicType.cdStep}
 \leanok
-Maps logic types to Cayley-Dickson construction steps: Classical $\to 0$, Fuzzy $\to 1$, Intuitionistic $\to 2$, Quantum $\to 3$, Paraconsistent $\to 4$.
+\uses{def:logictype}
+Maps logic types to Cayley-Dickson construction steps.
 \end{definition}
 
 \begin{definition}[Split-Octonion Sectors]
 \label{def:split}
 \lean{LogicTypes.LogicType.isAssociativeSector}
 \leanok
-Divides logic types into associative ($e_0$--$e_3$) and non-associative ($e_4$--$e_7$) sectors of the split-octonion algebra with $(4,4)$ signature.
+\uses{def:logictype}
+Divides logic types into associative and non-associative sectors of the split-octonion algebra.
 \end{definition}
 
 \section{Normal Forms and Contraction Theorem}
@@ -197,13 +212,15 @@ Divides logic types into associative ($e_0$--$e_3$) and non-associative ($e_4$--
 \label{def:logicnormal}
 \lean{LogicTypes.LogicNormalForm}
 \leanok
+\uses{def:rightComb, def:logictype}
 The normal form for each logic type. For Classical logic this is \textsf{rightComb}.
 \end{definition}
 
 \begin{theorem}[Logic Contraction to Normal Form]
 \label{thm:logic_contracts}
 \lean{LogicTypes.logic_contracts_to_normal_form}
-\leanok
+\uses{def:logicnormal, def:logiccontraction, def:size, thm:contracts_to_rightComb}
 For any logic type $lt$ and tree $t$, $\mathsf{LogicContraction}\ lt\ t\ (\mathsf{LogicNormalForm}\ lt\ t.\mathsf{size})$.
 Currently proven for Classical logic; other cases are placeholders.
 \end{theorem}
+\endinput
