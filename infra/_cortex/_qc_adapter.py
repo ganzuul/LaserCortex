@@ -177,7 +177,7 @@ class QCSignalAdapter:
 
             # Push through the bridge
             concept, cert = self.bridge.instantiate_spec(spec, witness)
-            verified = cert.verify()
+            verified = cert.verify(use_lean=True)
 
             event = SignalEvent(
                 bar_index=i,
@@ -229,7 +229,7 @@ class QCSignalAdapter:
             "total_bars": len(signal_events),
             "total_trades": total_trades,
             "all_signals_verified": all_verified,
-            "voyage_verified": voyage_cert.verify() if voyage_cert else False,
+            "voyage_verified": voyage_cert.verify(use_lean=True) if voyage_cert else False,
             "checkpoints": len(checkpoint_certs),
             "certificates_issued": len(signal_events),
         }
@@ -255,13 +255,13 @@ class QCSignalAdapter:
 
         voyage_ok = False
         if result.voyage_certificate:
-            voyage_ok = result.voyage_certificate.verify()
+            voyage_ok = result.voyage_certificate.verify(use_lean=True)
             if not voyage_ok:
                 issues.append("voyage seal verification failed")
 
         checkpoint_results = {}
         for cycle, cert in result.checkpoint_certificates.items():
-            ck = cert.verify()
+            ck = cert.verify(use_lean=True)
             checkpoint_results[cycle] = ck
             if not ck:
                 issues.append(f"checkpoint {cycle}: verify failed")

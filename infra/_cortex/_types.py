@@ -10,9 +10,10 @@ Mirrors:
 """
 
 from __future__ import annotations
+import subprocess
+import os
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Set
-from ._eml_tree import EMLTree, rightComb, contracts_to, contracts_one_successors
 
 
 # ── RouterIndex ──────────────────────────────────────────────────────
@@ -124,6 +125,37 @@ class TypeRegistry:
 
 # ── CortexCertificate ────────────────────────────────────────────────
 
+def _lean_binary_path() -> str:
+    """Return the path to the Lean verifier binary."""
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    candidate = os.path.join(repo_root, ".lake", "build", "bin", "lasercortex")
+    if os.path.exists(candidate):
+        return candidate
+    return "lasercortex"
+
+
+def lean_verify(tree: EMLTree) -> bool:
+    """Verify that `tree` contracts to its right-comb normal form
+    by calling the Lean verifier binary.
+
+    The binary reads a binary-encoded EMLTree on stdin
+    ('0' for Leaf, '1' + left + right for Node) and prints
+    "verified" or "failed".
+    """
+    encoded = tree.to_bits()
+    try:
+        result = subprocess.run(
+            [_lean_binary_path()],
+            input=encoded,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        return "verified" in result.stdout
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return False
+
+
 @dataclass(frozen=True)
 class CortexCertificate:
     """Proof-carrying audit trail: a tree reaches its equilibrium.
@@ -147,10 +179,13 @@ class CortexCertificate:
             f"path_len={len(self.path)})"
         )
 
-    def verify(self) -> bool:
+    def verify(self, use_lean: bool = False) -> bool:
         """Check that every step in the path is a valid contraction.
         This is the Skeptic's verification: given the path, check
         each contracts_one step.
+
+        When `use_lean=True`, additionally delegates to the Lean
+        verifier binary for final confirmation.
         """
         from ._eml_tree import contracts_one
         if not self.path:
@@ -162,6 +197,8 @@ class CortexCertificate:
         for i in range(len(self.path) - 1):
             if not contracts_one(self.path[i], self.path[i + 1]):
                 return False
+        if use_lean:
+            return lean_verify(self.source)
         return True
 
 
@@ -180,6 +217,7 @@ def certify(t: EMLTree) -> CortexCertificate:
 
 def _build_contraction_path(s: EMLTree, t: EMLTree, max_depth: int = 1000) -> List[EMLTree]:
     """Find a contraction path from s to t via DFS."""
+    from ._eml_tree import contracts_one_successors
     if s == t:
         return [s]
     if max_depth <= 0:

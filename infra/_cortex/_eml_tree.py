@@ -60,6 +60,14 @@ class EMLTree:
             return hash(())
         return hash((self.left, self.right))
 
+    def to_bits(self) -> str:
+        """Binary preorder encoding for the Lean verifier.
+        '0' → Leaf, '1' + left + right → Node.
+        """
+        if self.is_leaf:
+            return "0"
+        return "1" + self.left.to_bits() + self.right.to_bits()
+
 
 # ── Canonical trees ──────────────────────────────────────────────────
 
