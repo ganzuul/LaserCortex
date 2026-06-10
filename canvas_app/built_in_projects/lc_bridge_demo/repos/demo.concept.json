@@ -1,0 +1,49 @@
+[
+  {
+    "id": "c-price",
+    "concept_name": "{price_data}",
+    "type": "{}",
+    "flow_indices": ["1.2"],
+    "description": "Market price data input",
+    "is_ground_concept": true,
+    "reference_axis_names": ["_none_axis"]
+  },
+  {
+    "id": "c-risk",
+    "concept_name": "{risk_profile}",
+    "type": "{}",
+    "flow_indices": ["1.3"],
+    "description": "Investor risk tolerance profile",
+    "is_ground_concept": true,
+    "reference_axis_names": ["_none_axis"]
+  },
+  {
+    "id": "c-signal",
+    "concept_name": "{signal}",
+    "type": "{}",
+    "flow_indices": ["1.6"],
+    "description": "Composite signal from price and risk analysis",
+    "is_ground_concept": false,
+    "reference_axis_names": ["signal"]
+  },
+  {
+    "id": "c-decision",
+    "concept_name": "{decision}",
+    "type": "{}",
+    "flow_indices": ["1.10"],
+    "description": "Final investment decision",
+    "is_ground_concept": false,
+    "is_final_concept": true,
+    "reference_axis_names": ["decision"]
+  },
+  {
+    "id": "c-output",
+    "concept_name": ":<:({decision})",
+    "type": ":<:",
+    "flow_indices": ["1"],
+    "description": "Output investment decision",
+    "is_ground_concept": false,
+    "is_final_concept": true,
+    "reference_axis_names": ["_none_axis"]
+  }
+]

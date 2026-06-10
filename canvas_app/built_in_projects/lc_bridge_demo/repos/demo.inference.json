@@ -1,0 +1,87 @@
+[
+  {
+    "flow_info": {
+      "flow_index": "1"
+    },
+    "inference_sequence": "assigning",
+    "concept_to_infer": ":<:({decision})",
+    "function_concept": "$. %>({decision})",
+    "value_concepts": [
+      "{price_data}",
+      "{risk_profile}",
+      "{signal}",
+      "{decision}"
+    ],
+    "context_concepts": [],
+    "working_interpretation": {
+      "syntax": {
+        "marker": ".",
+        "assign_source": "{decision}",
+        "assign_destination": ":<:({decision})"
+      }
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.2"
+    },
+    "inference_sequence": "imperative_in_composition",
+    "concept_to_infer": "{price_data}",
+    "function_concept": "::(fetch price data)",
+    "value_concepts": [],
+    "context_concepts": [],
+    "working_interpretation": {
+      "paradigm": "h_Data-c_PassThrough-o_Normal"
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.3"
+    },
+    "inference_sequence": "imperative_in_composition",
+    "concept_to_infer": "{risk_profile}",
+    "function_concept": "::(fetch risk profile)",
+    "value_concepts": [],
+    "context_concepts": [],
+    "working_interpretation": {
+      "paradigm": "h_Data-c_PassThrough-o_Normal"
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.6"
+    },
+    "inference_sequence": "grouping",
+    "concept_to_infer": "{signal}",
+    "function_concept": "&[{}]({price_data}, {risk_profile})",
+    "value_concepts": [
+      "{price_data}",
+      "{risk_profile}"
+    ],
+    "context_concepts": [],
+    "working_interpretation": {
+      "syntax": {
+        "group_operator": "&[{}]",
+        "group_members": ["{price_data}", "{risk_profile}"]
+      }
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.10"
+    },
+    "inference_sequence": "imperative_in_composition",
+    "concept_to_infer": "{decision}",
+    "function_concept": "::(generate decision from signal)",
+    "value_concepts": [
+      "{signal}"
+    ],
+    "context_concepts": [],
+    "working_interpretation": {
+      "syntax": {
+        "imperative": "generate decision",
+        "source": "{signal}"
+      }
+    }
+  }
+]
