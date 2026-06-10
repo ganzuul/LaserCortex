@@ -277,6 +277,59 @@ function verifySeal(bytes32 stateHash, bytes memory certData) returns (bool) {
 
 ---
 
+## Spec Browser UI: The Reading Room
+
+### The Societal Analogy
+
+The Reading Room is where advocates browse the statute book. Every
+sealed writ, every certificate, every spec definition is on open
+shelves. The purser, the judge, the clerk, and the public all consult
+the same shelves. No special access.
+
+| Concept | NC / LC Name | Societal Name |
+|---------|-------------|---------------|
+| Spec list endpoint | `GET /api/cortex/specs` | **Shelf list** |
+| Spec detail endpoint | `GET /api/cortex/specs/{name}` | **Volume on shelf** |
+| Certificate viewer | `GET /api/cortex/certificates/{key}` | **Seal inspection** |
+| Spec browser panel | `SpecBrowserPanel` | **Reading Room window** |
+| Instantiate a spec | `POST /api/cortex/instantiate` | **Issue a writ** |
+
+### Implementation
+
+The Reading Room is a split-panel React component:
+- **Left pane**: scrollable list of all 10 seed specs, each with a
+  logic-type badge (blue CLASSICAL, amber TEMPORAL, purple QUANTUM)
+  and its axes.
+- **Right pane**: full detail for the selected spec — coupling
+  signature, witness type, shape, magnitude contract bounds,
+  expandable worked examples, plus a toggle for the default payload.
+
+The backend router (``cortex_router.py``) lazily instantiates a
+``NormCodeCortexBridge`` singleton on first request.  The bridge
+is the single source of truth for the certificate store, lift cache,
+and type registry.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/cortex/specs` | List all seed specs |
+| GET | `/api/cortex/specs/{name}` | Full spec detail |
+| GET | `/api/cortex/certificates` | List certificate keys |
+| GET | `/api/cortex/certificates/{key}` | Certificate detail + verify |
+| POST | `/api/cortex/instantiate` | Issue a writ (instantiate spec) |
+| GET | `/api/cortex/bridge/state` | Bridge state snapshot |
+
+### Data Channels
+
+The panel fetches from the bridge via `cortexApi.ts`, which wraps
+`fetch()` calls against `/api/cortex/*`.  The bridge singleton
+is stateless across requests (the bridge's state lives in memory
+in the Python process; restart loses it — persisted storage is a
+future concern).
+
+---
+
 ## SpecRegistry: The Statute Book
 
 ### The Societal Analogy

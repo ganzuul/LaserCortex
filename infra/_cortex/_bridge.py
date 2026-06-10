@@ -612,6 +612,10 @@ class NormCodeCortexBridge:
         """Retrieve a stored certificate."""
         return self._certificates.get(run_id)
 
+    def list_certificates(self) -> List[str]:
+        """List all stored certificate keys."""
+        return list(self._certificates.keys())
+
     # ── Checkpoint verification (Purser's Inspection) ──────────────
 
     def verify_checkpoint(

@@ -4,13 +4,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import { 
-  FolderOpen, 
-  Settings, 
-  HelpCircle, 
-  PanelRight, 
-  PanelRightClose, 
-  PanelBottom, 
+import {
+  FolderOpen,
+  Settings,
+  HelpCircle,
+  PanelRight,
+  PanelRightClose,
+  PanelBottom,
   PanelBottomClose,
   Folder,
   RefreshCw,
@@ -22,6 +22,7 @@ import {
   Save,
   Sparkles,
   Workflow,
+  BookOpen,
 } from 'lucide-react';
 import { GraphCanvas } from './components/graph/GraphCanvas';
 import { ControlPanel } from './components/panels/ControlPanel';
@@ -34,6 +35,7 @@ import { EditorPanel } from './components/panels/EditorPanel';
 import { CheckpointPanel } from './components/panels/CheckpointPanel';
 import { AgentPanel } from './components/panels/AgentPanel';
 import { WorkersPanel } from './components/panels/WorkersPanel';
+import { SpecBrowserPanel } from './components/panels/SpecBrowserPanel';
 import { UserInputModal } from './components/panels/UserInputModal';
 import { ProjectTabs } from './components/panels/ProjectTabs';
 import { ChatPanel } from './components/panels/ChatPanel';
@@ -170,6 +172,7 @@ function App() {
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showCheckpointPanel, setShowCheckpointPanel] = useState(false);
   const [showAgentPanel, setShowAgentPanel] = useState(false);
+  const [showSpecPanel, setShowSpecPanel] = useState(false);
   const [showWorkersPanel, setShowWorkersPanel] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('canvas');
   const [detailPanelFullscreen, setDetailPanelFullscreen] = useState(false);
@@ -377,6 +380,19 @@ function App() {
               >
                 <Bot size={18} />
               </button>
+
+              {/* Reading Room / Spec Browser Toggle */}
+              <button
+                onClick={() => setShowSpecPanel(!showSpecPanel)}
+                className={`p-2 rounded-lg transition-colors ${
+                  showSpecPanel
+                    ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                }`}
+                title="Reading Room — browse CortexSpecs"
+              >
+                <BookOpen size={18} />
+              </button>
             </>
           )}
           
@@ -548,6 +564,12 @@ function App() {
               {/* Left side panels */}
               {showWorkersPanel && <WorkersPanel />}
               {showAgentPanel && <AgentPanel />}
+              {showSpecPanel && (
+                <SpecBrowserPanel
+                  isOpen={showSpecPanel}
+                  onToggle={() => setShowSpecPanel(!showSpecPanel)}
+                />
+              )}
               
               {/* Graph Canvas */}
               <div className="flex-1 overflow-hidden">

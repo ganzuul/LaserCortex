@@ -1,4 +1,4 @@
-from . import repository_router, graph_router, execution_router, websocket_router, project_router, editor_router, checkpoint_router, agent_router, llm_router, chat_router
+from . import repository_router, graph_router, execution_router, websocket_router, project_router, editor_router, checkpoint_router, agent_router, llm_router, chat_router, cortex_router
 
 __all__ = [
     "repository_router",
@@ -11,4 +11,5 @@ __all__ = [
     "agent_router",
     "llm_router",
     "chat_router",
+    "cortex_router",
 ]

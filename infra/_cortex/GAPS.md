@@ -137,19 +137,38 @@ See ``infra/_cortex/DESIGN.md`` for the debt ledger analogy.
 
 ---
 
-## 7. Decomposition UI Needs Spec-Based Browsing
-**Severity: MAJOR**
+## 7. ~~Decomposition UI Needs Spec-Based Browsing~~ **RESOLVED**
+**Severity: MAJOR** → **FIXED**
 
 The 10 seed `CortexSpec`s define the enumerated inference space (heap
 threshold, locked room, Blue-Eyed Islanders, Monty Hall, etc.). NC's
-Canvas UI has no way to browse, select, or inspect these specs as
+Canvas UI had no way to browse, select, or inspect these specs as
 possible inference targets.
 
-**Location**: `canvas_app/` — UI
-**Fix**: Add a spec browser panel that queries `SpecRegistry` and
-displays each spec's witness schema, mapping hint, magnitude contract,
-and examples. Selecting a spec should pre-populate an inference form
-with its default_payload.
+**Fix**: ``SpecBrowserPanel`` (React) — the **Reading Room** — lists
+all seed specs in a left-hand sidebar with logic-type badges. Selecting
+one shows its witness schema, coupling signature, magnitude contract,
+worked examples with expand/collapse, and default payload preview.
+
+**Backend** (``cortex_router.py``, ``/api/cortex/specs``):
+- ``GET /api/cortex/specs`` — list all seed specs with summary info
+- ``GET /api/cortex/specs/{name}`` — full spec detail
+- ``GET /api/cortex/certificates`` — list certificate keys
+- ``GET /api/cortex/certificates/{key}`` — certificate detail + verify
+- ``POST /api/cortex/instantiate`` — issue a writ for a spec
+- ``GET /api/cortex/bridge/state`` — bridge state snapshot
+
+**UI** (``SpecBrowserPanel.tsx``):
+- Split-panel layout: spec list (left) / spec detail (right)
+- Specs display ``cortex_name``, logic-type badge (blue CLASSICAL,
+  amber TEMPORAL, purple QUANTUM), and axes
+- Detail section shows coupling, witness type, shape, magnitude contract,
+  expandable worked examples, and default payload toggle
+- Refresh and close controls in the panel header
+
+**Data channels wired**: ``cortexApi.ts`` connects the panel to
+the bridge via the FastAPI router.  The ``NormCodeCortexBridge``
+singleton is lazily instantiated on first request.
 
 ---
 
@@ -228,13 +247,13 @@ See ``infra/_cortex/DESIGN.md`` for the writ / sealed writ analogy.
 | 4 | No LogicType on Concept | ~~MAJOR~~ **RESOLVED** | `_concept.py` | logic_type param + mappings |
 | 5 | No paradox classification | ~~MAJOR~~ **VOID** | — | triangle handles it |
 | 6 | No Event model | ~~MAJOR~~ **SCAFFOLDED** | `_bridge.py` | debt ledger scaffold |
-| 7 | No spec-based decomposition UI | MAJOR | `canvas_app/` | ~2 new panels |
+| 7 | No spec-based decomposition UI | ~~MAJOR~~ **RESOLVED** | `canvas_app/` | Reading Room panel + API router |
 | 8 | No checkpoint verification | ~~MAJOR~~ **RESOLVED** | `_bridge.py` | purser's inspection |
 | 9 | Coupling→LogicType mapping | ~~MINOR~~ **RESOLVED** | `_spec.py` | COUPLING_TO_LOGIC dict |
 | 10 | Flow→Tree formal mapping | ~~MINOR~~ **DEFERRED** | — | Moot until gap #1 resolved |
 | 11 | Cannot instantiate a spec | ~~BLOCKING~~ **RESOLVED** | `_bridge.py` | writ + seal |
 
 **0 BLOCKING gaps** must be resolved before the bridge is functional.
-**1 MAJOR gap** should be resolved in Phase 1 (FastAPI + UI integration).
-**7 RESOLVED**: gaps #1, #2, #3, #4, #8, #9, and #11.
+**0 MAJOR gaps** should be resolved in Phase 1 (FastAPI + UI integration).
+**8 RESOLVED**: gaps #1, #2, #3, #4, #7, #8, #9, and #11.
 **1 DEFERRED**: gap #10.
