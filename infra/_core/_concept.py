@@ -143,8 +143,10 @@ CONCEPT_TYPES = {
     # Input/Output concepts (SYNTACTICAL)
     
     ":>": {"description": "input", "type_class": TYPE_CLASS_SYNTACTICAL},
+    ":>:": {"description": "input", "type_class": TYPE_CLASS_SYNTACTICAL},
     
     ":<": {"description": "output", "type_class": TYPE_CLASS_SYNTACTICAL},
+    ":<:": {"description": "output", "type_class": TYPE_CLASS_SYNTACTICAL},
     
     # Template and placeholder types (SYNTACTICAL)
     "{}?": {"description": "object_placeholder", "type_class": TYPE_CLASS_SYNTACTICAL},
