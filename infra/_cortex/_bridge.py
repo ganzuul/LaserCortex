@@ -46,6 +46,7 @@ from ._closure import (
     closure as run_closure,
     HISTORY_TREE,
 )
+from ._spec import CortexSpec, SpecRegistry, SEED_REGISTRY
 
 
 class CortexBridgeError(Exception):
@@ -60,6 +61,7 @@ class LiftResult:
     certificate: CortexCertificate
     logic_type: LogicType
     gate_results: Dict[str, bool]
+    spec_name: Optional[str] = None  # statute citation
 
 
 @dataclass
@@ -81,6 +83,47 @@ class CortexBridge:
     LC side requires.
     """
 
+    def resolve_spec(
+        self,
+        concept: Any,
+        registry: SpecRegistry = SEED_REGISTRY,
+    ) -> Optional[CortexSpec]:
+        """Find a CortexSpec matching *concept* and pre-populate its
+        typed-form fields.
+
+        Intended to be called *before* ``Inference.__init__`` runs its
+        ``validate_typed_form`` loop (the existing TVK).  After this call
+        the concept carries the spec's form_type, coupling_signature,
+        schema version, and a form_payload seeded from
+        ``spec.default_payload`` so that the TVK can validate it.
+
+        If no spec matches, the concept is left untouched and the caller
+        should fall back to the existing heuristic path.
+        """
+        spec = registry.best_match(concept)
+        if spec is not None:
+            spec.pre_populate(concept)
+        return spec
+
+    def pre_populate_repo(
+        self,
+        concept_repo: Any,
+        registry: SpecRegistry = SEED_REGISTRY,
+    ) -> int:
+        """Pre-populate all concepts in *concept_repo* from the spec registry.
+
+        Iterates every concept in the repo, finds its best spec match, and
+        calls ``pre_populate`` on each.  Returns the count of concepts that
+        were matched.
+        """
+        count = 0
+        for entry in concept_repo.get_all_concepts():
+            if entry.concept is not None:
+                spec = self.resolve_spec(entry.concept, registry)
+                if spec is not None:
+                    count += 1
+        return count
+
     # ── NC → LC (Lift) ─────────────────────────────────────────────
 
     def flow_index_to_tree(self, flow_index: str) -> EMLTree:
@@ -101,6 +144,7 @@ class CortexBridge:
         sequence_type: str,
         coupling_signature: Optional[str] = None,
         concept: Any = None,
+        spec: Optional[CortexSpec] = None,
     ) -> LiftResult:
         """Convert an NC inference execution to LC types.
 
@@ -110,14 +154,22 @@ class CortexBridge:
             sequence_type: NC inference sequence type
             coupling_signature: Optional coupling signature from Concept
             concept: Optional Concept object (used for LogicType resolution)
+            spec: Optional CortexSpec — the statute authorising this inference.
+                  If provided, its ``coupling_signature`` and ``form_type``
+                  take precedence over heuristics.
         """
         tree = self.flow_index_to_tree(flow_index)
 
-        # Determine LogicType: prefer Concept.to_logic_type(), fall back to coupling
+        # Use spec's coupling signature if available and concept lacks one
+        effective_coupling = coupling_signature
+        if effective_coupling is None and spec is not None:
+            effective_coupling = spec.coupling_signature
+
+        # Determine LogicType: prefer Concept.to_logic_type(), fall back to spec, then coupling
         if concept is not None:
             logic_type = self.infer_logic_type(concept)
         else:
-            logic_type = self._coupling_to_logic_type(coupling_signature)
+            logic_type = self._coupling_to_logic_type(effective_coupling)
 
         # Generate router index
         flat_idx = flow_to_index(flow_index)
@@ -142,6 +194,7 @@ class CortexBridge:
             certificate=cert,
             logic_type=logic_type,
             gate_results=gate_results,
+            spec_name=spec.cortex_name if spec is not None else None,
         )
 
     def _coupling_to_logic_type(self, sig: Optional[str]) -> LogicType:
@@ -172,6 +225,97 @@ class CortexBridge:
         form_type = getattr(concept, 'form_type', None)
         coupling = getattr(concept, 'coupling_signature', None)
         return self._coupling_to_logic_type(coupling)
+
+    def _coupling_to_tree(self, coupling_signature: str) -> EMLTree:
+        """Build an EMLTree shape from a coupling signature.
+
+        Each coupling signature encodes a structural constraint that
+        maps to a normal-form tree shape:
+
+        - ``commutative``          → balanced (leaf): order irrelevant
+        - ``non-commutative``      → right-leaning: temporal order kept
+        - ``non-associative``      → left-leaning: grouping matters
+        - ``commutative-associative`` → leaf: no structural constraint
+        """
+        mapping = {
+            "commutative": LEAF,
+            "commutative-associative": LEAF,
+            "non-commutative": EMLTree.node(LEAF, LEAF),
+            "non-associative": EMLTree.node(EMLTree.node(LEAF, LEAF), LEAF),
+        }
+        return mapping.get(coupling_signature, LEAF)
+
+    def instantiate_spec(
+        self,
+        spec: CortexSpec,
+        witness_data: Dict[str, Any],
+    ) -> Tuple[Concept, CortexCertificate]:
+        """Issue a writ: instantiate a statute with concrete evidence.
+
+        Takes an abstract ``CortexSpec`` and particular ``witness_data``,
+        constructs a certified Concept under the statute's authority.
+
+        The pipeline:
+        1. Validate witness_data against spec.validation (type check)
+        2. Create a Concept with the spec's form metadata
+        3. Merge spec.default_payload + witness_data into form_payload
+        4. Run validate_typed_form (reading clerk countersigns)
+        5. Build EMLTree from coupling signature
+        6. Certify the tree (apply the wax seal)
+        7. Return (Concept, CortexCertificate)
+
+        Raises ``TypeError`` if witness_data does not match the spec's
+        expected witness type.
+        """
+        # Lazy imports to avoid circular dependency:
+        # infra._core._concept imports LogicType from infra._cortex.
+        from .._core._concept import Concept
+        from .._core._reference import Reference
+        from .._core._inference import validate_typed_form
+
+        # 1. Validate witness type
+        wt = spec.validation.witness_type
+        if wt is not None and wt != "":
+            _PYTYPE_TO_SPEC = {
+                "int": "integer",
+                "float": "float",
+                "str": "string",
+                "bool": "boolean",
+                "list": "array",
+                "dict": "object",
+                "NoneType": "null",
+            }
+            actual_raw = type(witness_data.get("witness", None)).__name__
+            actual = _PYTYPE_TO_SPEC.get(actual_raw, actual_raw)
+            if actual != wt:
+                raise TypeError(
+                    f"Spec '{spec.cortex_name}' expects witness_type='{wt}', "
+                    f"got '{actual}' (Python {actual_raw})"
+                )
+
+        # 2. Create concept under the statute
+        concept = Concept(
+            name=f"writ:{spec.cortex_name}",
+            form_type=spec.form_type,
+            coupling_signature=spec.coupling_signature,
+            form_schema_version=spec.form_schema_version,
+        )
+
+        # 3. Populate form payload (spec defaults + witness data)
+        payload = dict(spec.default_payload)
+        payload.update(witness_data)
+        concept.reference = Reference([], [], form_payload=payload)
+
+        # 4. Reading clerk countersigns
+        validate_typed_form(concept)
+
+        # 5. Build tree from coupling signature
+        tree = self._coupling_to_tree(spec.coupling_signature)
+
+        # 6. Apply the wax seal
+        cert = certify(tree)
+
+        return concept, cert
 
     def lift_plan_to_logic_m(self, flow_indices: List[str]) -> LogicM[str]:
         """Convert a list of flow indices to a LogicM tree.
@@ -259,8 +403,9 @@ class NormCodeCortexBridge:
     - Certificate store (run_id → CortexCertificate)
     - LogicPipeline results per inference
 
-    GAP: This class assumes NC will provide hooks at the right points
-    in the orchestration lifecycle. Those hooks don't exist yet.
+    Hooks into the Orchestrator lifecycle:
+    - ``on_inference_complete`` called after each successful inference
+    - ``stamp_seal`` called at the end of ``run()`` / ``run_async()``
     """
 
     def __init__(self, registry_bound: int = 1024):
@@ -269,7 +414,106 @@ class NormCodeCortexBridge:
         self._certificates: Dict[str, CortexCertificate] = {}
         self._lift_cache: Dict[str, LiftResult] = {}
 
-    # ── Orchestration hooks (GAP: not yet wired into NC) ───────────
+    # ── Spec resolution (delegated to core) ────────────────────────
+
+    def resolve_spec(
+        self,
+        concept: Any,
+        registry: SpecRegistry = SEED_REGISTRY,
+    ) -> Optional[CortexSpec]:
+        """Find the governing statute for *concept* and pre-populate its
+        typed-form fields.
+
+        Delegates to ``CortexBridge.resolve_spec`` — the core stateless
+        translation.  This wrapper exists so the stateful bridge presents
+        the same interface to callers (Orchestrator, web UI, etc.).
+        """
+        return self.core.resolve_spec(concept, registry)
+
+    def pre_populate_repo(
+        self,
+        concept_repo: Any,
+        registry: SpecRegistry = SEED_REGISTRY,
+    ) -> int:
+        """Pre-populate every concept in *concept_repo* from the statute book.
+
+        Returns the count of concepts that matched a statute.
+        """
+        return self.core.pre_populate_repo(concept_repo, registry)
+
+    def instantiate_spec(
+        self,
+        spec: CortexSpec,
+        witness_data: Dict[str, Any],
+    ) -> Tuple[Concept, CortexCertificate]:
+        """Issue a writ under a statute.
+
+        Delegates to ``CortexBridge.instantiate_spec`` — the core
+        stateless translation.  This wrapper exists so the stateful
+        bridge presents the same interface to callers.
+        """
+        return self.core.instantiate_spec(spec, witness_data)
+
+    # ── BlamePool / Event scaffold ─────────────────────────────────
+
+    def blackboard_to_events(self, blackboard: Any) -> List[Event]:
+        """Convert NC Blackboard inference history to LC Events.
+
+        Every completed or failed inference becomes an Event with its
+        cycle as the year, the flow_index and status as the description,
+        and impact=1 for failures, impact=0 for successes.
+
+        This is the **commutative base case**: no interest, no pooling
+        threshold. Each debt is recorded independently.
+        """
+        events: List[Event] = []
+        history = getattr(blackboard, 'history', {})
+        if not history:
+            return events
+        for flow_index, item in history.items():
+            status = getattr(item, 'status', None)
+            cycle = getattr(item, 'cycle', 0)
+            if status == 'failed':
+                events.append(Event(
+                    year=cycle,
+                    description=f"inference {flow_index} failed",
+                    impact=1,
+                ))
+            elif status == 'completed':
+                events.append(Event(
+                    year=cycle,
+                    description=f"inference {flow_index} completed",
+                    impact=0,
+                ))
+        return events
+
+    def compute_blame(self, events: List[Event]) -> BlamePool:
+        """Compute the BlamePool from a list of Events.
+
+        Simple commutative sum: total_impact = Σ impact_i.
+        No interest, no pooling threshold — the Calvinist base case.
+        """
+        total = sum(e.impact for e in events)
+        return BlamePool(total_impact=total, event_count=len(events))
+
+    def run_closure_on_blackboard(
+        self,
+        blackboard: Any,
+    ) -> Tuple[List[Event], BlamePool]:
+        """Run the institutional closure pipeline on NC Blackboard state.
+
+        1. Convert blackboard history → Events
+        2. Compute the BlamePool (simple sum)
+        3. Return (events, pool)
+
+        The full closure pipeline (temporal_normalize → fuzzy_grade →
+        deontic_update) can run on these Events when wired.
+        """
+        events = self.blackboard_to_events(blackboard)
+        pool = self.compute_blame(events)
+        return events, pool
+
+    # ── Orchestration hooks ────────────────────────────────────────
 
     def on_inference_complete(
         self,
@@ -280,10 +524,15 @@ class NormCodeCortexBridge:
     ) -> LiftResult:
         """Called when an NC inference completes.
 
-        GAP: Must be called from infra/_core/_inference.py execute()
-        or infra/_orchest/_orchestrator.py _process_inference_state().
-        These calls don't exist yet.
+        Resolves the applicable statute (CortexSpec) from the concept,
+        then lifts the inference under that statute's authority.
+
+        GAP (previously): Must be called from Orchestrator. Now wired
+        via ``Orchestrator.cortex_bridge`` in ``_process_inference_state``.
         """
+        # Resolve the applicable statute before lifting
+        spec = self.resolve_spec(concept)
+
         sig = None
         if hasattr(concept, 'coupling_signature'):
             sig = concept.coupling_signature
@@ -294,6 +543,7 @@ class NormCodeCortexBridge:
             sequence_type=sequence_type,
             coupling_signature=sig,
             concept=concept,
+            spec=spec,
         )
 
         # Register in TypeRegistry
@@ -308,13 +558,16 @@ class NormCodeCortexBridge:
 
         return result
 
-    def on_plan_complete(self, run_id: str) -> Optional[CortexCertificate]:
-        """Called when an NC plan execution completes.
+    def stamp_seal(self, run_id: str) -> Optional[CortexCertificate]:
+        """Stamp the wax seal for a completed voyage (run).
 
-        GAP: Must be called from Orchestrator after all cycles complete.
-        The certificate should incorporate ALL inference trees from the run.
+        Collects every EMLTree lifted during the run, combines them
+        into a composite tree, certifies it (source → rightComb normal
+        form with full contraction path), and stores the certificate.
+
+        The seal can be verified by anyone via ``cert.verify()`` without
+        trusting the issuer.
         """
-        # Collect all trees lifted during this run
         trees = [
             v.eml_tree
             for k, v in self._lift_cache.items()
@@ -323,7 +576,6 @@ class NormCodeCortexBridge:
         if not trees:
             return None
 
-        # Build a composite tree
         composite = LEAF
         for t in trees:
             composite = EMLTree.node(composite, t)
@@ -332,18 +584,70 @@ class NormCodeCortexBridge:
         self._certificates[run_id] = cert
         return cert
 
-    def on_checkpoint(self, run_id: str, cycle: int) -> Optional[CortexCertificate]:
-        """Called at checkpoint time.
+    def stamp_checkpoint(self, run_id: str, cycle: int) -> Optional[CortexCertificate]:
+        """Stamp a checkpoint seal — a log entry at an intermediate port.
 
-        GAP: Must be called from Orchestrator._run_cycle() or via
-        CheckpointManager. The certificate at checkpoint serves as
-        a verifiable snapshot of partial progress.
+        Collects all trees lifted under the original *run_id* (not a
+        suffixed key) so the checkpoint seal is computed from the
+        actual voyage cache, then stored under a composite key
+        ``{run_id}:checkpoint:{cycle}`` for independent verification.
         """
-        return self.on_plan_complete(f"{run_id}:checkpoint:{cycle}")
+        trees = [
+            v.eml_tree
+            for k, v in self._lift_cache.items()
+            if k.startswith(f"{run_id}:")
+        ]
+        if not trees:
+            return None
+
+        composite = LEAF
+        for t in trees:
+            composite = EMLTree.node(composite, t)
+
+        cert = certify(composite)
+        self._certificates[f"{run_id}:checkpoint:{cycle}"] = cert
+        return cert
 
     def get_certificate(self, run_id: str) -> Optional[CortexCertificate]:
         """Retrieve a stored certificate."""
         return self._certificates.get(run_id)
+
+    # ── Checkpoint verification (Purser's Inspection) ──────────────
+
+    def verify_checkpoint(
+        self, run_id: str, cycle: int
+    ) -> Tuple[bool, Optional[CortexCertificate]]:
+        """Purser's inspection: verify a checkpoint seal.
+
+        Returns ``(True, cert)`` if the seal exists and ``cert.verify()``
+        passes.  Returns ``(False, None)`` if no seal was stamped for
+        this checkpoint.
+        """
+        cert = self._certificates.get(f"{run_id}:checkpoint:{cycle}")
+        if cert is None:
+            return False, None
+        return cert.verify(), cert
+
+    def checkpoint_proof(
+        self, run_id: str, cycle: int
+    ) -> Optional[Dict[str, Any]]:
+        """Package a checkpoint proof for smart contract verification.
+
+        Returns a dict with the certificate metadata and verification
+        status, or ``None`` if no checkpoint seal exists for this
+        (run_id, cycle) pair.
+        """
+        ok, cert = self.verify_checkpoint(run_id, cycle)
+        if not ok or cert is None:
+            return None
+        return {
+            "run_id": run_id,
+            "cycle": cycle,
+            "source": repr(cert.source),
+            "target": repr(cert.target),
+            "path_len": len(cert.path),
+            "verified": True,
+        }
 
     def get_registry_state(self) -> List[Tuple[RouterIndex, EMLTree]]:
         """Get all TypeRegistry bindings."""

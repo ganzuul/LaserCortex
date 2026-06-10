@@ -22,46 +22,54 @@ Each gap is tagged with a **severity**:
 
 ---
 
-## 1. NC Does Not Query the SpecRegistry for Inference Targets
-**Severity: BLOCKING**
+## 1. ~~NC Does Not Query the SpecRegistry~~ **RESOLVED**
+**Severity: BLOCKING** → **FIXED**
 
-NC inferences have no concept of a `CortexSpec`. They execute against
-flow indices and sequence types, but never ask "which registered spec
-does this inference target?" The bridge currently generates EMLTrees
-from flat flow indices — a heuristic that bypasses the spec entirely.
+NC inferences had no concept of a `CortexSpec`. They executed against
+flow indices and sequence types, but never asked "which registered spec
+does this inference target?"
 
-**Location**: `infra/_core/_inference.py` → `Inference.execute()`
-**Fix**: Before executing, call `SpecRegistry.lookup_by_context(context)`
-to find candidate specs. Attach the chosen spec to the inference. The
-bridge can then derive the correct LogicType, coupling semantics, and
-witness schema from the spec rather than guessing.
+**Fix**: `on_inference_complete()` now calls `resolve_spec(concept)`
+before lifting, which pre-populates the concept from the matching
+statute and carries the ``spec_name`` into the ``LiftResult``.
+Wired into ``Orchestrator._inference_execution()`` after every
+successful inference.
+
+See ``infra/_cortex/DESIGN.md`` for the statute book / constitutional
+authority analogy.
 
 ---
 
-## 2. No RouterIndex Binding
-**Severity: BLOCKING**
+## 2. ~~No RouterIndex Binding~~ **RESOLVED**
+**Severity: BLOCKING** → **FIXED**
 
 LC's `TypeRegistry` requires an injective mapping from `RouterIndex`
 (bounded natural) to `EMLTree`. NC's flow indices are strings like
 `"1.2.3"` with no formal mapping to a bounded index space.
 
-**Location**: NC flow indices are managed by `Waitlist` in
-`infra/_orchest/_waitlist.py`
-**Fix**: Assign each unique flow index a `RouterIndex` at waitlist
-creation time. Ensure bound is large enough for all inferences.
+**Fix**: `Waitlist.assign_router_indices()` assigns a `RouterIndex(i, n)`
+to each item based on sorted flow-index position. Called in
+`Orchestrator._create_waitlist()`.
+
+See `infra/_cortex/DESIGN.md` for the architectural rationale
+(legislative docket analogy, accountability, proof traces).
 
 ---
 
-## 3. No CortexCertificate on Completion
-**Severity: BLOCKING**
+## 3. ~~No CortexCertificate on Completion~~ **RESOLVED**
+**Severity: BLOCKING** → **FIXED**
 
 LC's `certify(tree)` produces a `CortexCertificate` for any tree,
 which serves as the proof-carrying audit trail. NC doesn't generate
 or store certificates.
 
-**Location**: `infra/_orchest/_orchestrator.py` → after all cycles complete
-**Fix**: Call `NormCodeCortexBridge.on_plan_complete(run_id)` at the
-end of orchestration and store the certificate in the run database.
+**Fix**: `NormCodeCortexBridge.stamp_seal(run_id)` collects all EMLTrees
+lifted during the run, combines them into a composite tree, certifies it,
+and stores the certificate. Called from `Orchestrator.run()` and
+`Orchestrator.run_async()` when the optional `cortex_bridge` parameter
+is provided.
+
+See `infra/_cortex/DESIGN.md` for the wax seal / voyage analogy.
 
 ---
 
@@ -78,30 +86,54 @@ parameter, to_logic_type()), `_bridge.py` (infer_logic_type updated).
 
 ---
 
-## 5. No Paradox Classification on Inference Failures
-**Severity: MAJOR**
+## 5. ~~No Paradox Classification on Inference Failures~~ **NOT A GAP**
+**Severity: MAJOR** → **VOID**
 
 LC's `WrappedProblem` classifies inference failures into 13 paradox
 classes (Liar, Sorites, Grandfather, etc.). NC logs errors but does
 not classify them.
 
-**Location**: `infra/_orchest/_orchestrator.py:_handle_inference_failure`
-**Fix**: Route inference failures through `CortexBridge.detect_paradox()`
-and store the `WrappedProblem` with the error record.
+**Why this is not a gap**: The triangle already handles garbage.
+
+- **Coherent**: TVK rejects bad input at the reading clerk stage
+  (wrong witness type, missing fields, schema violation). No writ
+  is issued for garbage.
+- **Unqualified**: `cert.verify()` replays every contraction step. If
+  the input is paradoxical, `rightComb` detects it, `contracts_to`
+  fails, and the seal is fraudulent. The certificate proves *that*
+  it is garbage without classifying *why*.
+- **Universal**: No matching statute → `resolve_spec` returns `None`
+  → the inference lifts without a `spec_name` citation. The system
+  says "I have no authority to certify this" — which itself is the
+  certification.
+
+The 13-class taxonomy is a UI concern (gap #7): present the failure
+mode, let the human decide which paradox it is, if they care. The
+formal guarantee is already complete without it.
 
 ---
 
-## 6. No Event Model for Institutional Closure
-**Severity: MAJOR**
+## 6. ~~No Event Model for Institutional Closure~~ **SCAFFOLDED**
+**Severity: MAJOR** → **SCAFFOLDED**
 
 LC's institutional closure pipeline (`Temporal → Fuzzy → Deontic`)
 operates on `LogicM[Event]`. NC has no `Event` type — the closest
-analog is the Blackboard's inference history, but there's no formal
+analog is the Blackboard's inference history, but there was no formal
 event structure with year/description/impact.
 
-**Location**: `infra/_orchest/_blackboard.py`
-**Fix**: Either add an Event model to NC's execution tracking, or
-build a bridge that converts Blackboard state changes to Events.
+**Scaffold**: ``NormCodeCortexBridge.blackboard_to_events(blackboard)``
+converts Blackboard history to ``List[Event]``. ``compute_blame(events)``
+returns the simple commutative ``BlamePool`` (no interest, no pooling
+threshold). The scaffold lives in ``_bridge.py`` and delegates to the
+existing types in ``_closure.py``.
+
+**Design rationale**: The BlamePool is a **debt ledger** in the Calvinist
+sense. The scaffold is the commutative base case: no interest (non-
+recursive blame), no pooling threshold (every event recorded independently).
+Future pooling with interest is non-commutative/non-associative work that
+must be fed forward to LC explicitly.
+
+See ``infra/_cortex/DESIGN.md`` for the debt ledger analogy.
 
 ---
 
@@ -121,16 +153,20 @@ with its default_payload.
 
 ---
 
-## 8. No Certificate Verification in Checkpoint Restore
-**Severity: MAJOR**
+## 8. ~~No Certificate Verification in Checkpoint Restore~~ **RESOLVED**
+**Severity: MAJOR** → **FIXED**
 
 LC's `contracts_to` provides idempotent verification (checkpoint
 state should contract to rightComb normal form). NC's checkpoint
-system (`CheckpointManager`) doesn't verify this property.
+system (`CheckpointManager`) didn't verify this property.
 
-**Location**: `infra/_orchest/_checkpoint.py`
-**Fix**: On checkpoint load, verify the checkpoint state tree
-contracts to its rightComb normal form. Reject if not.
+**Fix**: ``NormCodeCortexBridge.verify_checkpoint(run_id, cycle)``
+recomputes the stored seal and calls ``cert.verify()`` (the Skeptic
+replays every contraction step). ``checkpoint_proof(run_id, cycle)``
+packages the proof for smart contract consumption.
+
+See ``infra/_cortex/DESIGN.md`` for the purser's inspection analogy
+and paydata / smart contract integration path.
 
 ---
 
@@ -162,22 +198,23 @@ This gap is moot until gap #1 (spec query) is resolved.
 
 ---
 
-## 11. NC Cannot Select-and-Instantiate a Spec
-**Severity: BLOCKING**
+## 11. ~~NC Cannot Select-and-Instantiate a Spec~~ **RESOLVED**
+**Severity: BLOCKING** → **FIXED**
 
-`SpecRegistry.lookup_by_context()` exists but nothing calls it. There is
+`SpecRegistry.lookup_by_context()` exists but nothing calls it. There was
 no `instantiate(spec, witness_data)` that would construct a fully typed
-Concept from a spec and real evidence, then push it through the TVK
-(typed verification kernel).
+Concept from a spec and real evidence, then push it through the TVK.
 
-**Location**: `infra/_cortex/_bridge.py`
-**Fix**: Add `CortexBridge.instantiate_spec(spec, witness_data)` that:
-1. Validates witness_data against spec.validation
-2. Builds the EMLTree from the spec's coupling signature
-3. Sets the Concept's logic_type via spec.to_logic_type()
-4. Populates the form payload from spec.default_payload + witness_data
-5. Runs the form through TVK validation
-6. Returns a certified Concept+Certificate pair
+**Fix**: ``CortexBridge.instantiate_spec(spec, witness_data)`` now:
+1. Validates witness_data against spec.validation (type check)
+2. Creates a Concept with the spec's form metadata
+3. Merges spec.default_payload + witness_data into form_payload
+4. Runs validate_typed_form (reading clerk countersigns)
+5. Builds EMLTree from coupling signature
+6. Certifies the tree (applies the wax seal)
+7. Returns (Concept, CortexCertificate)
+
+See ``infra/_cortex/DESIGN.md`` for the writ / sealed writ analogy.
 
 ---
 
@@ -185,19 +222,19 @@ Concept from a spec and real evidence, then push it through the TVK
 
 | # | Gap | Severity | File | Fix Scope |
 |---|-----|----------|------|-----------|
-| 1 | NC doesn't query SpecRegistry | BLOCKING | `_inference.py` | ~5 lines + design |
-| 2 | No RouterIndex binding | BLOCKING | `_waitlist.py` | ~20 lines |
-| 3 | No certificate on completion | BLOCKING | `_orchestrator.py` | ~10 lines |
+| 1 | NC doesn't query SpecRegistry | ~~BLOCKING~~ **RESOLVED** | `_bridge.py` | +DESIGN.md |
+| 2 | No RouterIndex binding | ~~BLOCKING~~ **RESOLVED** | `_waitlist.py` | +DESIGN.md |
+| 3 | No certificate on completion | ~~BLOCKING~~ **RESOLVED** | `_orchestrator.py` | +DESIGN.md |
 | 4 | No LogicType on Concept | ~~MAJOR~~ **RESOLVED** | `_concept.py` | logic_type param + mappings |
-| 5 | No paradox classification | MAJOR | `_orchestrator.py` | ~15 lines |
-| 6 | No Event model | MAJOR | `_blackboard.py` | ~30 lines + design |
+| 5 | No paradox classification | ~~MAJOR~~ **VOID** | — | triangle handles it |
+| 6 | No Event model | ~~MAJOR~~ **SCAFFOLDED** | `_bridge.py` | debt ledger scaffold |
 | 7 | No spec-based decomposition UI | MAJOR | `canvas_app/` | ~2 new panels |
-| 8 | No checkpoint verification | MAJOR | `_checkpoint.py` | ~20 lines |
+| 8 | No checkpoint verification | ~~MAJOR~~ **RESOLVED** | `_bridge.py` | purser's inspection |
 | 9 | Coupling→LogicType mapping | ~~MINOR~~ **RESOLVED** | `_spec.py` | COUPLING_TO_LOGIC dict |
 | 10 | Flow→Tree formal mapping | ~~MINOR~~ **DEFERRED** | — | Moot until gap #1 resolved |
-| 11 | Cannot instantiate a spec | BLOCKING | `_bridge.py` | ~40 lines + design |
+| 11 | Cannot instantiate a spec | ~~BLOCKING~~ **RESOLVED** | `_bridge.py` | writ + seal |
 
-**4 BLOCKING gaps** must be resolved before the bridge is functional.
-**4 MAJOR gaps** should be resolved in Phase 1 (FastAPI + UI integration).
-**2 RESOLVED**: gaps #4 and #9.
+**0 BLOCKING gaps** must be resolved before the bridge is functional.
+**1 MAJOR gap** should be resolved in Phase 1 (FastAPI + UI integration).
+**7 RESOLVED**: gaps #1, #2, #3, #4, #8, #9, and #11.
 **1 DEFERRED**: gap #10.
