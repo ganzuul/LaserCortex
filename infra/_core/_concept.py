@@ -2,6 +2,8 @@ from ._reference import Reference
 from typing import Optional
 import uuid
 
+from infra._cortex._logic_types import LogicType
+
 
 #
 # LaserCortex: typed cortex additions
@@ -14,11 +16,53 @@ FORM_TYPES = {
     "narrative_justification": "Human-auditable explanation of a decision chain.",
 }
 
+FORM_TO_LOGIC = {
+    "threshold_category": LogicType.FUZZY,
+    "category_refactor": LogicType.CLASSICAL,
+    "risk_assessment": LogicType.MANY_VALUED,
+    "topological_equivalence": LogicType.INTUITIONISTIC,
+    "narrative_justification": LogicType.TEMPORAL,
+}
+
 COUPLING_SIGNATURES = {
     "commutative",
     "non-commutative",
     "non-associative",
     "commutative-associative",
+}
+
+# Map NC concept type symbols to LogicType
+TYPE_TO_LOGIC = {
+    "<=": LogicType.CLASSICAL,
+    "<-": LogicType.CLASSICAL,
+    "<>": LogicType.PARACONSISTENT,
+    "<{}>": LogicType.PARACONSISTENT,
+    "({})": LogicType.CLASSICAL,
+    "::": LogicType.CLASSICAL,
+    "::({})": LogicType.CLASSICAL,
+    "[]": LogicType.RELEVANCE,
+    "@by": LogicType.TEMPORAL,
+    "@if": LogicType.TEMPORAL,
+    "@if!": LogicType.TEMPORAL,
+    "@onlyIf": LogicType.TEMPORAL,
+    "@ifOnlyIf": LogicType.TEMPORAL,
+    "@after": LogicType.TEMPORAL,
+    "@before": LogicType.TEMPORAL,
+    "@with": LogicType.TEMPORAL,
+    "@while": LogicType.TEMPORAL,
+    "@until": LogicType.TEMPORAL,
+    "@afterstep": LogicType.TEMPORAL,
+    "@:'": LogicType.TEMPORAL,
+    "@:!": LogicType.TEMPORAL,
+    "@.": LogicType.TEMPORAL,
+    "*every": LogicType.MODAL,
+    "*some": LogicType.MODAL,
+    "*count": LogicType.MODAL,
+    "*.": LogicType.MODAL,
+    "$what?": LogicType.EPISTEMIC,
+    "$how?": LogicType.EPISTEMIC,
+    "$when?": LogicType.TEMPORAL,
+    ":S:": LogicType.EPISTEMIC,
 }
 
 
@@ -132,7 +176,7 @@ def normalize_type(type_str: str) -> str:
 
 
 class Concept:
-    def __init__(self, name, context="", axis_name: Optional[str] = None, reference: Optional[Reference] = None, type="{}", natural_name: Optional[str] = None, form_type: Optional[str] = None, form_schema_version: Optional[str] = None, coupling_signature: Optional[str] = None):
+    def __init__(self, name, context="", axis_name: Optional[str] = None, reference: Optional[Reference] = None, type="{}", natural_name: Optional[str] = None, form_type: Optional[str] = None, form_schema_version: Optional[str] = None, coupling_signature: Optional[str] = None, logic_type: Optional[LogicType] = None):
         if type not in CONCEPT_TYPES:
             raise ValueError(f"Invalid concept type. Must be one of: {list(CONCEPT_TYPES.keys())}")
             
@@ -146,8 +190,17 @@ class Concept:
         self.natural_name = natural_name if natural_name else self.axis_name
         self.reference: Optional[Reference] = reference
         self.id = str(uuid.uuid4())  # Generate unique identification number
+        self._logic_type = logic_type
 
         self._validate_form_metadata()
+
+    def to_logic_type(self) -> LogicType:
+        """Derive LogicType: explicit > form_type > concept type > CLASSICAL."""
+        if self._logic_type is not None:
+            return self._logic_type
+        if self.form_type is not None and self.form_type in FORM_TO_LOGIC:
+            return FORM_TO_LOGIC[self.form_type]
+        return TYPE_TO_LOGIC.get(self.type, LogicType.CLASSICAL)
     
     def _validate_form_metadata(self):
         if self.form_type is not None:
@@ -172,6 +225,7 @@ class Concept:
             form_type=self.form_type,
             form_schema_version=self.form_schema_version,
             coupling_signature=self.coupling_signature,
+            logic_type=self._logic_type,
         )
         return new_concept
     
