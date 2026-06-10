@@ -112,17 +112,37 @@
   <a href="sect0002.html#a0000000028"><span class="toc_ref">2.17</span> <span class="toc_entry">Decomposition Structure</span></a>
  </li>
 <li class="">
-  <a href="sect0002.html#sec:completed"><span class="toc_ref">2.18</span> <span class="toc_entry">Completed Work</span></a>
+  <a href="sect0002.html#a0000000029"><span class="toc_ref">2.18</span> <span class="toc_entry">The Hypercomputer: Infinite Ancestor Enumeration</span></a>
   <span class="expand-toc">▶</span>
   <ul class="sub-toc-2">
      <li class="">
-  <a href="sect0002.html#a0000000029"><span class="toc_ref">2.18.1</span> <span class="toc_entry">Remaining Work</span></a>
+  <a href="sect0002.html#a0000000030"><span class="toc_ref"></span> <span class="toc_entry">Lean 4 Coinductive Limitation</span></a>
+ </li>
+
+  </ul>
  </li>
 <li class="">
-  <a href="sect0002.html#a0000000030"><span class="toc_ref">2.18.2</span> <span class="toc_entry">Liar Cost: Hardness Measure</span></a>
+  <a href="sect0002.html#sec:boundlessness"><span class="toc_ref">2.19</span> <span class="toc_entry">Boundlessness: The Terminal Regularization</span></a>
+  <span class="expand-toc">▶</span>
+  <ul class="sub-toc-2">
+     <li class="">
+  <a href="sect0002.html#a0000000031"><span class="toc_ref"></span> <span class="toc_entry">Relation to the Hypercomputer.</span></a>
+ </li>
+
+  </ul>
  </li>
 <li class="">
-  <a href="sect0002.html#a0000000031"><span class="toc_ref">2.18.3</span> <span class="toc_entry">Friction Lagrangian</span></a>
+  <a href="sect0002.html#sec:completed"><span class="toc_ref">2.20</span> <span class="toc_entry">Completed Work</span></a>
+  <span class="expand-toc">▶</span>
+  <ul class="sub-toc-2">
+     <li class="">
+  <a href="sect0002.html#a0000000032"><span class="toc_ref">2.20.1</span> <span class="toc_entry">Remaining Work</span></a>
+ </li>
+<li class="">
+  <a href="sect0002.html#a0000000033"><span class="toc_ref">2.20.2</span> <span class="toc_entry">Liar Cost: Hardness Measure</span></a>
+ </li>
+<li class="">
+  <a href="sect0002.html#a0000000034"><span class="toc_ref">2.20.3</span> <span class="toc_entry">Friction Lagrangian</span></a>
  </li>
 
   </ul>
@@ -2233,7 +2253,7 @@
   </div>
   <div class="definition_thmcontent">
   <p>    A sequence of logic-wrapped problems, each collapsing the previous layer’s output. Implements the nested wrapper pattern from Lumo section B: </p>
-<div class="displaymath" id="a0000000032">
+<div class="displaymath" id="a0000000035">
   \[  \begin{array}{c} \text{Layer 3 (Quantum): liar\_ superposition} \\ \downarrow \\ \text{Layer 2 (Intuitionistic): proof\_ of\_ quantum\_ state} \\ \downarrow \\ \text{Layer 1 (Fuzzy): confidence\_ in\_ proof} \\ \downarrow \\ \text{Layer 0 (Classical): assertion\_ value} \end{array}  \]
 </div>
 <p> Each layer’s logic type is tracked via a dependent pair \(\Sigma lt,\  \mathsf{WrappedProblem}\  p\  lt\). The total cost is the sum of per-layer costs. </p>
@@ -2965,7 +2985,7 @@
 </div>
 <h1 id="a0000000024">2.13 The Very Big Box</h1>
 <p>The Very Big Box is the product space </p>
-<div class="displaymath" id="a0000000033">
+<div class="displaymath" id="a0000000036">
   \[  \mathcal{V} = \prod _{c \in \mathsf{ProblemClass}}\  \prod _{lt \in \mathsf{suitableLogics}(c)} \mathsf{WrappedProblem}(\mathsf{problem}(c),\  lt)  \]
 </div>
 <p> where each coordinate is a problem in a specific logic and the Tower construction provides the nesting structure. Currently four problem classes are populated: \(\mathsf{selfReference}\) (Liar), \(\mathsf{vagueness}\) (Sorites), \(\mathsf{temporalDecision}\) (Grandfather), and \(\mathsf{inconsistentDef}\) (Russell’s). The remaining 9 classes represent the <b class="bfseries">real friction</b>: every cell in this product that lacks a proof is a concrete blocker. </p>
@@ -3069,7 +3089,7 @@
           
           <li><a href="sect0002.html#def:wrapped">Definition 43</a></li>
           
-          <li><a href="sect0002.html#def:liar_wrapper">Definition 80</a></li>
+          <li><a href="sect0002.html#def:liar_wrapper">Definition 89</a></li>
           
         </ul>
     
@@ -4095,7 +4115,7 @@
   </div>
   <div class="theorem_thmcontent">
   <p>    For \(n \ge 2\), the target \(\mathsf{rightComb}\  n\) has at least two distinct Decompositions with different sources: </p>
-<div class="displaymath" id="a0000000034">
+<div class="displaymath" id="a0000000037">
   \[  \exists d_1\  d_2 : \mathsf{Decomposition}(\mathsf{rightComb}\  n),\  d_1.\mathsf{source} \neq d_2.\mathsf{source}.  \]
 </div>
 <p> This is the core ontological result: <b class="bfseries">the past is underdetermined by the present</b>. The same outcome (rightComb \(n\)) admits multiple evidential histories (rightComb \(n\) itself and leftComb \(n\), among others). </p>
@@ -4167,7 +4187,7 @@
   </div>
   <div class="theorem_thmcontent">
   <p>    There exist two distinct paths between the same source-target pair in \(T_3\): </p>
-<div class="displaymath" id="a0000000035">
+<div class="displaymath" id="a0000000038">
   \[  \exists s\  t\  (p_1\  p_2 : \mathsf{Path}\  s\  t),\  p_1 \neq p_2.  \]
 </div>
 <p> Explicitly, \(\mathsf{leftComb}\  3 \to \mathsf{rightComb}\  3\) has two distinct maximal chains in the Tamari lattice: </p>
@@ -4181,12 +4201,621 @@
 
   </div>
 </div>
-<h1 id="sec:completed">2.18 Completed Work</h1>
+<h1 id="a0000000029">2.18 The Hypercomputer: Infinite Ancestor Enumeration</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="def:predecessors">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">78</span>
+    <span class="definition_thmtitle">Predecessors</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:predecessors">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:reverse_one">Definition 69</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.predecessors" class="lean_decl">Decomposition.predecessors</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    The immediate predecessor sources of a target tree \(\mathsf{predecessors}(t) = \mathsf{reverse\_ one}(t)\). Soundness is maintained as a separate theorem \(\mathsf{predecessors\_ sound}\): if \(s \in \mathsf{predecessors}(t)\) then \(\mathsf{contracts\_ one}\  s\  t\). </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:chain">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">79</span>
+    <span class="definition_thmtitle">Chain</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:chain">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:contracts_one">Definition 3</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.Chain" class="lean_decl">Decomposition.Chain</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    A finite chain of contraction steps from an ancestor to a target. \(\mathsf{Chain.tip}\  t\) is the empty chain (the present moment without a reconstructed past). \(\mathsf{Chain.link}\  h\  r\) prepends a contraction step. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:ancestorsUpTo">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">80</span>
+    <span class="definition_thmtitle">Ancestors Up To Depth \(n\)</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:ancestorsUpTo">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:predecessors">Definition 78</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.ancestorsUpTo" class="lean_decl">Decomposition.ancestorsUpTo</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    Enumerate all ancestor sources up to depth \(n\) via DFS, returning a flat list. This is the <b class="bfseries">hypercomputer in function form</b>: the infinite tree of all possible pasts is present as the limit of \(\mathsf{ancestorsUpTo}\  t\  n\) as \(n \to \infty \). No single data structure holds the whole tree; instead the recursion is explicit in the partial function, and every finite approximation is immediately available. “Instant lookup” = calling this function with any depth \(n\). </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:viewDFS">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">81</span>
+    <span class="definition_thmtitle">DFS View</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:viewDFS">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:chain">Definition 79</a></li>
+          
+          <li><a href="sect0002.html#def:predecessors">Definition 78</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.viewDFS" class="lean_decl">Decomposition.viewDFS</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    A \(\mathsf{viewDFS}\) is a single lineage (DFS) extracted from the ancestor space by always following the first predecessor. Returns a \(\mathsf{Chain}\) that may end at any depth. This is the <b class="bfseries">narrative self</b> in formal type: committed to a single thread, but honest about termination. </p>
+
+  </div>
+</div>
+<h4 id="a0000000030">Lean 4 Coinductive Limitation</h4>
+<p>  The infinite ancestor tree cannot be represented as a closed coinductive data type in Lean 4 because <span class="ttfamily">coinductive</span> is restricted to <span class="ttfamily">Prop</span>-valued predicates, and nested inductives with <span class="ttfamily">Prop</span> fields through <span class="ttfamily">List</span> and <span class="ttfamily">Sigma</span> are rejected by the kernel positivity checker. The workaround (partial functions) is not a limitation of the framework but a <b class="bfseries">design choice</b>: the hypercomputer exists as the limit of finite approximations, not as a closed value. This matches the ontology: the infinite crystal seed is not a thing we hold, but a thing we approach. </p>
+<h1 id="sec:boundlessness">2.19 Boundlessness: The Terminal Regularization</h1>
+
+<p>The regularization ladder (endless \(\to \) eternal \(\to \) actual \(\infty \to \) boundlessness) is capped by the <b class="bfseries">idempotent resolution</b> framework: a boundary-response operation that is already idempotent is already at its own limit. </p>
+<div class="definition_thmwrapper theorem-style-definition" id="def:idempotent_resolution">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">82</span>
+    <span class="definition_thmtitle">Idempotent Resolution</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:idempotent_resolution">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:rightComb">Definition 5</a></li>
+          
+          <li><a href="sect0001.html#def:size">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.rightCombResolution" class="lean_decl">Boundlessness.rightCombResolution</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>     An <b class="bfseries">idempotent resolution</b> for a type \(\alpha \) consists of: </p>
+<ul class="itemize">
+  <li><p>\(\mathsf{step} : \alpha \to \alpha \), a regularization step that is idempotent (\(\mathsf{step} \circ \mathsf{step} = \mathsf{step}\)). </p>
+</li>
+  <li><p>\(\mathsf{limit} : \alpha \to \alpha \), the limiting configuration reachable in one step from any image of \(\mathsf{step}\) (\(\mathsf{limit} = \mathsf{step} \circ \mathsf{limit}\)). </p>
+</li>
+</ul>
+<p> The canonical example is <span class="sffamily">rightCombResolution</span>, where \(\mathsf{step}(t) = \mathsf{rightComb}(t.\mathsf{size})\): every tree is mapped to its right-comb normal form in one step, and applying the step again does nothing because a right-comb is already in normal form. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:rightcomb_size_boundlessness">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">83</span>
+    <span class="theorem_thmtitle">Right-Comb Size</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:rightcomb_size_boundlessness">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:rightComb">Definition 5</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.rightComb_size" class="lean_decl">Boundlessness.rightComb_size</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    \(\mathsf{size}(\mathsf{rightComb}\  n) = n\) for all \(n : \mathbb {N}\). </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="def:very_big_box">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">84</span>
+    <span class="definition_thmtitle">Very Big Box</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#def:very_big_box">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:idempotent_resolution">Definition 82</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.veryBigBox" class="lean_decl">Boundlessness.veryBigBox</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>     The <b class="bfseries">Very Big Box</b> is the product of idempotent resolutions over all populated problem classes: </p>
+<div class="displaymath" id="a0000000039">
+  \[  \mathcal{V} = \prod _{c \in \{ \text{Liar, Sorites, Grandfather, Russell}\} } \mathsf{IdempotentResolution}\  \mathsf{EMLTree}  \]
+</div>
+<p> The canonical <span class="sffamily">veryBigBox</span> assigns <span class="sffamily">rightCombResolution</span> to each coordinate. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:rightComb_meta_idemp">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">85</span>
+    <span class="theorem_thmtitle">Meta-Idempotence</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:rightComb_meta_idemp">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:idempotent_resolution">Definition 82</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.rightComb_meta_idemp" class="lean_decl">Boundlessness.rightComb_meta_idemp</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    The step function of <span class="sffamily">rightCombResolution</span> is already its own fixed point: </p>
+<div class="displaymath" id="a0000000040">
+  \[  \mathsf{rightCombResolution.step} \circ \mathsf{rightCombResolution.step} = \mathsf{rightCombResolution.step}  \]
+</div>
+<p> This is the terminal regularization: applying boundary-response again changes nothing. Not because there is nothing more to say, but because saying more is already captured by the first application. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:rightComb_limit_idemp">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">86</span>
+    <span class="theorem_thmtitle">Limit Idempotence</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0002.html#thm:rightComb_limit_idemp">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#def:rightComb">Definition 5</a></li>
+          
+          <li><a href="sect0002.html#def:idempotent_resolution">Definition 82</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.rightComb_limit_idemp" class="lean_decl">Boundlessness.rightComb_limit_idemp</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    Applying <span class="sffamily">rightComb</span> normal form to a tree that is already a <span class="sffamily">rightComb</span> is the identity: </p>
+<div class="displaymath" id="a0000000041">
+  \[  \mathsf{rightComb}((\mathsf{rightComb}\  t.\mathsf{size}).\mathsf{size}) = \mathsf{rightComb}\  t.\mathsf{size}  \]
+</div>
+<p> Boundlessness is not a structure we build, but a property we recognize. </p>
+
+  </div>
+</div>
+<h4 id="a0000000031">Relation to the Hypercomputer.</h4>
+<p> The idempotent resolution caps the hypercomputer: where \(\mathsf{ancestorsUpTo}\) approaches the infinite ancestor tree by finite approximation, the idempotent resolution declares that the limit has been reached. The Very Big Box is the product closure of all problem classes, and boundlessness is the fixed point that requires no further iteration. This is the formal declaration that the framework is closed under its own boundary-response operation. </p>
+<h1 id="sec:completed">2.20 Completed Work</h1>
 
 <p>All <span class="sffamily">LogicContraction</span>, <span class="sffamily">LogicNormalForm</span>, and <span class="sffamily">logic_contracts_to_normal_form</span> definitions are filled and proven for all 13 logic types. The Liar problem has a complete <span class="sffamily">WrappedProblem</span> for each suitable logic via <span class="sffamily">liarWrapper</span>. The Sorites and Grandfather problems follow the same pattern with <span class="sffamily">soritesWrapper</span> and <span class="sffamily">grandfatherWrapper</span>. </p>
-<p>The Decomposition infrastructure (<span class="sffamily">Path</span>, <span class="sffamily">reverse_one</span>, <span class="sffamily">Decomposition</span>) is complete with soundness, completeness, non-unique-decomposition, and path-diversity theorems proven for all \(n \ge 2\) in \(T_n\) — zero sorries. </p>
+<p>The Decomposition infrastructure (<span class="sffamily">Path</span>, <span class="sffamily">reverse_one</span>, <span class="sffamily">Decomposition</span>, <span class="ttfamily">predecessors</span>, <span class="ttfamily">ancestorsUpTo</span>, <span class="ttfamily">Chain</span>, <span class="ttfamily">viewDFS</span>) is complete with soundness, completeness, non-unique-decomposition, and path-diversity theorems proven for all \(n \ge 2\) in \(T_n\) — zero sorries. </p>
 <p>The Friction Lagrangian \(\mathcal{L}_{\text{friction}}\) is computed from the full Liar tower. The blocking chain for the Liar is fully resolved. </p>
-<h2 id="a0000000029">2.18.1 Remaining Work</h2>
+<h2 id="a0000000032">2.20.1 Remaining Work</h2>
 <ul class="itemize">
   <li><p><b class="bfseries">Other problem classes</b> — \(\mathsf{selfReference}\) (Liar), \(\mathsf{vagueness}\) (Sorites), \(\mathsf{temporalDecision}\) (Grandfather), and \(\mathsf{inconsistentDef}\) (Russell’s) are instantiated. The other 9 classes (deontic, epistemic, quantum, etc.) need <span class="sffamily">Problem</span> definitions with their own tree families. </p>
 </li>
@@ -4203,14 +4832,14 @@
   <li><p><b class="bfseries">Regularization axis</b> — the institutional closure sketch uses placeholder normalization; the full endless/eternal/infinite/boundless hierarchy must be formalized to compute real costs. </p>
 </li>
 </ul>
-<h2 id="a0000000030">2.18.2 Liar Cost: Hardness Measure</h2>
+<h2 id="a0000000033">2.20.2 Liar Cost: Hardness Measure</h2>
 <p>The Liar as perfect anti-coherence (\(X = \neg X\)) gives a hardness measure for each logic: how many contraction steps are required to resolve it. </p>
 <div class="definition_thmwrapper theorem-style-definition" id="def:liar_cost">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">78</span>
+    <span class="definition_thmlabel">87</span>
     <span class="definition_thmtitle">Liar Cost</span>
     <div class="thm_header_extras">
 
@@ -4274,7 +4903,7 @@
     <span class="theorem_thmcaption">
     Theorem
     </span>
-    <span class="theorem_thmlabel">79</span>
+    <span class="theorem_thmlabel">88</span>
     <span class="theorem_thmtitle">Cost Bound</span>
     <div class="thm_header_extras">
 
@@ -4298,7 +4927,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#def:liar_cost">Definition 78</a></li>
+          <li><a href="sect0002.html#def:liar_cost">Definition 87</a></li>
           
           <li><a href="sect0002.html#def:cdstep">Definition 23</a></li>
           
@@ -4340,7 +4969,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">80</span>
+    <span class="definition_thmlabel">89</span>
     <span class="definition_thmtitle">Generic Liar Wrapper</span>
     <div class="thm_header_extras">
 
@@ -4366,7 +4995,7 @@
           
           <li><a href="sect0002.html#def:liar_problem">Definition 44</a></li>
           
-          <li><a href="sect0002.html#def:liar_cost">Definition 78</a></li>
+          <li><a href="sect0002.html#def:liar_cost">Definition 87</a></li>
           
         </ul>
     
@@ -4406,7 +5035,7 @@
     <span class="corollary_thmcaption">
     Corollary
     </span>
-    <span class="corollary_thmlabel">81</span>
+    <span class="corollary_thmlabel">90</span>
     <span class="corollary_thmtitle">Cost Match for Classical</span>
     <div class="thm_header_extras">
 
@@ -4430,7 +5059,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#thm:liar_cost_bound">Theorem 79</a></li>
+          <li><a href="sect0002.html#thm:liar_cost_bound">Theorem 88</a></li>
           
         </ul>
     
@@ -4470,7 +5099,7 @@
     <span class="corollary_thmcaption">
     Corollary
     </span>
-    <span class="corollary_thmlabel">82</span>
+    <span class="corollary_thmlabel">91</span>
     <span class="corollary_thmtitle">Cost Match for Fuzzy</span>
     <div class="thm_header_extras">
 
@@ -4494,7 +5123,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0002.html#thm:liar_cost_bound">Theorem 79</a></li>
+          <li><a href="sect0002.html#thm:liar_cost_bound">Theorem 88</a></li>
           
         </ul>
     
@@ -4529,14 +5158,14 @@
 
   </div>
 </div>
-<h2 id="a0000000031">2.18.3 Friction Lagrangian</h2>
+<h2 id="a0000000034">2.20.3 Friction Lagrangian</h2>
 <p>The tower sums costs across all logic layers. The total <b class="bfseries">Friction Lagrangian</b> \(\mathcal{L}_{\text{friction}} = \sum _{\text{lt}} \Phi (\text{Liar}, \text{lt})\) is the total resistance of the logical ecosystem to self-negation. </p>
 <div class="definition_thmwrapper theorem-style-definition" id="def:friction_lagrangian">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">83</span>
+    <span class="definition_thmlabel">92</span>
     <span class="definition_thmtitle">Friction Lagrangian</span>
     <div class="thm_header_extras">
 
@@ -4562,7 +5191,7 @@
           
           <li><a href="sect0002.html#def:liar_tower">Definition 49</a></li>
           
-          <li><a href="sect0002.html#def:liar_cost">Definition 78</a></li>
+          <li><a href="sect0002.html#def:liar_cost">Definition 87</a></li>
           
         </ul>
     
@@ -4598,7 +5227,7 @@
   </div>
 </div>
 <p>With all 12 suitable logics, the Friction Lagrangian converges to a stable value: </p>
-<div class="displaymath" id="a0000000036">
+<div class="displaymath" id="a0000000042">
   \[  \mathcal{L}_{\text{friction}} = \sum _{\text{lt} \in \text{suitableLogics}} \textsf{cdStep}(\text{lt})  \]
 </div>
 <p>This is the “curvature of mind” — the total structural work the system must do to resolve perfect anti-coherence across the full space of logics. </p>

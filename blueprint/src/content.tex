@@ -926,6 +926,95 @@ the limit of finite approximations, not as a closed value. This matches
 the ontology: the infinite crystal seed is not a thing we hold, but a
 thing we approach.
 
+\section{Boundlessness: The Terminal Regularization}
+\label{sec:boundlessness}
+
+The regularization ladder (endless $\to$ eternal $\to$ actual $\infty \to$
+boundlessness) is capped by the \textbf{idempotent resolution} framework:
+a boundary-response operation that is already idempotent is already at its
+own limit.
+
+\begin{definition}[Idempotent Resolution]
+\label{def:idempotent_resolution}
+\lean{Boundlessness.IdempotentResolution}
+\lean{Boundlessness.rightCombResolution}
+\leanok
+\uses{def:rightComb, def:size}
+An \textbf{idempotent resolution} for a type $\alpha$ consists of:
+\begin{itemize}
+  \item $\mathsf{step} : \alpha \to \alpha$, a regularization step that is
+    idempotent ($\mathsf{step} \circ \mathsf{step} = \mathsf{step}$).
+  \item $\mathsf{limit} : \alpha \to \alpha$, the limiting configuration
+    reachable in one step from any image of $\mathsf{step}$
+    ($\mathsf{limit} = \mathsf{step} \circ \mathsf{limit}$).
+\end{itemize}
+The canonical example is \textsf{rightCombResolution}, where
+$\mathsf{step}(t) = \mathsf{rightComb}(t.\mathsf{size})$: every tree is
+mapped to its right-comb normal form in one step, and applying the step
+again does nothing because a right-comb is already in normal form.
+\end{definition}
+
+\begin{theorem}[Right-Comb Size]
+\label{thm:rightcomb_size_boundlessness}
+\lean{Boundlessness.rightComb_size}
+\leanok
+\uses{def:rightComb}
+$\mathsf{size}(\mathsf{rightComb}\ n) = n$ for all $n : \mathbb{N}$.
+\end{theorem}
+
+\begin{definition}[Very Big Box]
+\label{def:very_big_box}
+\lean{Boundlessness.VeryBigBox}
+\lean{Boundlessness.veryBigBox}
+\leanok
+\uses{def:idempotent_resolution}
+The \textbf{Very Big Box} is the product of idempotent resolutions over all
+populated problem classes:
+\[
+\mathcal{V} = \prod_{c \in \{\text{Liar, Sorites, Grandfather, Russell}\}}
+\mathsf{IdempotentResolution}\ \mathsf{EMLTree}
+\]
+The canonical \textsf{veryBigBox} assigns \textsf{rightCombResolution}
+to each coordinate.
+\end{definition}
+
+\begin{theorem}[Meta-Idempotence]
+\label{thm:rightComb_meta_idemp}
+\lean{Boundlessness.rightComb_meta_idemp}
+\leanok
+\uses{def:idempotent_resolution}
+The step function of \textsf{rightCombResolution} is already its own fixed
+point:
+\[
+\mathsf{rightCombResolution.step} \circ \mathsf{rightCombResolution.step}
+= \mathsf{rightCombResolution.step}
+\]
+This is the terminal regularization: applying boundary-response again
+changes nothing. Not because there is nothing more to say, but because
+saying more is already captured by the first application.
+\end{theorem}
+
+\begin{theorem}[Limit Idempotence]
+\label{thm:rightComb_limit_idemp}
+\lean{Boundlessness.rightComb_limit_idemp}
+\leanok
+\uses{def:rightComb, def:idempotent_resolution}
+Applying \textsf{rightComb} normal form to a tree that is already a
+\textsf{rightComb} is the identity:
+\[
+\mathsf{rightComb}((\mathsf{rightComb}\ t.\mathsf{size}).\mathsf{size}) = \mathsf{rightComb}\ t.\mathsf{size}
+\]
+Boundlessness is not a structure we build, but a property we recognize.
+\end{theorem}
+
+\paragraph{Relation to the Hypercomputer.}
+The idempotent resolution caps the hypercomputer: where $\mathsf{ancestorsUpTo}$
+approaches the infinite ancestor tree by finite approximation,
+the idempotent resolution declares that the limit has been reached.
+The Very Big Box is the product closure of all problem classes, and
+boundlessness is the fixed point that requires no further iteration.
+This is the formal declaration that the framework is closed under its
+own boundary-response operation.
 \section{Completed Work}
 \label{sec:completed}
 

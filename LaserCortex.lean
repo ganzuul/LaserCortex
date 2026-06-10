@@ -11,3 +11,4 @@ import LaserCortex.LogicMonad
 import LaserCortex.InstitutionalClosure
 import LaserCortex.DecisionComposition
 import LaserCortex.Decomposition
+import LaserCortex.Boundlessness

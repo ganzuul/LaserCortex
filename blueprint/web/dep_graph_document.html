@@ -74,7 +74,7 @@
       <span class="corollary_thmcaption">
       Corollary
       </span>
-      <span class="corollary_thmlabel">81</span><span class="corollary_thmtitle">Cost Match for Classical</span></div>
+      <span class="corollary_thmlabel">90</span><span class="corollary_thmtitle">Cost Match for Classical</span></div>
     <div class="thm_thmcontent"><p>    \(\textsf{liarCost}(\text{Classical}) = 0 = \textsf{classicalLiar.cost}\). </p>
 </div>
 
@@ -104,7 +104,7 @@
       <span class="corollary_thmcaption">
       Corollary
       </span>
-      <span class="corollary_thmlabel">82</span><span class="corollary_thmtitle">Cost Match for Fuzzy</span></div>
+      <span class="corollary_thmlabel">91</span><span class="corollary_thmtitle">Cost Match for Fuzzy</span></div>
     <div class="thm_thmcontent"><p>    \(\textsf{liarCost}(\text{Fuzzy}) = 1 = \textsf{fuzzyLiar.cost}\). </p>
 </div>
 
@@ -112,6 +112,36 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LiarParadox.liarCost_matches_fuzzy">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:ancestorsUpTo_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:ancestorsUpTo" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">80</span><span class="definition_thmtitle">Ancestors Up To Depth \(n\)</span></div>
+    <div class="thm_thmcontent"><p>    Enumerate all ancestor sources up to depth \(n\) via DFS, returning a flat list. This is the <b class="bfseries">hypercomputer in function form</b>: the infinite tree of all possible pasts is present as the limit of \(\mathsf{ancestorsUpTo}\  t\  n\) as \(n \to \infty \). No single data structure holds the whole tree; instead the recursion is explicit in the partial function, and every finite approximation is immediately available. “Instant lookup” = calling this function with any depth \(n\). </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#def:ancestorsUpTo">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.ancestorsUpTo">Lean</a>
     
     
   
@@ -202,6 +232,36 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/EMLRegistry.certify">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:chain_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:chain" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">79</span><span class="definition_thmtitle">Chain</span></div>
+    <div class="thm_thmcontent"><p>    A finite chain of contraction steps from an ancestor to a target. \(\mathsf{Chain.tip}\  t\) is the empty chain (the present moment without a reconstructed past). \(\mathsf{Chain.link}\  h\  r\) prepends a contraction step. </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#def:chain">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.Chain">Lean</a>
     
     
   
@@ -434,7 +494,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">83</span><span class="definition_thmtitle">Friction Lagrangian</span></div>
+      <span class="definition_thmlabel">92</span><span class="definition_thmtitle">Friction Lagrangian</span></div>
     <div class="thm_thmcontent"><p>    The sum of \(\Phi \) costs across all layers of the Liar tower. </p>
 </div>
 
@@ -633,6 +693,43 @@
 
 
     
+    <div class="dep-modal-container" id="def:idempotent_resolution_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:idempotent_resolution" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">82</span><span class="definition_thmtitle">Idempotent Resolution</span></div>
+    <div class="thm_thmcontent"><p>     An <b class="bfseries">idempotent resolution</b> for a type \(\alpha \) consists of: </p>
+<ul class="itemize">
+  <li><p>\(\mathsf{step} : \alpha \to \alpha \), a regularization step that is idempotent (\(\mathsf{step} \circ \mathsf{step} = \mathsf{step}\)). </p>
+</li>
+  <li><p>\(\mathsf{limit} : \alpha \to \alpha \), the limiting configuration reachable in one step from any image of \(\mathsf{step}\) (\(\mathsf{limit} = \mathsf{step} \circ \mathsf{limit}\)). </p>
+</li>
+</ul>
+<p> The canonical example is <span class="sffamily">rightCombResolution</span>, where \(\mathsf{step}(t) = \mathsf{rightComb}(t.\mathsf{size})\): every tree is mapped to its right-comb normal form in one step, and applying the step again does nothing because a right-comb is already in normal form. </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#def:idempotent_resolution">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.rightCombResolution">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
     <div class="dep-modal-container" id="def:institutional_closure_modal">
       <div class="dep-modal-content">
           <button class="dep-closebtn">
@@ -715,7 +812,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">78</span><span class="definition_thmtitle">Liar Cost</span></div>
+      <span class="definition_thmlabel">87</span><span class="definition_thmtitle">Liar Cost</span></div>
     <div class="thm_thmcontent"><p>    The cost \(\Phi (\text{Liar}, \text{lt})\) to resolve the Liar under logic <span class="sffamily">lt</span>. Conjectured to equal the Cayley–Dickson step. </p>
 </div>
 
@@ -805,7 +902,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">80</span><span class="definition_thmtitle">Generic Liar Wrapper</span></div>
+      <span class="definition_thmlabel">89</span><span class="definition_thmtitle">Generic Liar Wrapper</span></div>
     <div class="thm_thmcontent"><p>    For any logic <span class="sffamily">lt</span>, constructs the <span class="sffamily">WrappedProblem</span> with \(\textsf{cost} = \textsf{liarCost}(\text{lt})\). Fills all 12 mail slots. </p>
 </div>
 
@@ -1221,6 +1318,36 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.Path.length">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:predecessors_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:predecessors" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">78</span><span class="definition_thmtitle">Predecessors</span></div>
+    <div class="thm_thmcontent"><p>    The immediate predecessor sources of a target tree \(\mathsf{predecessors}(t) = \mathsf{reverse\_ one}(t)\). Soundness is maintained as a separate theorem \(\mathsf{predecessors\_ sound}\): if \(s \in \mathsf{predecessors}(t)\) then \(\mathsf{contracts\_ one}\  s\  t\). </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#def:predecessors">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.predecessors">Lean</a>
     
     
   
@@ -1735,7 +1862,7 @@
       </span>
       <span class="definition_thmlabel">48</span><span class="definition_thmtitle">Tower</span></div>
     <div class="thm_thmcontent"><p>    A sequence of logic-wrapped problems, each collapsing the previous layer’s output. Implements the nested wrapper pattern from Lumo section B: </p>
-<div class="displaymath" id="a0000000032">
+<div class="displaymath" id="a0000000035">
   \[  \begin{array}{c} \text{Layer 3 (Quantum): liar\_ superposition} \\ \downarrow \\ \text{Layer 2 (Intuitionistic): proof\_ of\_ quantum\_ state} \\ \downarrow \\ \text{Layer 1 (Fuzzy): confidence\_ in\_ proof} \\ \downarrow \\ \text{Layer 0 (Classical): assertion\_ value} \end{array}  \]
 </div>
 <p> Each layer’s logic type is tracked via a dependent pair \(\Sigma lt,\  \mathsf{WrappedProblem}\  p\  lt\). The total cost is the sum of per-layer costs. </p>
@@ -1775,6 +1902,70 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/LogicTypes.LogicTranslation">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:very_big_box_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:very_big_box" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">84</span><span class="definition_thmtitle">Very Big Box</span></div>
+    <div class="thm_thmcontent"><p>     The <b class="bfseries">Very Big Box</b> is the product of idempotent resolutions over all populated problem classes: </p>
+<div class="displaymath" id="a0000000039">
+  \[  \mathcal{V} = \prod _{c \in \{ \text{Liar, Sorites, Grandfather, Russell}\} } \mathsf{IdempotentResolution}\  \mathsf{EMLTree}  \]
+</div>
+<p> The canonical <span class="sffamily">veryBigBox</span> assigns <span class="sffamily">rightCombResolution</span> to each coordinate. </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#def:very_big_box">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.veryBigBox">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:viewDFS_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:viewDFS" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">81</span><span class="definition_thmtitle">DFS View</span></div>
+    <div class="thm_thmcontent"><p>    A \(\mathsf{viewDFS}\) is a single lineage (DFS) extracted from the ancestor space by always following the first predecessor. Returns a \(\mathsf{Chain}\) that may end at any depth. This is the <b class="bfseries">narrative self</b> in formal type: committed to a single thread, but honest about termination. </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#def:viewDFS">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.viewDFS">Lean</a>
     
     
   
@@ -2165,7 +2356,7 @@
       <span class="theorem_thmcaption">
       Theorem
       </span>
-      <span class="theorem_thmlabel">79</span><span class="theorem_thmtitle">Cost Bound</span></div>
+      <span class="theorem_thmlabel">88</span><span class="theorem_thmtitle">Cost Bound</span></div>
     <div class="thm_thmcontent"><p>    \(\textsf{liarCost}(\text{lt}) \le \textsf{cdStep}(\text{lt})\) for every logic type. For Classical and Fuzzy the bound is tight (equality). </p>
 </div>
 
@@ -2296,7 +2487,7 @@
       </span>
       <span class="theorem_thmlabel">76</span><span class="theorem_thmtitle">Non-Unique Decomposition</span></div>
     <div class="thm_thmcontent"><p>    For \(n \ge 2\), the target \(\mathsf{rightComb}\  n\) has at least two distinct Decompositions with different sources: </p>
-<div class="displaymath" id="a0000000034">
+<div class="displaymath" id="a0000000037">
   \[  \exists d_1\  d_2 : \mathsf{Decomposition}(\mathsf{rightComb}\  n),\  d_1.\mathsf{source} \neq d_2.\mathsf{source}.  \]
 </div>
 <p> This is the core ontological result: <b class="bfseries">the past is underdetermined by the present</b>. The same outcome (rightComb \(n\)) admits multiple evidential histories (rightComb \(n\) itself and leftComb \(n\), among others). </p>
@@ -2360,7 +2551,7 @@
       </span>
       <span class="theorem_thmlabel">77</span><span class="theorem_thmtitle">Path Diversity</span></div>
     <div class="thm_thmcontent"><p>    There exist two distinct paths between the same source-target pair in \(T_3\): </p>
-<div class="displaymath" id="a0000000035">
+<div class="displaymath" id="a0000000038">
   \[  \exists s\  t\  (p_1\  p_2 : \mathsf{Path}\  s\  t),\  p_1 \neq p_2.  \]
 </div>
 <p> Explicitly, \(\mathsf{leftComb}\  3 \to \mathsf{rightComb}\  3\) has two distinct maximal chains in the Tamari lattice: </p>
@@ -2508,6 +2699,74 @@
 
 
     
+    <div class="dep-modal-container" id="thm:rightComb_limit_idemp_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="thm:rightComb_limit_idemp" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">86</span><span class="theorem_thmtitle">Limit Idempotence</span></div>
+    <div class="thm_thmcontent"><p>    Applying <span class="sffamily">rightComb</span> normal form to a tree that is already a <span class="sffamily">rightComb</span> is the identity: </p>
+<div class="displaymath" id="a0000000041">
+  \[  \mathsf{rightComb}((\mathsf{rightComb}\  t.\mathsf{size}).\mathsf{size}) = \mathsf{rightComb}\  t.\mathsf{size}  \]
+</div>
+<p> Boundlessness is not a structure we build, but a property we recognize. </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#thm:rightComb_limit_idemp">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.rightComb_limit_idemp">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="thm:rightComb_meta_idemp_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="thm:rightComb_meta_idemp" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">85</span><span class="theorem_thmtitle">Meta-Idempotence</span></div>
+    <div class="thm_thmcontent"><p>    The step function of <span class="sffamily">rightCombResolution</span> is already its own fixed point: </p>
+<div class="displaymath" id="a0000000040">
+  \[  \mathsf{rightCombResolution.step} \circ \mathsf{rightCombResolution.step} = \mathsf{rightCombResolution.step}  \]
+</div>
+<p> This is the terminal regularization: applying boundary-response again changes nothing. Not because there is nothing more to say, but because saying more is already captured by the first application. </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#thm:rightComb_meta_idemp">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.rightComb_meta_idemp">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
     <div class="dep-modal-container" id="thm:rightcomb_ne_leftcomb_modal">
       <div class="dep-modal-content">
           <button class="dep-closebtn">
@@ -2557,6 +2816,36 @@
     
     
   <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Decomposition.rightComb_size">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="thm:rightcomb_size_boundlessness_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="thm:rightcomb_size_boundlessness" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">83</span><span class="theorem_thmtitle">Right-Comb Size</span></div>
+    <div class="thm_thmcontent"><p>    \(\mathsf{size}(\mathsf{rightComb}\  n) = n\) for all \(n : \mathbb {N}\). </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#thm:rightcomb_size_boundlessness">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ganzuul.github.io/LaserCortex/docs/find/#doc/Boundlessness.rightComb_size">Lean</a>
     
     
   
@@ -2644,7 +2933,7 @@ graphContainer.graphviz({useWorker: true})
     .width(width)
     .height(height)
     .fit(true)
-    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	"def:grandfather_cost"	[color=green,		fillcolor="#B0ECA3",		label=grandfather_cost,		shape=box,		style=filled];	"thm:grandfather_cost_bound"	[color=green,		label=grandfather_cost_bound,		shape=ellipse];	"def:grandfather_cost" -> "thm:grandfather_cost_bound"	[style=dashed];	"def:sorites_tower"	[color=green,		fillcolor="#B0ECA3",		label=sorites_tower,		shape=box,		style=filled];	"def:decomposition"	[color=green,		fillcolor="#B0ECA3",		label=decomposition,		shape=box,		style=filled];	"thm:non_unique_decomposition"	[color=green,		label=non_unique_decomposition,		shape=ellipse];	"def:decomposition" -> "thm:non_unique_decomposition"	[style=dashed];	"lem:size_one"	[color=green,		label=size_one,		shape=ellipse];	"lem:size_multi"	[color=green,		label=size_multi,		shape=ellipse];	"lem:size_one" -> "lem:size_multi"	[style=dashed];	"thm:path_diversity"	[color=green,		label=path_diversity,		shape=ellipse];	"def:metacontracts"	[color=green,		fillcolor="#B0ECA3",		label=metacontracts,		shape=box,		style=filled];	"def:grandfather_wrapper"	[color=green,		fillcolor="#B0ECA3",		label=grandfather_wrapper,		shape=box,		style=filled];	"def:grandfather_tower"	[color=green,		fillcolor="#B0ECA3",		label=grandfather_tower,		shape=box,		style=filled];	"def:grandfather_wrapper" -> "def:grandfather_tower"	[style=dashed];	"def:reverse_one"	[color=green,		fillcolor="#B0ECA3",		label=reverse_one,		shape=box,		style=filled];	"thm:reverse_one_complete"	[color=green,		label=reverse_one_complete,		shape=ellipse];	"def:reverse_one" -> "thm:reverse_one_complete"	[style=dashed];	"thm:reverse_one_sound"	[color=green,		label=reverse_one_sound,		shape=ellipse];	"def:reverse_one" -> "thm:reverse_one_sound"	[style=dashed];	"thm:rightcomb_size"	[color=green,		label=rightcomb_size,		shape=ellipse];	"lem:trans"	[color=green,		label=trans,		shape=ellipse];	"thm:contracts_to_rightComb"	[color=green,		label=contracts_to_rightComb,		shape=ellipse];	"lem:trans" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:certify"	[color=green,		fillcolor="#B0ECA3",		label=certify,		shape=box,		style=filled];	"thm:contracts_to_rightComb" -> "def:certify"	[style=dashed];	"def:classical_liar"	[color=green,		fillcolor="#B0ECA3",		label=classical_liar,		shape=box,		style=filled];	"thm:contracts_to_rightComb" -> "def:classical_liar"	[style=dashed];	"thm:logic_contracts"	[color=green,		label=logic_contracts,		shape=ellipse];	"thm:contracts_to_rightComb" -> "thm:logic_contracts"	[style=dashed];	"def:liar_tower"	[color=green,		fillcolor="#B0ECA3",		label=liar_tower,		shape=box,		style=filled];	"def:classical_liar" -> "def:liar_tower"	[style=dashed];	"thm:closure_fixed_point"	[color=green,		label=closure_fixed_point,		shape=ellipse];	"thm:sorites_cost_bound"	[color=green,		label=sorites_cost_bound,		shape=ellipse];	"def:contracts_to"	[color=green,		fillcolor="#B0ECA3",		label=contracts_to,		shape=box,		style=filled];	"def:contracts_to" -> "def:decomposition"	[style=dashed];	"def:contracts_to" -> "lem:size_multi"	[style=dashed];	"def:contracts_to" -> "lem:trans"	[style=dashed];	"lem:node_right"	[color=green,		label=node_right,		shape=ellipse];	"def:contracts_to" -> "lem:node_right"	[style=dashed];	"thm:path_soundness"	[color=green,		label=path_soundness,		shape=ellipse];	"def:contracts_to" -> "thm:path_soundness"	[style=dashed];	"def:certificate"	[color=green,		fillcolor="#B0ECA3",		label=certificate,		shape=box,		style=filled];	"def:contracts_to" -> "def:certificate"	[style=dashed];	"def:logiccontraction"	[color=green,		fillcolor="#B0ECA3",		label=logiccontraction,		shape=box,		style=filled];	"def:contracts_to" -> "def:logiccontraction"	[style=dashed];	"lem:node_left"	[color=green,		label=node_left,		shape=ellipse];	"def:contracts_to" -> "lem:node_left"	[style=dashed];	"lem:node_rightcombs"	[color=green,		label=node_rightcombs,		shape=ellipse];	"lem:node_right" -> "lem:node_rightcombs"	[style=dashed];	"def:certificate" -> "def:certify"	[style=dashed];	"def:logiccontraction" -> "thm:logic_contracts"	[style=dashed];	"def:translation"	[color=green,		fillcolor="#B0ECA3",		label=translation,		shape=box,		style=filled];	"def:logiccontraction" -> "def:translation"	[style=dashed];	"def:gate"	[color=green,		fillcolor="#B0ECA3",		label=gate,		shape=box,		style=filled];	"def:logiccontraction" -> "def:gate"	[style=dashed];	"def:wrapped"	[color=green,		fillcolor="#B0ECA3",		label=wrapped,		shape=box,		style=filled];	"def:logiccontraction" -> "def:wrapped"	[style=dashed];	"def:logic_specific_monad"	[color=green,		fillcolor="#B0ECA3",		label=logic_specific_monad,		shape=box,		style=filled];	"def:logiccontraction" -> "def:logic_specific_monad"	[style=dashed];	"lem:node_left" -> "thm:contracts_to_rightComb"	[style=dashed];	"lem:node_rightcombs" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:translation" -> "def:metacontracts"	[style=dashed];	"def:logic_pipeline"	[color=green,		fillcolor="#B0ECA3",		label=logic_pipeline,		shape=box,		style=filled];	"def:gate" -> "def:logic_pipeline"	[style=dashed];	"def:decision"	[color=green,		fillcolor="#B0ECA3",		label=decision,		shape=box,		style=filled];	"def:gate" -> "def:decision"	[style=dashed];	"def:wrapped" -> "def:grandfather_wrapper"	[style=dashed];	"def:wrapped" -> "def:classical_liar"	[style=dashed];	"def:sorites_wrapper"	[color=green,		fillcolor="#B0ECA3",		label=sorites_wrapper,		shape=box,		style=filled];	"def:wrapped" -> "def:sorites_wrapper"	[style=dashed];	"def:fuzzy_liar"	[color=green,		fillcolor="#B0ECA3",		label=fuzzy_liar,		shape=box,		style=filled];	"def:wrapped" -> "def:fuzzy_liar"	[style=dashed];	"def:russells_wrapper"	[color=green,		fillcolor="#B0ECA3",		label=russells_wrapper,		shape=box,		style=filled];	"def:wrapped" -> "def:russells_wrapper"	[style=dashed];	"def:tower"	[color=green,		fillcolor="#B0ECA3",		label=tower,		shape=box,		style=filled];	"def:wrapped" -> "def:tower"	[style=dashed];	"thm:monad_invariant"	[color=green,		label=monad_invariant,		shape=ellipse];	"def:logic_specific_monad" -> "thm:monad_invariant"	[style=dashed];	"def:rightComb"	[color=green,		fillcolor="#B0ECA3",		label=rightComb,		shape=box,		style=filled];	"def:rightComb" -> "thm:rightcomb_size"	[style=dashed];	"def:rightComb" -> "def:certificate"	[style=dashed];	"def:rightComb" -> "lem:node_rightcombs"	[style=dashed];	"thm:leftcomb_size"	[color=green,		label=leftcomb_size,		shape=ellipse];	"def:rightComb" -> "thm:leftcomb_size"	[style=dashed];	"thm:rightcomb_ne_leftcomb"	[color=green,		label=rightcomb_ne_leftcomb,		shape=ellipse];	"def:rightComb" -> "thm:rightcomb_ne_leftcomb"	[style=dashed];	"def:logicnormal"	[color=green,		fillcolor="#B0ECA3",		label=logicnormal,		shape=box,		style=filled];	"def:rightComb" -> "def:logicnormal"	[style=dashed];	"thm:rightcomb_ne_leftcomb" -> "thm:non_unique_decomposition"	[style=dashed];	"thm:rightcomb_ne_leftcomb" -> "thm:path_diversity"	[style=dashed];	"def:logicnormal" -> "thm:logic_contracts"	[style=dashed];	"def:logicnormal" -> "def:logic_specific_monad"	[style=dashed];	"def:friction_lagrangian"	[color=green,		fillcolor="#B0ECA3",		label=friction_lagrangian,		shape=box,		style=filled];	"def:liar_tower" -> "def:friction_lagrangian"	[style=dashed];	"def:logictype"	[color=green,		fillcolor="#B0ECA3",		label=logictype,		shape=box,		style=filled];	"def:logictype" -> "def:logiccontraction"	[style=dashed];	"def:logictype" -> "def:logicnormal"	[style=dashed];	"def:cdstep"	[color=green,		fillcolor="#B0ECA3",		label=cdstep,		shape=box,		style=filled];	"def:logictype" -> "def:cdstep"	[style=dashed];	"def:split"	[color=green,		fillcolor="#B0ECA3",		label=split,		shape=box,		style=filled];	"def:logictype" -> "def:split"	[style=dashed];	"def:logictree"	[color=green,		fillcolor="#B0ECA3",		label=logictree,		shape=box,		style=filled];	"def:logictype" -> "def:logictree"	[style=dashed];	"def:problem"	[color=green,		fillcolor="#B0ECA3",		label=problem,		shape=box,		style=filled];	"def:logictype" -> "def:problem"	[style=dashed];	"def:logicclass"	[color=green,		fillcolor="#B0ECA3",		label=logicclass,		shape=box,		style=filled];	"def:logictype" -> "def:logicclass"	[style=dashed];	"def:cdstep" -> "def:grandfather_cost"	[style=dashed];	"thm:liar_cost_bound"	[color=green,		label=liar_cost_bound,		shape=ellipse];	"def:cdstep" -> "thm:liar_cost_bound"	[style=dashed];	"def:sorites_cost"	[color=green,		fillcolor="#B0ECA3",		label=sorites_cost,		shape=box,		style=filled];	"def:cdstep" -> "def:sorites_cost"	[style=dashed];	"def:russells_cost"	[color=green,		fillcolor="#B0ECA3",		label=russells_cost,		shape=box,		style=filled];	"def:cdstep" -> "def:russells_cost"	[style=dashed];	"def:problem" -> "def:wrapped"	[style=dashed];	"def:sorites_problem"	[color=green,		fillcolor="#B0ECA3",		label=sorites_problem,		shape=box,		style=filled];	"def:problem" -> "def:sorites_problem"	[style=dashed];	"def:russells_problem"	[color=green,		fillcolor="#B0ECA3",		label=russells_problem,		shape=box,		style=filled];	"def:problem" -> "def:russells_problem"	[style=dashed];	"def:liar_problem"	[color=green,		fillcolor="#B0ECA3",		label=liar_problem,		shape=box,		style=filled];	"def:problem" -> "def:liar_problem"	[style=dashed];	"def:metaparadox"	[color=green,		fillcolor="#B0ECA3",		label=metaparadox,		shape=box,		style=filled];	"def:problem" -> "def:metaparadox"	[style=dashed];	"def:grandfather_problem"	[color=green,		fillcolor="#B0ECA3",		label=grandfather_problem,		shape=box,		style=filled];	"def:problem" -> "def:grandfather_problem"	[style=dashed];	"cor:liar_cost_match_classical"	[color=green,		label=liar_cost_match_classical,		shape=ellipse];	"thm:liar_cost_bound" -> "cor:liar_cost_match_classical"	[style=dashed];	"cor:liar_cost_match_fuzzy"	[color=green,		label=liar_cost_match_fuzzy,		shape=ellipse];	"thm:liar_cost_bound" -> "cor:liar_cost_match_fuzzy"	[style=dashed];	"def:sorites_cost" -> "thm:sorites_cost_bound"	[style=dashed];	"thm:russells_cost_bound"	[color=green,		label=russells_cost_bound,		shape=ellipse];	"def:russells_cost" -> "thm:russells_cost_bound"	[style=dashed];	"def:sorites_problem" -> "def:sorites_wrapper"	[style=dashed];	"def:russells_problem" -> "def:russells_wrapper"	[style=dashed];	"def:liar_problem" -> "def:classical_liar"	[style=dashed];	"def:liar_cost"	[color=green,		fillcolor="#B0ECA3",		label=liar_cost,		shape=box,		style=filled];	"def:liar_problem" -> "def:liar_cost"	[style=dashed];	"def:liar_problem" -> "def:fuzzy_liar"	[style=dashed];	"def:grandfather_problem" -> "def:grandfather_wrapper"	[style=dashed];	"def:liar_cost" -> "def:friction_lagrangian"	[style=dashed];	"def:liar_cost" -> "thm:liar_cost_bound"	[style=dashed];	"def:liar_wrapper"	[color=green,		fillcolor="#B0ECA3",		label=liar_wrapper,		shape=box,		style=filled];	"def:liar_cost" -> "def:liar_wrapper"	[style=dashed];	"def:liar_wrapper" -> "def:sorites_wrapper"	[style=dashed];	"def:sorites_wrapper" -> "def:sorites_tower"	[style=dashed];	"def:institutional_closure"	[color=green,		fillcolor="#B0ECA3",		label=institutional_closure,		shape=box,		style=filled];	"def:institutional_closure" -> "thm:closure_fixed_point"	[style=dashed];	"thm:decide_soundness"	[color=green,		label=decide_soundness,		shape=ellipse];	"def:institutional_closure" -> "thm:decide_soundness"	[style=dashed];	"thm:normalization_idempotent"	[color=green,		label=normalization_idempotent,		shape=ellipse];	"def:institutional_closure" -> "thm:normalization_idempotent"	[style=dashed];	"def:logic_pipeline" -> "thm:decide_soundness"	[style=dashed];	"thm:pipeline_soundness"	[color=green,		label=pipeline_soundness,		shape=ellipse];	"def:logic_pipeline" -> "thm:pipeline_soundness"	[style=dashed];	"def:decision" -> "thm:decide_soundness"	[style=dashed];	"def:decision" -> "thm:pipeline_soundness"	[style=dashed];	"def:compose"	[color=green,		fillcolor="#B0ECA3",		label=compose,		shape=box,		style=filled];	"def:decision" -> "def:compose"	[style=dashed];	"def:fuzzy_liar" -> "def:liar_tower"	[style=dashed];	"def:router"	[color=green,		fillcolor="#B0ECA3",		label=router,		shape=box,		style=filled];	"def:registry"	[color=green,		fillcolor="#B0ECA3",		label=registry,		shape=box,		style=filled];	"def:router" -> "def:registry"	[style=dashed];	"def:russells_tower"	[color=green,		fillcolor="#B0ECA3",		label=russells_tower,		shape=box,		style=filled];	"def:problemclass"	[color=green,		fillcolor="#B0ECA3",		label=problemclass,		shape=box,		style=filled];	"def:problemclass" -> "def:problem"	[style=dashed];	"def:russells_wrapper" -> "def:russells_tower"	[style=dashed];	"def:leftComb"	[color=green,		fillcolor="#B0ECA3",		label=leftComb,		shape=box,		style=filled];	"def:leftComb" -> "thm:rightcomb_ne_leftcomb"	[style=dashed];	"def:emltree"	[color=green,		fillcolor="#B0ECA3",		label=emltree,		shape=box,		style=filled];	"def:emltree" -> "def:rightComb"	[style=dashed];	"def:emltree" -> "def:logictree"	[style=dashed];	"def:emltree" -> "def:problem"	[style=dashed];	"def:emltree" -> "def:registry"	[style=dashed];	"def:emltree" -> "def:leftComb"	[style=dashed];	"def:size"	[color=green,		fillcolor="#B0ECA3",		label=size,		shape=box,		style=filled];	"def:emltree" -> "def:size"	[style=dashed];	"def:contracts_one"	[color=green,		fillcolor="#B0ECA3",		label=contracts_one,		shape=box,		style=filled];	"def:emltree" -> "def:contracts_one"	[style=dashed];	"def:logic_monad"	[color=green,		fillcolor="#B0ECA3",		label=logic_monad,		shape=box,		style=filled];	"def:emltree" -> "def:logic_monad"	[style=dashed];	"def:size" -> "lem:size_one"	[style=dashed];	"def:size" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:contracts_one" -> "lem:size_one"	[style=dashed];	"def:contracts_one" -> "def:reverse_one"	[style=dashed];	"def:contracts_one" -> "def:contracts_to"	[style=dashed];	"def:path"	[color=green,		fillcolor="#B0ECA3",		label=path,		shape=box,		style=filled];	"def:contracts_one" -> "def:path"	[style=dashed];	"def:logic_monad" -> "def:logic_specific_monad"	[style=dashed];	"def:logic_monad" -> "def:institutional_closure"	[style=dashed];	"thm:logic_monad_laws"	[color=green,		label=logic_monad_laws,		shape=ellipse];	"def:logic_monad" -> "thm:logic_monad_laws"	[style=dashed];	"def:path" -> "thm:path_diversity"	[style=dashed];	"def:path" -> "thm:path_soundness"	[style=dashed];	"def:path_length"	[color=green,		fillcolor="#B0ECA3",		label=path_length,		shape=box,		style=filled];	"def:path" -> "def:path_length"	[style=dashed];	"def:path_append"	[color=green,		fillcolor="#B0ECA3",		label=path_append,		shape=box,		style=filled];	"def:path" -> "def:path_append"	[style=dashed];	"def:tower" -> "def:sorites_tower"	[style=dashed];	"def:tower" -> "def:grandfather_tower"	[style=dashed];	"def:tower" -> "def:liar_tower"	[style=dashed];	"def:tower" -> "def:russells_tower"	[style=dashed];}`)
+    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	"def:grandfather_cost"	[color=green,		fillcolor="#B0ECA3",		label=grandfather_cost,		shape=box,		style=filled];	"thm:grandfather_cost_bound"	[color=green,		label=grandfather_cost_bound,		shape=ellipse];	"def:grandfather_cost" -> "thm:grandfather_cost_bound"	[style=dashed];	"def:sorites_tower"	[color=green,		fillcolor="#B0ECA3",		label=sorites_tower,		shape=box,		style=filled];	"def:decomposition"	[color=green,		fillcolor="#B0ECA3",		label=decomposition,		shape=box,		style=filled];	"thm:non_unique_decomposition"	[color=green,		label=non_unique_decomposition,		shape=ellipse];	"def:decomposition" -> "thm:non_unique_decomposition"	[style=dashed];	"lem:size_one"	[color=green,		label=size_one,		shape=ellipse];	"lem:size_multi"	[color=green,		label=size_multi,		shape=ellipse];	"lem:size_one" -> "lem:size_multi"	[style=dashed];	"thm:path_diversity"	[color=green,		label=path_diversity,		shape=ellipse];	"def:chain"	[color=green,		fillcolor="#B0ECA3",		label=chain,		shape=box,		style=filled];	"def:viewDFS"	[color=green,		fillcolor="#B0ECA3",		label=viewDFS,		shape=box,		style=filled];	"def:chain" -> "def:viewDFS"	[style=dashed];	"def:metacontracts"	[color=green,		fillcolor="#B0ECA3",		label=metacontracts,		shape=box,		style=filled];	"def:grandfather_wrapper"	[color=green,		fillcolor="#B0ECA3",		label=grandfather_wrapper,		shape=box,		style=filled];	"def:grandfather_tower"	[color=green,		fillcolor="#B0ECA3",		label=grandfather_tower,		shape=box,		style=filled];	"def:grandfather_wrapper" -> "def:grandfather_tower"	[style=dashed];	"def:idempotent_resolution"	[color=green,		fillcolor="#B0ECA3",		label=idempotent_resolution,		shape=box,		style=filled];	"thm:rightComb_limit_idemp"	[color=green,		label=rightComb_limit_idemp,		shape=ellipse];	"def:idempotent_resolution" -> "thm:rightComb_limit_idemp"	[style=dashed];	"def:very_big_box"	[color=green,		fillcolor="#B0ECA3",		label=very_big_box,		shape=box,		style=filled];	"def:idempotent_resolution" -> "def:very_big_box"	[style=dashed];	"thm:rightComb_meta_idemp"	[color=green,		label=rightComb_meta_idemp,		shape=ellipse];	"def:idempotent_resolution" -> "thm:rightComb_meta_idemp"	[style=dashed];	"def:liar_wrapper"	[color=green,		fillcolor="#B0ECA3",		label=liar_wrapper,		shape=box,		style=filled];	"def:sorites_wrapper"	[color=green,		fillcolor="#B0ECA3",		label=sorites_wrapper,		shape=box,		style=filled];	"def:liar_wrapper" -> "def:sorites_wrapper"	[style=dashed];	"def:sorites_wrapper" -> "def:sorites_tower"	[style=dashed];	"def:reverse_one"	[color=green,		fillcolor="#B0ECA3",		label=reverse_one,		shape=box,		style=filled];	"def:predecessors"	[color=green,		fillcolor="#B0ECA3",		label=predecessors,		shape=box,		style=filled];	"def:reverse_one" -> "def:predecessors"	[style=dashed];	"thm:reverse_one_complete"	[color=green,		label=reverse_one_complete,		shape=ellipse];	"def:reverse_one" -> "thm:reverse_one_complete"	[style=dashed];	"thm:reverse_one_sound"	[color=green,		label=reverse_one_sound,		shape=ellipse];	"def:reverse_one" -> "thm:reverse_one_sound"	[style=dashed];	"def:predecessors" -> "def:viewDFS"	[style=dashed];	"def:ancestorsUpTo"	[color=green,		fillcolor="#B0ECA3",		label=ancestorsUpTo,		shape=box,		style=filled];	"def:predecessors" -> "def:ancestorsUpTo"	[style=dashed];	"thm:rightcomb_size"	[color=green,		label=rightcomb_size,		shape=ellipse];	"thm:closure_fixed_point"	[color=green,		label=closure_fixed_point,		shape=ellipse];	"def:contracts_to"	[color=green,		fillcolor="#B0ECA3",		label=contracts_to,		shape=box,		style=filled];	"def:contracts_to" -> "def:decomposition"	[style=dashed];	"def:contracts_to" -> "lem:size_multi"	[style=dashed];	"lem:trans"	[color=green,		label=trans,		shape=ellipse];	"def:contracts_to" -> "lem:trans"	[style=dashed];	"lem:node_right"	[color=green,		label=node_right,		shape=ellipse];	"def:contracts_to" -> "lem:node_right"	[style=dashed];	"thm:path_soundness"	[color=green,		label=path_soundness,		shape=ellipse];	"def:contracts_to" -> "thm:path_soundness"	[style=dashed];	"def:certificate"	[color=green,		fillcolor="#B0ECA3",		label=certificate,		shape=box,		style=filled];	"def:contracts_to" -> "def:certificate"	[style=dashed];	"def:logiccontraction"	[color=green,		fillcolor="#B0ECA3",		label=logiccontraction,		shape=box,		style=filled];	"def:contracts_to" -> "def:logiccontraction"	[style=dashed];	"lem:node_left"	[color=green,		label=node_left,		shape=ellipse];	"def:contracts_to" -> "lem:node_left"	[style=dashed];	"thm:contracts_to_rightComb"	[color=green,		label=contracts_to_rightComb,		shape=ellipse];	"lem:trans" -> "thm:contracts_to_rightComb"	[style=dashed];	"lem:node_rightcombs"	[color=green,		label=node_rightcombs,		shape=ellipse];	"lem:node_right" -> "lem:node_rightcombs"	[style=dashed];	"def:certify"	[color=green,		fillcolor="#B0ECA3",		label=certify,		shape=box,		style=filled];	"def:certificate" -> "def:certify"	[style=dashed];	"thm:logic_contracts"	[color=green,		label=logic_contracts,		shape=ellipse];	"def:logiccontraction" -> "thm:logic_contracts"	[style=dashed];	"def:translation"	[color=green,		fillcolor="#B0ECA3",		label=translation,		shape=box,		style=filled];	"def:logiccontraction" -> "def:translation"	[style=dashed];	"def:gate"	[color=green,		fillcolor="#B0ECA3",		label=gate,		shape=box,		style=filled];	"def:logiccontraction" -> "def:gate"	[style=dashed];	"def:wrapped"	[color=green,		fillcolor="#B0ECA3",		label=wrapped,		shape=box,		style=filled];	"def:logiccontraction" -> "def:wrapped"	[style=dashed];	"def:logic_specific_monad"	[color=green,		fillcolor="#B0ECA3",		label=logic_specific_monad,		shape=box,		style=filled];	"def:logiccontraction" -> "def:logic_specific_monad"	[style=dashed];	"lem:node_left" -> "thm:contracts_to_rightComb"	[style=dashed];	"thm:contracts_to_rightComb" -> "def:certify"	[style=dashed];	"def:classical_liar"	[color=green,		fillcolor="#B0ECA3",		label=classical_liar,		shape=box,		style=filled];	"thm:contracts_to_rightComb" -> "def:classical_liar"	[style=dashed];	"thm:contracts_to_rightComb" -> "thm:logic_contracts"	[style=dashed];	"def:liar_tower"	[color=green,		fillcolor="#B0ECA3",		label=liar_tower,		shape=box,		style=filled];	"def:classical_liar" -> "def:liar_tower"	[style=dashed];	"lem:node_rightcombs" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:translation" -> "def:metacontracts"	[style=dashed];	"def:logic_pipeline"	[color=green,		fillcolor="#B0ECA3",		label=logic_pipeline,		shape=box,		style=filled];	"def:gate" -> "def:logic_pipeline"	[style=dashed];	"def:decision"	[color=green,		fillcolor="#B0ECA3",		label=decision,		shape=box,		style=filled];	"def:gate" -> "def:decision"	[style=dashed];	"def:wrapped" -> "def:grandfather_wrapper"	[style=dashed];	"def:wrapped" -> "def:sorites_wrapper"	[style=dashed];	"def:wrapped" -> "def:classical_liar"	[style=dashed];	"def:fuzzy_liar"	[color=green,		fillcolor="#B0ECA3",		label=fuzzy_liar,		shape=box,		style=filled];	"def:wrapped" -> "def:fuzzy_liar"	[style=dashed];	"def:russells_wrapper"	[color=green,		fillcolor="#B0ECA3",		label=russells_wrapper,		shape=box,		style=filled];	"def:wrapped" -> "def:russells_wrapper"	[style=dashed];	"def:tower"	[color=green,		fillcolor="#B0ECA3",		label=tower,		shape=box,		style=filled];	"def:wrapped" -> "def:tower"	[style=dashed];	"thm:monad_invariant"	[color=green,		label=monad_invariant,		shape=ellipse];	"def:logic_specific_monad" -> "thm:monad_invariant"	[style=dashed];	"def:rightComb"	[color=green,		fillcolor="#B0ECA3",		label=rightComb,		shape=box,		style=filled];	"def:rightComb" -> "def:idempotent_resolution"	[style=dashed];	"def:rightComb" -> "thm:rightcomb_size"	[style=dashed];	"def:rightComb" -> "def:certificate"	[style=dashed];	"def:rightComb" -> "lem:node_rightcombs"	[style=dashed];	"thm:leftcomb_size"	[color=green,		label=leftcomb_size,		shape=ellipse];	"def:rightComb" -> "thm:leftcomb_size"	[style=dashed];	"thm:rightcomb_ne_leftcomb"	[color=green,		label=rightcomb_ne_leftcomb,		shape=ellipse];	"def:rightComb" -> "thm:rightcomb_ne_leftcomb"	[style=dashed];	"thm:rightcomb_size_boundlessness"	[color=green,		label=rightcomb_size_boundlessness,		shape=ellipse];	"def:rightComb" -> "thm:rightcomb_size_boundlessness"	[style=dashed];	"def:logicnormal"	[color=green,		fillcolor="#B0ECA3",		label=logicnormal,		shape=box,		style=filled];	"def:rightComb" -> "def:logicnormal"	[style=dashed];	"thm:rightcomb_ne_leftcomb" -> "thm:non_unique_decomposition"	[style=dashed];	"thm:rightcomb_ne_leftcomb" -> "thm:path_diversity"	[style=dashed];	"def:logicnormal" -> "thm:logic_contracts"	[style=dashed];	"def:logicnormal" -> "def:logic_specific_monad"	[style=dashed];	"def:friction_lagrangian"	[color=green,		fillcolor="#B0ECA3",		label=friction_lagrangian,		shape=box,		style=filled];	"def:liar_tower" -> "def:friction_lagrangian"	[style=dashed];	"thm:sorites_cost_bound"	[color=green,		label=sorites_cost_bound,		shape=ellipse];	"def:logictype"	[color=green,		fillcolor="#B0ECA3",		label=logictype,		shape=box,		style=filled];	"def:logictype" -> "def:logiccontraction"	[style=dashed];	"def:logictype" -> "def:logicnormal"	[style=dashed];	"def:cdstep"	[color=green,		fillcolor="#B0ECA3",		label=cdstep,		shape=box,		style=filled];	"def:logictype" -> "def:cdstep"	[style=dashed];	"def:split"	[color=green,		fillcolor="#B0ECA3",		label=split,		shape=box,		style=filled];	"def:logictype" -> "def:split"	[style=dashed];	"def:logictree"	[color=green,		fillcolor="#B0ECA3",		label=logictree,		shape=box,		style=filled];	"def:logictype" -> "def:logictree"	[style=dashed];	"def:problem"	[color=green,		fillcolor="#B0ECA3",		label=problem,		shape=box,		style=filled];	"def:logictype" -> "def:problem"	[style=dashed];	"def:logicclass"	[color=green,		fillcolor="#B0ECA3",		label=logicclass,		shape=box,		style=filled];	"def:logictype" -> "def:logicclass"	[style=dashed];	"def:cdstep" -> "def:grandfather_cost"	[style=dashed];	"def:sorites_cost"	[color=green,		fillcolor="#B0ECA3",		label=sorites_cost,		shape=box,		style=filled];	"def:cdstep" -> "def:sorites_cost"	[style=dashed];	"thm:liar_cost_bound"	[color=green,		label=liar_cost_bound,		shape=ellipse];	"def:cdstep" -> "thm:liar_cost_bound"	[style=dashed];	"def:russells_cost"	[color=green,		fillcolor="#B0ECA3",		label=russells_cost,		shape=box,		style=filled];	"def:cdstep" -> "def:russells_cost"	[style=dashed];	"def:problem" -> "def:wrapped"	[style=dashed];	"def:sorites_problem"	[color=green,		fillcolor="#B0ECA3",		label=sorites_problem,		shape=box,		style=filled];	"def:problem" -> "def:sorites_problem"	[style=dashed];	"def:russells_problem"	[color=green,		fillcolor="#B0ECA3",		label=russells_problem,		shape=box,		style=filled];	"def:problem" -> "def:russells_problem"	[style=dashed];	"def:liar_problem"	[color=green,		fillcolor="#B0ECA3",		label=liar_problem,		shape=box,		style=filled];	"def:problem" -> "def:liar_problem"	[style=dashed];	"def:metaparadox"	[color=green,		fillcolor="#B0ECA3",		label=metaparadox,		shape=box,		style=filled];	"def:problem" -> "def:metaparadox"	[style=dashed];	"def:grandfather_problem"	[color=green,		fillcolor="#B0ECA3",		label=grandfather_problem,		shape=box,		style=filled];	"def:problem" -> "def:grandfather_problem"	[style=dashed];	"def:sorites_cost" -> "thm:sorites_cost_bound"	[style=dashed];	"cor:liar_cost_match_classical"	[color=green,		label=liar_cost_match_classical,		shape=ellipse];	"thm:liar_cost_bound" -> "cor:liar_cost_match_classical"	[style=dashed];	"cor:liar_cost_match_fuzzy"	[color=green,		label=liar_cost_match_fuzzy,		shape=ellipse];	"thm:liar_cost_bound" -> "cor:liar_cost_match_fuzzy"	[style=dashed];	"thm:russells_cost_bound"	[color=green,		label=russells_cost_bound,		shape=ellipse];	"def:russells_cost" -> "thm:russells_cost_bound"	[style=dashed];	"def:sorites_problem" -> "def:sorites_wrapper"	[style=dashed];	"def:russells_problem" -> "def:russells_wrapper"	[style=dashed];	"def:liar_problem" -> "def:classical_liar"	[style=dashed];	"def:liar_problem" -> "def:fuzzy_liar"	[style=dashed];	"def:liar_cost"	[color=green,		fillcolor="#B0ECA3",		label=liar_cost,		shape=box,		style=filled];	"def:liar_problem" -> "def:liar_cost"	[style=dashed];	"def:grandfather_problem" -> "def:grandfather_wrapper"	[style=dashed];	"def:institutional_closure"	[color=green,		fillcolor="#B0ECA3",		label=institutional_closure,		shape=box,		style=filled];	"def:institutional_closure" -> "thm:closure_fixed_point"	[style=dashed];	"thm:decide_soundness"	[color=green,		label=decide_soundness,		shape=ellipse];	"def:institutional_closure" -> "thm:decide_soundness"	[style=dashed];	"thm:normalization_idempotent"	[color=green,		label=normalization_idempotent,		shape=ellipse];	"def:institutional_closure" -> "thm:normalization_idempotent"	[style=dashed];	"def:logic_pipeline" -> "thm:decide_soundness"	[style=dashed];	"thm:pipeline_soundness"	[color=green,		label=pipeline_soundness,		shape=ellipse];	"def:logic_pipeline" -> "thm:pipeline_soundness"	[style=dashed];	"def:decision" -> "thm:decide_soundness"	[style=dashed];	"def:decision" -> "thm:pipeline_soundness"	[style=dashed];	"def:compose"	[color=green,		fillcolor="#B0ECA3",		label=compose,		shape=box,		style=filled];	"def:decision" -> "def:compose"	[style=dashed];	"def:fuzzy_liar" -> "def:liar_tower"	[style=dashed];	"def:router"	[color=green,		fillcolor="#B0ECA3",		label=router,		shape=box,		style=filled];	"def:registry"	[color=green,		fillcolor="#B0ECA3",		label=registry,		shape=box,		style=filled];	"def:router" -> "def:registry"	[style=dashed];	"def:russells_tower"	[color=green,		fillcolor="#B0ECA3",		label=russells_tower,		shape=box,		style=filled];	"def:problemclass"	[color=green,		fillcolor="#B0ECA3",		label=problemclass,		shape=box,		style=filled];	"def:problemclass" -> "def:problem"	[style=dashed];	"def:russells_wrapper" -> "def:russells_tower"	[style=dashed];	"def:liar_cost" -> "def:liar_wrapper"	[style=dashed];	"def:liar_cost" -> "thm:liar_cost_bound"	[style=dashed];	"def:liar_cost" -> "def:friction_lagrangian"	[style=dashed];	"def:leftComb"	[color=green,		fillcolor="#B0ECA3",		label=leftComb,		shape=box,		style=filled];	"def:leftComb" -> "thm:rightcomb_ne_leftcomb"	[style=dashed];	"def:emltree"	[color=green,		fillcolor="#B0ECA3",		label=emltree,		shape=box,		style=filled];	"def:emltree" -> "def:rightComb"	[style=dashed];	"def:emltree" -> "def:logictree"	[style=dashed];	"def:emltree" -> "def:problem"	[style=dashed];	"def:emltree" -> "def:registry"	[style=dashed];	"def:emltree" -> "def:leftComb"	[style=dashed];	"def:size"	[color=green,		fillcolor="#B0ECA3",		label=size,		shape=box,		style=filled];	"def:emltree" -> "def:size"	[style=dashed];	"def:contracts_one"	[color=green,		fillcolor="#B0ECA3",		label=contracts_one,		shape=box,		style=filled];	"def:emltree" -> "def:contracts_one"	[style=dashed];	"def:logic_monad"	[color=green,		fillcolor="#B0ECA3",		label=logic_monad,		shape=box,		style=filled];	"def:emltree" -> "def:logic_monad"	[style=dashed];	"def:size" -> "lem:size_one"	[style=dashed];	"def:size" -> "def:idempotent_resolution"	[style=dashed];	"def:size" -> "thm:contracts_to_rightComb"	[style=dashed];	"def:contracts_one" -> "lem:size_one"	[style=dashed];	"def:contracts_one" -> "def:chain"	[style=dashed];	"def:contracts_one" -> "def:reverse_one"	[style=dashed];	"def:contracts_one" -> "def:contracts_to"	[style=dashed];	"def:path"	[color=green,		fillcolor="#B0ECA3",		label=path,		shape=box,		style=filled];	"def:contracts_one" -> "def:path"	[style=dashed];	"def:logic_monad" -> "def:logic_specific_monad"	[style=dashed];	"def:logic_monad" -> "def:institutional_closure"	[style=dashed];	"thm:logic_monad_laws"	[color=green,		label=logic_monad_laws,		shape=ellipse];	"def:logic_monad" -> "thm:logic_monad_laws"	[style=dashed];	"def:path" -> "thm:path_diversity"	[style=dashed];	"def:path" -> "thm:path_soundness"	[style=dashed];	"def:path_length"	[color=green,		fillcolor="#B0ECA3",		label=path_length,		shape=box,		style=filled];	"def:path" -> "def:path_length"	[style=dashed];	"def:path_append"	[color=green,		fillcolor="#B0ECA3",		label=path_append,		shape=box,		style=filled];	"def:path" -> "def:path_append"	[style=dashed];	"def:tower" -> "def:sorites_tower"	[style=dashed];	"def:tower" -> "def:grandfather_tower"	[style=dashed];	"def:tower" -> "def:liar_tower"	[style=dashed];	"def:tower" -> "def:russells_tower"	[style=dashed];}`)
     .on("end", interactive);
 
 latexLabelEscaper = function(label) {
