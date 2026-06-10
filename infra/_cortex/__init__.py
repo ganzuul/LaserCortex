@@ -125,6 +125,12 @@ from ._spec import (
     MONTY_HALL_SPEC,
     CONFESSIONAL_SPEC,
 )
+from ._qc_adapter import (
+    QCSignalAdapter,
+    SignalConfig,
+    SignalEvent,
+    BacktestResult,
+)
 
 __all__ = [
     # Core tree types
