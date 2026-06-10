@@ -120,6 +120,22 @@ async def list_example_repositories():
                 if not concepts_full.exists() or not inferences_full.exists():
                     continue
 
+                # Validate self-consistency: every concept_to_infer in the
+                # inference repo must exist in the concept repo
+                try:
+                    concepts_data = json.loads(concepts_full.read_text())
+                    inferences_data = json.loads(inferences_full.read_text())
+                    concept_names = {c.get("concept_name", "") for c in concepts_data}
+                    missing = [
+                        inf.get("concept_to_infer", "")
+                        for inf in inferences_data
+                        if inf.get("concept_to_infer", "") not in concept_names
+                    ]
+                    if missing:
+                        continue
+                except (json.JSONDecodeError, KeyError, OSError):
+                    continue
+
                 # De-duplicate by resolved concepts path
                 key = str(concepts_full)
                 if key in seen:
