@@ -239,7 +239,44 @@ def test_bridge_certificate_flow():
     bridge = NormCodeCortexBridge()
     bridge.on_inference_complete("1", None, "functional", "run_002")
     bridge.on_inference_complete("1.1", None, "functional", "run_002")
-    cert = bridge.on_plan_complete("run_002")
+    cert = bridge.stamp_seal("run_002")
     assert cert is not None
     assert cert.verify()
     assert bridge.get_certificate("run_002") == cert
+
+def test_instantiate_spec():
+    bridge = NormCodeCortexBridge()
+    from infra._cortex._spec import SORITES_SPEC
+
+    concept, cert = bridge.instantiate_spec(
+        SORITES_SPEC,
+        {"witness": 147, "uncertainty": {"present": True, "score": 0.3}},
+    )
+    assert concept.form_type == "threshold_category"
+    assert concept.coupling_signature == "commutative"
+    assert concept.form_schema_version == "0.1.0"
+    assert concept.reference is not None
+    assert concept.reference.form_payload["witness"] == 147
+    assert concept.reference.form_payload["uncertainty"] == {"present": True, "score": 0.3}
+    assert concept.reference.form_payload["category_label"] == "heap"
+    assert cert.verify()
+
+def test_instantiate_spec_type_mismatch():
+    bridge = NormCodeCortexBridge()
+    from infra._cortex._spec import SORITES_SPEC
+
+    import pytest
+    with pytest.raises(TypeError, match="witness_type"):
+        bridge.instantiate_spec(SORITES_SPEC, {"witness": "not_an_integer"})
+
+def test_instantiate_spec_non_commutative():
+    bridge = NormCodeCortexBridge()
+    from infra._cortex._spec import BLUE_EYED_SPEC
+
+    concept, cert = bridge.instantiate_spec(
+        BLUE_EYED_SPEC,
+        {"witness": {"days": 7}, "binary_outcome": True, "category_label": "departure"},
+    )
+    assert concept.form_type == "threshold_category"
+    assert concept.coupling_signature == "non-commutative"
+    assert cert.verify()

@@ -1,12 +1,14 @@
 import logging
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Optional
 from infra._orchest._repo import InferenceEntry
+from infra._cortex._types import RouterIndex, flow_to_index
 
 @dataclass
 class WaitlistItem:
     """Represents an inference waiting to be processed."""
     inference_entry: InferenceEntry
+    router_index: Optional[RouterIndex] = field(default=None, repr=False)
 
     def __hash__(self):
         return hash(self.inference_entry.id)
@@ -31,6 +33,19 @@ class Waitlist:
         
         self.items.sort(key=sort_key)
         logging.info(f"Waitlist items sorted by flow_index: {[item.inference_entry.flow_info['flow_index'] for item in self.items]}")
+
+    def assign_router_indices(self) -> None:
+        """Assign a bounded RouterIndex to each item based on sorted position.
+
+        The bound is ``len(items)`` so every item gets a unique address
+        in ``[0, bound)`` — the minimum space needed for injectivity.
+        """
+        bound = len(self.items)
+        for i, item in enumerate(self.items):
+            item.router_index = RouterIndex(i, bound)
+        logging.info(
+            f"Assigned RouterIndices [0, {bound}) to {len(self.items)} items."
+        )
 
     def get_supporting_items(self, target_item: WaitlistItem) -> List[WaitlistItem]:
         """

@@ -104,6 +104,7 @@ from ._bridge import (
     NormCodeCortexBridge,
     CortexBridgeError,
     LiftResult,
+    GroundResult,
 )
 from ._spec import (
     CortexSpec,
@@ -208,6 +209,7 @@ __all__ = [
     "NormCodeCortexBridge",
     "CortexBridgeError",
     "LiftResult",
+    "GroundResult",
 
     # Specs
     "CortexSpec",

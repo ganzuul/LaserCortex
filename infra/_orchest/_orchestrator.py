@@ -27,7 +27,8 @@ class Orchestrator:
                  max_cycles: int = 30,
                  db_path: Optional[str] = None,
                  checkpoint_frequency: Optional[int] = None,
-                 run_id: Optional[str] = None):
+                 run_id: Optional[str] = None,
+                 cortex_bridge: Optional[Any] = None):
         """
         Args:
             checkpoint_frequency: If provided, save checkpoint every N inferences within a cycle.
@@ -48,6 +49,9 @@ class Orchestrator:
         
         # Use provided run_id or generate a unique run_id for this orchestrator instance
         self.run_id = run_id if run_id is not None else str(uuid.uuid4())
+
+        # Optional LC bridge — stamps the wax seal at voyage completion
+        self.cortex_bridge = cortex_bridge
         
         # Initialize checkpointing system if db_path is provided
         self.db: Optional[OrchestratorDB] = None
@@ -113,6 +117,7 @@ class Orchestrator:
         items = [WaitlistItem(inference_entry=inf) for inf in self.inference_repo.get_all_inferences()]
         self.waitlist = Waitlist(id=str(uuid.uuid4()), items=items)
         self.waitlist.sort_by_flow_index()
+        self.waitlist.assign_router_indices()
         logging.info(f"Created waitlist {self.waitlist.id} with {len(self.waitlist.items)} items.")
 
     def _initialize_blackboard(self):
@@ -322,13 +327,26 @@ class Orchestrator:
         try:
             states = self._execute_agent_frame(item, inference)
             status = self._process_inference_state(states, item)
-            
+
+            # Lift the inference into LC — stamps the tree under the
+            # governing statute, registers it in the TypeRegistry,
+            # and caches it for the wax seal at voyage end.
+            if self.cortex_bridge is not None and status == 'completed':
+                concept = item.inference_entry.concept_to_infer.concept
+                if concept is not None:
+                    self.cortex_bridge.on_inference_complete(
+                        flow_index=flow_index,
+                        concept=concept,
+                        sequence_type=item.inference_entry.inference_sequence,
+                        run_id=self.run_id,
+                    )
+
             # Capture and save logs
             if log_handler and execution_id is not None:
                 log_content = log_handler.get_log_content()
                 if log_content.strip():  # Only save if there's content
                     self.tracker.capture_inference_log(execution_id, log_content)
-            
+
             return status
 
         except Exception as e:
@@ -1204,6 +1222,14 @@ class Orchestrator:
         if self.waitlist:
             self.tracker.log_summary(self.waitlist.id, self.waitlist.items, self.blackboard, self.concept_repo)
 
+        # Stamp the wax seal — authenticate the voyage
+        if self.cortex_bridge is not None:
+            cert = self.cortex_bridge.stamp_seal(self.run_id)
+            if cert is not None:
+                logging.info(f"Wax seal stamped for voyage {self.run_id}: {cert}")
+            else:
+                logging.warning(f"No trees lifted for voyage {self.run_id} — seal not issued.")
+
         final_concepts = [c for c in self.concept_repo.get_all_concepts() if c.is_final_concept]
         return final_concepts
 
@@ -1245,6 +1271,14 @@ class Orchestrator:
         # Automatically log summary when orchestration completes
         if self.waitlist:
             self.tracker.log_summary(self.waitlist.id, self.waitlist.items, self.blackboard, self.concept_repo)
+
+        # Stamp the wax seal — authenticate the voyage
+        if self.cortex_bridge is not None:
+            cert = self.cortex_bridge.stamp_seal(self.run_id)
+            if cert is not None:
+                logging.info(f"Wax seal stamped for voyage {self.run_id}: {cert}")
+            else:
+                logging.warning(f"No trees lifted for voyage {self.run_id} — seal not issued.")
 
         final_concepts = [c for c in self.concept_repo.get_all_concepts() if c.is_final_concept]
         return final_concepts

@@ -133,6 +133,34 @@ class CortexSpec:
     def matches_form(self, form_type: str) -> bool:
         return self.form_type == form_type
 
+    def pre_populate(self, concept: Any) -> None:
+        """Set typed-form fields on a Concept from this spec's defaults.
+
+        Intended to be called *before* ``Inference.__init__`` runs its
+        ``validate_typed_form`` loop.  After this call the concept carries
+        the spec's form_type, coupling_signature, schema version, and a
+        form_payload seeded from ``default_payload`` so that the existing
+        TVK can validate it.
+
+        Only sets fields that are currently ``None`` on the concept
+        (never overwrites user-supplied values).
+        """
+        if concept.form_type is None:
+            concept.form_type = self.form_type
+        if concept.coupling_signature is None:
+            concept.coupling_signature = self.coupling_signature
+        if concept.form_schema_version is None:
+            concept.form_schema_version = self.form_schema_version
+
+        # Seed the form payload from spec defaults
+        ref = getattr(concept, 'reference', None)
+        if ref is not None:
+            if ref.form_payload is None:
+                ref.form_payload = dict(self.default_payload)
+            else:
+                for k, v in self.default_payload.items():
+                    ref.form_payload.setdefault(k, v)
+
 
 # ── SpecRegistry ─────────────────────────────────────────────────────
 
@@ -176,6 +204,49 @@ class SpecRegistry:
                     results.append(s)
                     break
         return results
+
+    def best_match(self, concept: Any) -> Optional[CortexSpec]:
+        """Find the best spec for a Concept.
+
+        Priority:
+          1. Exact form_type + coupling_signature match
+          2. Form_type match only
+          3. Concept name/context substring match against examples
+          4. ``None`` (no match — caller should use default)
+        """
+        form_type = getattr(concept, 'form_type', None)
+        coupling = getattr(concept, 'coupling_signature', None)
+        name = getattr(concept, 'name', '') or ''
+        context = getattr(concept, 'context', '') or ''
+
+        if form_type and coupling:
+            for s in self.specs.values():
+                if s.matches_form(form_type) and s.matches_coupling(coupling):
+                    return s
+
+        if form_type:
+            exact = self.lookup_by_form(form_type)
+            if len(exact) == 1:
+                return exact[0]
+            if coupling:
+                for s in exact:
+                    if s.matches_coupling(coupling):
+                        return s
+
+        words = (name + ' ' + context).lower().split()
+        if len(words) >= 2:
+            best_spec = None
+            best_score = 0
+            for s in self.specs.values():
+                corpus = s.provenance.prompt.lower() + ' | '
+                corpus += ' | '.join(ex.source_text.lower() for ex in s.examples)
+                score = sum(1 for w in words if len(w) > 2 and w in corpus)
+                if score > best_score:
+                    best_score = score
+                    best_spec = s
+            return best_spec
+
+        return None
 
 
 # ── The 10 seed specs (from the Phase 5 bootstrapping document) ──────
