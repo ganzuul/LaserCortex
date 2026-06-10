@@ -105,6 +105,25 @@ from ._bridge import (
     CortexBridgeError,
     LiftResult,
 )
+from ._spec import (
+    CortexSpec,
+    SpecRegistry,
+    MagnitudeContract,
+    SpecValidation,
+    SpecExample,
+    SpecProvenance,
+    SEED_REGISTRY,
+    SORITES_SPEC,
+    LOCKED_ROOM_SPEC,
+    BLUE_EYED_SPEC,
+    TALLNESS_SPEC,
+    POISONED_CUP_SPEC,
+    HEAP_FUZZY_SPEC,
+    CONFLICTING_ALIBIS_SPEC,
+    BARBER_SPEC,
+    MONTY_HALL_SPEC,
+    CONFESSIONAL_SPEC,
+)
 
 __all__ = [
     # Core tree types
@@ -189,4 +208,23 @@ __all__ = [
     "NormCodeCortexBridge",
     "CortexBridgeError",
     "LiftResult",
+
+    # Specs
+    "CortexSpec",
+    "SpecRegistry",
+    "MagnitudeContract",
+    "SpecValidation",
+    "SpecExample",
+    "SpecProvenance",
+    "SEED_REGISTRY",
+    "SORITES_SPEC",
+    "LOCKED_ROOM_SPEC",
+    "BLUE_EYED_SPEC",
+    "TALLNESS_SPEC",
+    "POISONED_CUP_SPEC",
+    "HEAP_FUZZY_SPEC",
+    "CONFLICTING_ALIBIS_SPEC",
+    "BARBER_SPEC",
+    "MONTY_HALL_SPEC",
+    "CONFESSIONAL_SPEC",
 ]

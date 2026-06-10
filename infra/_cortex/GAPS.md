@@ -1,7 +1,19 @@
 # NC ↔ LC Bridge — Identified Gaps
 
-These are the places where NC (NormCode) doesn't yet produce the data
-that LC (LaserCortex) requires. Each gap is a future integration point.
+## Architecture
+
+**LC defines the inference target space; NC navigates it.**
+
+The Phase 5 bootstrapping protocol (see `_spec.py`) enumerates what CAN be
+inferred as `CortexSpec` objects — each with a witness schema, coupling
+signature, mapping semantics, and magnitude contract. NC does not build
+EMLTrees from nothing; it queries the `SpecRegistry`, picks a registered
+spec, and produces evidence that matches that spec's witness schema and
+satisfies its magnitude contract.
+
+The EMLTree, certificate, and router index are bookkeeping that the bridge
+generates automatically when NC selects a spec and executes against it.
+They are not the primary interface.
 
 Each gap is tagged with a **severity**:
 - **BLOCKING**: LC cannot function without this (must fix before Phase 1)
@@ -10,17 +22,19 @@ Each gap is tagged with a **severity**:
 
 ---
 
-## 1. No EMLTree Production from NC Inferences
+## 1. NC Does Not Query the SpecRegistry for Inference Targets
 **Severity: BLOCKING**
 
-LC needs every NC inference to produce an `EMLTree` (binary tree shape
-encoding the inference's dependency structure). Currently NC executes
-inferences but produces no tree.
+NC inferences have no concept of a `CortexSpec`. They execute against
+flow indices and sequence types, but never ask "which registered spec
+does this inference target?" The bridge currently generates EMLTrees
+from flat flow indices — a heuristic that bypasses the spec entirely.
 
 **Location**: `infra/_core/_inference.py` → `Inference.execute()`
-**Fix**: After each successful execution, call
-`CortexBridge.flow_index_to_tree(flow_index)` and store the tree
-alongside the inference result.
+**Fix**: Before executing, call `SpecRegistry.lookup_by_context(context)`
+to find candidate specs. Attach the chosen spec to the inference. The
+bridge can then derive the correct LogicType, coupling semantics, and
+witness schema from the spec rather than guessing.
 
 ---
 
@@ -45,8 +59,7 @@ LC's `certify(tree)` produces a `CortexCertificate` for any tree,
 which serves as the proof-carrying audit trail. NC doesn't generate
 or store certificates.
 
-**Location**: `infra/_orchest/_orchestrator.py` → after all cycles
-complete
+**Location**: `infra/_orchest/_orchestrator.py` → after all cycles complete
 **Fix**: Call `NormCodeCortexBridge.on_plan_complete(run_id)` at the
 end of orchestration and store the certificate in the run database.
 
@@ -92,16 +105,19 @@ build a bridge that converts Blackboard state changes to Events.
 
 ---
 
-## 7. No Decomposition Consumption
+## 7. Decomposition UI Needs Spec-Based Browsing
 **Severity: MAJOR**
 
-LC's `Decomposition` and `ancestorsUpTo` provide counterfactual
-reasoning paths (what prior states could lead to the current
-decision). NC has no UI or storage for decompositions.
+The 10 seed `CortexSpec`s define the enumerated inference space (heap
+threshold, locked room, Blue-Eyed Islanders, Monty Hall, etc.). NC's
+Canvas UI has no way to browse, select, or inspect these specs as
+possible inference targets.
 
 **Location**: `canvas_app/` — UI
-**Fix**: Add a decomposition explorer to the Canvas UI that queries
-`CortexBridge.decompose_decision()`.
+**Fix**: Add a spec browser panel that queries `SpecRegistry` and
+displays each spec's witness schema, mapping hint, magnitude contract,
+and examples. Selecting a spec should pre-populate an inference form
+with its default_payload.
 
 ---
 
@@ -118,30 +134,50 @@ contracts to its rightComb normal form. Reject if not.
 
 ---
 
-## 9. No Coupling Signature to LogicType Mapping
-**Severity: MINOR**
+## 9. ~~No Coupling Signature to LogicType Mapping~~ (RESOLVED)
+**Severity: MINOR** → **RESOLVED**
 
-NC's `COUPLING_SIGNATURES` = `{commutative, non-commutative,
-non-associative, commutative-associative}`. LC's `LogicType` has 13
-variants. The mapping between them is heuristic.
+`_spec.py` now defines `COUPLING_TO_LOGIC`:
 
-**Location**: `infra/_cortex/_bridge.py:_coupling_to_logic_type`
-**Fix**: This is a design question. Does each coupling signature
-correspond to a specific LogicType, or can a concept with a given
-coupling be processed by multiple logics?
+    commutative           → CLASSICAL
+    non-commutative        → TEMPORAL
+    non-associative        → QUANTUM
+    commutative-associative → CLASSICAL
+
+Each `CortexSpec.to_logic_type()` uses this mapping. The Phase 5
+taxonomy (Blue-Eyed Islanders = non-commutative = TEMPORAL, Barber
+paradox = non-associative = QUANTUM) is the ground truth.
+
+Resolved in: `_spec.py` (COUPLING_TO_LOGIC, CortexSpec.to_logic_type()).
 
 ---
 
-## 10. No Flow Index to EMLTree Formal Mapping
-**Severity: MINOR**
+## 10. ~~No Flow Index to EMLTree Formal Mapping~~ (DEFERRED)
+**Severity: MINOR** → **DEFERRED**
 
-The current `tree_from_flow_index()` heuristic builds right-nested
-trees from dotted index strings. The formal mapping should use the
-inference's dependency subgraph topology to determine tree shape.
+With the spec-centric architecture, the EMLTree shape is determined by
+the chosen spec's dependency structure, not by a heuristic on the flow
+index. The flow index becomes a routing identifier, not a tree topology.
+This gap is moot until gap #1 (spec query) is resolved.
 
-**Location**: `infra/_cortex/_bridge.py:flow_index_to_tree`
-**Fix**: Build the EMLTree from the actual dependency DAG
-(Waitlist.get_supporting_items) rather than from the flat index.
+---
+
+## 11. NC Cannot Select-and-Instantiate a Spec
+**Severity: BLOCKING**
+
+`SpecRegistry.lookup_by_context()` exists but nothing calls it. There is
+no `instantiate(spec, witness_data)` that would construct a fully typed
+Concept from a spec and real evidence, then push it through the TVK
+(typed verification kernel).
+
+**Location**: `infra/_cortex/_bridge.py`
+**Fix**: Add `CortexBridge.instantiate_spec(spec, witness_data)` that:
+1. Validates witness_data against spec.validation
+2. Builds the EMLTree from the spec's coupling signature
+3. Sets the Concept's logic_type via spec.to_logic_type()
+4. Populates the form payload from spec.default_payload + witness_data
+5. Runs the form through TVK validation
+6. Returns a certified Concept+Certificate pair
 
 ---
 
@@ -149,18 +185,19 @@ inference's dependency subgraph topology to determine tree shape.
 
 | # | Gap | Severity | File | Fix Scope |
 |---|-----|----------|------|-----------|
-| 1 | No EMLTree production | BLOCKING | `_inference.py` | 1-2 lines hook |
+| 1 | NC doesn't query SpecRegistry | BLOCKING | `_inference.py` | ~5 lines + design |
 | 2 | No RouterIndex binding | BLOCKING | `_waitlist.py` | ~20 lines |
 | 3 | No certificate on completion | BLOCKING | `_orchestrator.py` | ~10 lines |
-| 4 | No LogicType on Concept | ~~MAJOR~~ **RESOLVED** | `_concept.py` | logic_type param + FORM_TO_LOGIC + TYPE_TO_LOGIC |
+| 4 | No LogicType on Concept | ~~MAJOR~~ **RESOLVED** | `_concept.py` | logic_type param + mappings |
 | 5 | No paradox classification | MAJOR | `_orchestrator.py` | ~15 lines |
 | 6 | No Event model | MAJOR | `_blackboard.py` | ~30 lines + design |
-| 7 | No decomposition UI | MAJOR | `canvas_app/` | ~2 new panels |
+| 7 | No spec-based decomposition UI | MAJOR | `canvas_app/` | ~2 new panels |
 | 8 | No checkpoint verification | MAJOR | `_checkpoint.py` | ~20 lines |
-| 9 | Coupling→LogicType mapping | MINOR | `_bridge.py` | Design decision |
-| 10 | Flow→Tree formal mapping | MINOR | `_bridge.py` | Design decision |
+| 9 | Coupling→LogicType mapping | ~~MINOR~~ **RESOLVED** | `_spec.py` | COUPLING_TO_LOGIC dict |
+| 10 | Flow→Tree formal mapping | ~~MINOR~~ **DEFERRED** | — | Moot until gap #1 resolved |
+| 11 | Cannot instantiate a spec | BLOCKING | `_bridge.py` | ~40 lines + design |
 
-**3 BLOCKING gaps** must be resolved before the bridge is functional.
+**4 BLOCKING gaps** must be resolved before the bridge is functional.
 **4 MAJOR gaps** should be resolved in Phase 1 (FastAPI + UI integration).
-**2 MINOR gaps** are design questions for future refinement.
-**1 RESOLVED**: gap #4 (LogicType on Concept).
+**2 RESOLVED**: gaps #4 and #9.
+**1 DEFERRED**: gap #10.
