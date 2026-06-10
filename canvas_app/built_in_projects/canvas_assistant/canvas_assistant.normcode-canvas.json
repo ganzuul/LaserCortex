@@ -13,7 +13,7 @@
     "llm_model": "qwen-plus",
     "max_cycles": 200,
     "db_path": "./assistant.db",
-    "base_dir": "c:\\Users\\ProgU\\PycharmProjects\\normCode\\canvas_app\\built_in_projects\\canvas_assistant\\repos",
+    "base_dir": ".",
     "paradigm_dir": "provisions/paradigms",
     "agent_config": "compiler.agent.json"
   },

@@ -81,24 +81,59 @@ async def load_repositories(request: LoadRepositoryRequest):
 
 @router.get("/examples")
 async def list_example_repositories():
-    """List available example repository sets."""
-    # Look for example repositories in the project
+    """List available example repository sets.
+    
+    Scans known project directories for `.normcode-canvas.json` files
+    and extracts the concept/inference paths from their repository config.
+    """
     project_root = Path(__file__).parent.parent.parent.parent
-    examples_dir = project_root / "streamlit_app" / "repository_sets"
-    
+
+    # Directories to scan for .normcode-canvas.json project files
+    scan_dirs = [
+        project_root / "canvas_app" / "built_in_projects",
+        project_root / "direct_infra_experiment",
+    ]
+
     examples = []
-    if examples_dir.exists():
-        for subdir in examples_dir.iterdir():
-            if subdir.is_dir():
-                concept_file = subdir / "concept_repo.json"
-                inference_file = subdir / "inference_repo.json"
-                if concept_file.exists() and inference_file.exists():
-                    examples.append({
-                        "name": subdir.name,
-                        "concepts_path": str(concept_file),
-                        "inferences_path": str(inference_file),
-                    })
-    
+    seen = set()
+    for scan_dir in scan_dirs:
+        if not scan_dir.exists():
+            continue
+        for proj_file in scan_dir.rglob("*.normcode-canvas.json"):
+            try:
+                config = json.loads(proj_file.read_text())
+                repos = config.get("repositories", {})
+                concepts_path = repos.get("concepts", "")
+                inferences_path = repos.get("inferences", "")
+                if not concepts_path or not inferences_path:
+                    continue
+
+                # Normalize backslashes from Windows configs to forward slashes
+                concepts_path = concepts_path.replace("\\", "/")
+                inferences_path = inferences_path.replace("\\", "/")
+
+                # Resolve relative paths against the project file's directory
+                proj_dir = proj_file.parent
+                concepts_full = (proj_dir / concepts_path).resolve()
+                inferences_full = (proj_dir / inferences_path).resolve()
+
+                if not concepts_full.exists() or not inferences_full.exists():
+                    continue
+
+                # De-duplicate by resolved concepts path
+                key = str(concepts_full)
+                if key in seen:
+                    continue
+                seen.add(key)
+
+                examples.append({
+                    "name": config.get("name", proj_file.stem),
+                    "concepts_path": str(concepts_full),
+                    "inferences_path": str(inferences_full),
+                })
+            except (json.JSONDecodeError, KeyError, OSError):
+                continue
+
     return {"examples": examples}
 
 

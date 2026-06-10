@@ -5,16 +5,16 @@
   "created_at": "2025-12-22T20:11:27.830865",
   "updated_at": "2025-12-24T21:56:45.988840",
   "repositories": {
-    "concepts": "C:\\Users\\ProgU\\PycharmProjects\\normCode\\direct_infra_experiment\\nc_ai_planning_ex\\iteration_6\\repos\\phase_1.concept.json",
-    "inferences": "C:\\Users\\ProgU\\PycharmProjects\\normCode\\direct_infra_experiment\\nc_ai_planning_ex\\iteration_6\\repos\\phase_1.inference.json",
-    "inputs": "repos\\phase1_2_test_inputs.json"
+    "concepts": "repos/phase_1.concept.json",
+    "inferences": "repos/phase_1.inference.json",
+    "inputs": "repos/phase1_2_test_inputs.json"
   },
   "execution": {
     "llm_model": "Alibaba Cloud (DashScope) - qwen-plus",
     "max_cycles": 50,
     "db_path": "orchestration.db",
-    "base_dir": "C:\\Users\\ProgU\\PycharmProjects\\normCode\\direct_infra_experiment\\nc_ai_planning_ex\\iteration_6\\repos",
-    "paradigm_dir": "gold\\provision\\paradigm"
+    "base_dir": ".",
+    "paradigm_dir": "provision/paradigm"
   },
   "breakpoints": [
     "1"
