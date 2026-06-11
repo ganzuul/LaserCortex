@@ -13,7 +13,7 @@ sys.path.insert(0, str(project_root))
 backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))
 
-from routers import repository_router, graph_router, execution_router, websocket_router, project_router, editor_router, checkpoint_router, agent_router, llm_router, chat_router, db_inspector_router, cortex_router
+from routers import repository_router, graph_router, execution_router, websocket_router, project_router, editor_router, checkpoint_router, agent_router, llm_router, chat_router, db_inspector_router, cortex_router, tamari_router
 from core.config import settings
 
 # Configure logging
@@ -97,6 +97,10 @@ app.include_router(
 app.include_router(
     cortex_router.router,
     tags=["cortex"]
+)
+app.include_router(
+    tamari_router.router,
+    tags=["tamari"]
 )
 
 

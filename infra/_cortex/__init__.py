@@ -99,6 +99,34 @@ from ._boundlessness import (
     RIGHT_COMB_RESOLUTION,
     VERY_BIG_BOX,
 )
+from ._cost import (
+    NodeCost,
+    node_param,
+    phi,
+    NODE_PARAM,
+)
+from ._amm import (
+    Route,
+    route_to_tree,
+    compose,
+    cross_impact,
+    associator_cost,
+    all_routes,
+)
+from ._tamari_lattice import (
+    build_lattice,
+    all_trees,
+    loday_coord,
+    num_leaves,
+    tree_position,
+    find_path,
+    find_path_to_rightcomb,
+    tree_layout_dict,
+    Lattice,
+    Vertex,
+    Edge,
+    Coord3,
+)
 from ._bridge import (
     CortexBridge,
     NormCodeCortexBridge,
@@ -209,6 +237,34 @@ __all__ = [
     "VeryBigBox",
     "RIGHT_COMB_RESOLUTION",
     "VERY_BIG_BOX",
+
+    # Cost
+    "NodeCost",
+    "node_param",
+    "phi",
+    "NODE_PARAM",
+
+    # AMM
+    "Route",
+    "route_to_tree",
+    "compose",
+    "cross_impact",
+    "associator_cost",
+    "all_routes",
+
+    # Tamari lattice
+    "build_lattice",
+    "all_trees",
+    "loday_coord",
+    "num_leaves",
+    "tree_position",
+    "find_path",
+    "find_path_to_rightcomb",
+    "tree_layout_dict",
+    "Lattice",
+    "Vertex",
+    "Edge",
+    "Coord3",
 
     # Bridge
     "CortexBridge",

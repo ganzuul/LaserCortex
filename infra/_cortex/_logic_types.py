@@ -25,7 +25,7 @@ from ._eml_tree import EMLTree, rightComb, contracts_to
 # ── LogicType (13-valued enum) ───────────────────────────────────────
 
 class LogicType(Enum):
-    """The 13 logic types forming the pluralistic logic framework.
+    """The 14 logic types forming the pluralistic logic framework.
     Mirror of LogicTypes.lean: inductive LogicType.
     """
     FUZZY = "fuzzy"
@@ -40,6 +40,7 @@ class LogicType(Enum):
     FREE = "free"
     INFINITARY = "infinitary"
     MODAL = "modal"
+    SPACETIME = "spacetime"
     CLASSICAL = "classical"
 
     def display_name(self) -> str:
@@ -58,6 +59,7 @@ class LogicType(Enum):
             LogicType.INFINITARY: "Infinitary Logic",
             LogicType.MODAL: "Modal Logic",
             LogicType.CLASSICAL: "Classical Logic",
+            LogicType.SPACETIME: "Spacetime Logic",
         }
         return names[self]
 
@@ -77,6 +79,7 @@ class LogicType(Enum):
             LogicType.INFINITARY: 11,
             LogicType.MODAL: 12,
             LogicType.CLASSICAL: 13,
+            LogicType.SPACETIME: 14,
         }
         return indices[self]
 
@@ -105,6 +108,7 @@ class LogicType(Enum):
             LogicType.TEMPORAL,
             LogicType.DEONTIC,
             LogicType.EPISTEMIC,
+            LogicType.SPACETIME,
         }
 
 

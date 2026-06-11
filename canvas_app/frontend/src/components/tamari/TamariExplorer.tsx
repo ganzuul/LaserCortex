@@ -15,7 +15,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { tamariApi, TamariLattice, TamariVertex, TamariPath } from '../../services/tamariApi';
+import { tamariApi, TamariLattice, TamariVertex, TamariPath, CostLandscape } from '../../services/tamariApi';
 
 // ── Color scheme ──────────────────────────────────────────────────────
 
@@ -28,10 +28,42 @@ const COLORS = {
   vertex_path: 0xff44ff,
   edge_normal: 0x334466,
   edge_path: 0xff44ff,
+  edge_antinertia: 0xff66aa,
 };
 
 const SCALE = 0.3;
 const PARTICLE_COUNT = 100;
+
+// ── 14 logic types (mirrors LogicTypes.lean) ──────────────────────────
+
+const LOGIC_TYPES = [
+  'classical', 'fuzzy', 'many_valued', 'paraconsistent',
+  'temporal', 'deontic', 'epistemic', 'quantum',
+  'intuitionistic', 'relevance', 'free', 'infinitary',
+  'modal', 'spacetime',
+];
+
+const LOGIC_LABELS: Record<string, string> = {
+  classical: 'Classical', fuzzy: 'Fuzzy', many_valued: 'Many-Valued',
+  paraconsistent: 'Paraconsistent', temporal: 'Temporal', deontic: 'Deontic',
+  epistemic: 'Epistemic', quantum: 'Quantum', intuitionistic: 'Intuitionistic',
+  relevance: 'Relevance', free: 'Free', infinitary: 'Infinitary',
+  modal: 'Modal', spacetime: 'Spacetime',
+};
+
+// ── Cost color mapping ────────────────────────────────────────────────
+
+function costColor(cost: number, maxCost: number, isRC: boolean, isLC: boolean): number {
+  if (isRC) return COLORS.vertex_rightcomb;
+  if (isLC) return COLORS.vertex_leftcomb;
+  if (maxCost === 0) return COLORS.vertex_normal;
+  const t = Math.min(cost / maxCost, 1);
+  // Blue (cold) → Yellow (hot) gradient
+  const r = Math.round(0x44 + (0xff - 0x44) * t);
+  const g = Math.round(0x88 * (1 - t * 0.7));
+  const b = Math.round(0xff * (1 - t));
+  return (r << 16) | (g << 8) | b;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -55,8 +87,12 @@ function makeStorageAttribute(array: Float32Array, itemSize: number): any {
 
 // ── Scene builder ─────────────────────────────────────────────────────
 
-function buildLatticeMesh(lattice: TamariLattice):
-  { mesh: THREE.InstancedMesh; positions: Float32Array } {
+function buildLatticeMesh(
+  lattice: TamariLattice,
+  landscape: CostLandscape | null,
+  logic: string,
+  showCostFlag: boolean,
+): { mesh: THREE.InstancedMesh; positions: Float32Array } {
   const sphereGeom = new THREE.SphereGeometry(0.15, 16, 16);
   const mesh = new THREE.InstancedMesh(
     sphereGeom, new THREE.MeshPhongMaterial(), lattice.vertices.length
@@ -64,35 +100,85 @@ function buildLatticeMesh(lattice: TamariLattice):
   const dummy = new THREE.Object3D();
   const color = new THREE.Color();
   const positions = new Float32Array(lattice.vertices.length * 3);
+
+  let maxCost = 0;
+  if (showCostFlag && landscape) {
+    maxCost = Math.max(1, ...landscape.vertices.map(v => v.costs?.[logic] ?? 0));
+  }
+
   lattice.vertices.forEach((v, i) => {
-    const x = v.coord.x * SCALE, y = v.coord.y * SCALE, z = v.coord.z * SCALE;
+    const x = v.coord.x * SCALE, y = v.coord.y * SCALE;
+    const cost = landscape?.vertices[i]?.costs?.[logic] ?? 0;
+    const z = showCostFlag ? cost * SCALE : 0;
     positions[i * 3] = x; positions[i * 3 + 1] = y; positions[i * 3 + 2] = z;
     dummy.position.set(x, y, z);
     dummy.updateMatrix();
     mesh.setMatrixAt(i, dummy.matrix);
-    if (v.is_right_comb) color.setHex(COLORS.vertex_rightcomb);
-    else if (v.is_left_comb) color.setHex(COLORS.vertex_leftcomb);
-    else color.setHex(COLORS.vertex_normal);
+    if (showCostFlag && landscape) {
+      color.setHex(costColor(cost, maxCost, v.is_right_comb, v.is_left_comb));
+    } else {
+      if (v.is_right_comb) color.setHex(COLORS.vertex_rightcomb);
+      else if (v.is_left_comb) color.setHex(COLORS.vertex_leftcomb);
+      else color.setHex(COLORS.vertex_normal);
+    }
     mesh.setColorAt(i, color);
   });
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  mesh.userData = { positions, lattice };
+  mesh.userData = { positions, landscape };
   return { mesh, positions };
 }
 
-function buildEdgeLines(lattice: TamariLattice, positions: Float32Array): THREE.LineSegments {
+function buildEdgeLines(
+  lattice: TamariLattice,
+  positions: Float32Array,
+  landscape: CostLandscape | null,
+  logic: string,
+  showAntiInertiaFlag: boolean,
+): THREE.LineSegments {
   const edgePositions: number[] = [];
+  const edgeColors: number[] = [];
+
+  let maxCross = 0;
+  if (showAntiInertiaFlag && landscape) {
+    const crosses = lattice.edges
+      .map(e => Math.abs(
+        (landscape.vertices[e.source]?.costs?.[logic] ?? 0) -
+        (landscape.vertices[e.target]?.costs?.[logic] ?? 0)
+      ));
+    maxCross = Math.max(1, ...crosses);
+  }
+
   lattice.edges.forEach(e => {
     const i = e.source * 3, j = e.target * 3;
     edgePositions.push(
       positions[i], positions[i + 1], positions[i + 2],
       positions[j], positions[j + 1], positions[j + 2],
     );
+    if (showAntiInertiaFlag && landscape) {
+      const ci = Math.abs(
+        (landscape.vertices[e.source]?.costs?.[logic] ?? 0) -
+        (landscape.vertices[e.target]?.costs?.[logic] ?? 0)
+      );
+      const t = Math.min(ci / maxCross, 1);
+      // Anti-inertia: blue → magenta based on cross-impact
+      const r = Math.round(0x33 + (0xff - 0x33) * t);
+      const g = Math.round(0x44 * (1 - t * 0.6));
+      const b = Math.round(0x66 + (0xaa - 0x66) * t);
+      edgeColors.push(r / 255, g / 255, b / 255, r / 255, g / 255, b / 255);
+    } else {
+      edgeColors.push(0.2, 0.27, 0.4, 0.2, 0.27, 0.4);
+    }
   });
+
   const edgeGeom = new THREE.BufferGeometry();
   edgeGeom.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
-  const edgeMat = new THREE.LineBasicMaterial({ color: COLORS.edge_normal, transparent: true, opacity: 0.4 });
+  edgeGeom.setAttribute('color', new THREE.Float32BufferAttribute(edgeColors, 3));
+  const edgeMat = new THREE.LineBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.6,
+  });
   return new THREE.LineSegments(edgeGeom, edgeMat);
 }
 
@@ -138,12 +224,16 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
 
   const [n, setN] = useState(initialN);
   const [lattice, setLattice] = useState<TamariLattice | null>(null);
+  const [costLandscape, setCostLandscape] = useState<CostLandscape | null>(null);
+  const [selectedLogic, setSelectedLogic] = useState('classical');
   const [selectedVertex, setSelectedVertex] = useState<TamariVertex | null>(null);
   const [contractionPath, setContractionPath] = useState<TamariPath | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [animatePath, setAnimatePath] = useState(false);
   const [animProgress, setAnimProgress] = useState(0);
+  const [showCost, setShowCost] = useState(true);
+  const [showAntiInertia, setShowAntiInertia] = useState(true);
 
   // ── Fetch lattice data ──────────────────────────────────────────────
 
@@ -151,8 +241,12 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await tamariApi.getLattice(size);
+      const [data, landscape] = await Promise.all([
+        tamariApi.getLattice(size),
+        tamariApi.getCostLandscape(size),
+      ]);
       setLattice(data);
+      setCostLandscape(landscape);
       setSelectedVertex(null);
       setContractionPath(null);
       setAnimProgress(0);
@@ -324,12 +418,12 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     if (instancedMeshRef.current) { scene.remove(instancedMeshRef.current); instancedMeshRef.current = null; }
     if (edgeLinesRef.current) { scene.remove(edgeLinesRef.current); edgeLinesRef.current = null; }
 
-    const { mesh, positions } = buildLatticeMesh(lattice);
+    const { mesh, positions } = buildLatticeMesh(lattice, costLandscape, selectedLogic, showCost);
     staticPositionsRef.current = positions;
     scene.add(mesh);
     instancedMeshRef.current = mesh;
 
-    const lines = buildEdgeLines(lattice, positions);
+    const lines = buildEdgeLines(lattice, positions, costLandscape, selectedLogic, showAntiInertia);
     scene.add(lines);
     edgeLinesRef.current = lines;
 
@@ -337,7 +431,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     if (webgpuAvailable) {
       initCompute(lattice).catch(() => {});
     }
-  }, [lattice, rendererStatus, webgpuAvailable]);
+  }, [lattice, costLandscape, selectedLogic, showCost, showAntiInertia, rendererStatus, webgpuAvailable]);
 
   // ── Initialize WebGPU compute shaders ───────────────────────────────
 
@@ -347,7 +441,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
 
     let TSL: Record<string, any>;
     try { TSL = await import('three/tsl'); } catch { return; }
-    const { Fn, uniform, float, instanceIndex, If, storage } = TSL;
+    const { Fn, uniform, instanceIndex, If, storage } = TSL;
 
     // Populate positions from lattice data
     const posArr = new Float32Array(count * 3);
@@ -496,7 +590,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       <div className="flex-1 relative">
         <div ref={containerRef} className="absolute inset-0" />
         {/* Controls overlay */}
-        <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur rounded-lg p-3 text-white text-sm space-y-2">
+        <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur rounded-lg p-3 text-white text-sm space-y-2 max-w-xs">
           <div className="flex items-center gap-2">
             <label className="text-slate-300">Size n:</label>
             <select value={n} onChange={e => setN(Number(e.target.value))}
@@ -505,6 +599,29 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
                 <option key={v} value={v}>T{v} ({[1, 1, 2, 5, 14, 42][v]} trees)</option>
               ))}
             </select>
+          </div>
+          {/* Logic type selector */}
+          <div className="flex items-center gap-2">
+            <label className="text-slate-300 text-xs">Logic:</label>
+            <select value={selectedLogic} onChange={e => setSelectedLogic(e.target.value)}
+              className="bg-slate-700 text-white rounded px-2 py-1 text-xs max-w-[140px]">
+              {LOGIC_TYPES.map(lt => (
+                <option key={lt} value={lt}>{LOGIC_LABELS[lt] || lt}</option>
+              ))}
+            </select>
+          </div>
+          {/* Toggles */}
+          <div className="flex items-center gap-3 text-xs">
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" checked={showCost} onChange={e => setShowCost(e.target.checked)}
+                className="accent-blue-500" />
+              Φ cost field
+            </label>
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" checked={showAntiInertia} onChange={e => setShowAntiInertia(e.target.checked)}
+                className="accent-pink-500" />
+              Anti-inertia
+            </label>
           </div>
           {loading && <div className="text-yellow-400">Loading...</div>}
           {error && <div className="text-red-400">{error}</div>}
@@ -519,7 +636,9 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
           <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#4488ff' }} /><span>Regular tree</span></div>
           <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#44ff88' }} /><span>rightComb (equilibrium)</span></div>
           <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#ff4444' }} /><span>leftComb (maximum)</span></div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: showCost ? '#ffaa00' : '#4488ff' }} /><span>Cost height → yellow</span></div>
           <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#ff44ff' }} /><span>Contraction path</span></div>
+          {showAntiInertia && <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#ff66aa' }} /><span>Anti-inertia (Φ gradient)</span></div>}
         </div>
       </div>
 
@@ -537,6 +656,11 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
                 <div className="text-slate-400">
                   coord: ({selectedVertex.coord.x}, {selectedVertex.coord.y}, {selectedVertex.coord.z})
                 </div>
+                {costLandscape && (
+                  <div className="text-yellow-400">
+                    Φ({LOGIC_LABELS[selectedLogic] || selectedLogic}) = {costLandscape.vertices[selectedVertex.id]?.costs?.[selectedLogic] ?? '?'}
+                  </div>
+                )}
                 {selectedVertex.is_right_comb && <div className="text-green-400">rightComb — equilibrium attractor</div>}
                 {selectedVertex.is_left_comb && <div className="text-red-400">leftComb — maximum element</div>}
               </div>

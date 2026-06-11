@@ -253,7 +253,7 @@ export function ProjectPanel() {
           )}
 
           {/* Actions */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => { setProjectPanelOpen(true); setActiveTab('open'); }}
               className="p-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors flex flex-col items-center gap-2"
@@ -269,6 +269,18 @@ export function ProjectPanel() {
               <Plus className="w-8 h-8 text-blue-500" />
               <span className="text-slate-800 font-medium">New Project</span>
               <span className="text-slate-500 text-xs">Create project configuration</span>
+            </button>
+            <button
+              onClick={() => window.open('/tamari.html', '_blank')}
+              className="p-4 bg-slate-50 hover:bg-purple-100 border border-slate-200 hover:border-purple-300 rounded-lg transition-colors flex flex-col items-center gap-2"
+            >
+              <svg className="w-8 h-8 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              <span className="text-slate-800 font-medium">Tamari Lattice</span>
+              <span className="text-slate-500 text-xs">Φ cost landscape explorer</span>
             </button>
           </div>
         </div>

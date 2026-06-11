@@ -58,9 +58,17 @@ class VertexResponse(BaseModel):
     size: int
 
 
+class CostVertexResponse(VertexResponse):
+    costs: Dict[str, int] = {}
+
+
 class EdgeResponse(BaseModel):
     source: int
     target: int
+
+
+class CostEdgeResponse(EdgeResponse):
+    cross_impacts: Dict[str, int] = {}
 
 
 class PathResponse(BaseModel):
@@ -76,6 +84,21 @@ class LatticeResponse(BaseModel):
     edge_count: int
     vertices: List[VertexResponse]
     edges: List[EdgeResponse]
+
+
+class CostLatticeResponse(BaseModel):
+    n: int
+    vertex_count: int
+    edge_count: int
+    logic_type: str
+    vertices: List[CostVertexResponse]
+    edges: List[CostEdgeResponse]
+
+
+class CostLandscapeResponse(BaseModel):
+    n: int
+    logic_types: List[str]
+    vertices: List[CostVertexResponse]
 
 
 class TreeLayoutResponse(BaseModel):
@@ -218,4 +241,72 @@ async def find_path_to_equilibrium(bits: str):
         target=path.target_id,
         vertices=path.vertex_ids,
         length=len(path.vertex_ids) - 1,
+    )
+
+
+@router.get("/cost-lattice/{n}/{logic}", response_model=CostLatticeResponse)
+async def get_cost_lattice(n: int, logic: str):
+    """Get the Tamari lattice T_n with Φ costs for the given logic type.
+
+    Each vertex includes its Φ cost under the given logic type.
+    Each edge includes the absolute cost difference (cross-impact / anti-inertia).
+    """
+    from infra._cortex._logic_types import LogicType
+
+    try:
+        lt = LogicType(logic)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid logic type: {logic}")
+
+    lattice = _get_lattice(n)
+
+    return CostLatticeResponse(
+        n=lattice.n,
+        vertex_count=len(lattice.vertices),
+        edge_count=len(lattice.edges),
+        logic_type=logic,
+        vertices=[
+            CostVertexResponse(
+                id=v.id,
+                bits=v.bits,
+                repr=repr(v.tree),
+                coord=Point3DResponse(x=v.coord.x, y=v.coord.y, z=v.costs.get(logic, 0)),
+                is_left_comb=v.is_left_comb,
+                is_right_comb=v.is_right_comb,
+                size=v.size,
+                costs=v.costs,
+            )
+            for v in lattice.vertices
+        ],
+        edges=[
+            CostEdgeResponse(source=e.source_id, target=e.target_id, cross_impacts=e.cross_impacts)
+            for e in lattice.edges
+        ],
+    )
+
+
+@router.get("/cost-landscape/{n}", response_model=CostLandscapeResponse)
+async def get_cost_landscape(n: int):
+    """Get the full Φ cost landscape for all 14 logic types.
+
+    Returns every vertex with its costs as {logic_type: Φ_value}.
+    The frontend uses this to interpolate between logic regimes.
+    """
+    lattice = _get_lattice(n)
+    return CostLandscapeResponse(
+        n=lattice.n,
+        logic_types=lattice.logic_types,
+        vertices=[
+            CostVertexResponse(
+                id=v.id,
+                bits=v.bits,
+                repr=repr(v.tree),
+                coord=Point3DResponse(x=v.coord.x, y=v.coord.y, z=0),
+                is_left_comb=v.is_left_comb,
+                is_right_comb=v.is_right_comb,
+                size=v.size,
+                costs=v.costs,
+            )
+            for v in lattice.vertices
+        ],
     )
