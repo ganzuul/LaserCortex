@@ -104,6 +104,11 @@ def EMLTree.size : EMLTree → Nat
   | .Leaf       => 0
   | .Node l r   => 1 + l.size + r.size
 
+/-- Binary preorder encoding: '0' = Leaf, '1' + left + right = Node. -/
+def EMLTree.toBits : EMLTree → String
+  | .Leaf      => "0"
+  | .Node l r  => "1" ++ l.toBits ++ r.toBits
+
 -- Tamari contraction: one step (right rotation)
 -- Primitive grammar rewrite rule: (a • b) • c → a • (b • c)
 -- This is the **coupling signature** for the non-associative composition

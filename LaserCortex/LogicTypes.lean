@@ -96,6 +96,14 @@ def LogicType.name : LogicType → String := fun lt =>
   | .Spacetime => "Spacetime Logic"
   | .Classical => "Classical Logic"
 
+/-- List of all 14 logic types, in a canonical order. -/
+def allLogics : List LogicType := [
+  .Classical, .Fuzzy, .ManyValued, .Paraconsistent,
+  .Temporal, .Deontic, .Epistemic, .Quantum,
+  .Intuitionistic, .Relevance, .Free, .Infinitary,
+  .Modal, .Spacetime
+]
+
 -- ============================================================================
 -- SECTION 2: Logic Type Properties
 -- Metadata and classification of logic types
