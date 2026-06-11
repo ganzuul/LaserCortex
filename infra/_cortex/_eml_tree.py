@@ -169,12 +169,8 @@ def contracts_one_successors(t: EMLTree) -> List[EMLTree]:
         result.append(EMLTree.node(a, EMLTree.node(b, c)))
 
     # Possible rotations in left subtree
-    if not t.left.is_leaf:
-        for a_prime in contracts_one_successors(t.left):
-            result.append(EMLTree.node(a_prime, t.right))
-    else:
-        for a_prime in contracts_one_successors(t.left):
-            result.append(EMLTree.node(a_prime, t.right))
+    for a_prime in contracts_one_successors(t.left):
+        result.append(EMLTree.node(a_prime, t.right))
 
     # Possible rotations in right subtree
     for c_prime in contracts_one_successors(t.right):

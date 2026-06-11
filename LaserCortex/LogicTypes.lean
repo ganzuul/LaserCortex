@@ -2,7 +2,7 @@
 LogicTypes.lean
 Multi-Logic Type System for Pluralistic Reasoning Framework
 
-This file defines the type hierarchy for 13 logic types identified in
+This file defines the type hierarchy for 14 logic types identified in
 the NeSy framework (see /home/nos/devcom/docs/NeSy/paradoxes_and_logics.md).
 
 Design Philosophy:
@@ -37,7 +37,7 @@ namespace LogicTypes
 -- ============================================================================
 
 /-- 
-The 13 logic types that form the pluralistic logic framework.
+The 14 logic types that form the pluralistic logic framework.
 
 Each logic type corresponds to a distinct reasoning paradigm and handles
 specific classes of paradoxes as boundary conditions.
@@ -74,6 +74,7 @@ inductive LogicType where
   | Free
   | Infinitary
   | Modal
+  | Spacetime
   | Classical
   deriving DecidableEq, Repr
 
@@ -92,6 +93,7 @@ def LogicType.name : LogicType → String := fun lt =>
   | .Free => "Free Logic"
   | .Infinitary => "Infinitary Logic"
   | .Modal => "Modal Logic"
+  | .Spacetime => "Spacetime Logic"
   | .Classical => "Classical Logic"
 
 -- ============================================================================
@@ -124,6 +126,7 @@ def LogicType.classification : LogicType → LogicClass := fun lt =>
   | .Free => .Extension  -- Partial reference
   | .Infinitary => .Generalization  -- Infinite conjunctions/disjunctions
   | .Modal => .Alternative  -- Possible/necessary worlds
+  | .Spacetime => .Generalization  -- Geometric/temporal-spatial operators
   | .Classical => .Classical
 
 /-- 
@@ -142,8 +145,9 @@ From PLURALISTIC_LOGIC_FRAMEWORK.md:
 - T₁₁: Infinitary (infinite structures)
 - T₁₂: Modal (possible worlds)
 - T₁₃: Classical (binary truth - baseline)
+- T₁₄: Spacetime (geometric/spatiotemporal truth)
 
-The full logical space is T₁ × T₂ × ... × T₁₃
+The full logical space is T₁ × T₂ × ... × T₁₄
 -/
 def LogicType.dimensionIndex : LogicType → Nat := fun lt =>
   match lt with
@@ -159,6 +163,7 @@ def LogicType.dimensionIndex : LogicType → Nat := fun lt =>
   | .Free => 10
   | .Infinitary => 11
   | .Modal => 12
+  | .Spacetime => 14
   | .Classical => 13
 
 -- ============================================================================
@@ -194,6 +199,7 @@ def LogicContraction : LogicType → EMLRegistry.EMLTree → EMLRegistry.EMLTree
   | .Free => EMLRegistry.contracts_to  -- Entity existence handling
   | .Infinitary => EMLRegistry.contracts_to  -- Coinductive reduction (finite approximation)
   | .Modal => EMLRegistry.contracts_to  -- Modal reduction
+  | .Spacetime => EMLRegistry.contracts_to  -- Geometric spacetime contraction
 
 -- ============================================================================
 -- SECTION 4: Meta-Contraction (Between Logics)
@@ -307,6 +313,7 @@ def LogicType.isAssociativeSector : LogicType → Bool := fun lt =>
   match lt with
   | .Classical | .Fuzzy | .ManyValued | .Temporal | .Deontic | .Epistemic => true
   | .Paraconsistent | .Quantum | .Intuitionistic | .Relevance | .Free | .Infinitary | .Modal => false
+  | .Spacetime => true  -- Geometric logic spans both sectors; associative by default
 
 /-- 
 The split boundary: logic types that span both sectors.
@@ -340,6 +347,7 @@ def LogicNormalForm : LogicType → Nat → EMLRegistry.EMLTree
   | .Free, n => EMLRegistry.rightComb n
   | .Infinitary, n => EMLRegistry.rightComb n
   | .Modal, n => EMLRegistry.rightComb n
+  | .Spacetime, n => EMLRegistry.rightComb n
 
 /-- 
 The main contraction theorem for each logic type.
