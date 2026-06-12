@@ -42,6 +42,7 @@ class LogicType(Enum):
     MODAL = "modal"
     SPACETIME = "spacetime"
     CLASSICAL = "classical"
+    BOOLEAN = "boolean"
 
     def display_name(self) -> str:
         """Mirror of LogicType.name."""
@@ -60,6 +61,7 @@ class LogicType(Enum):
             LogicType.MODAL: "Modal Logic",
             LogicType.CLASSICAL: "Classical Logic",
             LogicType.SPACETIME: "Spacetime Logic",
+            LogicType.BOOLEAN: "Boolean Logic",
         }
         return names[self]
 
@@ -80,6 +82,7 @@ class LogicType(Enum):
             LogicType.MODAL: 12,
             LogicType.CLASSICAL: 13,
             LogicType.SPACETIME: 14,
+            LogicType.BOOLEAN: 15,
         }
         return indices[self]
 
@@ -109,6 +112,7 @@ class LogicType(Enum):
             LogicType.DEONTIC,
             LogicType.EPISTEMIC,
             LogicType.SPACETIME,
+            LogicType.BOOLEAN,
         }
 
 

@@ -120,6 +120,15 @@ export const tamariApi = {
 
   verifyLean: (): Promise<{ passed: boolean; summary: string; log: string; target_count: number }> =>
     fetchJson(`${API_BASE}/verify-lean`),
+
+  findInteresting: (n: number, logic: string, topK?: number): Promise<{
+    n: number; logic: string; criterion: string;
+    vertices: { id: number; bits: string; repr: string; cost: number; neighbors: number; cost_variance: number; is_right_comb: boolean; is_left_comb: boolean }[];
+  }> => fetchJson(`${API_BASE}/find-interesting`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ n, logic, top_k: topK ?? 5 }),
+  }),
 };
 
 // Type re-exports for backward compatibility

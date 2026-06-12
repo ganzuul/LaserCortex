@@ -48,6 +48,7 @@ NODE_PARAM: Dict[LogicType, NodeCost] = {
     LogicType.INFINITARY:     NodeCost(leftWeight=1, rightDiv=1, bias=1),
     LogicType.MODAL:          NodeCost(leftWeight=1, rightDiv=1, bias=1),
     LogicType.SPACETIME:      NodeCost(leftWeight=2, rightDiv=1, bias=1, coupling=2, denom=6),
+    LogicType.BOOLEAN:        NodeCost(leftWeight=1, rightDiv=0, bias=1),
 }
 
 

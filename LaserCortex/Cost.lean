@@ -39,6 +39,7 @@ def nodeParam (L : LogicTypes.LogicType) : NodeCost :=
   | .Infinitary     => { leftWeight := 1, rightDiv := 1, bias := 1 }
   | .Modal          => { leftWeight := 1, rightDiv := 1, bias := 1 }
   | .Spacetime      => { leftWeight := 2, rightDiv := 1, bias := 1 }
+  | .Boolean        => { leftWeight := 1, rightDiv := 0, bias := 1 }
 
 theorem nodeParam_bias_one (L : LogicTypes.LogicType) : (nodeParam L).bias = 1 := by
   cases L <;> rfl

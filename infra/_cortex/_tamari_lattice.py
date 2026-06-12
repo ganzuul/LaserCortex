@@ -248,6 +248,11 @@ def count_local_minima(costs: Dict[int, int], edges: List[Edge]) -> int:
     return minima
 
 
+def _tree_id_map(trees: List[EMLTree]) -> Dict[EMLTree, int]:
+    """Build O(1) tree-to-id lookup (avoids O(V) .index() calls)."""
+    return {t: i for i, t in enumerate(trees)}
+
+
 def total_pentagon_defect(
     costs: Dict[int, int],
     edges: List[Edge],
@@ -300,6 +305,7 @@ def coupling_decay(
     logic: str,
     couplings: List[int],
     denom: int = 10,
+    include_pentagon: bool = True,
 ) -> dict:
     """Sweep coupling values and return decay metrics.
 
@@ -317,12 +323,13 @@ def coupling_decay(
     trees = all_trees(n)
     edges_raw: List[Edge] = []
     tree_list: List[EMLTree] = list(trees)
+    tree_id_of = _tree_id_map(tree_list)
 
     # Build adjacency once (edges are independent of coupling)
     for s in trees:
-        sid = tree_list.index(s)
+        sid = tree_id_of[s]
         for t in contracts_one_successors(s):
-            tid = tree_list.index(t)
+            tid = tree_id_of[t]
             edges_raw.append(Edge(source_id=sid, target_id=tid))
 
     rc = rightComb(n) if n > 0 else LEAF
@@ -335,11 +342,14 @@ def coupling_decay(
             costs_map[i] = phi_coupled(lt, t, coupling=k, denom=denom)
 
         num_min = count_local_minima(costs_map, edges_raw)
-        penta = total_pentagon_defect(costs_map, edges_raw, [
-            Vertex(id=i, tree=t, bits="", coord=Coord3(0, 0, 0),
-                   is_left_comb=False, is_right_comb=False, size=n)
-            for i, t in enumerate(tree_list)
-        ])
+        if include_pentagon:
+            penta = total_pentagon_defect(costs_map, edges_raw, [
+                Vertex(id=i, tree=t, bits="", coord=Coord3(0, 0, 0),
+                       is_left_comb=False, is_right_comb=False, size=n)
+                for i, t in enumerate(tree_list)
+            ])
+        else:
+            penta = 0.0
         vals = list(costs_map.values())
         rc_cost = costs_map[rc_idx]
 

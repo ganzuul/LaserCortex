@@ -237,6 +237,10 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   const [leanResult, setLeanResult] = useState<{ passed: boolean; summary: string; target_count: number } | null>(null);
   const [leanVerifying, setLeanVerifying] = useState(false);
 
+  // Find interesting
+  const [interestingVertices, setInterestingVertices] = useState<any[] | null>(null);
+  const [interestingLoading, setInterestingLoading] = useState(false);
+
   // ── Fetch lattice data ──────────────────────────────────────────────
 
   const fetchLattice = useCallback(async (size: number) => {
@@ -761,6 +765,22 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     } catch { setContractionPath(null); }
   }, []);
 
+  // Find interesting meta-stable configurations via Lean-verified backend
+  const handleFindInteresting = useCallback(async () => {
+    if (!lattice) return;
+    setInterestingLoading(true);
+    setInterestingVertices(null);
+    try {
+      const result = await tamariApi.findInteresting(n, selectedLogic, 5);
+      setInterestingVertices(result.vertices);
+      if (result.vertices.length > 0) {
+        const v = lattice.vertices[result.vertices[0].id];
+        if (v) handleVertexClick(v);
+      }
+    } catch { /* ignore */ }
+    setInterestingLoading(false);
+  }, [n, selectedLogic, lattice]);
+
   useEffect(() => {
     const renderer = rendererRef.current;
     const mesh = instancedMeshRef.current;
@@ -1001,52 +1021,27 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
           setCalError('StorageInstancedBufferAttribute not available');
           return;
         }
-
         const costArr = new Float32Array(V * (internalN + 1));
         const costAttr = makeStorageAttribute(costArr, 1);
         const outArr = new Float32Array(V);
         const outAttr = makeStorageAttribute(outArr, 1);
 
-        const { kernel } = createPhiKernel(TSL, treeAttr, costAttr, outAttr, V, internalN, params);
-        const renderer = rendererRef.current as any;
-        if (!renderer?.compute) { setCalError('Renderer does not support compute'); return; }
-
+        // Try GPU compute, fall back to CPU on any error
+        let gpuCosts: Float32Array | null = null;
         try {
-          renderer.compute(kernel);
-          const readData = await renderer.backend.getArrayBufferAsync(outAttr, null, 0, outArr.byteLength);
-          if (cancelled) return;
-          const gpuCosts = new Float32Array(readData);
-
-          const apiCosts = costLandscape.vertices.map(v => v.costs?.[selectedLogic] ?? 0);
-          const cpuCosts = bitStrings.map(bits => computePhiCPU(bits, params));
-
-          let maxGpuError = 0, totalGpuError = 0;
-          let maxCpuError = 0, totalCpuError = 0;
-          for (let i = 0; i < V; i++) {
-            const gpuErr = Math.abs(gpuCosts[i] - apiCosts[i]);
-            const cpuErr = Math.abs(cpuCosts[i] - apiCosts[i]);
-            maxGpuError = Math.max(maxGpuError, gpuErr);
-            totalGpuError += gpuErr;
-            maxCpuError = Math.max(maxCpuError, cpuErr);
-            totalCpuError += cpuErr;
+          const { kernel } = createPhiKernel(TSL, treeAttr, costAttr, outAttr, V, internalN, params);
+          const renderer = rendererRef.current as any;
+          if (renderer?.compute) {
+            renderer.compute(kernel);
+            const readData = await renderer.backend.getArrayBufferAsync(outAttr, null, 0, outArr.byteLength);
+            if (!cancelled) gpuCosts = new Float32Array(readData);
           }
-
-          const gpuOk = maxGpuError === 0;
-          const cpuOk = maxCpuError === 0;
-          const summary = [
-            `Trees: ${V}, n=${internalN}, logic: ${selectedLogic}`,
-            `GPU vs API: ${gpuOk ? 'PASS' : 'FAIL'} (max err=${maxGpuError}, avg err=${(totalGpuError / V).toFixed(4)})`,
-            `CPU vs API: ${cpuOk ? 'PASS' : 'FAIL'} (max err=${maxCpuError}, avg err=${(totalCpuError / V).toFixed(4)})`,
-            `Params: bias=${params.bias} w=${params.leftWeight} rd=${params.rightDiv} c=${params.coupling} d=${params.denom}`,
-            `GPU costs: ${gpuCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
-            `API costs: ${apiCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
-          ];
-          setCalResult(summary.join('\n'));
         } catch (e) {
-          if (!cancelled) setCalError(`Phi GPU error: ${e}`);
+          if (!cancelled) console.warn('Phi GPU path failed, falling back to CPU:', e);
         }
-      } else {
-        // CPU-only fallback
+        if (cancelled) return;
+
+        // CPU reference always computed
         const apiCosts = costLandscape.vertices.map(v => v.costs?.[selectedLogic] ?? 0);
         const cpuCosts = bitStrings.map(bits => computePhiCPU(bits, params));
 
@@ -1057,15 +1052,28 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
           totalCpuError += err;
         }
         const cpuOk = maxCpuError === 0;
-        const summary = [
+
+        const lines: string[] = [
           `Trees: ${V}, n=${internalN}, logic: ${selectedLogic}`,
-          `CPU vs API: ${cpuOk ? 'PASS' : 'FAIL'} (max err=${maxCpuError}, avg err=${(totalCpuError / V).toFixed(4)})`,
-          `Params: bias=${params.bias} w=${params.leftWeight} rd=${params.rightDiv} c=${params.coupling} d=${params.denom}`,
-          `CPU costs: ${cpuCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
-          `API costs: ${apiCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
-          `(GPU fallback — compute not available)`,
         ];
-        setCalResult(summary.join('\n'));
+
+        if (gpuCosts) {
+          let maxGpuError = 0, totalGpuError = 0;
+          for (let i = 0; i < V; i++) {
+            const err = Math.abs(gpuCosts[i] - apiCosts[i]);
+            maxGpuError = Math.max(maxGpuError, err);
+            totalGpuError += err;
+          }
+          const gpuOk = maxGpuError === 0;
+          lines.push(`GPU vs API: ${gpuOk ? 'PASS' : 'FAIL'} (max err=${maxGpuError}, avg err=${(totalGpuError / V).toFixed(4)})`);
+          lines.push(`GPU costs: ${gpuCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`);
+        }
+        lines.push(`CPU vs API: ${cpuOk ? 'PASS' : 'FAIL'} (max err=${maxCpuError}, avg err=${(totalCpuError / V).toFixed(4)})`);
+        lines.push(`Params: bias=${params.bias} w=${params.leftWeight} rd=${params.rightDiv} c=${params.coupling} d=${params.denom}`);
+        lines.push(`CPU costs: ${cpuCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`);
+        lines.push(`API costs: ${apiCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`);
+        if (!gpuCosts) lines.push(`(GPU path failed — CPU result shown)`);
+        setCalResult(lines.join('\n'));
       }
     })();
 
@@ -1105,7 +1113,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
           >
             <div className="text-green-400 mb-1">Streaming Survey — {selectedLogic}</div>
             <div className="text-slate-300">
-              free: <span className="text-green-300">{surveyStats.free}</span>{' '}
+              wander: <span className="text-green-300">{surveyStats.free}</span>{' '}
               stuck: <span className="text-yellow-300">{surveyStats.stuck}</span>{' '}
               knots: <span className="text-pink-400">{surveyStats.knots}</span>
             </div>
@@ -1128,8 +1136,8 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
             <label className="text-slate-300">Size n:</label>
             <select value={n} onChange={e => setN(Number(e.target.value))}
               className="bg-slate-700 text-white rounded px-2 py-1 text-sm">
-              {[0, 1, 2, 3, 4, 5].map(v => (
-                <option key={v} value={v}>T{v} ({[1, 1, 2, 5, 14, 42][v]} trees)</option>
+              {[0, 1, 2, 3, 4, 5, 6, 7].map(v => (
+                <option key={v} value={v}>T{v} ({[1, 1, 2, 5, 14, 42, 132, 429][v]} trees)</option>
               ))}
             </select>
           </div>
@@ -1196,6 +1204,9 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
             {leanResult && (
               <div className={`mt-1 ${leanResult.passed ? 'text-green-400' : 'text-red-400'}`}>
                 {leanResult.summary}
+                {leanResult.passed && (
+                  <span className="ml-1 text-green-500">✓ ({leanResult.target_count} targets)</span>
+                )}
               </div>
             )}
           </div>
@@ -1277,15 +1288,15 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
                 </div>
                 <div className="mt-2 space-y-1">
                   <div className="flex justify-between text-slate-400">
-                    <span>Free particles</span>
+                    <span>Wandering (budget left)</span>
                     <span className="text-green-300">{surveyStats.free}</span>
                   </div>
                   <div className="flex justify-between text-slate-400">
-                    <span>Stuck</span>
+                    <span>Stuck (budget exhausted)</span>
                     <span className="text-yellow-300">{surveyStats.stuck}</span>
                   </div>
                   <div className="flex justify-between text-slate-400">
-                    <span>Knot vertices</span>
+                    <span>Knot vertices (stuck sites)</span>
                     <span className="text-pink-400">{surveyStats.knots}</span>
                   </div>
                   <div className="flex justify-between text-slate-400">
@@ -1307,6 +1318,33 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
               </div>
             </div>
           )}
+
+          {/* Find interesting (Lean-guided) */}
+          <div className="mb-4 p-3 bg-slate-800 rounded-lg">
+            <h3 className="text-sm font-medium text-slate-300 mb-2">Lean-Guided Discovery</h3>
+            <div className="text-xs space-y-1">
+              <button onClick={handleFindInteresting} disabled={interestingLoading || !lattice}
+                className="px-3 py-1 bg-indigo-700 hover:bg-indigo-600 rounded text-xs disabled:opacity-50">
+                {interestingLoading ? 'Searching...' : 'Find Interesting Trees'}
+              </button>
+              {interestingVertices && interestingVertices.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  <div className="text-slate-400">Top meta-stable candidates:</div>
+                  {interestingVertices.map((v: any) => (
+                    <button key={v.id} onClick={() => {
+                      const tv = lattice?.vertices[v.id];
+                      if (tv) handleVertexClick(tv);
+                    }}
+                      className={`w-full text-left px-2 py-0.5 rounded text-xs font-mono block ${
+                        selectedVertex?.id === v.id ? 'bg-indigo-600/30 text-indigo-300' : 'hover:bg-slate-700 text-slate-300'
+                      }`}>
+                      {treeShortLabel(v.repr)} <span className="text-slate-500">Φ={v.cost} var={v.cost_variance}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
           <div>
             <h3 className="text-sm font-medium text-slate-300 mb-2">All Trees ({lattice?.vertex_count || 0})</h3>

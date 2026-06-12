@@ -355,6 +355,172 @@ async def verify_lean():
         return LeanVerifyResponse(passed=False, summary=f"FAIL: {e}", log="")
 
 
+# ── Find interesting configurations endpoint ──────────────────────────────
+
+class FindInterestingRequest(BaseModel):
+    n: int
+    logic: str = "classical"
+    top_k: int = 5
+
+class InterestingVertex(BaseModel):
+    id: int
+    bits: str
+    repr: str
+    cost: int
+    neighbors: int
+    cost_variance: float
+    is_right_comb: bool
+    is_left_comb: bool
+
+class FindInterestingResponse(BaseModel):
+    n: int
+    logic: str
+    vertices: List[InterestingVertex]
+    criterion: str
+
+@router.post("/find-interesting", response_model=FindInterestingResponse)
+async def find_interesting(req: FindInterestingRequest):
+    """Find the top-k most 'interesting' trees by cost variance.
+
+    Interesting = high cost difference with neighbors (meta-stable),
+    or high pentagon involvement, or neither left nor right comb.
+    Returns candidates for non-collapsing / meta-stable configurations.
+    """
+    if req.n < 2 or req.n > 7:
+        raise HTTPException(status_code=400, detail="n must be 2-7")
+    lattice = _get_lattice(req.n)
+    from infra._cortex._logic_types import LogicType
+    try:
+        lt = LogicType(req.logic)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid logic: {req.logic}")
+
+    candidates: list[dict] = []
+    for v in lattice.vertices:
+        cost = v.costs.get(req.logic, 0)
+        neighbors = 0
+        cost_sum = 0
+        cost_sq_sum = 0
+        for e in lattice.edges:
+            if e.source_id == v.id:
+                nb = lattice.vertices[e.target_id]
+                nb_cost = nb.costs.get(req.logic, 0)
+                cost_sum += nb_cost
+                cost_sq_sum += nb_cost * nb_cost
+                neighbors += 1
+            elif e.target_id == v.id:
+                nb = lattice.vertices[e.source_id]
+                nb_cost = nb.costs.get(req.logic, 0)
+                cost_sum += nb_cost
+                cost_sq_sum += nb_cost * nb_cost
+                neighbors += 1
+        mean_nb = cost_sum / max(neighbors, 1)
+        cost_variance = (cost_sq_sum / max(neighbors, 1)) - mean_nb * mean_nb
+
+        candidates.append({
+            "id": v.id,
+            "bits": v.bits,
+            "repr": repr(v.tree),
+            "cost": cost,
+            "neighbors": neighbors,
+            "cost_variance": round(cost_variance, 2),
+            "is_right_comb": v.is_right_comb,
+            "is_left_comb": v.is_left_comb,
+            "score": cost_variance if not v.is_right_comb else -1,
+        })
+
+    candidates.sort(key=lambda c: c["score"], reverse=True)
+    top = candidates[:req.top_k]
+    return FindInterestingResponse(
+        n=req.n,
+        logic=req.logic,
+        criterion="highest cost variance among neighbors (meta-stable candidates)",
+        vertices=[InterestingVertex(**v) for v in top],
+    )
+
+
+# ── Compact coupling sweep across all 14 logics ─────────────────────────
+
+class SweepResult(BaseModel):
+    logic: str
+    coupling: int
+    num_local_minima: int
+    pentagon_defect: float
+    right_comb_cost: int
+    min_cost: int
+    max_cost: int
+    mean_cost: float
+
+class LogicCollapse(BaseModel):
+    logic: str
+    collapse_threshold: Optional[int]  # first coupling where num_local_minima == 1
+    right_comb_cost_at_collapse: Optional[int]
+    pentagon_defect_at_collapse: Optional[float]
+    default_coupling: int
+    default_denom: int
+
+class CouplingSweepResponse(BaseModel):
+    n: int
+    couplings: List[int]
+    logics: List[LogicCollapse]
+    sweeps: List[SweepResult]
+
+@router.get("/coupling-decay-sweep/{n}", response_model=CouplingSweepResponse)
+async def get_coupling_sweep_all(
+    n: int,
+    couplings: str = "0,1,2,3,5,8,10,12,15,20,30,50",
+):
+    """Sweep coupling across all 14 logics and find quench-collapse thresholds.
+
+    Returns per-logic collapse threshold (first coupling with 1 local minimum),
+    plus the full sweep data for charting.
+    """
+    from infra._cortex._tamari_lattice import coupling_decay
+    from infra._cortex._cost import NODE_PARAM
+    from infra._cortex._logic_types import LogicType
+
+    coupling_list = [int(c) for c in couplings.split(",")]
+    logics_out: List[LogicCollapse] = []
+    sweeps_out: List[SweepResult] = []
+
+    for lt in LogicType:
+        default = NODE_PARAM[lt]
+        result = coupling_decay(n=n, logic=lt.value, couplings=coupling_list, denom=default.denom)
+        collapse_threshold = None
+        rc_at_collapse = None
+        penta_at_collapse = None
+        for sp in result["sweep"]:
+            sweeps_out.append(SweepResult(
+                logic=lt.value,
+                coupling=sp["coupling"],
+                num_local_minima=sp["num_local_minima"],
+                pentagon_defect=sp["pentagon_defect"],
+                right_comb_cost=sp["right_comb_cost"],
+                min_cost=sp["min_cost"],
+                max_cost=sp["max_cost"],
+                mean_cost=sp["mean_cost"],
+            ))
+            if sp["num_local_minima"] == 1 and collapse_threshold is None:
+                collapse_threshold = sp["coupling"]
+                rc_at_collapse = sp["right_comb_cost"]
+                penta_at_collapse = sp["pentagon_defect"]
+        logics_out.append(LogicCollapse(
+            logic=lt.value,
+            collapse_threshold=collapse_threshold,
+            right_comb_cost_at_collapse=rc_at_collapse,
+            pentagon_defect_at_collapse=penta_at_collapse,
+            default_coupling=default.coupling,
+            default_denom=default.denom,
+        ))
+
+    return CouplingSweepResponse(
+        n=n,
+        couplings=coupling_list,
+        logics=logics_out,
+        sweeps=sweeps_out,
+    )
+
+
 @router.get("/cost-landscape/{n}", response_model=CostLandscapeResponse)
 async def get_cost_landscape(n: int):
     """Get the full Φ cost landscape for all 14 logic types.

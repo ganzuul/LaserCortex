@@ -76,6 +76,7 @@ inductive LogicType where
   | Modal
   | Spacetime
   | Classical
+  | Boolean
   deriving DecidableEq, Repr
 
 -- Human-readable names for each logic type
@@ -95,13 +96,14 @@ def LogicType.name : LogicType → String := fun lt =>
   | .Modal => "Modal Logic"
   | .Spacetime => "Spacetime Logic"
   | .Classical => "Classical Logic"
+  | .Boolean => "Boolean Logic"
 
 /-- List of all 14 logic types, in a canonical order. -/
 def allLogics : List LogicType := [
   .Classical, .Fuzzy, .ManyValued, .Paraconsistent,
   .Temporal, .Deontic, .Epistemic, .Quantum,
   .Intuitionistic, .Relevance, .Free, .Infinitary,
-  .Modal, .Spacetime
+  .Modal, .Spacetime, .Boolean
 ]
 
 -- ============================================================================
@@ -136,6 +138,7 @@ def LogicType.classification : LogicType → LogicClass := fun lt =>
   | .Modal => .Alternative  -- Possible/necessary worlds
   | .Spacetime => .Generalization  -- Geometric/temporal-spatial operators
   | .Classical => .Classical
+  | .Boolean => .Classical  -- Two-valued, all classical principles
 
 /-- 
 The dimension index for each logic type.
@@ -173,6 +176,7 @@ def LogicType.dimensionIndex : LogicType → Nat := fun lt =>
   | .Modal => 12
   | .Spacetime => 14
   | .Classical => 13
+  | .Boolean => 15
 
 -- ============================================================================
 -- SECTION 3: Logic Trees and Contraction
@@ -208,6 +212,7 @@ def LogicContraction : LogicType → EMLRegistry.EMLTree → EMLRegistry.EMLTree
   | .Infinitary => EMLRegistry.contracts_to  -- Coinductive reduction (finite approximation)
   | .Modal => EMLRegistry.contracts_to  -- Modal reduction
   | .Spacetime => EMLRegistry.contracts_to  -- Geometric spacetime contraction
+  | .Boolean => EMLRegistry.contracts_to  -- Boolean minimisation as Tamari contraction
 
 -- ============================================================================
 -- SECTION 4: Meta-Contraction (Between Logics)
@@ -322,6 +327,7 @@ def LogicType.isAssociativeSector : LogicType → Bool := fun lt =>
   | .Classical | .Fuzzy | .ManyValued | .Temporal | .Deontic | .Epistemic => true
   | .Paraconsistent | .Quantum | .Intuitionistic | .Relevance | .Free | .Infinitary | .Modal => false
   | .Spacetime => true  -- Geometric logic spans both sectors; associative by default
+  | .Boolean => true  -- Boolean algebra is fully associative
 
 /-- 
 The split boundary: logic types that span both sectors.
@@ -356,6 +362,7 @@ def LogicNormalForm : LogicType → Nat → EMLRegistry.EMLTree
   | .Infinitary, n => EMLRegistry.rightComb n
   | .Modal, n => EMLRegistry.rightComb n
   | .Spacetime, n => EMLRegistry.rightComb n
+  | .Boolean, n => EMLRegistry.rightComb n
 
 /-- 
 The main contraction theorem for each logic type.
