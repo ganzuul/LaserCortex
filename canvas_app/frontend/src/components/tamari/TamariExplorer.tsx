@@ -1,16 +1,12 @@
 /**
  * TamariExplorer — Interactive 3D visualization of the Tamari lattice.
  *
- * Uses WebGPU compute shaders (TSL) for physics simulation:
- *   - Verlet integration kernel: vertex inertia and dynamics
- *   - Pentagonator constraint kernel: edge length constraints
+ * Uses CPU-side interpolation for path animation (no GPU compute jank).
+ * WebGPU/WebGL renderer selected automatically.
  *
- * Falls back to WebGL if WebGPU is unavailable.
- *
- * Architecture (from Three-js_pentagonator-demo.md):
- *   Storage Buffers: positions, velocities, colors, edge topology
- *   Compute Kernels: Fn() + instanceIndex for parallel GPU execution
- *   Rendering: InstancedMesh + GPU readback for compute-driven updates
+ * Contraction paths are animated by lerping vertex positions along
+ * the Loday coordinate space, with the currently-selected tree smoothly
+ * transitioning through each step of the path.
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
@@ -34,7 +30,6 @@ const COLORS = {
 };
 
 const SCALE = 0.3;
-const PARTICLE_COUNT = 100;
 
 // ── 14 logic types (mirrors LogicTypes.lean) ──────────────────────────
 
@@ -211,12 +206,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   const animFrameRef = useRef<number>(0);
   const [rendererStatus, setRendererStatus] = useState<RendererStatus>('init');
 
-  // GPU compute refs
   const [webgpuAvailable, setWebgpuAvailable] = useState(false);
-  const computeReadyRef = useRef(false);
-  const storagePosRef = useRef<any>(null);
-  const computeVerletRef = useRef<any>(null);
-  const computeConstraintRef = useRef<any>(null);
   const staticPositionsRef = useRef<Float32Array | null>(null);
   const instancedMeshRef = useRef<THREE.InstancedMesh | null>(null);
   const edgeLinesRef = useRef<THREE.LineSegments | null>(null);
@@ -225,8 +215,12 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   const calCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const calAnimRef = useRef<number>(0);
 
-  // Contraction animation
-  const contractionLambdaRef = useRef(1.0);
+  // Path animation refs (avoid stale closures in rAF)
+  const pathLerpRef = useRef(0);
+  const pathAnimRunningRef = useRef(false);
+  const pathStepRef = useRef(0);
+  const latticeRef = useRef<TamariLattice | null>(null);
+  const pathRef = useRef<TamariPath | null>(null);
 
   const [n, setN] = useState(initialN);
   const [lattice, setLattice] = useState<TamariLattice | null>(null);
@@ -267,6 +261,10 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   }, []);
 
   useEffect(() => { fetchLattice(n); }, [n, fetchLattice]);
+
+  // Sync lattice ref
+  useEffect(() => { latticeRef.current = lattice; }, [lattice]);
+  useEffect(() => { pathRef.current = contractionPath; }, [contractionPath]);
 
   // ── Initialize renderer (WebGPU async or WebGL sync) ────────────────
 
@@ -369,7 +367,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     };
   }, []);
 
-  // ── Animation loop (starts when renderer is ready) ─────────────────
+  // ── Animation loop (reads refs, never stale) ──────────────────────
 
   useEffect(() => {
     if (rendererStatus !== 'ready') return;
@@ -382,29 +380,64 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       const scene = sceneRef.current;
       const camera = cameraRef.current;
 
-      // Dispatch compute shaders if ready
-      if (computeReadyRef.current && renderer?.compute) {
-        if (computeVerletRef.current) renderer.compute(computeVerletRef.current);
-        if (computeConstraintRef.current) renderer.compute(computeConstraintRef.current);
+      // CPU path animation (reads refs, not stale state)
+      const mesh = instancedMeshRef.current;
+      const staticPos = staticPositionsRef.current;
+      const path = pathRef.current;
+      const lats = latticeRef.current;
+      if (pathAnimRunningRef.current && mesh && staticPos && path && lats) {
+        const totalSteps = path.vertices.length - 1;
+        const step = pathStepRef.current;
+        if (step < totalSteps) {
+          const fromIdx = path.vertices[step];
+          const toIdx = path.vertices[step + 1];
 
-        // Read back compute buffer → update InstancedMesh positions
-        const buf = storagePosRef.current;
-        const mesh = instancedMeshRef.current;
-        if (mesh && renderer.readBuffer && buf) {
-          const byteLen = buf.array.byteLength;
-          const gpuBuf = (buf as any).__storageBuffer || buf;
-          renderer.readBuffer(gpuBuf, 0, byteLen).then((readData: ArrayBuffer) => {
-            const floats = new Float32Array(readData);
-            const dummy = new THREE.Object3D();
-            const cnt = Math.min(mesh.count, floats.length / 3);
-            for (let i = 0; i < cnt; i++) {
-              const ix = i * 3;
-              dummy.position.set(floats[ix], floats[ix + 1], floats[ix + 2]);
-              dummy.updateMatrix();
-              mesh.setMatrixAt(i, dummy.matrix);
-            }
+          const fx = staticPos[fromIdx * 3];
+          const fy = staticPos[fromIdx * 3 + 1];
+          const fz = staticPos[fromIdx * 3 + 2];
+          const tx = staticPos[toIdx * 3];
+          const ty = staticPos[toIdx * 3 + 1];
+          const tz = staticPos[toIdx * 3 + 2];
+
+          pathLerpRef.current = Math.min(pathLerpRef.current + 0.025, 1.0);
+          const t = pathLerpRef.current;
+          const s = t * t * (3 - 2 * t); // smoothstep
+
+          const dummy = new THREE.Object3D();
+          const ax = fx + (tx - fx) * s;
+          const ay = fy + (ty - fy) * s;
+          const az = fz + (tz - fz) * s;
+          dummy.position.set(ax, ay, az);
+          dummy.updateMatrix();
+          mesh.setMatrixAt(fromIdx, dummy.matrix);
+          mesh.instanceMatrix.needsUpdate = true;
+
+          if (t >= 1.0) {
+            // Snap to exact position and advance step
+            dummy.position.set(tx, ty, tz);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(fromIdx, dummy.matrix);
             mesh.instanceMatrix.needsUpdate = true;
-          }).catch(() => { /* readBuffer not supported on this device */ });
+
+            if (step >= totalSteps - 1) {
+              pathAnimRunningRef.current = false;
+              setAnimatePath(false);
+              // Reset all vertices to lattice positions
+              const dummy2 = new THREE.Object3D();
+              const cnt = Math.min(mesh.count, staticPos.length / 3);
+              for (let i = 0; i < cnt; i++) {
+                dummy2.position.set(staticPos[i * 3], staticPos[i * 3 + 1], staticPos[i * 3 + 2]);
+                dummy2.updateMatrix();
+                mesh.setMatrixAt(i, dummy2.matrix);
+              }
+              mesh.instanceMatrix.needsUpdate = true;
+              setAnimProgress(1);
+            } else {
+              pathStepRef.current = step + 1;
+              pathLerpRef.current = 0;
+              setAnimProgress((step + 1) / totalSteps);
+            }
+          }
         }
       }
 
@@ -436,92 +469,11 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     scene.add(lines);
     edgeLinesRef.current = lines;
 
-    // Initialize compute shaders with this lattice data
-    if (webgpuAvailable) {
-      initCompute(lattice).catch(() => {});
-    }
-  }, [lattice, costLandscape, selectedLogic, showCost, showAntiInertia, rendererStatus, webgpuAvailable]);
-
-  // ── Initialize WebGPU compute shaders ───────────────────────────────
-
-  async function initCompute(lattice: TamariLattice) {
-    const count = lattice.vertices.length;
-    if (count < 1 || count > PARTICLE_COUNT) return;
-
-    let TSL: Record<string, any>;
-    try { TSL = await import('three/tsl'); } catch { return; }
-    const { Fn, uniform, instanceIndex, If, storage } = TSL;
-
-    // Populate positions from lattice data
-    const posArr = new Float32Array(count * 3);
-    lattice.vertices.forEach((v, i) => {
-      posArr[i * 3] = v.coord.x * SCALE;
-      posArr[i * 3 + 1] = v.coord.y * SCALE;
-      posArr[i * 3 + 2] = v.coord.z * SCALE;
-    });
-    const storagePos = makeStorageAttribute(posArr, 3);
-    storagePosRef.current = storagePos;
-
-    // Velocities initialized to zero
-    const velArr = new Float32Array(count * 3);
-    const storageVel = makeStorageAttribute(velArr, 3);
-
-    // Target positions (defaults = current positions, updated on path selection)
-    const targetArr = new Float32Array(count * 3);
-    targetArr.set(posArr);
-    const storageTarget = makeStorageAttribute(targetArr, 3);
-
-    // Create TSL storage nodes — one per buffer, created once
-    const posNode = storage(storagePos, 'vec3', count);
-    const velNode = storage(storageVel, 'vec3', count);
-    const targetNode = storage(storageTarget, 'vec3', count);
-
-    // Uniforms
-    const gravity = uniform(-0.001);
-    const friction = uniform(0.98);
-    const lambda = uniform(1.0);
-    const springStrength = uniform(0.05);
-
-    // Verlet integration compute kernel
-    const computeVerlet = Fn(() => {
-      const pos = posNode.element(instanceIndex);
-      const vel = velNode.element(instanceIndex);
-
-      vel.y = vel.y.add(gravity);
-      vel.x = vel.x.mul(friction);
-      vel.y = vel.y.mul(friction);
-      vel.z = vel.z.mul(friction);
-
-      pos.x = pos.x.add(vel.x);
-      pos.y = pos.y.add(vel.y);
-      pos.z = pos.z.add(vel.z);
-
-      If(pos.y.lessThan(-5), () => {
-        pos.y = -5;
-        vel.y = vel.y.negate().mul(0.5);
-      });
-    })().compute(count);
-    computeVerletRef.current = computeVerlet;
-
-    // Pentagonator constraint compute kernel
-    const computeConstraint = Fn(() => {
-      const pos = posNode.element(instanceIndex);
-      const target = targetNode.element(instanceIndex);
-
-      const dx = target.x.sub(pos.x);
-      const dy = target.y.sub(pos.y);
-      const dz = target.z.sub(pos.z);
-
-      const strength = springStrength.mul(lambda);
-
-      pos.x = pos.x.add(dx.mul(strength));
-      pos.y = pos.y.add(dy.mul(strength));
-      pos.z = pos.z.add(dz.mul(strength));
-    })().compute(count);
-
-    computeConstraintRef.current = computeConstraint;
-    computeReadyRef.current = true;
-  }
+    // Reset path animation state
+    pathStepRef.current = 0;
+    pathLerpRef.current = 0;
+    pathAnimRunningRef.current = false;
+  }, [lattice, costLandscape, selectedLogic, showCost, showAntiInertia, rendererStatus]);
 
   // ── Highlight contraction path ──────────────────────────────────────
 
@@ -545,9 +497,22 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
 
   const handleVertexClick = useCallback(async (vertex: TamariVertex) => {
     setSelectedVertex(vertex);
+    pathAnimRunningRef.current = false;
     setAnimatePath(false);
     setAnimProgress(0);
-    contractionLambdaRef.current = 1.0;
+    // Reset mesh to lattice positions
+    const mesh = instancedMeshRef.current;
+    const pos = staticPositionsRef.current;
+    if (mesh && pos) {
+      const dummy = new THREE.Object3D();
+      const cnt = Math.min(mesh.count, pos.length / 3);
+      for (let i = 0; i < cnt; i++) {
+        dummy.position.set(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+    }
     try {
       const path = await tamariApi.findPathToEquilibrium(vertex.bits);
       setContractionPath(path);
@@ -576,19 +541,28 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     return () => renderer.domElement.removeEventListener('click', onClick);
   }, [lattice, handleVertexClick]);
 
-  // ── Path animation ─────────────────────────────────────────────────
+  // ── Path animation trigger ─────────────────────────────────────────
 
   useEffect(() => {
     if (!animatePath || !contractionPath) return;
-    contractionLambdaRef.current = 1.0;
-    const totalSteps = contractionPath.vertices.length - 1;
-    let step = 0;
-    const interval = setInterval(() => {
-      step++;
-      setAnimProgress(step / totalSteps);
-      if (step >= totalSteps) { clearInterval(interval); setAnimatePath(false); }
-    }, 500);
-    return () => clearInterval(interval);
+    // Reset refs for the new animation
+    pathStepRef.current = 0;
+    pathLerpRef.current = 0;
+    pathAnimRunningRef.current = true;
+    // Reset all mesh positions to lattice coordinates
+    const mesh = instancedMeshRef.current;
+    const pos = staticPositionsRef.current;
+    if (mesh && pos) {
+      const dummy = new THREE.Object3D();
+      const cnt = Math.min(mesh.count, pos.length / 3);
+      for (let i = 0; i < cnt; i++) {
+        dummy.position.set(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+    setAnimProgress(0);
   }, [animatePath, contractionPath]);
 
   // ── Decay chart (coupling sweep) ──────────────────────────────────
@@ -970,7 +944,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
               <h3 className="text-sm font-medium text-slate-300 mb-2">Contraction Path to Equilibrium</h3>
               <div className="text-xs space-y-1">
                 <div className="text-slate-400">Length: {contractionPath.length} step{contractionPath.length !== 1 ? 's' : ''}</div>
-                <button onClick={() => { setAnimatePath(true); setAnimProgress(0); contractionLambdaRef.current = 1.0; }}
+                <button onClick={() => { setAnimatePath(true); setAnimProgress(0); }}
                   className="mt-2 px-3 py-1 bg-purple-600 hover:bg-purple-500 rounded text-xs">
                   Animate NA→NC Transition
                 </button>
@@ -979,7 +953,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div className="bg-purple-500 h-2 rounded-full transition-all duration-300" style={{ width: `${animProgress * 100}%` }} />
                     </div>
-                    <div className="text-slate-400 mt-1">λ = {(1 - animProgress).toFixed(2)} (non-assoc → NC)</div>
+                    <div className="text-slate-400 mt-1">step {pathStepRef.current} / {contractionPath.vertices.length - 1}</div>
                   </div>
                 )}
                 <div className="mt-2 text-slate-400">
