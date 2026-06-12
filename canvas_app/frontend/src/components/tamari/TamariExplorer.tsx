@@ -1,21 +1,9 @@
-/**
- * TamariExplorer — Interactive 3D visualization of the Tamari lattice.
- *
- * Uses CPU-side interpolation for path animation (no GPU compute jank).
- * WebGPU/WebGL renderer selected automatically.
- *
- * Contraction paths are animated by lerping vertex positions along
- * the Loday coordinate space, with the currently-selected tree smoothly
- * transitioning through each step of the path.
- */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { tamariApi, TamariLattice, TamariVertex, TamariPath, CostLandscape, CouplingDecayResult } from '../../services/tamariApi';
 import { createBenchKernel } from '../../shaders/bench';
 import { flattenAllTrees, computePhiCPU, getLogicParams, createPhiKernel } from '../../shaders/phi_cost';
-
-// ── Color scheme ──────────────────────────────────────────────────────
 
 const COLORS = {
   background: 0x0a0a1a,
@@ -30,8 +18,6 @@ const COLORS = {
 };
 
 const SCALE = 0.3;
-
-// ── 14 logic types (mirrors LogicTypes.lean) ──────────────────────────
 
 const LOGIC_TYPES = [
   'classical', 'fuzzy', 'many_valued', 'paraconsistent',
@@ -48,32 +34,24 @@ const LOGIC_LABELS: Record<string, string> = {
   modal: 'Modal', spacetime: 'Spacetime',
 };
 
-// ── Cost color mapping ────────────────────────────────────────────────
+const N_SURVEY_PARTICLES = 30;
+const SURVEY_STEP_RATE = 3; // steps per frame per particle
 
 function costColor(cost: number, maxCost: number, isRC: boolean, isLC: boolean): number {
   if (isRC) return COLORS.vertex_rightcomb;
   if (isLC) return COLORS.vertex_leftcomb;
   if (maxCost === 0) return COLORS.vertex_normal;
   const t = Math.min(cost / maxCost, 1);
-  // Blue (cold) → Yellow (hot) gradient
   const r = Math.round(0x44 + (0xff - 0x44) * t);
   const g = Math.round(0x88 * (1 - t * 0.7));
   const b = Math.round(0xff * (1 - t));
   return (r << 16) | (g << 8) | b;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────
-
 function treeShortLabel(repr: string): string {
   return repr.replace(/Node/g, 'N').replace(/Leaf/g, 'L').replace(/\s/g, '');
 }
 
-function checkWebGPUSupport(): boolean {
-  return !!(navigator as any).gpu;
-}
-
-// StorageInstancedBufferAttribute exists in three/webgpu at runtime but may
-// not be in the type declarations. Create one safely.
 function makeStorageAttribute(array: Float32Array, itemSize: number): any {
   const ctor = (THREE as any).StorageInstancedBufferAttribute;
   if (ctor) return new ctor(array, itemSize);
@@ -81,8 +59,6 @@ function makeStorageAttribute(array: Float32Array, itemSize: number): any {
   (attr as any).isStorageInstancedBufferAttribute = true;
   return attr;
 }
-
-// ── Scene builder ─────────────────────────────────────────────────────
 
 function buildLatticeMesh(
   lattice: TamariLattice,
@@ -158,7 +134,6 @@ function buildEdgeLines(
         (landscape.vertices[e.target]?.costs?.[logic] ?? 0)
       );
       const t = Math.min(ci / maxCross, 1);
-      // Anti-inertia: blue → magenta based on cross-impact
       const r = Math.round(0x33 + (0xff - 0x33) * t);
       const g = Math.round(0x44 * (1 - t * 0.6));
       const b = Math.round(0x66 + (0xaa - 0x66) * t);
@@ -189,13 +164,18 @@ function addSceneLights(scene: THREE.Scene): void {
   scene.add(grid);
 }
 
-// ── Main component ────────────────────────────────────────────────────
+interface SurveyParticle {
+  vertexIdx: number;
+  budget: number;
+  stuck: boolean;
+  hopCount: number;
+}
+
+type CalMode = 'off' | 'decay' | 'bench' | 'phi' | 'survey';
 
 interface TamariExplorerProps {
   initialN?: number;
 }
-
-type RendererStatus = 'init' | 'ready';
 
 export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -204,23 +184,32 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const animFrameRef = useRef<number>(0);
-  const [rendererStatus, setRendererStatus] = useState<RendererStatus>('init');
+  const [rendererStatus, setRendererStatus] = useState<'init' | 'ready'>('init');
 
   const [webgpuAvailable, setWebgpuAvailable] = useState(false);
   const staticPositionsRef = useRef<Float32Array | null>(null);
   const instancedMeshRef = useRef<THREE.InstancedMesh | null>(null);
   const edgeLinesRef = useRef<THREE.LineSegments | null>(null);
 
-  // Calibration
   const calCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const calAnimRef = useRef<number>(0);
 
-  // Path animation refs (avoid stale closures in rAF)
+  // Path animation refs
   const pathLerpRef = useRef(0);
   const pathAnimRunningRef = useRef(false);
   const pathStepRef = useRef(0);
   const latticeRef = useRef<TamariLattice | null>(null);
   const pathRef = useRef<TamariPath | null>(null);
+
+  // Survey refs (avoid stale closures in rAF)
+  const surveyParticlesRef = useRef<SurveyParticle[]>([]);
+  const surveyBudgetRef = useRef(50);
+  const surveyAdjListRef = useRef<number[][]>([]);
+  const surveyEdgeCostRef = useRef<Float32Array | null>(null);
+  const surveyStuckCountRef = useRef(0);
+  const surveyKnotVerticesRef = useRef<Set<number>>(new Set());
+  const surveyParticleMeshesRef = useRef<THREE.InstancedMesh | null>(null);
+  const surveyKnotMeshesRef = useRef<THREE.InstancedMesh | null>(null);
 
   const [n, setN] = useState(initialN);
   const [lattice, setLattice] = useState<TamariLattice | null>(null);
@@ -234,9 +223,19 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   const [animProgress, setAnimProgress] = useState(0);
   const [showCost, setShowCost] = useState(true);
   const [showAntiInertia, setShowAntiInertia] = useState(true);
-  const [calMode, setCalMode] = useState<'off' | 'decay' | 'bench' | 'phi'>('off');
+  const [antiInertiaBudget, setAntiInertiaBudget] = useState(50);
+  const [calMode, setCalMode] = useState<CalMode>('off');
   const [calResult, setCalResult] = useState<string | null>(null);
   const [calError, setCalError] = useState<string | null>(null);
+
+  // Survey live stats (updated periodically from refs)
+  const [surveyStats, setSurveyStats] = useState({ free: 0, stuck: 0, knots: 0, totalHops: 0 });
+  const [surveySweepActive, setSurveySweepActive] = useState(false);
+  const surveySweepIdxRef = useRef(0);
+
+  // Lean verification
+  const [leanResult, setLeanResult] = useState<{ passed: boolean; summary: string; target_count: number } | null>(null);
+  const [leanVerifying, setLeanVerifying] = useState(false);
 
   // ── Fetch lattice data ──────────────────────────────────────────────
 
@@ -262,11 +261,10 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
 
   useEffect(() => { fetchLattice(n); }, [n, fetchLattice]);
 
-  // Sync lattice ref
   useEffect(() => { latticeRef.current = lattice; }, [lattice]);
   useEffect(() => { pathRef.current = contractionPath; }, [contractionPath]);
 
-  // ── Initialize renderer (WebGPU async or WebGL sync) ────────────────
+  // ── Initialize renderer ─────────────────────────────────────────────
 
   useEffect(() => {
     const container = containerRef.current;
@@ -274,17 +272,68 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     let disposed = false;
     let cleanupFns: (() => void)[] = [];
 
-    const hasWebGPU = checkWebGPUSupport();
-    setWebgpuAvailable(hasWebGPU);
+    async function waitForDimensions(ctr: HTMLDivElement, timeout = 3000): Promise<void> {
+      if (ctr.clientWidth > 0 && ctr.clientHeight > 0) return;
+      return new Promise<void>(resolve => {
+        const start = Date.now();
+        const obs = new ResizeObserver(() => {
+          if (ctr.clientWidth > 0 && ctr.clientHeight > 0 || Date.now() - start > timeout) {
+            obs.disconnect();
+            resolve();
+          }
+        });
+        obs.observe(ctr);
+      });
+    }
 
-    async function initWebGPU() {
+    function initWebGL(ctr: HTMLDivElement) {
+      const w = ctr.clientWidth || window.innerWidth;
+      const h = ctr.clientHeight || window.innerHeight;
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(w, h);
+      ctr.appendChild(renderer.domElement);
+      rendererRef.current = renderer;
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(COLORS.background);
+      sceneRef.current = scene;
+      addSceneLights(scene);
+
+      const aspect = ctr.clientWidth / Math.max(ctr.clientHeight, 1);
+      const camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
+      camera.position.set(0, 0, 15);
+      cameraRef.current = camera;
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controlsRef.current = controls;
+
+      const onResize = () => {
+        if (!containerRef.current) return;
+        const w = containerRef.current.clientWidth;
+        const h = Math.max(containerRef.current.clientHeight, 1);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      };
+      window.addEventListener('resize', onResize);
+      cleanupFns.push(() => window.removeEventListener('resize', onResize));
+
+      setRendererStatus('ready');
+    }
+
+    async function initWebGPU(ctr: HTMLDivElement) {
       const { WebGPURenderer } = await import('three/webgpu');
       if (disposed || !containerRef.current) return;
-      const ctr = containerRef.current!;
+      await waitForDimensions(ctr);
 
-      const renderer = new WebGPURenderer({ antialias: true });
+      const w = ctr.clientWidth || window.innerWidth;
+      const h = Math.max(ctr.clientHeight, 1) || window.innerHeight;
+      const renderer = new WebGPURenderer({ antialias: true, powerPreference: 'high-performance' });
       renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(ctr.clientWidth, ctr.clientHeight);
+      renderer.setSize(w, h);
       ctr.appendChild(renderer.domElement);
       await renderer.init();
 
@@ -297,7 +346,8 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       sceneRef.current = scene;
       addSceneLights(scene);
 
-      const camera = new THREE.PerspectiveCamera(60, ctr.clientWidth / ctr.clientHeight, 0.1, 1000);
+      const aspect = ctr.clientWidth / Math.max(ctr.clientHeight, 1);
+      const camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
       camera.position.set(0, 0, 15);
       cameraRef.current = camera;
 
@@ -315,42 +365,20 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       window.addEventListener('resize', onResize);
       cleanupFns.push(() => window.removeEventListener('resize', onResize));
 
+      setWebgpuAvailable(true);
       setRendererStatus('ready');
     }
 
+    const hasWebGPU = !!(navigator as any).gpu;
     if (hasWebGPU) {
-      initWebGPU();
+      initWebGPU(container).catch(() => {
+        setWebgpuAvailable(false);
+        if (disposed) return;
+        initWebGL(container);
+      });
     } else {
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      container.appendChild(renderer.domElement);
-      rendererRef.current = renderer;
-
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(COLORS.background);
-      sceneRef.current = scene;
-      addSceneLights(scene);
-
-      const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-      camera.position.set(0, 0, 15);
-      cameraRef.current = camera;
-
-      const controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controlsRef.current = controls;
-
-      const onResize = () => {
-        if (!containerRef.current) return;
-        camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-      };
-      window.addEventListener('resize', onResize);
-      cleanupFns.push(() => window.removeEventListener('resize', onResize));
-
-      setRendererStatus('ready');
+      setWebgpuAvailable(false);
+      initWebGL(container);
     }
 
     return () => {
@@ -367,7 +395,110 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     };
   }, []);
 
-  // ── Animation loop (reads refs, never stale) ──────────────────────
+  // ── Survey init (build adjacency + edge costs) ─────────────────────
+
+  useEffect(() => {
+    if (calMode !== 'survey' || !lattice || !costLandscape) return;
+    const nVerts = lattice.vertices.length;
+    const adj: number[][] = Array.from({ length: nVerts }, () => []);
+    const edgeCost = new Float32Array(nVerts * nVerts).fill(-1);
+
+    lattice.edges.forEach(e => {
+      adj[e.source].push(e.target);
+      adj[e.target].push(e.source);
+      const ci = Math.abs(
+        (costLandscape.vertices[e.source]?.costs?.[selectedLogic] ?? 0) -
+        (costLandscape.vertices[e.target]?.costs?.[selectedLogic] ?? 0)
+      );
+      edgeCost[e.source * nVerts + e.target] = ci;
+      edgeCost[e.target * nVerts + e.source] = ci;
+    });
+
+    surveyAdjListRef.current = adj;
+    surveyEdgeCostRef.current = edgeCost;
+  }, [calMode, lattice, costLandscape, selectedLogic]);
+
+  // ── Survey particle initialization ─────────────────────────────────
+
+  useEffect(() => {
+    if (calMode !== 'survey' || !lattice) return;
+
+    surveyParticlesRef.current = Array.from({ length: N_SURVEY_PARTICLES }, () => ({
+      vertexIdx: Math.floor(Math.random() * lattice.vertices.length),
+      budget: antiInertiaBudget,
+      stuck: false,
+      hopCount: 0,
+    }));
+    surveyStuckCountRef.current = 0;
+    surveyKnotVerticesRef.current = new Set();
+  }, [calMode, lattice, antiInertiaBudget]);
+
+  // Keep budget ref in sync (for rAF)
+  useEffect(() => { surveyBudgetRef.current = antiInertiaBudget; }, [antiInertiaBudget]);
+
+  // ── Survey sweep (auto-cycle logics) ──────────────────────────────
+
+  useEffect(() => {
+    if (calMode !== 'survey' || !surveySweepActive) return;
+    const interval = setInterval(() => {
+      const next = (surveySweepIdxRef.current + 1) % LOGIC_TYPES.length;
+      surveySweepIdxRef.current = next;
+      setSelectedLogic(LOGIC_TYPES[next]);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [calMode, surveySweepActive]);
+
+  // ── Build/teardown survey particle meshes ──────────────────────────
+
+  useEffect(() => {
+    if (calMode !== 'survey') {
+      if (surveyParticleMeshesRef.current && sceneRef.current) {
+        sceneRef.current.remove(surveyParticleMeshesRef.current);
+        surveyParticleMeshesRef.current.geometry.dispose();
+        (surveyParticleMeshesRef.current.material as THREE.Material).dispose();
+        surveyParticleMeshesRef.current = null;
+      }
+      if (surveyKnotMeshesRef.current && sceneRef.current) {
+        sceneRef.current.remove(surveyKnotMeshesRef.current);
+        surveyKnotMeshesRef.current.geometry.dispose();
+        (surveyKnotMeshesRef.current.material as THREE.Material).dispose();
+        surveyKnotMeshesRef.current = null;
+      }
+      return;
+    }
+    if (!sceneRef.current) return;
+
+    // Particle mesh (small glowing spheres)
+    const partGeom = new THREE.SphereGeometry(0.08, 8, 8);
+    const partMat = new THREE.MeshBasicMaterial({ color: 0x88ff88 });
+    const partMesh = new THREE.InstancedMesh(partGeom, partMat, N_SURVEY_PARTICLES);
+    sceneRef.current.add(partMesh);
+    surveyParticleMeshesRef.current = partMesh;
+
+    // Knot mesh (larger pulsing spheres, up to Verts)
+    const knotGeom = new THREE.SphereGeometry(0.12, 8, 8);
+    const knotMat = new THREE.MeshBasicMaterial({ color: 0xff4488 });
+    const knotMesh = new THREE.InstancedMesh(knotGeom, knotMat, 0);
+    sceneRef.current.add(knotMesh);
+    surveyKnotMeshesRef.current = knotMesh;
+
+    return () => {
+      if (surveyParticleMeshesRef.current && sceneRef.current) {
+        sceneRef.current.remove(surveyParticleMeshesRef.current);
+        surveyParticleMeshesRef.current.geometry.dispose();
+        (surveyParticleMeshesRef.current.material as THREE.Material).dispose();
+        surveyParticleMeshesRef.current = null;
+      }
+      if (surveyKnotMeshesRef.current && sceneRef.current) {
+        sceneRef.current.remove(surveyKnotMeshesRef.current);
+        surveyKnotMeshesRef.current.geometry.dispose();
+        (surveyKnotMeshesRef.current.material as THREE.Material).dispose();
+        surveyKnotMeshesRef.current = null;
+      }
+    };
+  }, [calMode]);
+
+  // ── Animation loop ─────────────────────────────────────────────────
 
   useEffect(() => {
     if (rendererStatus !== 'ready') return;
@@ -380,7 +511,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       const scene = sceneRef.current;
       const camera = cameraRef.current;
 
-      // CPU path animation (reads refs, not stale state)
+      // CPU path animation
       const mesh = instancedMeshRef.current;
       const staticPos = staticPositionsRef.current;
       const path = pathRef.current;
@@ -401,7 +532,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
 
           pathLerpRef.current = Math.min(pathLerpRef.current + 0.025, 1.0);
           const t = pathLerpRef.current;
-          const s = t * t * (3 - 2 * t); // smoothstep
+          const s = t * t * (3 - 2 * t);
 
           const dummy = new THREE.Object3D();
           const ax = fx + (tx - fx) * s;
@@ -413,7 +544,6 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
           mesh.instanceMatrix.needsUpdate = true;
 
           if (t >= 1.0) {
-            // Snap to exact position and advance step
             dummy.position.set(tx, ty, tz);
             dummy.updateMatrix();
             mesh.setMatrixAt(fromIdx, dummy.matrix);
@@ -422,7 +552,6 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
             if (step >= totalSteps - 1) {
               pathAnimRunningRef.current = false;
               setAnimatePath(false);
-              // Reset all vertices to lattice positions
               const dummy2 = new THREE.Object3D();
               const cnt = Math.min(mesh.count, staticPos.length / 3);
               for (let i = 0; i < cnt; i++) {
@@ -441,13 +570,116 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
         }
       }
 
+      // ── Survey simulation ────────────────────────────────────────────
+      if (calMode === 'survey') {
+        const adj = surveyAdjListRef.current;
+        const edgeCost = surveyEdgeCostRef.current;
+        const particles = surveyParticlesRef.current;
+        const nVerts = adj.length;
+        const pos = staticPositionsRef.current;
+        const partMesh = surveyParticleMeshesRef.current;
+
+        if (adj.length > 0 && pos && particles.length > 0) {
+          let totalStuck = 0;
+          let totalHops = 0;
+          const knotVerts = surveyKnotVerticesRef.current;
+
+          for (let p = 0; p < particles.length; p++) {
+            const pt = particles[p];
+            totalHops += pt.hopCount;
+
+            if (pt.stuck) { totalStuck++; continue; }
+
+            // Step SURVEY_STEP_RATE times per frame
+            for (let step = 0; step < SURVEY_STEP_RATE; step++) {
+              const neighbors = adj[pt.vertexIdx];
+              if (!neighbors || neighbors.length === 0) break;
+
+              // Pick random neighbor
+              const nIdx = neighbors[Math.floor(Math.random() * neighbors.length)];
+              const cost = edgeCost ? edgeCost[pt.vertexIdx * nVerts + nIdx] : 0;
+
+              if (cost <= pt.budget) {
+                pt.vertexIdx = nIdx;
+                pt.budget -= cost;
+                pt.hopCount++;
+              } else {
+                // Particle is stuck — record knot
+                pt.stuck = true;
+                totalStuck++;
+                knotVerts.add(pt.vertexIdx);
+                break;
+              }
+            }
+          }
+
+          surveyStuckCountRef.current = totalStuck;
+          surveyKnotVerticesRef.current = knotVerts;
+
+          // Update particle mesh
+          if (partMesh) {
+            const dummy = new THREE.Object3D();
+            for (let p = 0; p < particles.length; p++) {
+              const vi = particles[p].vertexIdx;
+              const px = pos[vi * 3];
+              const py = pos[vi * 3 + 1];
+              const pz = pos[vi * 3 + 2];
+              dummy.position.set(px, py + 0.1, pz);
+              dummy.scale.setScalar(particles[p].stuck ? 0.5 : 1);
+              dummy.updateMatrix();
+              partMesh.setMatrixAt(p, dummy.matrix);
+            }
+            partMesh.instanceMatrix.needsUpdate = true;
+            partMesh.count = particles.length;
+          }
+
+          // Update knot mesh
+          const knotMesh = surveyKnotMeshesRef.current;
+          if (knotMesh) {
+            const knotArr = Array.from(knotVerts);
+            if (knotArr.length !== knotMesh.count) {
+              // Recreate geometry with correct count
+              const newGeom = new THREE.SphereGeometry(0.12, 8, 8);
+              const newKnot = new THREE.InstancedMesh(newGeom, knotMesh.material, knotArr.length);
+              if (sceneRef.current) {
+                sceneRef.current.remove(knotMesh);
+                sceneRef.current.add(newKnot);
+              }
+              surveyKnotMeshesRef.current = newKnot;
+            }
+            const kMesh = surveyKnotMeshesRef.current;
+            if (kMesh) {
+              const kDummy = new THREE.Object3D();
+              knotArr.forEach((vi, i) => {
+                const kx = pos[vi * 3];
+                const ky = pos[vi * 3 + 1];
+                const kz = pos[vi * 3 + 2];
+                kDummy.position.set(kx, ky, kz);
+                kDummy.scale.setScalar(1 + 0.2 * Math.sin(Date.now() * 0.003 + i));
+                kDummy.updateMatrix();
+                kMesh.setMatrixAt(i, kDummy.matrix);
+              });
+              kMesh.instanceMatrix.needsUpdate = true;
+            }
+          }
+
+          // Push stats to state periodically (every ~60 frames via hopCount-based throttle)
+          setSurveyStats({
+            free: particles.length - totalStuck,
+            stuck: totalStuck,
+            knots: knotVerts.size,
+            totalHops,
+          });
+        }
+      }
+
       if (scene && camera && renderer) {
         renderer.render(scene, camera);
       }
     };
 
     animate();
-  }, [rendererStatus]);
+  }, [rendererStatus, calMode]);
 
   // ── Build scene from lattice data ───────────────────────────────────
 
@@ -456,7 +688,6 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     const scene = sceneRef.current;
     if (!scene) return;
 
-    // Clear previous objects
     if (instancedMeshRef.current) { scene.remove(instancedMeshRef.current); instancedMeshRef.current = null; }
     if (edgeLinesRef.current) { scene.remove(edgeLinesRef.current); edgeLinesRef.current = null; }
 
@@ -469,13 +700,10 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     scene.add(lines);
     edgeLinesRef.current = lines;
 
-    // Reset path animation state
     pathStepRef.current = 0;
     pathLerpRef.current = 0;
     pathAnimRunningRef.current = false;
   }, [lattice, costLandscape, selectedLogic, showCost, showAntiInertia, rendererStatus]);
-
-  // ── Highlight contraction path ──────────────────────────────────────
 
   useEffect(() => {
     const mesh = instancedMeshRef.current;
@@ -495,12 +723,26 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
 
   // ── Click handler ───────────────────────────────────────────────────
 
+  // ── Lean verify handler ───────────────────────────────────────────
+
+  const handleLeanVerify = useCallback(async () => {
+    setLeanVerifying(true);
+    setLeanResult(null);
+    try {
+      const result = await tamariApi.verifyLean();
+      setLeanResult(result);
+    } catch {
+      setLeanResult({ passed: false, summary: 'FAIL: network error', target_count: 0 });
+    } finally {
+      setLeanVerifying(false);
+    }
+  }, []);
+
   const handleVertexClick = useCallback(async (vertex: TamariVertex) => {
     setSelectedVertex(vertex);
     pathAnimRunningRef.current = false;
     setAnimatePath(false);
     setAnimProgress(0);
-    // Reset mesh to lattice positions
     const mesh = instancedMeshRef.current;
     const pos = staticPositionsRef.current;
     if (mesh && pos) {
@@ -541,15 +783,11 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     return () => renderer.domElement.removeEventListener('click', onClick);
   }, [lattice, handleVertexClick]);
 
-  // ── Path animation trigger ─────────────────────────────────────────
-
   useEffect(() => {
     if (!animatePath || !contractionPath) return;
-    // Reset refs for the new animation
     pathStepRef.current = 0;
     pathLerpRef.current = 0;
     pathAnimRunningRef.current = true;
-    // Reset all mesh positions to lattice coordinates
     const mesh = instancedMeshRef.current;
     const pos = staticPositionsRef.current;
     if (mesh && pos) {
@@ -565,11 +803,10 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     setAnimProgress(0);
   }, [animatePath, contractionPath]);
 
-  // ── Decay chart (coupling sweep) ──────────────────────────────────
+  // ── Decay chart ───────────────────────────────────────────────────
 
   const [decayResult, setDecayResult] = useState<CouplingDecayResult | null>(null);
 
-  // Fetch decay data when calMode changes to 'decay' or logic/n changes
   useEffect(() => {
     if (calMode !== 'decay') { setDecayResult(null); return; }
     tamariApi.getCouplingDecay(n, selectedLogic, '0,1,2,5,10,20,50')
@@ -598,7 +835,6 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     const maxMin = Math.max(...sweep.map(s => s.num_local_minima), 1);
     const maxDefect = Math.max(...sweep.map(s => s.pentagon_defect), 1);
 
-    // Grid
     ctx.strokeStyle = 'rgba(100,130,180,0.12)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
@@ -606,13 +842,11 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
     }
 
-    // Axes
     ctx.strokeStyle = 'rgba(150,180,220,0.4)';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + plotH); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(pad.left, pad.top + plotH); ctx.lineTo(w - pad.right, pad.top + plotH); ctx.stroke();
 
-    // Y-axis labels (left = num local minima, right = pentagon defect)
     ctx.fillStyle = 'rgba(200,220,255,0.5)';
     ctx.font = '9px monospace';
     ctx.textAlign = 'right';
@@ -621,17 +855,14 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       ctx.fillText(String(Math.round(maxMin * (1 - i / 4))), pad.left - 4, y + 3);
     }
 
-    // X labels (coupling values)
     ctx.textAlign = 'center';
     sweep.forEach((s, i) => {
       const x = pad.left + (plotW / (sweep.length - 1 || 1)) * i;
       ctx.fillText(String(s.coupling), x, pad.top + plotH + 14);
     });
 
-    // Curves: local minima (solid), pentagon defect (dashed)
     const lineX = (i: number) => pad.left + (plotW / (sweep.length - 1 || 1)) * i;
 
-    // Local minima curve
     ctx.strokeStyle = '#44ff88';
     ctx.lineWidth = 2;
     ctx.setLineDash([]);
@@ -647,7 +878,6 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       ctx.beginPath(); ctx.arc(lineX(i), y, 3, 0, Math.PI * 2); ctx.fill();
     });
 
-    // Pentagon defect curve
     ctx.strokeStyle = '#ff6644';
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 3]);
@@ -659,7 +889,6 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Labels
     ctx.fillStyle = '#44ff88';
     ctx.font = '9px monospace';
     ctx.textAlign = 'left';
@@ -667,7 +896,6 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     ctx.fillStyle = '#ff6644';
     ctx.fillText('pentagon defect', pad.left + 4, pad.top + 24);
 
-    // Title
     ctx.fillStyle = 'rgba(200,220,255,0.4)';
     ctx.font = '9px monospace';
     ctx.textAlign = 'left';
@@ -684,6 +912,9 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     let running = true;
     const loop = () => {
       if (!running) return;
+      const canvas = calCanvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (!ctx) { calAnimRef.current = requestAnimationFrame(loop); return; }
       drawDecayChart();
       calAnimRef.current = requestAnimationFrame(loop);
     };
@@ -694,12 +925,18 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   // ── Bench calibration ─────────────────────────────────────────────
 
   useEffect(() => {
-    if (calMode !== 'bench' || !webgpuAvailable) return;
+    if (calMode !== 'bench') return;
     let cancelled = false;
 
     (async () => {
       setCalResult(null);
       setCalError(null);
+
+      if (!webgpuAvailable) {
+        setCalError('WebGPU not available — bench requires GPU compute');
+        return;
+      }
+
       let TSL: any;
       try { TSL = await import('three/tsl'); } catch { setCalError('Failed to import three/tsl'); return; }
       if (cancelled) return;
@@ -708,7 +945,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       const arr = new Float32Array(count);
       const attr = makeStorageAttribute(arr, 1);
       if (!(attr as any).isStorageInstancedBufferAttribute) {
-        setCalError('StorageInstancedBufferAttribute not available (WebGPU required)');
+        setCalError('StorageInstancedBufferAttribute not available');
         return;
       }
 
@@ -718,7 +955,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
 
       try {
         renderer.compute(kernel);
-        const readData = await renderer.readBuffer(attr, 0, arr.byteLength);
+        const readData = await renderer.backend.getArrayBufferAsync(attr, null, 0, arr.byteLength);
         if (cancelled) return;
         const floats = new Float32Array(readData);
         const ok = verify(floats);
@@ -737,89 +974,98 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     return () => { cancelled = true; };
   }, [calMode, webgpuAvailable]);
 
-  // ── Phi calibration ───────────────────────────────────────────────
+  // ── Phi calibration (GPU or CPU fallback) ─────────────────────────
 
   useEffect(() => {
-    if (calMode !== 'phi' || !webgpuAvailable || !lattice || !costLandscape) return;
+    if (calMode !== 'phi' || !lattice || !costLandscape) return;
     let cancelled = false;
 
     (async () => {
       setCalResult(null);
       setCalError(null);
-      let TSL: any;
-      try { TSL = await import('three/tsl'); } catch { setCalError('Failed to import three/tsl'); return; }
-      if (cancelled) return;
 
       const V = lattice.vertex_count;
       const internalN = n;
       const bitStrings = lattice.vertices.map(v => v.bits);
-
-      // Flatten all trees
-      const treeData = flattenAllTrees(bitStrings, internalN);
-      const treeAttr = makeStorageAttribute(
-        new Float32Array(treeData), 1,
-      );
-      if (!(treeAttr as any).isStorageInstancedBufferAttribute) {
-        setCalError('StorageInstancedBufferAttribute not available (WebGPU required)');
-        return;
-      }
-
-      // Temp costs buffer (one extra element per tree for sentinel = 0)
-      const costArr = new Float32Array(V * (internalN + 1));
-      const costAttr = makeStorageAttribute(costArr, 1);
-
-      // Output buffer
-      const outArr = new Float32Array(V);
-      const outAttr = makeStorageAttribute(outArr, 1);
-
       const params = getLogicParams(selectedLogic);
-      const { kernel } = createPhiKernel(
-        TSL, treeAttr, costAttr, outAttr, V, internalN, params,
-      );
 
-      const renderer = rendererRef.current as any;
-      if (!renderer?.compute) { setCalError('Renderer does not support compute'); return; }
-
-      try {
-        renderer.compute(kernel);
-        const readData = await renderer.readBuffer(outAttr, 0, outArr.byteLength);
+      if (webgpuAvailable) {
+        // GPU path
+        let TSL: any;
+        try { TSL = await import('three/tsl'); } catch { setCalError('Failed to import three/tsl'); return; }
         if (cancelled) return;
-        const gpuCosts = new Float32Array(readData);
 
-        // CPU reference
+        const treeData = flattenAllTrees(bitStrings, internalN);
+        const treeAttr = makeStorageAttribute(new Float32Array(treeData), 1);
+        if (!(treeAttr as any).isStorageInstancedBufferAttribute) {
+          setCalError('StorageInstancedBufferAttribute not available');
+          return;
+        }
+
+        const costArr = new Float32Array(V * (internalN + 1));
+        const costAttr = makeStorageAttribute(costArr, 1);
+        const outArr = new Float32Array(V);
+        const outAttr = makeStorageAttribute(outArr, 1);
+
+        const { kernel } = createPhiKernel(TSL, treeAttr, costAttr, outAttr, V, internalN, params);
+        const renderer = rendererRef.current as any;
+        if (!renderer?.compute) { setCalError('Renderer does not support compute'); return; }
+
+        try {
+          renderer.compute(kernel);
+          const readData = await renderer.backend.getArrayBufferAsync(outAttr, null, 0, outArr.byteLength);
+          if (cancelled) return;
+          const gpuCosts = new Float32Array(readData);
+
+          const apiCosts = costLandscape.vertices.map(v => v.costs?.[selectedLogic] ?? 0);
+          const cpuCosts = bitStrings.map(bits => computePhiCPU(bits, params));
+
+          let maxGpuError = 0, totalGpuError = 0;
+          let maxCpuError = 0, totalCpuError = 0;
+          for (let i = 0; i < V; i++) {
+            const gpuErr = Math.abs(gpuCosts[i] - apiCosts[i]);
+            const cpuErr = Math.abs(cpuCosts[i] - apiCosts[i]);
+            maxGpuError = Math.max(maxGpuError, gpuErr);
+            totalGpuError += gpuErr;
+            maxCpuError = Math.max(maxCpuError, cpuErr);
+            totalCpuError += cpuErr;
+          }
+
+          const gpuOk = maxGpuError === 0;
+          const cpuOk = maxCpuError === 0;
+          const summary = [
+            `Trees: ${V}, n=${internalN}, logic: ${selectedLogic}`,
+            `GPU vs API: ${gpuOk ? 'PASS' : 'FAIL'} (max err=${maxGpuError}, avg err=${(totalGpuError / V).toFixed(4)})`,
+            `CPU vs API: ${cpuOk ? 'PASS' : 'FAIL'} (max err=${maxCpuError}, avg err=${(totalCpuError / V).toFixed(4)})`,
+            `Params: bias=${params.bias} w=${params.leftWeight} rd=${params.rightDiv} c=${params.coupling} d=${params.denom}`,
+            `GPU costs: ${gpuCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
+            `API costs: ${apiCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
+          ];
+          setCalResult(summary.join('\n'));
+        } catch (e) {
+          if (!cancelled) setCalError(`Phi GPU error: ${e}`);
+        }
+      } else {
+        // CPU-only fallback
         const apiCosts = costLandscape.vertices.map(v => v.costs?.[selectedLogic] ?? 0);
         const cpuCosts = bitStrings.map(bits => computePhiCPU(bits, params));
 
-        // Compare
-        let maxGpuError = 0;
-        let totalGpuError = 0;
-        let maxCpuError = 0;
-        let totalCpuError = 0;
-        const errors: number[] = [];
-
+        let maxCpuError = 0, totalCpuError = 0;
         for (let i = 0; i < V; i++) {
-          const gpuErr = Math.abs(gpuCosts[i] - apiCosts[i]);
-          const cpuErr = Math.abs(cpuCosts[i] - apiCosts[i]);
-          maxGpuError = Math.max(maxGpuError, gpuErr);
-          totalGpuError += gpuErr;
-          maxCpuError = Math.max(maxCpuError, cpuErr);
-          totalCpuError += cpuErr;
-          errors.push(gpuErr);
+          const err = Math.abs(cpuCosts[i] - apiCosts[i]);
+          maxCpuError = Math.max(maxCpuError, err);
+          totalCpuError += err;
         }
-
-        const gpuOk = maxGpuError === 0;
         const cpuOk = maxCpuError === 0;
         const summary = [
           `Trees: ${V}, n=${internalN}, logic: ${selectedLogic}`,
-          `GPU vs API: ${gpuOk ? 'PASS' : 'FAIL'} (max err=${maxGpuError}, avg err=${(totalGpuError / V).toFixed(4)})`,
           `CPU vs API: ${cpuOk ? 'PASS' : 'FAIL'} (max err=${maxCpuError}, avg err=${(totalCpuError / V).toFixed(4)})`,
           `Params: bias=${params.bias} w=${params.leftWeight} rd=${params.rightDiv} c=${params.coupling} d=${params.denom}`,
-          `GPU costs: ${gpuCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
+          `CPU costs: ${cpuCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
           `API costs: ${apiCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
+          `(GPU fallback — compute not available)`,
         ];
         setCalResult(summary.join('\n'));
-      } catch (e) {
-        if (!cancelled) setCalError(`Phi error: ${e}`);
       }
     })();
 
@@ -830,17 +1076,18 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
 
   return (
     <div className="flex h-full w-full">
-      {/* 3D Canvas */}
       <div className="flex-1 relative">
         <div ref={containerRef} className="absolute inset-0" />
-        {/* Calibration chart overlay */}
+
+        {/* Decay chart overlay */}
         {calMode === 'decay' && (
           <canvas ref={calCanvasRef}
             className="absolute bottom-4 right-4 w-80 h-52 rounded-lg pointer-events-none"
             style={{ background: 'rgba(10,10,30,0.88)', border: '1px solid rgba(100,130,180,0.3)' }}
           />
         )}
-        {/* Bench / Phi calibration result */}
+
+        {/* Bench/Phi calibration result */}
         {(calMode === 'bench' || calMode === 'phi') && (
           <div className="absolute bottom-4 right-4 w-96 max-h-64 rounded-lg overflow-auto p-3 font-mono text-xs"
             style={{ background: 'rgba(10,10,30,0.92)', border: '1px solid rgba(100,130,180,0.3)' }}
@@ -850,6 +1097,31 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
             {!calError && !calResult && <div className="text-slate-400">Running calibration...</div>}
           </div>
         )}
+
+        {/* Survey stats overlay */}
+        {calMode === 'survey' && (
+          <div className="absolute bottom-4 right-4 w-64 rounded-lg p-3 font-mono text-xs"
+            style={{ background: 'rgba(10,10,30,0.92)', border: '1px solid rgba(100,130,180,0.3)' }}
+          >
+            <div className="text-green-400 mb-1">Streaming Survey — {selectedLogic}</div>
+            <div className="text-slate-300">
+              free: <span className="text-green-300">{surveyStats.free}</span>{' '}
+              stuck: <span className="text-yellow-300">{surveyStats.stuck}</span>{' '}
+              knots: <span className="text-pink-400">{surveyStats.knots}</span>
+            </div>
+            <div className="text-slate-400">hops: {surveyStats.totalHops}</div>
+            <div className="text-slate-400 mt-1">
+              budget: {antiInertiaBudget} | {N_SURVEY_PARTICLES} particles
+            </div>
+            <div className="mt-1 flex gap-2">
+              <button onClick={() => setSurveySweepActive(v => !v)}
+                className={`px-2 py-0.5 rounded text-xs ${surveySweepActive ? 'bg-green-700 text-green-200' : 'bg-slate-700 text-slate-300'}`}>
+                {surveySweepActive ? 'Sweeping...' : 'Sweep all logics'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Controls overlay */}
         <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur rounded-lg p-3 text-white text-sm space-y-2 max-w-xs">
           <div className="flex items-center gap-2">
@@ -861,7 +1133,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
               ))}
             </select>
           </div>
-          {/* Logic type selector */}
+
           <div className="flex items-center gap-2">
             <label className="text-slate-300 text-xs">Logic:</label>
             <select value={selectedLogic} onChange={e => setSelectedLogic(e.target.value)}
@@ -871,7 +1143,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
               ))}
             </select>
           </div>
-          {/* Toggles */}
+
           <div className="flex items-center gap-3 text-xs">
             <label className="flex items-center gap-1 cursor-pointer">
               <input type="checkbox" checked={showCost} onChange={e => setShowCost(e.target.checked)}
@@ -884,17 +1156,29 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
               Anti-inertia
             </label>
           </div>
+
+          {/* Anti-inertia budget slider */}
+          <div className="flex items-center gap-2 text-xs">
+            <label className="text-slate-300 whitespace-nowrap">Budget:</label>
+            <input type="range" min={0} max={200} value={antiInertiaBudget}
+              onChange={e => setAntiInertiaBudget(Number(e.target.value))}
+              className="flex-1 accent-pink-500" />
+            <span className="text-slate-300 w-8 text-right">{antiInertiaBudget}</span>
+          </div>
+
           {/* Calibration mode */}
           <div className="flex items-center gap-2 text-xs">
             <label className="text-slate-300">Cal:</label>
-            <select value={calMode} onChange={e => setCalMode(e.target.value as any)}
+            <select value={calMode} onChange={e => setCalMode(e.target.value as CalMode)}
               className="bg-slate-700 text-white rounded px-1 py-0.5 text-xs">
               <option value="off">Off</option>
               <option value="decay">Decay</option>
               <option value="bench">Bench (GPU)</option>
               <option value="phi">Phi (GPU)</option>
+              <option value="survey">Survey</option>
             </select>
           </div>
+
           {loading && <div className="text-yellow-400">Loading...</div>}
           {error && <div className="text-red-400">{error}</div>}
           <div className="flex items-center gap-2 text-xs">
@@ -902,8 +1186,21 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
             <span className="text-slate-400">{webgpuAvailable ? 'WebGPU (compute shaders)' : 'WebGL (fallback)'}</span>
           </div>
           {lattice && <div className="text-slate-400 text-xs">{lattice.vertex_count} vertices, {lattice.edge_count} edges</div>}
+
+          {/* Lean certificate */}
+          <div className="text-xs">
+            <button onClick={handleLeanVerify} disabled={leanVerifying}
+              className="px-2 py-1 rounded text-xs bg-slate-700 hover:bg-slate-600 disabled:opacity-50">
+              {leanVerifying ? 'Verifying...' : 'Verify Lean'}
+            </button>
+            {leanResult && (
+              <div className={`mt-1 ${leanResult.passed ? 'text-green-400' : 'text-red-400'}`}>
+                {leanResult.summary}
+              </div>
+            )}
+          </div>
         </div>
-        {/* Legend */}
+
         <div className="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur rounded-lg p-3 text-white text-xs space-y-1">
           <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#4488ff' }} /><span>Regular tree</span></div>
           <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#44ff88' }} /><span>rightComb (equilibrium)</span></div>
@@ -911,6 +1208,10 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
           <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: showCost ? '#ffaa00' : '#4488ff' }} /><span>Cost height → yellow</span></div>
           <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#ff44ff' }} /><span>Contraction path</span></div>
           {showAntiInertia && <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#ff66aa' }} /><span>Anti-inertia (Φ gradient)</span></div>}
+          {calMode === 'survey' && (
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ background: '#88ff88' }} /><span>Particle</span>
+              <span className="w-3 h-3 rounded-full ml-2" style={{ background: '#ff4488' }} /><span>Knot</span></div>
+          )}
         </div>
       </div>
 
@@ -960,6 +1261,48 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
                   Path: {contractionPath.vertices.map((vi, i) => (
                     <span key={i}>{i > 0 && ' → '}<span className="text-purple-300">{treeShortLabel(lattice?.vertices[vi]?.repr || '')}</span></span>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {calMode === 'survey' && (
+            <div className="mb-4 p-3 bg-slate-800 rounded-lg">
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Streaming Survey</h3>
+              <div className="text-xs space-y-1">
+                <div className="text-slate-400">
+                  Particles wander the lattice, consuming anti-inertia budget (Φ gradient) to traverse edges.
+                  When budget runs out, they get <span className="text-pink-400">stuck</span> — forming
+                  a <span className="text-pink-400">knot</span> in spacetime.
+                </div>
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-slate-400">
+                    <span>Free particles</span>
+                    <span className="text-green-300">{surveyStats.free}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Stuck</span>
+                    <span className="text-yellow-300">{surveyStats.stuck}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Knot vertices</span>
+                    <span className="text-pink-400">{surveyStats.knots}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Total hops</span>
+                    <span>{surveyStats.totalHops}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Budget per particle</span>
+                    <span>{antiInertiaBudget}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Particle count</span>
+                    <span>{N_SURVEY_PARTICLES}</span>
+                  </div>
+                </div>
+                <div className="mt-2 text-slate-500 italic">
+                  Knots are self-sustaining configurations — the energetic atom of spacetime tensegrity.
                 </div>
               </div>
             </div>

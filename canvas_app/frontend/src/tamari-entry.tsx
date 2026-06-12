@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './index.css';
 import { TamariExplorer } from './components/tamari/TamariExplorer';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

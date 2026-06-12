@@ -117,6 +117,9 @@ export const tamariApi = {
 
   getCouplingDecay: (n: number, logic: string, couplings?: string): Promise<CouplingDecayResult> =>
     fetchJson(`${API_BASE}/coupling-decay/${n}?logic=${logic}&couplings=${couplings || '0,1,2,5,10,20,50'}`),
+
+  verifyLean: (): Promise<{ passed: boolean; summary: string; log: string; target_count: number }> =>
+    fetchJson(`${API_BASE}/verify-lean`),
 };
 
 // Type re-exports for backward compatibility

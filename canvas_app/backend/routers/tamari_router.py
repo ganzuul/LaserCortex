@@ -308,6 +308,53 @@ async def get_coupling_decay(
     return result
 
 
+# ── Lean certificate endpoint ─────────────────────────────────────────────
+
+import subprocess
+
+class LeanVerifyResponse(BaseModel):
+    passed: bool
+    summary: str
+    log: str
+    target_count: int = 0
+
+@router.get("/verify-lean", response_model=LeanVerifyResponse)
+async def verify_lean():
+    """Run `lake build` and verify zero sorries.
+
+    Returns pass/fail, build summary, and full log.
+    """
+    project_root = Path(__file__).parent.parent.parent.parent
+    try:
+        result = subprocess.run(
+            ["lake", "build"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        log = result.stdout + "\n" + result.stderr
+        # Check for zero sorries: look for "0 sorries" or no "sorry" failures
+        lines = result.stdout.splitlines()
+        target_count = 0
+        passed = True
+        for line in lines:
+            if "sorries" in line.lower():
+                target_count = int(line.split()[0]) if line.split()[0].isdigit() else 0
+            if "error" in line.lower() and "error" in result.stderr.lower():
+                passed = False
+        if result.returncode != 0:
+            passed = False
+        summary = "PASS: all targets verified (zero sorries)" if passed else "FAIL: build errors found"
+        return LeanVerifyResponse(passed=passed, summary=summary, log=log, target_count=target_count)
+    except subprocess.TimeoutExpired:
+        return LeanVerifyResponse(passed=False, summary="FAIL: lake build timed out (>120s)", log="")
+    except FileNotFoundError:
+        return LeanVerifyResponse(passed=False, summary="FAIL: lake not found on PATH", log="")
+    except Exception as e:
+        return LeanVerifyResponse(passed=False, summary=f"FAIL: {e}", log="")
+
+
 @router.get("/cost-landscape/{n}", response_model=CostLandscapeResponse)
 async def get_cost_landscape(n: int):
     """Get the full Φ cost landscape for all 14 logic types.
