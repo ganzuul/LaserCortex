@@ -16,6 +16,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { tamariApi, TamariLattice, TamariVertex, TamariPath, CostLandscape, CouplingDecayResult } from '../../services/tamariApi';
+import { createBenchKernel } from '../../shaders/bench';
+import { flattenAllTrees, computePhiCPU, getLogicParams, createPhiKernel } from '../../shaders/phi_cost';
 
 // ── Color scheme ──────────────────────────────────────────────────────
 
@@ -238,7 +240,9 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   const [animProgress, setAnimProgress] = useState(0);
   const [showCost, setShowCost] = useState(true);
   const [showAntiInertia, setShowAntiInertia] = useState(true);
-  const [calMode, setCalMode] = useState<'off' | 'decay'>('off');
+  const [calMode, setCalMode] = useState<'off' | 'decay' | 'bench' | 'phi'>('off');
+  const [calResult, setCalResult] = useState<string | null>(null);
+  const [calError, setCalError] = useState<string | null>(null);
 
   // ── Fetch lattice data ──────────────────────────────────────────────
 
@@ -713,6 +717,141 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     return () => { running = false; cancelAnimationFrame(calAnimRef.current); };
   }, [calMode, drawDecayChart]);
 
+  // ── Bench calibration ─────────────────────────────────────────────
+
+  useEffect(() => {
+    if (calMode !== 'bench' || !webgpuAvailable) return;
+    let cancelled = false;
+
+    (async () => {
+      setCalResult(null);
+      setCalError(null);
+      let TSL: any;
+      try { TSL = await import('three/tsl'); } catch { setCalError('Failed to import three/tsl'); return; }
+      if (cancelled) return;
+
+      const count = 16;
+      const arr = new Float32Array(count);
+      const attr = makeStorageAttribute(arr, 1);
+      if (!(attr as any).isStorageInstancedBufferAttribute) {
+        setCalError('StorageInstancedBufferAttribute not available (WebGPU required)');
+        return;
+      }
+
+      const { kernel, verify } = createBenchKernel(TSL, attr, count);
+      const renderer = rendererRef.current as any;
+      if (!renderer?.compute) { setCalError('Renderer does not support compute'); return; }
+
+      try {
+        renderer.compute(kernel);
+        const readData = await renderer.readBuffer(attr, 0, arr.byteLength);
+        if (cancelled) return;
+        const floats = new Float32Array(readData);
+        const ok = verify(floats);
+        const details = Array.from({ length: Math.min(8, count) }, (_, i) =>
+          `[${i}] = ${floats[i]} (expected ${i * 2})`
+        ).join(', ');
+        setCalResult(ok
+          ? `PASS: bench kernel verified (${details})`
+          : `FAIL: bench mismatch (${details})`
+        );
+      } catch (e) {
+        if (!cancelled) setCalError(`Bench error: ${e}`);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [calMode, webgpuAvailable]);
+
+  // ── Phi calibration ───────────────────────────────────────────────
+
+  useEffect(() => {
+    if (calMode !== 'phi' || !webgpuAvailable || !lattice || !costLandscape) return;
+    let cancelled = false;
+
+    (async () => {
+      setCalResult(null);
+      setCalError(null);
+      let TSL: any;
+      try { TSL = await import('three/tsl'); } catch { setCalError('Failed to import three/tsl'); return; }
+      if (cancelled) return;
+
+      const V = lattice.vertex_count;
+      const internalN = n;
+      const bitStrings = lattice.vertices.map(v => v.bits);
+
+      // Flatten all trees
+      const treeData = flattenAllTrees(bitStrings, internalN);
+      const treeAttr = makeStorageAttribute(
+        new Float32Array(treeData), 1,
+      );
+      if (!(treeAttr as any).isStorageInstancedBufferAttribute) {
+        setCalError('StorageInstancedBufferAttribute not available (WebGPU required)');
+        return;
+      }
+
+      // Temp costs buffer (one extra element per tree for sentinel = 0)
+      const costArr = new Float32Array(V * (internalN + 1));
+      const costAttr = makeStorageAttribute(costArr, 1);
+
+      // Output buffer
+      const outArr = new Float32Array(V);
+      const outAttr = makeStorageAttribute(outArr, 1);
+
+      const params = getLogicParams(selectedLogic);
+      const { kernel } = createPhiKernel(
+        TSL, treeAttr, costAttr, outAttr, V, internalN, params,
+      );
+
+      const renderer = rendererRef.current as any;
+      if (!renderer?.compute) { setCalError('Renderer does not support compute'); return; }
+
+      try {
+        renderer.compute(kernel);
+        const readData = await renderer.readBuffer(outAttr, 0, outArr.byteLength);
+        if (cancelled) return;
+        const gpuCosts = new Float32Array(readData);
+
+        // CPU reference
+        const apiCosts = costLandscape.vertices.map(v => v.costs?.[selectedLogic] ?? 0);
+        const cpuCosts = bitStrings.map(bits => computePhiCPU(bits, params));
+
+        // Compare
+        let maxGpuError = 0;
+        let totalGpuError = 0;
+        let maxCpuError = 0;
+        let totalCpuError = 0;
+        const errors: number[] = [];
+
+        for (let i = 0; i < V; i++) {
+          const gpuErr = Math.abs(gpuCosts[i] - apiCosts[i]);
+          const cpuErr = Math.abs(cpuCosts[i] - apiCosts[i]);
+          maxGpuError = Math.max(maxGpuError, gpuErr);
+          totalGpuError += gpuErr;
+          maxCpuError = Math.max(maxCpuError, cpuErr);
+          totalCpuError += cpuErr;
+          errors.push(gpuErr);
+        }
+
+        const gpuOk = maxGpuError === 0;
+        const cpuOk = maxCpuError === 0;
+        const summary = [
+          `Trees: ${V}, n=${internalN}, logic: ${selectedLogic}`,
+          `GPU vs API: ${gpuOk ? 'PASS' : 'FAIL'} (max err=${maxGpuError}, avg err=${(totalGpuError / V).toFixed(4)})`,
+          `CPU vs API: ${cpuOk ? 'PASS' : 'FAIL'} (max err=${maxCpuError}, avg err=${(totalCpuError / V).toFixed(4)})`,
+          `Params: bias=${params.bias} w=${params.leftWeight} rd=${params.rightDiv} c=${params.coupling} d=${params.denom}`,
+          `GPU costs: ${gpuCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
+          `API costs: ${apiCosts.slice(0, 5).join(', ')}${V > 5 ? '...' : ''}`,
+        ];
+        setCalResult(summary.join('\n'));
+      } catch (e) {
+        if (!cancelled) setCalError(`Phi error: ${e}`);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [calMode, webgpuAvailable, lattice, costLandscape, n, selectedLogic]);
+
   // ── Render ─────────────────────────────────────────────────────────
 
   return (
@@ -726,6 +865,16 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
             className="absolute bottom-4 right-4 w-80 h-52 rounded-lg pointer-events-none"
             style={{ background: 'rgba(10,10,30,0.88)', border: '1px solid rgba(100,130,180,0.3)' }}
           />
+        )}
+        {/* Bench / Phi calibration result */}
+        {(calMode === 'bench' || calMode === 'phi') && (
+          <div className="absolute bottom-4 right-4 w-96 max-h-64 rounded-lg overflow-auto p-3 font-mono text-xs"
+            style={{ background: 'rgba(10,10,30,0.92)', border: '1px solid rgba(100,130,180,0.3)' }}
+          >
+            {calError && <div className="text-red-400 whitespace-pre-wrap">{calError}</div>}
+            {calResult && <div className="text-green-400 whitespace-pre-wrap">{calResult}</div>}
+            {!calError && !calResult && <div className="text-slate-400">Running calibration...</div>}
+          </div>
         )}
         {/* Controls overlay */}
         <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur rounded-lg p-3 text-white text-sm space-y-2 max-w-xs">
@@ -768,6 +917,8 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
               className="bg-slate-700 text-white rounded px-1 py-0.5 text-xs">
               <option value="off">Off</option>
               <option value="decay">Decay</option>
+              <option value="bench">Bench (GPU)</option>
+              <option value="phi">Phi (GPU)</option>
             </select>
           </div>
           {loading && <div className="text-yellow-400">Loading...</div>}
