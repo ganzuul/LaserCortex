@@ -1,6 +1,55 @@
 # Lab Protocol: Timespace Decomposition
 
-**Version 0.1** | 2026-06-11
+**Version 0.2** | 2026-06-12
+
+## (4,4) Signature Model
+
+The timespace decomposition is algebraically grounded in the **split-octonion (4,4) signature**:
+
+```
+octonion_norm(x) = x.e0² + x.e1² + x.e2² + x.e3² − x.e4² − x.e5² − x.e6² − x.e7²
+```
+
+| Sector | Norm sign | Basis vectors | Algebra | Timespace role |
+|--------|-----------|---------------|---------|----------------|
+| **Associative** | + | e0, e1, e2, e3 | Commutator acts, associative | **Time** — irreversibility, order matters |
+| **Split** | − | e4, e5, e6, e7 | Associator acts, non-associative | **Space** — differentiability, grouping matters |
+| **Null cone** | 0 | eᵢ+eⱼ (i≤3, j≥4) | Zero-divisor channels | **Interface** — quench-collapse threshold |
+
+Each logic type's cost function Φ_L is a **projection operator** P_L onto a subspace
+of this (4,4) space, characterized by three weights:
+
+```
+time_weight      = leftWeight        (associative sector amplification)
+space_weight     = 1/(rightDiv+1)   (split sector transmission)
+interface_weight = coupling/denom   (cross-sector coupling term)
+```
+
+The ratio time_weight : space_weight determines the logic's sector bias. When
+time_weight = space_weight, the projection lands on the **null cone** — the
+interface where zero-divisor channels open.
+
+### Timespace Classification of Logic Types
+
+| Sector bias | Logics | Time:Space | Zero divisors |
+|-------------|--------|-----------|---------------|
+| Balanced (null cone) | Boolean, Intuitionistic, Free | 1:1 | Metric (from signature) |
+| Time-biased (commutator dominant) | Classical, Fuzzy, ManyValued, Deontic, Epistemic, Quantum, Relevance, Infinitary, Modal | 2:1 to 3:1 | Suppressed by time dominance |
+| Strongly time-biased | Paraconsistent, Temporal, Spacetime | 4:1 | Explosive (leftWeight=2) |
+| Space-biased (associator dominant) | *(none — requires formula extension)* | <1:1 | Strong metric (predicted) |
+
+### Key Insight: No Space-Biased Logic Exists (Yet)
+
+The current `NodeCost.apply` formula `bias + leftWeight·a + b/(rightDiv+1)` always
+amplifies the left (associative) subtree and compresses the right (split) subtree.
+This means **every logic is either time-biased or balanced** — none can be space-biased.
+
+A pure space-like logic would require either:
+1. `leftWeight = 0` (commutator suppressed, only associator matters)
+2. A mirrored formula: `bias + a/(leftDiv+1) + rightWeight·b`
+
+This is the next architectural extension needed for the Spacetime logic type to
+faithfully represent the split-octonion e4–e7 sector.
 
 ## Core Definition
 
@@ -248,6 +297,27 @@ Virtual cameras are the producers — they stage the decomposition, the
 fixed camera renders the result. Switching between virtual camera feeds
 is equivalent to selecting different logic-type projections without
 recomputing the lattice.
+
+### 8. Split-Octonion (4,4) Signature
+The foundational algebraic structure from which timespace is projected. The
+norm splits 8 dimensions into an associative (+) triplet with a time-like
+commutator and a split (−) quadruplet with a space-like associator. The
+15 logic types are projection operators onto subspaces of this octonion
+algebra, each selecting a different balance of time, space, and interface.
+
+**Structural role**: The (4,4) signature is not a fitting parameter — it is
+the algebraic skeleton of the entire cost landscape. The Cayley-Dickson ladder
+confirms that associativity breaks exactly at the octonion level (dim 8), which
+is where the split between time and space becomes algebraically necessary.
+Below this level (ℝ/ℂ/ℍ, dim 1/2/4), time and space are not yet differentiated
+(associative — no pentagonator, no timespace decomposition). Above it (sedenions,
+dim 16+), zero divisors from non-alternativity create a second, stronger regime.
+
+**Verified properties** (see `infra/tests/test_cayley_dickson_ladder.py`):
+- ℝ/ℂ/ℍ: max associator norm = 0 (fully associative) → pre-timespace
+- 𝕆 (split): max associator norm = 4.0 → timespace decomposition active
+- Null cone: (e0+e4)·(e0−e4) = 0 → zero-divisor channels at time/space interface
+- Most non-associative triple: (e1, e2, e4) → crosses boundary, points along e7
 
 ## How to Use This Protocol
 
