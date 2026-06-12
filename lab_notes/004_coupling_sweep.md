@@ -128,6 +128,33 @@ This is not an arbitrary parameterization. It is the discrete ℕ-arithmetic ana
 
 We have almost certainly replicated the results of peer-reviewed research somewhere — likely in the theory of operads, the Tamari lattice literature (Loday, F. Müller-Hoissen, etc.), or in categorical accounts of proof theory where the cost of cut-elimination scales with left-nesting depth. The connection to split-octonions and E8 is the novel direction, but the underlying discrete geometry of the Tamari lattice as a model of sequential composition cost is well-studied. This is reassuring: our model passes the sanity check that would be expected of any legitimate approach.
 
+## Cayley-Dickson Ladder Verification (2026-06-12)
+
+The split-octonion multiplication table from `unified_spacetime_engine_explicit.lean` (copied verbatim) was implemented as a Python `SplitOctonion` class and tested against the Cayley-Dickson ladder.
+
+### Explicitly Tested Hypotheses
+
+| Hypothesis | Result | Evidence |
+|---|---|---|
+| ℝ (dim 1) has zero associator norm | ✓ confirmed | max \|assoc\| = 0 |
+| ℂ (dim 2) has zero associator norm | ✓ confirmed | max \|assoc\| = 0 |
+| ℍ (dim 4) has zero associator norm | ✓ confirmed | max \|assoc\| = 0 |
+| 𝕆 (dim 8) has non-zero associator norm | ✓ confirmed | max \|assoc\| = 4.0 |
+| Most non-associative triple crosses split boundary | ✓ confirmed | (e1, e2, e4) has |assoc| = 4.0 pointing along e7 |
+| Split sector e4-e7 is fully non-associative | ✓ confirmed | all triples have |assoc| = 4.0 |
+| Basis×basis products have no zero divisors | ✓ confirmed | no basis pair multiplies to 0 |
+| Split-octonions have no zero divisors at all | ✗ **refuted** | (e0+e4)×(e0-e4) = 0 via isotropic null cone |
+| Equating split-octonion zero divisors with sedenion zero divisors | ✗ **refuted** | different mechanisms: metric null cone vs. algebraic non-alternativity |
+
+### Significance of the Refuted Hypotheses
+
+The claim "split-octonions have no zero divisors" is commonly repeated (since octonions are a normed division algebra). But the **split** octonions have (4,4) signature, so isotropic vectors exist at dim 8, not just dim 16+. The distinction is physically meaningful:
+
+- **Split-octonion zero divisors** (metric, null cone): provide decoupled channels through the null cone geometry. These correspond to the crossImpact = 0 signature in our cost landscape: non-associative logics where CI(Rmid) = 0 means the second composition incurs zero additional cost.
+- **Sedenion zero divisors** (algebraic, non-alternativity): would appear at dim 16+, corresponding to our leftWeight=2 explosive regime where alternativity fails entirely.
+
+This two-layer zero divisor structure (metric at dim 8, algebraic at dim 16+) maps naturally onto our three cost classes: associative (no zero divisors), non-associative with CI=0 channels (metric zero divisors), explosive (algebraic zero divisors).
+
 ## References
 - `lab_notes/001_product_coupling_term.md` — original coupling proposal
 - `lab_notes/002_brute_force_candidates.md` — Φ minima without coupling

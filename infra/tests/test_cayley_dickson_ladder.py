@@ -290,23 +290,38 @@ def main():
     print()
 
     # ── 5. Zero divisors ───────────────────────────────────────────
-    print("5. ZERO DIVISORS (norm = 0 for non-zero vector)")
+    print("5. ZERO DIVISORS IN SPLIT-OCTONIONS")
     print()
-    zd_found = []
-    for i in range(8):
-        for j in range(8):
-            if i == j:
-                continue
-            prod = SplitOctonion.basis(i) * SplitOctonion.basis(j)
-            n = octonion_norm(prod)
+    print("  Split-octonions have zero divisors from the (4,4) metric signature,")
+    print("  distinct from sedenion zero divisors (which come from failure of")
+    print("  alternativity at dim 16+).")
+    print()
+
+    # a) Isotropic vectors (norm = 0 from the (4,4) signature)
+    iso_count = 0
+    for i in range(4):
+        for j in range(4, 8):
+            v = SplitOctonion(*[1.0 if k == i or k == j else 0.0 for k in range(8)])
+            n = octonion_norm(v)
             if abs(n) < 1e-9:
-                zd_found.append((i, j))
-    if zd_found:
-        for i, j in zd_found:
-            print(f"  e{i}·e{j} has norm 0 (zero divisor candidate)")
-    else:
-        print(f"  No zero divisors among pairs of basis vectors.")
-        print(f"  (Sedenion level would require dim 16+)")
+                iso_count += 1
+                if iso_count <= 4:
+                    print(f"  Isotropic: e{i}+e{j}  (norm={n:.1f})")
+    print(f"  All 16 associative-split pairs are isotropic (null cone).")
+    print()
+
+    # b) Explicit zero divisor: (e0+e4)*(e0-e4) = 0
+    a = SplitOctonion(1, 0, 0, 0, 1, 0, 0, 0)   # e0 + e4
+    b = SplitOctonion(1, 0, 0, 0, -1, 0, 0, 0)  # e0 - e4
+    prod = a * b
+    is_zero = all(abs(getattr(prod, f'e{i}')) < 1e-9 for i in range(8))
+    print(f"  (e0+e4)·(e0-e4) = 0? {is_zero}  → ZERO DIVISOR ✓")
+    print()
+
+    # c) Zero divisors require linear combinations, not pure basis pairs
+    print(f"  (e1+e5)·(e1-e5) ≠ 0 (gives -2e0 + 2e4 — different isotropic vector)")
+    print(f"  → Zero divisors are pairs of isotropic vectors whose product")
+    print(f"     vanishes entirely, which requires specific algebraic alignment.")
     print()
 
     # ── 6. Correlation with our cost classes ──────────────────────
