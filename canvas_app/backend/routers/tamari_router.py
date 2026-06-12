@@ -12,6 +12,8 @@ from fastapi import APIRouter, HTTPException
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 import logging
+import subprocess
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -309,8 +311,6 @@ async def get_coupling_decay(
 
 
 # ── Lean certificate endpoint ─────────────────────────────────────────────
-
-import subprocess
 
 class LeanVerifyResponse(BaseModel):
     passed: bool

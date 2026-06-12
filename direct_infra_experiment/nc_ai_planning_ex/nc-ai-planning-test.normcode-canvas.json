@@ -1,0 +1,22 @@
+{
+  "id": "306c3b56",
+  "name": "NC AI planning test",
+  "description": null,
+  "created_at": "2026-06-10T21:52:17.532970",
+  "updated_at": "2026-06-10T22:03:27.075628",
+  "repositories": {
+    "concepts": "iteration_6/repos/phase_1.2_concept.json",
+    "inferences": "iteration_6/repos/phase_1.inference.json",
+    "inputs": "iteration_6/repos/phase1_2_test_inputs.json"
+  },
+  "execution": {
+    "llm_model": "demo",
+    "max_cycles": 50,
+    "db_path": "orchestration.db",
+    "base_dir": "/home/nos/labware/LaserCortex/direct_infra_experiment/nc_ai_planning_ex/iteration_6/repos",
+    "paradigm_dir": "iteration_8/provisions/paradigms",
+    "agent_config": null
+  },
+  "breakpoints": [],
+  "ui_preferences": {}
+}

@@ -1,0 +1,22 @@
+{
+  "id": "d537dbc5",
+  "name": "Demo_Ch",
+  "description": "\u4e2d\u6587\u7248",
+  "created_at": "2025-12-21T16:30:00.046487",
+  "updated_at": "2026-06-10T22:21:20.560861",
+  "repositories": {
+    "concepts": "repos/gold_chinese.concept.json",
+    "inferences": "repos/gold_chinese.inference.json",
+    "inputs": null
+  },
+  "execution": {
+    "llm_model": "demo",
+    "max_cycles": 50,
+    "db_path": "orchestration.db",
+    "base_dir": "/home/nos/labware/LaserCortex/democh_20260120_134822.normcode-portable/project/repos",
+    "paradigm_dir": "provision/paradigm",
+    "agent_config": "\u9ec4\u91d1\u6295\u8d44\u5efa\u8bae.agent.json"
+  },
+  "breakpoints": [],
+  "ui_preferences": {}
+}
