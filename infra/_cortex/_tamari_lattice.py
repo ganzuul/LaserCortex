@@ -223,3 +223,140 @@ def tree_layout_dict(tree: EMLTree) -> dict:
         "layout": {"loday": coords},
         "coordinates": [{"x": c, "y": 0, "z": 0} for c in coords],
     }
+
+
+# ── Coupling sweep / decay chart ──────────────────────────────────────
+
+
+def count_local_minima(costs: Dict[int, int], edges: List[Edge]) -> int:
+    """Number of trees whose cost is ≤ all neighbors (local minima)."""
+    minima = 0
+    for v_id, c in costs.items():
+        is_min = True
+        for e in edges:
+            neighbor = None
+            if e.source_id == v_id:
+                neighbor = e.target_id
+            elif e.target_id == v_id:
+                neighbor = e.source_id
+            if neighbor is not None:
+                if costs.get(neighbor, 0) < c:
+                    is_min = False
+                    break
+        if is_min:
+            minima += 1
+    return minima
+
+
+def total_pentagon_defect(
+    costs: Dict[int, int],
+    edges: List[Edge],
+    vertices: List[Vertex],
+) -> float:
+    """Sum of |Φ(a) + Φ(b) - Φ(compose(a,b))| across all K₄ faces.
+
+    A simplified proxy: for each K₄ face (a pentagon of 5 vertices),
+    sum the absolute cost differences around the cycle. High defect
+    means the associator is not coherent — Lagrangian friction is high.
+    """
+    # Build adjacency
+    adj: Dict[int, List[int]] = {v.id: [] for v in vertices}
+    for e in edges:
+        adj.setdefault(e.source_id, []).append(e.target_id)
+        adj.setdefault(e.target_id, []).append(e.source_id)
+
+    # Find all 5-cycles (K₄ faces) — brute force for small n
+    pentagons: List[List[int]] = []
+    visited: set = set()
+    for start_id in adj:
+        # DFS for cycles of length 5
+        def dfs(path: List[int]) -> None:
+            if len(path) == 5:
+                if start_id in adj.get(path[-1], []):
+                    cycle = tuple(sorted(path))
+                    if cycle not in visited:
+                        visited.add(cycle)
+                        pentagons.append(list(path))
+                return
+            for nb in adj.get(path[-1], []):
+                if nb not in path and (len(path) > 1 or nb > path[0]):
+                    dfs(path + [nb])
+
+        dfs([start_id])
+
+    defect = 0.0
+    for pent in pentagons:
+        # Cost around the pentagon cycle
+        cycle_costs = [costs.get(v_id, 0) for v_id in pent]
+        # Simple defect: sum of absolute differences between adjacent costs
+        for i in range(5):
+            defect += abs(cycle_costs[i] - cycle_costs[(i + 1) % 5])
+
+    return defect
+
+
+def coupling_decay(
+    n: int,
+    logic: str,
+    couplings: List[int],
+    denom: int = 10,
+) -> dict:
+    """Sweep coupling values and return decay metrics.
+
+    For each coupling value:
+      - cost per tree
+      - number of local minima
+      - pentagon defect (proxy for Lagrangian friction)
+      - rightComb cost
+      - min / max / mean cost
+    """
+    from ._cost import phi_coupled
+    from ._logic_types import LogicType
+
+    lt = LogicType(logic)
+    trees = all_trees(n)
+    edges_raw: List[Edge] = []
+    tree_list: List[EMLTree] = list(trees)
+
+    # Build adjacency once (edges are independent of coupling)
+    for s in trees:
+        sid = tree_list.index(s)
+        for t in contracts_one_successors(s):
+            tid = tree_list.index(t)
+            edges_raw.append(Edge(source_id=sid, target_id=tid))
+
+    rc = rightComb(n) if n > 0 else LEAF
+    rc_idx = tree_list.index(rc)
+
+    sweep_points: List[dict] = []
+    for k in couplings:
+        costs_map: Dict[int, int] = {}
+        for i, t in enumerate(tree_list):
+            costs_map[i] = phi_coupled(lt, t, coupling=k, denom=denom)
+
+        num_min = count_local_minima(costs_map, edges_raw)
+        penta = total_pentagon_defect(costs_map, edges_raw, [
+            Vertex(id=i, tree=t, bits="", coord=Coord3(0, 0, 0),
+                   is_left_comb=False, is_right_comb=False, size=n)
+            for i, t in enumerate(tree_list)
+        ])
+        vals = list(costs_map.values())
+        rc_cost = costs_map[rc_idx]
+
+        sweep_points.append({
+            "coupling": k,
+            "num_local_minima": num_min,
+            "pentagon_defect": round(penta, 1),
+            "right_comb_cost": rc_cost,
+            "min_cost": min(vals),
+            "max_cost": max(vals),
+            "mean_cost": round(sum(vals) / max(len(vals), 1), 1),
+            "costs": [costs_map[i] for i in range(len(tree_list))],
+        })
+
+    return {
+        "n": n,
+        "logic_type": logic,
+        "couplings": couplings,
+        "sweep": sweep_points,
+    }

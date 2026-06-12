@@ -58,6 +58,24 @@ export interface CostLandscape {
   vertices: TamariVertex[];
 }
 
+export interface CouplingDecaySweepPoint {
+  coupling: number;
+  num_local_minima: number;
+  pentagon_defect: number;
+  right_comb_cost: number;
+  min_cost: number;
+  max_cost: number;
+  mean_cost: number;
+  costs: number[];
+}
+
+export interface CouplingDecayResult {
+  n: number;
+  logic_type: string;
+  couplings: number[];
+  sweep: CouplingDecaySweepPoint[];
+}
+
 export interface TamariPath {
   source: number;
   target: number;
@@ -96,6 +114,9 @@ export const tamariApi = {
 
   getCostLandscape: (n: number): Promise<CostLandscape> =>
     fetchJson(`${API_BASE}/cost-landscape/${n}`),
+
+  getCouplingDecay: (n: number, logic: string, couplings?: string): Promise<CouplingDecayResult> =>
+    fetchJson(`${API_BASE}/coupling-decay/${n}?logic=${logic}&couplings=${couplings || '0,1,2,5,10,20,50'}`),
 };
 
 // Type re-exports for backward compatibility

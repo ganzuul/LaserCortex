@@ -15,7 +15,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { tamariApi, TamariLattice, TamariVertex, TamariPath, CostLandscape } from '../../services/tamariApi';
+import { tamariApi, TamariLattice, TamariVertex, TamariPath, CostLandscape, CouplingDecayResult } from '../../services/tamariApi';
 
 // ── Color scheme ──────────────────────────────────────────────────────
 
@@ -219,6 +219,10 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   const instancedMeshRef = useRef<THREE.InstancedMesh | null>(null);
   const edgeLinesRef = useRef<THREE.LineSegments | null>(null);
 
+  // Calibration
+  const calCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const calAnimRef = useRef<number>(0);
+
   // Contraction animation
   const contractionLambdaRef = useRef(1.0);
 
@@ -234,6 +238,7 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
   const [animProgress, setAnimProgress] = useState(0);
   const [showCost, setShowCost] = useState(true);
   const [showAntiInertia, setShowAntiInertia] = useState(true);
+  const [calMode, setCalMode] = useState<'off' | 'decay'>('off');
 
   // ── Fetch lattice data ──────────────────────────────────────────────
 
@@ -582,6 +587,132 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
     return () => clearInterval(interval);
   }, [animatePath, contractionPath]);
 
+  // ── Decay chart (coupling sweep) ──────────────────────────────────
+
+  const [decayResult, setDecayResult] = useState<CouplingDecayResult | null>(null);
+
+  // Fetch decay data when calMode changes to 'decay' or logic/n changes
+  useEffect(() => {
+    if (calMode !== 'decay') { setDecayResult(null); return; }
+    tamariApi.getCouplingDecay(n, selectedLogic, '0,1,2,5,10,20,50')
+      .then(setDecayResult)
+      .catch(() => setDecayResult(null));
+  }, [calMode, n, selectedLogic]);
+
+  const drawDecayChart = useCallback(() => {
+    const canvas = calCanvasRef.current;
+    if (!canvas || !decayResult) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = canvas.clientWidth * window.devicePixelRatio;
+    canvas.height = canvas.clientHeight * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+
+    ctx.clearRect(0, 0, w, h);
+    const pad = { top: 32, right: 16, bottom: 28, left: 44 };
+    const plotW = w - pad.left - pad.right;
+    const plotH = h - pad.top - pad.bottom;
+
+    const sweep = decayResult.sweep;
+    const maxMin = Math.max(...sweep.map(s => s.num_local_minima), 1);
+    const maxDefect = Math.max(...sweep.map(s => s.pentagon_defect), 1);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(100,130,180,0.12)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.top + (plotH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = 'rgba(150,180,220,0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + plotH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top + plotH); ctx.lineTo(w - pad.right, pad.top + plotH); ctx.stroke();
+
+    // Y-axis labels (left = num local minima, right = pentagon defect)
+    ctx.fillStyle = 'rgba(200,220,255,0.5)';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.top + (plotH / 4) * i;
+      ctx.fillText(String(Math.round(maxMin * (1 - i / 4))), pad.left - 4, y + 3);
+    }
+
+    // X labels (coupling values)
+    ctx.textAlign = 'center';
+    sweep.forEach((s, i) => {
+      const x = pad.left + (plotW / (sweep.length - 1 || 1)) * i;
+      ctx.fillText(String(s.coupling), x, pad.top + plotH + 14);
+    });
+
+    // Curves: local minima (solid), pentagon defect (dashed)
+    const lineX = (i: number) => pad.left + (plotW / (sweep.length - 1 || 1)) * i;
+
+    // Local minima curve
+    ctx.strokeStyle = '#44ff88';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    sweep.forEach((s, i) => {
+      const y = pad.top + plotH - (s.num_local_minima / maxMin) * plotH;
+      i === 0 ? ctx.moveTo(lineX(i), y) : ctx.lineTo(lineX(i), y);
+    });
+    ctx.stroke();
+    sweep.forEach((s, i) => {
+      const y = pad.top + plotH - (s.num_local_minima / maxMin) * plotH;
+      ctx.fillStyle = '#44ff88';
+      ctx.beginPath(); ctx.arc(lineX(i), y, 3, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // Pentagon defect curve
+    ctx.strokeStyle = '#ff6644';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    sweep.forEach((s, i) => {
+      const y = pad.top + plotH - (s.pentagon_defect / maxDefect) * plotH;
+      i === 0 ? ctx.moveTo(lineX(i), y) : ctx.lineTo(lineX(i), y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Labels
+    ctx.fillStyle = '#44ff88';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('local minima', pad.left + 4, pad.top + 12);
+    ctx.fillStyle = '#ff6644';
+    ctx.fillText('pentagon defect', pad.left + 4, pad.top + 24);
+
+    // Title
+    ctx.fillStyle = 'rgba(200,220,255,0.4)';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Decay: ${decayResult.logic_type} (coupling → collapse)`, pad.left, pad.top - 6);
+  }, [decayResult]);
+
+  useEffect(() => {
+    if (calMode !== 'decay' || !decayResult) return;
+    drawDecayChart();
+  }, [calMode, decayResult, drawDecayChart]);
+
+  useEffect(() => {
+    if (calMode !== 'decay') { cancelAnimationFrame(calAnimRef.current); return; }
+    let running = true;
+    const loop = () => {
+      if (!running) return;
+      drawDecayChart();
+      calAnimRef.current = requestAnimationFrame(loop);
+    };
+    loop();
+    return () => { running = false; cancelAnimationFrame(calAnimRef.current); };
+  }, [calMode, drawDecayChart]);
+
   // ── Render ─────────────────────────────────────────────────────────
 
   return (
@@ -589,6 +720,13 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
       {/* 3D Canvas */}
       <div className="flex-1 relative">
         <div ref={containerRef} className="absolute inset-0" />
+        {/* Calibration chart overlay */}
+        {calMode === 'decay' && (
+          <canvas ref={calCanvasRef}
+            className="absolute bottom-4 right-4 w-80 h-52 rounded-lg pointer-events-none"
+            style={{ background: 'rgba(10,10,30,0.88)', border: '1px solid rgba(100,130,180,0.3)' }}
+          />
+        )}
         {/* Controls overlay */}
         <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur rounded-lg p-3 text-white text-sm space-y-2 max-w-xs">
           <div className="flex items-center gap-2">
@@ -622,6 +760,15 @@ export function TamariExplorer({ initialN = 3 }: TamariExplorerProps) {
                 className="accent-pink-500" />
               Anti-inertia
             </label>
+          </div>
+          {/* Calibration mode */}
+          <div className="flex items-center gap-2 text-xs">
+            <label className="text-slate-300">Cal:</label>
+            <select value={calMode} onChange={e => setCalMode(e.target.value as any)}
+              className="bg-slate-700 text-white rounded px-1 py-0.5 text-xs">
+              <option value="off">Off</option>
+              <option value="decay">Decay</option>
+            </select>
           </div>
           {loading && <div className="text-yellow-400">Loading...</div>}
           {error && <div className="text-red-400">{error}</div>}

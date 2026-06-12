@@ -285,6 +285,29 @@ async def get_cost_lattice(n: int, logic: str):
     )
 
 
+@router.get("/coupling-decay/{n}")
+async def get_coupling_decay(
+    n: int,
+    logic: str = "paraconsistent",
+    couplings: str = "0,1,2,5,10,20,50",
+    denom: int = 10,
+):
+    """Sweep coupling strength and return decay metrics.
+
+    For each coupling value returns:
+      - num_local_minima: how many trees are locally optimal
+      - pentagon_defect: sum of cost differences around K4 faces
+      - right_comb_cost, min/max/mean cost
+      - full cost array per tree
+
+    The decay chart shows the landscape collapsing as coupling increases.
+    """
+    from infra._cortex._tamari_lattice import coupling_decay
+    coupling_list = [int(c) for c in couplings.split(",")]
+    result = coupling_decay(n=n, logic=logic, couplings=coupling_list, denom=denom)
+    return result
+
+
 @router.get("/cost-landscape/{n}", response_model=CostLandscapeResponse)
 async def get_cost_landscape(n: int):
     """Get the full Φ cost landscape for all 14 logic types.
