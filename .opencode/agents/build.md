@@ -48,3 +48,11 @@ To find cross-paradigm dependencies, use:
 RULE: After receiving librarian results, immediately call file-reading tools on BOTH source and target modules before writing any code. Never modify either side of a dependency edge without checking the invariant_at_boundary field first.
 
 When creating semantic index entries, use ingest_source + create_note so they are visible in the ON web UI.
+
+MODEL ROUTING (Day/Night Rhythm):
+- **Daytime (9B student)**: Chat and quick queries use Qwen3.5-9B on `:11434`.
+- **Nighttime (35B teacher)**: Transformations (full pipeline) use the 35B teacher on `:8080`.
+- ON defaults: `default_chat_model` → 9B, `default_transformation_model` → 35B.
+- If transformations fail during daytime, the 35B server is not running — log the question for the nightly batch run.
+- The 9B runs with `--no-jinja` (Qwen3.5 is a thinking model; `preserve_thinking` puts output in `reasoning_content` which ON can't read).
+- Embedding server (bge-m3) runs independently on `:8082`.
