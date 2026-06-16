@@ -125,7 +125,7 @@ Pipeline scripts (in /home/nos/labware/open-notebook/scripts/pipeline/):
     **Content-addressed embedding cache** at `~/.cache/lasercortex/embedding_cache.json`
     — embeddings are keyed by SHA256 of the preview text. Only new/changed files
     are embedded on subsequent runs (typically < 1 min after first run).
-    Typical first run: ~3-5 min for 800 files (excluding lean4-skills/ etc.).
+    Typical first run: ~3-5 min for ~800 files.
     Output at `/tmp/lasercortex_ranking.json` — read by pipeline scripts.
   - `generate_phonebook.py` — phonebook generation (heuristic + 35B).
     **Transformation cache** in `.phonebook_cache.json` — tracks SHA256 of each
@@ -165,6 +165,25 @@ The system avoids re-computation through two content-addressed caches:
 The nightly batch caps total work at 3h. If the ranking says the top-K files
 would exceed 3h, it warns but proceeds (the pipeline itself skips any files
 that are already cached, so actual work is always ≤ 3h of new transforms).
+
+MANUAL PIPELINE QUEUE:
+
+To include files from excluded directories (e.g. `.lake/packages/mathlib4/`) in
+the next nightly pipeline run, add their paths to `.manual_pipeline_queue` in
+the repo root:
+  - One path per line (absolute or relative to repo root).
+  - Globs supported: `.lake/packages/mathlib4/Mathlib/Data/List/*.lean`
+  - Lines starting with ``#`` are comments (ignored).
+  - The queue is automatically cleared after a successful nightly run.
+
+Both `rank_by_relevance.py` and `generate_phonebook.py` support:
+  - `--include-path PATH` (repeatable) — single-file include
+  - `--include-list FILE` — read paths from a file
+
+The nightly batch detects `.manual_pipeline_queue` automatically and passes it
+as `--include-list` to both the ranker and the pipeline. During daytime, simply
+edit the queue file; the next `manage.sh swap 35b` or `nightly_batch.sh` will
+process the listed files through the 35B teacher pass.
 
 manage.sh commands:
   manage.sh status                 # model state, page cache, VRAM, last ranking summary
