@@ -91,8 +91,9 @@ Cold-start caveats:
     Docker volumes start empty and the server won't create the directory.
   - Real cold-start (no cache at all): ~6 min (CUDA compile) + ~1 min (model
     load) = ~7 min. With CUDA cache: ~45-150s. With both: ~45s.
-  - The "~10s" target is not met because model loading still faults 6-7G from
-    disk even with vmtouch (only 14-17G of 21G fits in available RAM).
+  - Model loading still faults 6-7G from disk even with vmtouch (only 14-17G of
+    21G fits in available RAM). With more RAM (≥32 GB) the full model would fit
+    in page cache and restarts would be near-instant.
 
 MODEL MANAGEMENT (Docker-based, with parallel pre-flight):
 
@@ -103,8 +104,9 @@ Principles:
   - A model stays in VRAM until explicitly swapped. Never auto-unload.
   - vmtouch is used ONLY for the 35B (21 GB) and ONLY just before launch,
     not at boot. The 9B (5.8 GB) loads fast enough without it.
-  - Parallel pre-flight: vmtouch (I/O) and file relevance ranking (CPU) run
-    concurrently. Total wall time ≈ max(38s, 5min) = ~5 min.
+  - Parallel pre-flight: vmtouch (I/O, ~100s for 20G) and file relevance ranking
+    (CPU, ~5 min first run, <1s cached) run concurrently.
+    Total wall time ≈ max(100s, 5min) = ~5 min first run, ~100s subsequently.
   - If estimated pipeline time > 3h, warns (does not block).
 
 Tooling (all in /home/nos/labware/llocollama/):
