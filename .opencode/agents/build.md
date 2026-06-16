@@ -34,6 +34,20 @@ Before relying on librarian data for any non-trivial task, verify the index is c
 4. If no Deep Analysis notes exist for the module (only heuristic Semantic Index notes), the 35B teacher pass has not completed — treat the index as provisional.
 5. Never assume the phonebook reflects the current state of the code. A failed pipeline run (e.g. transformation timeouts) leaves the index with heuristic-only entries that lack cross-refs, invariants, and typed edges.
 
+GAPS IN THE INDEX:
+   If you need a file that isn't in the index (e.g. a mathlib lemma, a file from
+   an excluded directory), suggest adding it to `.manual_pipeline_queue` in the
+   repo root. The next nightly run will process it through the 35B teacher pass
+   and add its Deep Analysis to the notebook. You can also run the pipeline
+   directly yourself:
+     python3 /home/nos/labware/open-notebook/scripts/pipeline/rank_by_relevance.py \\
+       /home/nos/labware/LaserCortex --query "..." --include-path .lake/packages/...
+     python3 /home/nos/labware/open-notebook/scripts/pipeline/generate_phonebook.py \\
+       /home/nos/labware/LaserCortex --mode full --include-path .lake/packages/...
+
+   The `lean4-skills/` directory is no longer excluded — it will appear in the
+   index after the next pipeline run.
+
 CROSS-LAYER QUERY SYNTAX:
 To find cross-paradigm dependencies, use:
   query_librarian(anchor_tag="#webgpu-buffer", edge_type="CONSTRAINT", related_tags=["#proof-bound"])
