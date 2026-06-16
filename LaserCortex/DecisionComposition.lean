@@ -1,3 +1,29 @@
+
+/-
+# Module: DecisionComposition
+
+## Intent
+
+Implements a compile-time refinement type system for chaining logic modalities as gates, guaranteeing data preservation and proof-bound soundness across EMLTree evaluations.
+
+## Contracts
+
+Gate.ofLogicType, Gate.check, Decision.empty, Decision.singleton, Decision.compose, Decision.composeOf, LogicPipeline.run, LogicPipeline.runAux, closurePipeline, decide, soundness, closure_sound, decide_sound
+
+## Cross-refs
+
+LaserCortex.EMLRegistry → EMLTree, LogicM, Event, Norm; LaserCortex.LogicTypes → LogicType, LogicContraction, logic_contracts_to_normal_form; LaserCortex.InstitutionalClosure → InstitutionalClosure.closure
+
+## Invariants
+
+∀ g ∈ gates, g.check datum (type-level gate refinement); (d.compose g h).datum = d.datum (datum immutability); (p.run tree).datum = tree (pipeline identity preservation); soundness/closure_sound/decide_sound enforce logical validity of all passed gates.
+
+## Tags
+
+#lean4-theorem #invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
 import LaserCortex.LogicMonad

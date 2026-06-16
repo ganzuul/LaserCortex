@@ -1,3 +1,29 @@
+
+/-
+# Module: Candidates
+
+## Intent
+
+Exhaustively enumerates binary trees of size n, computes minimum/maximum logical cost bounds under specified logic types, and verifies right-comb tree optimality.
+
+## Contracts
+
+`allTrees : Nat → List EMLTree`, `minCost : LogicType → Nat → EMLTree × Nat`, `maxCost : LogicType → Nat → EMLTree × Nat`, `rightCombIsMin : LogicType → Nat → Bool`, `report : Nat → List (String × String × Nat × Nat × Nat)`
+
+## Cross-refs
+
+`LaserCortex.EMLRegistry → EMLTree, rightComb`, `LaserCortex.Cost → Φ`, `LaserCortex.LogicTypes → LogicType, allLogics, name, toBits`
+
+## Invariants
+
+`allTrees n` strictly enumerates all binary trees with exactly `n` internal nodes via recursive decomposition; `minCost`/`maxCost` guarantee `Nat`-bounded cost returns with `0 ≤ Φ L t`; `rightCombIsMin` asserts `Φ L t ≥ Φ L (rightComb n)` for all `t ∈ allTrees n` iff it evaluates to `true`; `report` preserves tuple ordering `(logic, tree_bits, min_cost, max_cost, right_comb_cost)`.
+
+## Tags
+
+#invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.Cost
 import LaserCortex.LogicTypes

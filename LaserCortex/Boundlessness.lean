@@ -1,3 +1,29 @@
+
+/-
+# Module: Boundlessness
+
+## Intent
+
+Formalizes the algebraic structure of idempotent resolution for `EMLTree` contraction, defines `rightCombResolution` and `VeryBigBox`, and proves meta-idempotence and terminal regularization bounds.
+
+## Contracts
+
+`IdempotentResolution (α : Type)`, `VeryBigBox`, `rightCombResolution : IdempotentResolution EMLTree`, `veryBigBox : VeryBigBox`, `rightComb_size (n : Nat)`, `rightComb_meta_idemp`, `rightComb_limit_idemp (t : EMLTree)`
+
+## Cross-refs
+
+`LaserCortex.EMLRegistry → EMLTree, rightComb, .size`
+
+## Invariants
+
+`step ∘ step = step` (idempotence of regularization step); `limit = step ∘ limit` (fixed-point property); `(rightComb n).size = n` (size preservation under normal form); `rightComb (rightComb t.size).size = rightComb t.size` (terminal idempotence)
+
+## Tags
+
+#lean4-theorem #axiom #invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
 import LaserCortex.InstitutionalClosure

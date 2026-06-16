@@ -1,3 +1,29 @@
+
+/-
+# Module: AMM
+
+## Intent
+
+Formalizes a constant-product automated market maker with binary-tree swap routes, computing compositional cross-impact costs and associator defects within a logic-parametrized cost algebra.
+
+## Contracts
+
+`Pool.reserveA`, `Pool.reserveB`, `Pool.hApos`, `Pool.hBpos`, `k(p : Pool) : Nat`, `swapOut(p : Pool)(dx : Nat) : Nat`, `Route.leaf`, `Route.node`, `compose(r1 r2 : Route) : Route`, `routeToTree(r : Route) : EMLTree`, `crossImpact(L : LogicTypes.LogicType)(r1 r2 : Route) : Nat`, `associatorCost(L : LogicTypes.LogicType)(r1 r2 r3 : Route) : Nat`
+
+## Cross-refs
+
+`LaserCortex.EMLRegistry → EMLTree, contracts_one.rotate` | `LaserCortex.Cost → Φ, nodeParam, LogicTypes.LogicType, Cost.NodeCost.apply, Cost.nodeParam_bias_one L`
+
+## Invariants
+
+`hApos : 0 < reserveA`, `hBpos : 0 < reserveB` | `(reserveA + dx) * (reserveB - swapOut p dx) ≥ k p` (floor division bound) | `crossImpact L r1 r2 ≥ 0` (truncated ℕ subtraction) | `crossImpact_classical L r1 r2 = 1` when `(nodeParam L).rightDiv = 0 ∧ (nodeParam L).leftWeight = 1` | `associatorCost L r1 r2 r3 = 0` when `(nodeParam L).rightDiv = 0` (pentagon coherence) | `compose` lacks structural associativity; rotational equivalence holds via `EMLTree` Tamari decomposition.
+
+## Tags
+
+#lean4-theorem #invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.Cost
 

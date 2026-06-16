@@ -1,3 +1,29 @@
+
+/-
+# Module: Decomposition
+
+## Intent
+
+Formalizes Tamari lattice contraction paths, reverse-decomposition enumeration, and ancestor search spaces to prove non-uniqueness of historical reconstructions and path diversity.
+
+## Contracts
+
+reverse_one | reverse_one_sound | reverse_one_complete | non_unique_decomposition | path_diversity | ancestorsUpTo | viewDFS | Decomposition.source | Chain.link | Path.length | Path.append
+
+## Cross-refs
+
+EMLRegistry → EMLTree, contracts_one, contracts_to | EMLTree → size, leftComb, rightComb
+
+## Invariants
+
+Path.length structural count (0 for .nil, 1+recursive for .cons) | reverse_one soundness/completeness equivalence with contracts_one | non_unique_decomposition n ≥ 2 bound for rightComb/leftComb divergence | ancestorsUpTo/viewDFS partial truncation at explicit depth n | Chain derives Nonempty; tip represents empty chain at terminal node | contracts_one/contracts_to inductively enforce valid Tamari lattice transitions | lean4_limitation_note coinductive kernel positivity restriction on Prop-valued nested inductives | path_diversity proves p₁ ≠ p₂ via Path.length inequality
+
+## Tags
+
+#lean4-theorem #axiom #invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 
 open EMLRegistry

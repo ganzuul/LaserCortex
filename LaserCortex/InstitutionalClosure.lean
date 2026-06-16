@@ -1,3 +1,29 @@
+
+/-
+# Module: InstitutionalClosure
+
+## Intent
+
+Formalizes institutional closure as a fixed-point pipeline over historical events, mapping temporal linearization, fuzzy impact grading, and deontic norm revision through the LogicMonad.
+
+## Contracts
+
+closure : LogicM Event → LogicM Norm, temporalNormalize : LogicM α → LogicM α, fuzzyGrade : LogicM Event → LogicM Nat, deonticUpdate : LogicM Nat → LogicM Norm, selfRecognize : LogicM Norm → LogicM Norm, Event, Norm, BlamePool, closure_is_fixed_point, normalization_idempotent, closure_pipeline_eq
+
+## Cross-refs
+
+LogicMonad → LogicM, EMLRegistry → Repr, LogicTypes → LogicContraction (contracts_to_rightComb), TemporalParadox → temporal normalization semantics, SoritesParadox → fuzzy grading semantics, LiarParadox → deontic self-reference semantics
+
+## Invariants
+
+Pipeline convergence relies on idempotence of contracts_to_rightComb; selfRecognize acts as identity yielding fixed-point equality; normalization_idempotent guarantees state stability under re-processing; impact thresholds trigger deterministic norm revision (threshold := impact / 2 if > 10 else 10); closure composition strictly equals selfRecognize ∘ deonticUpdate ∘ fuzzyGrade ∘ temporalNormalize.
+
+## Tags
+
+#lean4-theorem #axiom #invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
 import LaserCortex.LogicMonad

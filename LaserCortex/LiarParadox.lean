@@ -1,3 +1,29 @@
+
+/-
+# Module: LaserCortex.LiarParadox
+
+## Intent
+
+Formalizes self-referential logical paradoxes as indexed tree structures, computes per-logic resolution costs via Cayley-Dickson contraction steps, and aggregates resistance metrics into a fractal friction Lagrangian.
+
+## Contracts
+
+ProblemClass, Problem, WrappedProblem, Tower, liarProblem : Problem, liarTower : Tower liarProblem, frictionLagrangian : Nat, liarCost : LogicTypes.LogicType → Nat, missingProofParadox : Problem → LogicTypes.LogicType → Problem, liarWrapper : LogicTypes.LogicType → WrappedProblem liarProblem, liarCost_le_cdStep, liarCost_matches_classical, liarCost_matches_fuzzy
+
+## Cross-refs
+
+LaserCortex.EMLRegistry → EMLTree, contracts_to, contracts_to_rightComb, rightComb | LaserCortex.LogicTypes → LogicType, LogicContraction, cdStep
+
+## Invariants
+
+liarCost lt = lt.cdStep (hardness metric); liarTower.layers cardinality matches liarProblem.suitableLogics.length; frictionLagrangian equals Σ(WrappedProblem.cost) across all layers; liarWrapper proof obligation reduces to EMLRegistry.contracts_to_rightComb via structural case analysis on LogicType; normal form mapping enforces rightComb 2 for .ManyValued and rightComb 3 for all other logics; Tower layers store dependent pairs Σ lt, WrappedProblem p lt ensuring type-safe logic-problem alignment.
+
+## Tags
+
+#lean4-theorem #invariant #proof-bound #axiom
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
 

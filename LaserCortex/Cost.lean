@@ -1,3 +1,29 @@
+
+/-
+# Module: Cost
+
+## Intent
+
+Defines a recursive cost function Φ over EML trees parameterized by logic-specific node cost structures, proving that for logics with zero right-division, Φ equals tree size and is invariant under Tamari rotations and contraction paths.
+
+## Contracts
+
+[NodeCost, NodeCost.apply, nodeParam, Φ, nodeParam_bias_one, nodeParam_leftWeight_ge_one, Φ_Leaf, Φ_Node, Φ_rightComb_succ, Φ_rightComb_classical, Φ_rightComb_le_n, Φ_rightComb_pos, Φ_eq_size_classical, Φ_contracts_one_eq_classical, Φ_contracts_to_eq_classical]
+
+## Cross-refs
+
+LaserCortex.EMLRegistry → EMLTree, rightComb, contracts_one, contracts_to, contracts_one_size_eq; LaserCortex.LogicTypes → LogicType
+
+## Invariants
+
+(nodeParam L).bias = 1 for all L; 1 ≤ (nodeParam L).leftWeight; divisor is (rightDiv + 1) preventing zero-division; Φ L t ≤ t.size for all L and t; Φ L t = t.size and Φ is invariant under EMLRegistry.contracts_one/contracts_to when (nodeParam L).rightDiv = 0.
+
+## Tags
+
+#lean4-theorem #axiom #invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
 

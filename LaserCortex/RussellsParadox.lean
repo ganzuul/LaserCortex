@@ -1,3 +1,29 @@
+
+/-
+# Module: RussellsParadox
+
+## Intent
+
+Formalizes Russell's set-theoretic diagonalization as a tree contraction problem across multiple logical systems, defining cost bounds and a paraconsistent resolution framework.
+
+## Contracts
+
+russellsTree : EMLTree | russellsProblem : Problem | russellsWrapper (lt : LogicTypes.LogicType) : WrappedProblem russellsProblem lt | russellsTower : Tower russellsProblem | russellsCost (lt : LogicTypes.LogicType) : Nat | russellsFrictionLagrangian : Nat | theorem russellsCost_le_cdStep (lt : LogicTypes.LogicType) : russellsCost lt ≤ lt.cdStep
+
+## Cross-refs
+
+EMLRegistry → EMLTree, contracts_to, contracts_to_rightComb, rightComb, Tower | LogicTypes → LogicType, LogicContraction, cdStep | LiarParadox → namespace/paradigm context
+
+## Invariants
+
+russellsTree topology fixed to leftComb size 3 | contraction target fixed to rightComb 3 | cost bound russellsCost lt ≤ lt.cdStep explicitly postpones regularization axis computation | resolution guaranteed by EMLRegistry.contracts_to_rightComb for any tree/logic | suitable logic space restricted to [Paraconsistent, Classical, ManyValued, Intuitionistic, Relevance, Free, Modal] | Friction Lagrangian defined as sum of per-layer wrapper costs
+
+## Tags
+
+#lean4-theorem #invariant #axiom #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
 import LaserCortex.LiarParadox

@@ -1,3 +1,29 @@
+
+/-
+# Module: LodayCoords
+
+## Intent
+
+Computes Loday coordinate lists for binary trees and formally proves structural properties including length bounds and coordinate map injectivity.
+
+## Contracts
+
+numLeaves, numNodes, lodayCoord, numLeaves_pos, numNodes_pos, lodayCoord_length, lodayCoord_injective
+
+## Cross-refs
+
+LaserCortex.EMLRegistry → EMLTree
+
+## Invariants
+
+- ∀ t : EMLTree, 0 < numLeaves t
+
+## Tags
+
+#lean4-theorem #proof-bound #invariant
+
+-/
+
 import LaserCortex.EMLRegistry
 
 open EMLRegistry

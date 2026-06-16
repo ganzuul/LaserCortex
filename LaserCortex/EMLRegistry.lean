@@ -88,6 +88,33 @@
 -- 
 -- =========================================================================
 
+
+
+/-
+# Module: EMLRegistry
+
+## Intent
+
+Formalizes a Tamari-order contraction lattice over inductive binary trees, providing decidable reachability proofs and a certified type-registry binding neural router indices to verified tree topologies.
+
+## Contracts
+
+EMLTree.depth, EMLTree.size, contracts_one, contracts_to, rightComb, contracts_to_rightComb, size_invariant, decidable_contracts_to, RouterIndex, TypeRegistry, TypeRegistry.fromTree, CortexCertificate, certify, exampleRegistry
+
+## Cross-refs
+
+Init.Data.Finset → Finset.univ, Finset.find?; Classical → Classical.decidable; Data.Fin → Fin n; Function → Function.Injective; Repr → Repr.deriving, Repr.reprPrec
+
+## Invariants
+
+contracts_to s t → s.size = t.size (size preservation); RouterIndex n ⊆ Fin n (strict bounded index); TypeRegistry.injective enforces distinct index-to-type mapping; contracts_to_rightComb bounds all trees to canonical rightComb t.size (lattice minimum); decidability of contracts_to gated on size equality via Classical.choice; CortexCertificate.quenchWitness enforces Tamari neighborhood containment for type certification.
+
+## Tags
+
+#lean4-theorem #axiom #invariant #proof-bound
+
+-/
+
 namespace EMLRegistry
 
 -- EMLTree: The core inductive type (governed grammar syntax tree)

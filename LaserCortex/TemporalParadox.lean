@@ -1,3 +1,29 @@
+
+/-
+# Module: TemporalParadox
+
+## Intent
+
+Formalizes the Grandfather causal loop as a tree contraction problem over indexed logical systems, computing resolution costs and proving normal-form transformation bounds.
+
+## Contracts
+
+grandfatherTree : EMLTree, grandfatherProblem : Problem, grandfatherWrapper : LogicType → WrappedProblem grandfatherProblem, grandfatherTower : Tower grandfatherProblem, grandfatherCost : LogicType → Nat, grandfatherCost_le_cdStep : ∀ (lt : LogicType), grandfatherCost lt ≤ lt.cdStep, grandfatherFrictionLagrangian : Nat
+
+## Cross-refs
+
+LaserCortex.LogicTypes → LogicType, cdStep, LogicContraction; LaserCortex.EMLRegistry → EMLTree, contracts_to_rightComb; LaserCortex.LiarParadox → leftComb, rightComb
+
+## Invariants
+
+Contraction from grandfatherTree to rightComb 4 is provable via EMLRegistry.contracts_to_rightComb; Resolution cost is upper-bounded by lt.cdStep; Tower layer costs are summable as Nat; Normal form is strictly deterministic (rightComb tree.size); Proof construction relies on case analysis over LogicType followed by definitional reduction.
+
+## Tags
+
+#lean4-theorem #invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
 import LaserCortex.LiarParadox

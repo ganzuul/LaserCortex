@@ -1,3 +1,29 @@
+
+/-
+# Module: SoritesParadox
+
+## Intent
+
+Formalizes the Sorites vagueness paradox as a transformable problem structure, computes its computational cost per logic type, and aggregates total friction via a layer-summed Lagrangian.
+
+## Contracts
+
+soritesTree : EMLTree, soritesProblem : Problem, soritesWrapper : LogicTypes.LogicType → WrappedProblem soritesProblem lt, soritesTower : Tower soritesProblem, soritesCost : LogicTypes.LogicType → Nat, soritesCost_le_cdStep : ∀ lt, soritesCost lt ≤ lt.cdStep, soritesFrictionLagrangian : Nat
+
+## Cross-refs
+
+LaserCortex.EMLRegistry → EMLTree, leftComb, rightComb, contracts_to_rightComb, LaserCortex.LogicTypes → LogicType, LogicContraction, cdStep, LaserCortex.LiarParadox → Problem, Tower, WrappedProblem
+
+## Invariants
+
+soritesTree is fixed to leftComb 5; soritesCost lt is bounded by lt.cdStep; soritesTower.layers cardinality equals 10 (size of suitableLogics); soritesFrictionLagrangian is deterministic sum of WrappedProblem.cost across all logic layers; normalForm transformation enforces rightComb 5 via LogicContraction proof obligation; soritesWrapper.cost evaluates to lt.cdStep.
+
+## Tags
+
+#lean4-theorem #invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
 import LaserCortex.LiarParadox

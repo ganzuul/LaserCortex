@@ -1,28 +1,26 @@
 /-
-LogicTypes.lean
-Multi-Logic Type System for Pluralistic Reasoning Framework
+# Module: LogicTypes
 
-This file defines the type hierarchy for 14 logic types identified in
-the NeSy framework (see /home/nos/devcom/docs/NeSy/paradoxes_and_logics.md).
+## Intent
 
-Design Philosophy:
-- Paradoxes are not errors but structured features
-- Each logic type handles a class of paradoxes as boundary conditions
-- The system treats paradoxes, empty references, and path-dependent states
-  as structured, typed features rather than processing defects
+Defines a 14-type pluralistic logic hierarchy and formalizes intra-logic contraction, cross-logic translation, and meta-contraction relations over the `EMLTree` structure.
 
-Integration with EMLRegistry:
-- EMLTree remains the foundational tree structure
-- Each logic type defines its own contraction relation
-- Classical logic uses the Tamari contraction from EMLRegistry
-- Other logics will have their own contraction semantics
+## Contracts
 
-See also:
-- LaserCortex/EMLRegistry.lean (foundation)
-- docs/PLURALISTIC_LOGIC_FRAMEWORK.md (design document)
-- docs/TIME_LIKE_DIMENSIONS.md (physical interpretation)
-- /home/nos/devcom/docs/NeSy/paradoxes_and_logics.md (paradox taxonomy)
-- /home/nos/devcom/docs/NeSy/Gemini_on_typed-cortex_NeSy.md (Very Big Box architecture)
+inductive LogicType, inductive LogicClass, inductive MetaContractsTo, structure LogicTranslation, def LogicNormalForm, def LogicContraction, theorem logic_contracts_to_normal_form, theorem classical_contracts_to_normal_form, theorem classical_node_of_rightCombs
+
+## Cross-refs
+
+LaserCortex.EMLRegistry → EMLTree, contracts_to, rightComb, contracts_to_rightComb, node_of_rightCombs_contracts_to_rightComb, contracts_one
+
+## Invariants
+
+LogicNormalForm universally reduces to EMLRegistry.rightComb n across all LogicType variants. LogicContraction defaults to EMLRegistry.contracts_to for all variants; logic-specific semantics are placeholder stubs. MetaContractsTo enforces transitivity, congruence, and intra/inter-logic preservation via LogicTranslation.soundness and .completeness. LogicType.cdStep maps 5 logics to Nats 0–4, defaulting all others to 0. LogicType.isAssociativeSector partitions logics into split boundary 3 (associative) and 4 (non-associative).
+
+## Tags
+
+#lean4-theorem #axiom #invariant #proof-bound
+
 -/
 
 import LaserCortex.EMLRegistry

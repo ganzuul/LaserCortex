@@ -1,3 +1,29 @@
+
+/-
+# Module: LogicMonad
+
+## Intent
+
+Formalizes a free monad over binary trees (`LogicM`) and a logic-parameterized computation structure (`LogicMonad`) that enforces normalization invariants across distinct logical systems.
+
+## Contracts
+
+`LogicM`, `LogicM.bind`, `LogicM.map`, `LogicM.toEMLTree`, `LogicM.size`, `LogicMonad`, `pure`, `seq`, `toTree`, `normalizeAcross`, `pure_bind`, `bind_pure`, `bind_assoc`, `seq_via_bind`, `monad_structure_invariant`
+
+## Cross-refs
+
+`LaserCortex.EMLRegistry → EMLTree` (structural mapping target), `LaserCortex.LogicTypes → LogicType, LogicContraction, LogicNormalForm` (normalization parameters and type constraints)
+
+## Invariants
+
+`LogicM` strictly enforces binary tree topology via `pure` (leaf) and `node` (binary internal) constructors. `LogicMonad` enforces `lt`-normalized form on all `tree` fields. Monad laws (`pure_bind`, `bind_pure`, `bind_assoc`) structurally guaranteed by structural induction. `monad_structure_invariant` enforces `LogicType`-agnostic monadic identity. Normalization cost bounded by `cdStep lt` per `seq` operation.
+
+## Tags
+
+#lean4-theorem #axiom #invariant #proof-bound
+
+-/
+
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
 
