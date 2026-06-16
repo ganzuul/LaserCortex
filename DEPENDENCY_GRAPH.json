@@ -1,0 +1,49 @@
+{
+  "edges": [
+    {
+      "edge_id": "E001",
+      "edge_type": "CONSTRAINT",
+      "source": {"module": "LaserCortex/AMM.lean", "symbol": "swap_preserves_k_bound"},
+      "target": {"module": "infra/_cortex/_amm.py", "symbol": "AMM"},
+      "invariant_at_boundary": "The Python AMM swap must preserve the constant-product invariant k, matching the Lean formal proof.",
+      "failure_mode": "swap_preserves_k_bound would be violated if Python reserves are updated inconsistently.",
+      "tags": ["#lean4-theorem", "#invariant", "#python-mirror"]
+    },
+    {
+      "edge_id": "E002",
+      "edge_type": "DATA_SOURCE",
+      "source": {"module": "LaserCortex/LogicTypes.lean", "symbol": "LogicType"},
+      "target": {"module": "infra/_cortex/_logic_types.py", "symbol": "LogicType"},
+      "invariant_at_boundary": "Python LogicType enum must match the 14 variants defined in Lean.",
+      "failure_mode": "Logic contraction checks in Python would disagree with Lean proofs.",
+      "tags": ["#lean4-theorem", "#python-mirror"]
+    },
+    {
+      "edge_id": "E003",
+      "edge_type": "DATA_SOURCE",
+      "source": {"module": "LaserCortex/LodayCoords.lean", "symbol": "lodayCoord"},
+      "target": {"module": "canvas_app/frontend/src/shaders/phi_cost.ts", "symbol": "phi_cost"},
+      "invariant_at_boundary": "The WebGPU shader's Loday coordinate indexing must match the injective ordering from the Lean proof.",
+      "failure_mode": "Visual tree positions would misalign with Φ cost assignments.",
+      "tags": ["#lean4-theorem", "#webgpu-buffer", "#proof-bound"]
+    },
+    {
+      "edge_id": "E004",
+      "edge_type": "DATA_SOURCE",
+      "source": {"module": "LaserCortex/Cost.lean", "symbol": "Φ"},
+      "target": {"module": "infra/_cortex/_cost.py", "symbol": "phi"},
+      "invariant_at_boundary": "Python Φ must compute identical Nat costs as Lean Φ for all EMLTrees up to n=15.",
+      "failure_mode": "Cost landscape visualization would display wrong Φ values.",
+      "tags": ["#lean4-theorem", "#python-mirror"]
+    },
+    {
+      "edge_id": "E005",
+      "edge_type": "DATA_SOURCE",
+      "source": {"module": "LaserCortex/EMLRegistry.lean", "symbol": "EMLTree"},
+      "target": {"module": "infra/_cortex/_eml_tree.py", "symbol": "EMLTree"},
+      "invariant_at_boundary": "Python EMLTree constructors and contracts_to must mirror Lean definitions exactly.",
+      "failure_mode": "Tree normalization and route-to-tree mapping would diverge from proven behavior.",
+      "tags": ["#lean4-theorem", "#python-mirror"]
+    }
+  ]
+}
