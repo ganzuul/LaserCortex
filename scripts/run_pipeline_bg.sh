@@ -59,7 +59,11 @@ case "${1:-start}" in
       echo ""
       echo "Pass 3 complete at $(date)"
 
+      # ---- Cleanup: stop embedding server (no longer needed) ----
+      echo "[cleanup] Stopping embedding server..."
+      /home/nos/labware/LaserCortex/scripts/start_embed_server.sh kill 2>&1 || true
       echo ""
+
       echo "=== Pipeline Background Job Complete ==="
       date
     ' _ "$PIDFILE" "$LOCKFILE" "$LOGFILE" "$ON_DIR" "$RANKING_FILE" "$REPO_DIR" &
