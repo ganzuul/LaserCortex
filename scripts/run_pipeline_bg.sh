@@ -45,7 +45,7 @@ case "${1:-start}" in
       # ---- Remaining Pass 2: cached files are skipped automatically ----
       echo "[1/2] Running 35B Deep Analysis on outstanding files..."
       cd "$4"
-      python3 scripts/pipeline/generate_phonebook.py \
+      PYTHONUNBUFFERED=1 python3 scripts/pipeline/generate_phonebook.py \
         --mode full \
         --ranking-file "$5" \
         --top-k 144 \
@@ -55,7 +55,12 @@ case "${1:-start}" in
 
       # ---- Re-run Cross-Layer-Linker with all completed abstracts ----
       echo "[2/2] Running Cross-Layer-Linker..."
-      python3 /tmp/run_pass3.py 2>&1
+      PASS3="$4/scripts/run_pass3.py"
+      if [ -f "$PASS3" ]; then
+        PYTHONUNBUFFERED=1 python3 "$PASS3" 2>&1
+      else
+        echo "  WARNING: $PASS3 not found — run standalone: python3 $PASS3"
+      fi
       echo ""
       echo "Pass 3 complete at $(date)"
 
