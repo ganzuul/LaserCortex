@@ -3,7 +3,7 @@
 #
 # Contains resource-safety guards per SAFETY.md P2–P4:
 #   - Free RAM check: refuse to start if < 4 GB free (process killed before swap-thrashing)
-#   - Virtual memory cap: ulimit -v 12 GB (prevents unbounded VSZ, tuned for PyTorch init)
+#   - Virtual memory cap: ulimit -v 12 GB (CPU) or 18 GB (CUDA) — prevents unbounded VSZ
 #   - RSS watchdog: kills the server if RSS exceeds 3 GB
 #   - Ramp-ready: caller can gradually increase workers
 set -euo pipefail
@@ -12,7 +12,10 @@ PIDFILE="/tmp/lasercortex-embed.pid"
 LOGFILE="/tmp/lasercortex-embed.log"
 WDFILE="/tmp/lasercortex-embed-watchdog.pid"
 RSS_LIMIT_MB=3072      # kill server if RSS exceeds 3 GB
-VMEM_LIMIT_KB=$((12 * 1024 * 1024))   # ulimit -v: 12 GB virtual (RSS stays ~1-6 GB depending on backend; PyTorch init + libgomp threads need ~8 GB)
+# Virtual memory cap (ulimit -v).  CUDA libraries map GPU contexts into
+# virtual address space (~15 GB VSZ for CUDA PyTorch).  CPU mode needs
+# ~9 GB.  We detect the device from "$@" and adjust accordingly.
+VMEM_LIMIT_KB=$((12 * 1024 * 1024))   # default: 12 GB (safe for CPU)
 
 case "${1:-start}" in
   start)
@@ -41,24 +44,45 @@ case "${1:-start}" in
     fi
 
     echo "Starting bge-m3 embedding server on :8082..."
-    echo "  Extra args: $@"
+    echo "  Arguments: $@"
     echo "  RSS limit:  ${RSS_LIMIT_MB} MB"
-    echo "  VMEM limit: $(( VMEM_LIMIT_KB / 1024 )) MB"
+
+    # Detect device to set appropriate VMEM limit.
+    # CUDA libraries map GPU contexts into virtual address space
+    # (~15 GB VSZ for CUDA PyTorch).  CPU mode needs ~9 GB.
+    if echo "$@" | grep -q -- '--device[= ]cuda'; then
+      VMEM_LIMIT_KB="-1"  # unlimited — CUDA libraries map large VSZ, RSS watchdog is real protection
+      # Enable expandable segments to reduce CUDA memory fragmentation
+      export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      echo "  VMEM limit: unlimited (device: cuda)"
+      echo "  PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"
+    else
+      echo "  VMEM limit: $(( VMEM_LIMIT_KB / 1024 )) MB (device: cpu)"
+    fi
 
     # ── Launch with memory cap (P2) ──────────────────────────────────
     # Use setsid to fully detach from the controlling terminal so Ctrl+C
     # in the parent shell doesn't propagate to the server.
+    # Default device is cpu (the python server's own default); override
+    # by passing --device cuda via $@.
     setsid bash -c '
 echo "$$" > "$0"
-ulimit -v '"$VMEM_LIMIT_KB"'
+VMEM='"$VMEM_LIMIT_KB"'
+if [ "$VMEM" = "-1" ]; then
+  ulimit -v unlimited
+else
+  ulimit -v "$VMEM"
+fi
 exec python3 /home/nos/labware/open-notebook/scripts/pipeline/embedding_server.py \
-  --port 8082 --device cpu \
+  --port 8082 \
   "$@"
 ' "$PIDFILE" "$@" \
       > "$LOGFILE" 2>&1 &
     # The setsid child writes its own PID ($$) immediately; we don't need `$!`
 
     # ── RSS watchdog (P2) ────────────────────────────────────────────
+    # Redirect watchdog output to the logfile so it doesn't hold stdout
+    # open and prevent the shell from returning the prompt.
     (
       # Wait for PID file to be written by the setsid child (first action)
       PID=""
@@ -84,7 +108,7 @@ exec python3 /home/nos/labware/open-notebook/scripts/pipeline/embedding_server.p
         fi
         sleep 5
       done
-    ) &
+    ) >> "$LOGFILE" 2>&1 &
     echo $! > "$WDFILE"
 
     # ── Wait for it to be ready ──────────────────────────────────────
