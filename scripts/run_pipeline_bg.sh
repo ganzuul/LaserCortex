@@ -45,10 +45,20 @@ case "${1:-start}" in
       # ---- Remaining Pass 2: cached files are skipped automatically ----
       echo "[1/2] Running 35B Deep Analysis on outstanding files..."
       cd "$4"
+      # TOP_K env var controls how many files to process in this run.
+      # Default: no cap (process all remaining files).
+      # Set to e.g. 144 for a ~3h budget.
+      TOP_K_ARG=()
+      if [ -n "${TOP_K:-}" ]; then
+        TOP_K_ARG=("--top-k" "$TOP_K")
+        echo "  TOP_K=$TOP_K (capped at $TOP_K files)"
+      else
+        echo "  TOP_K=unset (processing all remaining files)"
+      fi
       PYTHONUNBUFFERED=1 python3 scripts/pipeline/generate_phonebook.py \
         --mode full \
         --ranking-file "$5" \
-        --top-k 144 \
+        "${TOP_K_ARG[@]}" \
         "$6" 2>&1
       echo ""
       echo "Pass 2 complete at $(date)"
