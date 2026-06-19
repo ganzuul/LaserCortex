@@ -1,0 +1,10 @@
+numpy
+matplotlib
+networkx
+plotly
+ipywidgets
+# Optional (install if you want TDA / 3D / graphviz features)
+# ripser
+# scikit-tda
+# pyvista
+# graphviz
