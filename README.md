@@ -1,4 +1,4 @@
-````markdown name=README.md url=https://github.com/ganzuul/LaserCortex/blob/main/README.md
+
 # LaserCortex — Typed Cortex, EML, and Tamari‑based Provenance
 
 LaserCortex develops a typed “cortex” inspired by NormCode: a minimal, auditable formalism for pluralistic, paradox‑tolerant reasoning that records choice history as provenance. The project combines a small, rigorous Lean 4 core (formal types, Tamari contraction proofs, cost models) with Python + TypeScript tooling for visualization, execution, and agent infrastructure.
@@ -78,12 +78,3 @@ Parse/verify a tree with the CLI (example uses the binary-bit encoding used in M
 
 ## License
 AGPLv3 — see `LICENSE`.
-
----
-
-If you’d like, I can open a PR that:
-- replaces the current README.md with this text,
-- commits a reproducible Jupyter notebook that regenerates the `logexp_avtivation.png` (and overlays LodayCoord / Φ samples),
-- or adds a short Lean doc comment near `EMLTree` with the “Node as ternary encoding” wording.
-Which of those would you like me to do next?
-```
