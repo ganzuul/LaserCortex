@@ -41,6 +41,15 @@ class EMLTree:
             return 0
         return 1 + self.left.size() + self.right.size()
 
+    def height(self) -> int:
+        """Maximum path length from root to leaf.
+        For combs (maximally skewed), height = size.
+        For balanced trees, height ≈ log₂(size+1).
+        Mirrors EMLTree.height."""
+        if self.is_leaf:
+            return 0
+        return 1 + max(self.left.height(), self.right.height())
+
     def __repr__(self) -> str:
         if self.is_leaf:
             return "Leaf"
