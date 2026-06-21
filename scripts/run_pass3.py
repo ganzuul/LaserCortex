@@ -12,8 +12,10 @@ Usage:
 Dependencies: requests (stdlib-only otherwise)
 """
 
+import hashlib
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -27,7 +29,21 @@ GRAPH_OUT = REPO_ROOT / "DEPENDENCY_GRAPH.json"
 PHONEBOOK_OUT = REPO_ROOT / "MASTER_RECON_PHONEBOOK.md"
 
 ON_URL = "http://localhost:5055/api"
+LLM_URL = "http://localhost:8080"  # Direct llama-server (bypass ON for determinism)
 TRANSFORMATION_CROSS_LAYER_LINKER = "transformation:j2puh5eolx32sc5b431s"
+
+# Cache the cross-layer linker prompt (fetched once from ON)
+_cross_layer_prompt: str = ""
+def _get_cross_layer_prompt() -> str:
+    global _cross_layer_prompt
+    if not _cross_layer_prompt:
+        try:
+            t = requests.get(f"{ON_URL}/transformations/{TRANSFORMATION_CROSS_LAYER_LINKER}", timeout=10).json()
+            _cross_layer_prompt = t.get("prompt", "")
+        except Exception as e:
+            print(f"  WARNING: Could not fetch prompt: {e}")
+            _cross_layer_prompt = ""
+    return _cross_layer_prompt
 
 # Layer ordering for display
 LAYER_ORDER = ["FORMALIZATION", "API_GATEWAY", "PRESENTATION", "DOCUMENTATION", "SYSTEM", "UNKNOWN"]
@@ -182,60 +198,117 @@ def build_cross_layer_abstract(entries: list[dict], enriched: dict[str, str]) ->
         layer = entry.get("layer", "UNKNOWN")
         grouped.setdefault(layer, []).append(entry)
 
-    # Build abstract
+    # Build abstract with context window budget (~200K chars ≈ 50K tokens,
+    # leaving room for system prompt and response within 65K ctx).
+    MAX_CHARS = 180_000
+    ENRICHED_TRUNC = 100  # shorter enriched snippets to fit more modules
+    FALLBACK_TRUNC = 60   # even shorter for non-enriched entries
+
     abstracts = []
-    for layer in LAYER_ORDER:
-        mods = grouped.get(layer, [])
-        if not mods:
-            continue
-        for mod in mods:
+    budget = MAX_CHARS
+
+    # First pass: FORMALIZATION modules (highest value for cross-layer)
+    for layer in [l for l in LAYER_ORDER if l == "FORMALIZATION"]:
+        for mod in grouped.get(layer, []):
             module_name = mod["module"]
             line = f"  [{layer}] {module_name}"
             if module_name in enriched:
-                line += f": {enriched[module_name][:200]}"
+                line += f": {enriched[module_name][:ENRICHED_TRUNC]}"
             elif mod.get("intent") and mod["intent"] not in ("N/A", "", "No description"):
-                line += f": {mod['intent'][:200]}"
+                line += f": {mod['intent'][:FALLBACK_TRUNC]}"
             else:
-                # For graph-only modules with no description, add a hint
                 tags = ' '.join(mod.get('tags', []))
-                contracts = mod.get('contracts', [])
-                if contracts:
-                    line += f": contracts={', '.join(contracts[:3])}"
-                elif tags:
+                if tags:
                     line += f": tags={tags}"
-            abstracts.append(line)
+            if len(line) + sum(len(a) for a in abstracts) < budget:
+                abstracts.append(line)
+
+    # Second pass: enriched modules (Deep Analysis available)
+    for layer in LAYER_ORDER:
+        if layer == "FORMALIZATION":
+            continue
+        for mod in grouped.get(layer, []):
+            module_name = mod["module"]
+            if module_name not in enriched:
+                continue  # skip non-enriched in this pass
+            line = f"  [{layer}] {module_name}"
+            line += f": {enriched[module_name][:ENRICHED_TRUNC]}"
+            if len(line) + sum(len(a) for a in abstracts) < budget:
+                abstracts.append(line)
+
+    # Third pass: remaining graph modules (brief hints only)
+    for layer in LAYER_ORDER:
+        if layer == "FORMALIZATION":
+            continue
+        for mod in grouped.get(layer, []):
+            module_name = mod["module"]
+            if module_name in enriched:
+                continue  # already added above
+            line = f"  [{layer}] {module_name}"
+            tags = ' '.join(mod.get('tags', []))
+            contracts = mod.get('contracts', [])
+            if contracts:
+                line += f": contracts={', '.join(contracts[:2])}"
+            elif tags:
+                line += f": tags={tags}"
+            if len(line) + sum(len(a) for a in abstracts) < budget:
+                abstracts.append(line)
 
     batch_input = "\n".join(abstracts)
-    print(f"  Abstract: {len(included_entries)} modules, {len(batch_input)} chars, {len(abstracts)} lines")
+    total_chars = len(batch_input)
+    print(f"  Abstract: {len(abstracts)} modules, {total_chars} chars, {len(abstracts)} lines")
     print(f"    Breakdown: {len(enriched_modules)} enriched, {len(graph_nodes)} graph nodes, {len(formalization_modules)} FORMALIZATION")
+    if total_chars >= MAX_CHARS * 0.9:
+        print(f"  ⚠ Approaching context budget ({total_chars}/{MAX_CHARS} chars)")
     return batch_input
 
 
 def run_cross_layer_linker(entries: list[dict], enriched: dict[str, str], model_id: str) -> list[dict]:
-    """Call the 35B Cross-Layer-Linker transformation via ON API."""
+    """
+    Call the 35B Cross-Layer-Linker transformation deterministically.
+
+    Bypasses ON's API (which can't set temperature/seed) and calls the 35B
+    directly with temperature=0, seed derived from input hash.
+    """
     batch_input = build_cross_layer_abstract(entries, enriched)
+    prompt = _get_cross_layer_prompt()
+    if not prompt:
+        print("  WARNING: No cross-layer linker prompt available")
+        return []
+
+    # Derive seed from input for determinism
+    seed = int(hashlib.sha256(batch_input.encode()).hexdigest()[:8], 16)
+
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": batch_input},
+    ]
 
     try:
         resp = requests.post(
-            f"{ON_URL}/transformations/execute",
+            f"{LLM_URL}/v1/chat/completions",
             json={
-                "transformation_id": TRANSFORMATION_CROSS_LAYER_LINKER,
-                "input_text": batch_input,
-                "model_id": model_id,
+                "model": model_id,
+                "messages": messages,
+                "temperature": 0,
+                "seed": seed,
+                "max_tokens": 8192,
+                "cache_prompt": False,
             },
             timeout=600,
         )
         resp.raise_for_status()
         result = resp.json()
+        output = result["choices"][0]["message"].get("content", "")
     except Exception as e:
         print(f"  WARNING: Cross-layer linking API call failed: {e}")
         return []
 
-    cross_edges_raw = result.get("output", "")
-    if not cross_edges_raw:
+    if not output:
         print("  WARNING: Empty response from cross-layer linker")
         return []
 
+    cross_edges_raw = output
     try:
         cross_edges = json.loads(cross_edges_raw)
         if isinstance(cross_edges, list):
@@ -356,8 +429,43 @@ def main():
     # Run cross-layer linker
     cross_edges = run_cross_layer_linker(entries, enriched, model_id)
     if cross_edges:
-        dep_graph["edges"].extend(cross_edges)
-        print(f"  Total edges after Pass 3: {len(dep_graph['edges'])}")
+        # Assign layer_source/layer_target by looking up module names in cache
+        by_module = {e["module"]: e for e in entries}
+        def _strip_layer(name: str) -> str:
+            """Remove [LAYER] prefix added by 35B if present."""
+            return re.sub(r'^\[(\w+)\]\s*', '', name).strip()
+        for e in cross_edges:
+            src_mod = _strip_layer(e["source"]["module"] if isinstance(e["source"], dict) else e["source"])
+            tgt_mod = _strip_layer(e["target"]["module"] if isinstance(e["target"], dict) else e["target"])
+            src_entry = by_module.get(src_mod)
+            tgt_entry = by_module.get(tgt_mod)
+            e["layer_source"] = src_entry["layer"] if src_entry else "UNKNOWN"
+            e["layer_target"] = tgt_entry["layer"] if tgt_entry else "UNKNOWN"
+            e["_pass"] = 3
+
+    # Persistently merge Pass 3 edges (survives stochastic failures)
+    pass3_out = REPO_ROOT / "PASS3_EDGES.json"
+    existing_pass3 = []
+    if pass3_out.exists():
+        try:
+            existing_pass3 = json.loads(pass3_out.read_text())
+            print(f"  Loaded {len(existing_pass3)} previously discovered Pass 3 edges")
+        except (json.JSONDecodeError, Exception):
+            pass
+    if cross_edges:
+        # Merge: add new edges, keyed by (source, target, edge_type)
+        seen = {(e["source"]["module"], e["target"]["module"], e["edge_type"]) for e in existing_pass3}
+        for e in cross_edges:
+            key = (e["source"]["module"], e["target"]["module"], e["edge_type"])
+            if key not in seen:
+                existing_pass3.append(e)
+                seen.add(key)
+        pass3_out.write_text(json.dumps(existing_pass3, indent=2))
+        print(f"  Persisted {len(cross_edges)} edges ({len(existing_pass3)} cumulative)")
+
+    # Always apply persisted Pass 3 edges to the graph
+    dep_graph["edges"].extend(existing_pass3)
+    print(f"  Total edges after Pass 3: {len(dep_graph['edges'])}")
 
     # Write artifacts
     write_phonebook(entries, dep_graph)

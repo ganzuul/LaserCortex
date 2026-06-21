@@ -26,6 +26,29 @@ case "${1:-start}" in
       echo "Lockfile exists — removing stale lock"
       rm -f "$LOCKFILE"
     fi
+    # ---- Pre-flight: count actual work needed (OUTER shell, clean quoting) ---
+    echo "Checking files needing 35B Deep Analysis..."
+    NEEDS_WORK=$(python3 -c "
+import json
+try:
+    cache = json.load(open('$REPO_DIR/.phonebook_cache.json'))
+    need = sum(1 for v in cache.values() if not v.get('transform_sha'))
+    print(need)
+except (FileNotFoundError, json.JSONDecodeError):
+    print(-1)
+")
+    if [ "$NEEDS_WORK" = "0" ]; then
+      echo "All files already have 35B Deep Analysis — nothing to do."
+      exit 0
+    elif [ "$NEEDS_WORK" = "-1" ]; then
+      echo "WARNING: Cannot read .phonebook_cache.json — proceeding anyway"
+      NEEDS_WORK=""
+    else
+      echo "Files needing Deep Analysis: $NEEDS_WORK"
+      echo "  (Estimated: $(( NEEDS_WORK * 75 / 60 ))min at 75s/file)"
+    fi
+    export NEEDS_WORK
+
     echo "Launching pipeline in background..."
     echo "  Log: $LOGFILE"
     echo "  PID: \$\$ → written to $PIDFILE"
@@ -41,6 +64,11 @@ case "${1:-start}" in
       date
       echo "Host: $(uname -a)"
       echo ""
+
+      # ---- Pre-flight result from outer shell via env var --------------
+      if [ -n "${NEEDS_WORK:-}" ]; then
+        echo "[pre-flight] Files needing 35B Deep Analysis: $NEEDS_WORK"
+      fi
 
       # ---- Remaining Pass 2: cached files are skipped automatically ----
       echo "[1/2] Running 35B Deep Analysis on outstanding files..."
@@ -65,7 +93,7 @@ case "${1:-start}" in
 
       # ---- Re-run Cross-Layer-Linker with all completed abstracts ----
       echo "[2/2] Running Cross-Layer-Linker..."
-      PASS3="$4/scripts/run_pass3.py"
+      PASS3="$6/scripts/run_pass3.py"
       if [ -f "$PASS3" ]; then
         PYTHONUNBUFFERED=1 python3 "$PASS3" 2>&1
       else
@@ -74,9 +102,13 @@ case "${1:-start}" in
       echo ""
       echo "Pass 3 complete at $(date)"
 
-      # ---- Cleanup: stop embedding server (no longer needed) ----
-      echo "[cleanup] Stopping embedding server..."
-      /home/nos/labware/LaserCortex/scripts/start_embed_server.sh kill 2>&1 || true
+      # ---- Cleanup: stop embedding server if it was started ----
+      if [ -f "/tmp/embed-server.pid" ] && kill -0 "$(cat /tmp/embed-server.pid)" 2>/dev/null; then
+        echo "[cleanup] Stopping embedding server (PID $(cat /tmp/embed-server.pid))..."
+        /home/nos/labware/LaserCortex/scripts/start_embed_server.sh kill 2>&1 || true
+      else
+        echo "[cleanup] Embedding server not running — nothing to stop"
+      fi
       echo ""
 
       echo "=== Pipeline Background Job Complete ==="

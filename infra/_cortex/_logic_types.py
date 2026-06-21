@@ -103,6 +103,7 @@ class LogicType(Enum):
     def is_associative_sector(self) -> bool:
         """Mirror of LogicType.isAssociativeSector.
         Split-octonion (4,4) signature division.
+        Spacetime is now in the split (non-associative) sector via mirror flag.
         """
         return self in {
             LogicType.CLASSICAL,
@@ -111,7 +112,6 @@ class LogicType(Enum):
             LogicType.TEMPORAL,
             LogicType.DEONTIC,
             LogicType.EPISTEMIC,
-            LogicType.SPACETIME,
             LogicType.BOOLEAN,
         }
 

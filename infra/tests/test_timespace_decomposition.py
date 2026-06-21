@@ -37,27 +37,65 @@ def sector_weights(params: NodeCost) -> Dict[str, float]:
       Φ_linear = bias + leftWeight·a + b/(rightDiv+1)
       Φ_coupled = coupling·a·b/denom
 
+    When mirror=True, the left/right roles swap:
+      Φ_linear = bias + a/(rightDiv+1) + leftWeight·b
+
     Sector decomposition:
       time_weight  = leftWeight    (how much the associative sector amplifies)
+                    — but when mirrored, rightWeight = leftWeight, time_weight = 1/(rightDiv+1)
       space_weight = 1/(rightDiv+1)  (how much the split sector transmits)
+                    — but when mirrored, space_weight = leftWeight
       interface_weight = coupling/denom (cross-term between sectors)
       null_index   = |time_weight - space_weight| (distance from the null cone)
 
     Returns weights normalized so that total = time_weight + space_weight.
     """
-    tw = params.leftWeight
-    sw = 1.0 / (params.rightDiv + 1)
+    if params.mirror:
+        tw = 1.0 / (params.rightDiv + 1)  # mirror: time is compressed
+        sw = params.leftWeight             # mirror: space is amplified
+    else:
+        tw = params.leftWeight             # time amplifies
+        sw = 1.0 / (params.rightDiv + 1)  # space transmits
     iw = params.coupling / max(params.denom, 1)
     null_idx = abs(tw - sw)
     total = tw + sw
+    # Sector bias determination:
+    # - In mirror mode, the left subtree is compressed (time) and the right
+    #   subtree is amplified (space). When leftWeight=0, the amplified channel
+    #   is completely silent, meaning the cost tracks ONLY the compressed channel
+    #   (the left-spine depth = associator axis). This is space-biased because
+    #   the gradient drives toward leftComb (the maximum-left-nesting configuration).
+    # - The gradient direction determines which sector dominates:
+    #   - time-biased: gradient drives toward rightComb (commutator dominant)
+    #   - space-biased: gradient drives toward leftComb (associator dominant)
+    #   - balanced: gradient is flat or unbiased
+    # - For unmirrored logics: gradient toward rightComb iff tw > sw
+    # - For mirrored logics: gradient toward leftComb iff sw = 0 (the amplified
+    #   channel is silent, so only the compressed/left channel matters)
+    if params.mirror:
+        # In mirror mode, the amplified channel is space (right subtree).
+        # If space_weight = 0, the space channel is silent and the logic
+        # tracks only the left-spine depth (associator) → space-biased.
+        # If space_weight > 0 and time_weight = 0, time is silent → time-biased.
+        # Otherwise, compare as usual.
+        if sw == 0 and tw > 0:
+            bias = "space"
+        elif tw == 0 and sw > 0:
+            bias = "time"
+        elif null_idx < 0.01:
+            bias = "balanced"
+        else:
+            bias = "time" if tw > sw else ("space" if sw > tw else "balanced")
+    else:
+        bias = "time" if tw > sw else ("space" if sw > tw else "balanced")
     return {
         "time_weight": tw,
         "space_weight": sw,
-        "interface_weight": iw,
+        "interface_weight": round(iw, 4),
         "null_index": round(null_idx, 4),
         "time_frac": round(tw / total, 4) if total > 0 else 0.5,
         "space_frac": round(sw / total, 4) if total > 0 else 0.5,
-        "sector_bias": "time" if tw > sw else ("space" if sw > tw else "balanced"),
+        "sector_bias": bias,
     }
 
 

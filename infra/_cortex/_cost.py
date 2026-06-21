@@ -26,9 +26,13 @@ class NodeCost:
     bias: int
     coupling: int = 0
     denom: int = 10
+    mirror: bool = False
 
     def apply(self, a: int, b: int) -> int:
-        linear = self.bias + self.leftWeight * a + (b // max(1, self.rightDiv + 1))
+        if self.mirror:
+            linear = self.bias + (a // max(1, self.rightDiv + 1)) + self.leftWeight * b
+        else:
+            linear = self.bias + self.leftWeight * a + (b // max(1, self.rightDiv + 1))
         product = (self.coupling * a * b) // max(1, self.denom)
         return linear + product
 
@@ -47,7 +51,7 @@ NODE_PARAM: Dict[LogicType, NodeCost] = {
     LogicType.FREE:           NodeCost(leftWeight=1, rightDiv=0, bias=1),
     LogicType.INFINITARY:     NodeCost(leftWeight=1, rightDiv=1, bias=1),
     LogicType.MODAL:          NodeCost(leftWeight=1, rightDiv=1, bias=1),
-    LogicType.SPACETIME:      NodeCost(leftWeight=2, rightDiv=1, bias=1, coupling=2, denom=6),
+    LogicType.SPACETIME:      NodeCost(leftWeight=0, rightDiv=0, bias=1, mirror=True),
     LogicType.BOOLEAN:        NodeCost(leftWeight=1, rightDiv=0, bias=1),
 }
 

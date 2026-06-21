@@ -324,7 +324,7 @@ def LogicType.isAssociativeSector : LogicType → Bool := fun lt =>
   match lt with
   | .Classical | .Fuzzy | .ManyValued | .Temporal | .Deontic | .Epistemic => true
   | .Paraconsistent | .Quantum | .Intuitionistic | .Relevance | .Free | .Infinitary | .Modal => false
-  | .Spacetime => true  -- Geometric logic spans both sectors; associative by default
+  | .Spacetime => false  -- Space-biased: in the associator-dominant split sector (mirror flag)
   | .Boolean => true  -- Boolean algebra is fully associative
 
 /-- 

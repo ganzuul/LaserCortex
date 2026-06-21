@@ -1,6 +1,6 @@
 # Lab Protocol: Timespace Decomposition
 
-**Version 0.2** | 2026-06-12
+**Version 0.3** | 2026-06-21
 
 ## (4,4) Signature Model
 
@@ -34,22 +34,35 @@ interface where zero-divisor channels open.
 | Sector bias | Logics | Time:Space | Zero divisors |
 |-------------|--------|-----------|---------------|
 | Balanced (null cone) | Boolean, Intuitionistic, Free | 1:1 | Metric (from signature) |
-| Time-biased (commutator dominant) | Classical, Fuzzy, ManyValued, Deontic, Epistemic, Quantum, Relevance, Infinitary, Modal | 2:1 to 3:1 | Suppressed by time dominance |
-| Strongly time-biased | Paraconsistent, Temporal, Spacetime | 4:1 | Explosive (leftWeight=2) |
-| Space-biased (associator dominant) | *(none — requires formula extension)* | <1:1 | Strong metric (predicted) |
+| Time-biased (commutator dominant) | Classical, Fuzzy, ManyValued, Deontic, Epistemic, Quantum, Relevance, Infinitary, Modal, Paraconsistent, Temporal | 2:1 to 4:1 | Suppressed by time dominance |
+| Space-biased (associator dominant) | Spacetime | ∞:0 (commutator silent) | Strong metric (left-spine driven) |
 
-### Key Insight: No Space-Biased Logic Exists (Yet)
+### Key Insight: Spacetime Is the Only Space-Biased Logic (v0.3)
 
-The current `NodeCost.apply` formula `bias + leftWeight·a + b/(rightDiv+1)` always
-amplifies the left (associative) subtree and compresses the right (split) subtree.
-This means **every logic is either time-biased or balanced** — none can be space-biased.
+The `NodeCost.apply` formula with the `mirror` flag (v0.3) can now represent
+space-biased logics. When `mirror = false` (default), the formula amplifies
+the left (associative/time) subtree and compresses the right (split/space):
 
-A pure space-like logic would require either:
-1. `leftWeight = 0` (commutator suppressed, only associator matters)
-2. A mirrored formula: `bias + a/(leftDiv+1) + rightWeight·b`
+```
+bias + leftWeight · Φ(left) + Φ(right) / (rightDiv + 1) + coupling · Φ(left) · Φ(right) / denom
+```
 
-This is the next architectural extension needed for the Spacetime logic type to
-faithfully represent the split-octonion e4–e7 sector.
+When `mirror = true`, the roles reverse — the left subtree is compressed and
+the right is amplified:
+
+```
+bias + Φ(left) / (rightDiv + 1) + leftWeight · Φ(right) + coupling · Φ(left) · Φ(right) / denom
+```
+
+Spacetime uses `mirror = true, leftWeight = 0, rightDiv = 0, bias = 1`, giving:
+
+```
+Φ(Node l r) = 1 + Φ(l)  (pure associator, commutator silent)
+```
+
+This makes Spacetime the only space-biased logic: the gradient drives toward
+leftComb (the opposite of all other logics), and the (2,3) trefoil torus knot
+winding is p=2 (associator) on the time axis and q=3 (split) on the space axis.
 
 ## Core Definition
 
@@ -318,6 +331,22 @@ dim 16+), zero divisors from non-alternativity create a second, stronger regime.
 - 𝕆 (split): max associator norm = 4.0 → timespace decomposition active
 - Null cone: (e0+e4)·(e0−e4) = 0 → zero-divisor channels at time/space interface
 - Most non-associative triple: (e1, e2, e4) → crosses boundary, points along e7
+
+### 9. Mirror Flag (Space-Bias Calibration)
+The `NodeCost.mirror` flag swaps the left/right treatment of subtree costs.
+When `mirror = false` (default), the formula amplifies the left (associative/time)
+subtree and compresses the right (split/space). When `mirror = true`, the roles
+reverse: the left subtree is compressed and the right is amplified.
+
+For Spacetime logic (`leftWeight=0, rightDiv=0, mirror=True`):
+- Φ(Node l r) = 1 + Φ(l) — only the left-spine depth matters
+- The commutator (right subtree structure) is completely silent (leftWeight=0)
+- The gradient drives toward **leftComb** (opposite of all other logics)
+- This is the only space-biased logic in the framework
+
+The torus knot interpretation: (p,q) = (2,3) trefoil with p = associative
+winding and q = split winding. The leaf-spine cost Φ(leftComb n) = n gives
+the p-winding number, and the gradient reversal gives the q-winding.
 
 ## How to Use This Protocol
 

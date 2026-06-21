@@ -29,30 +29,34 @@
 - Each logic type = projection operator onto a subspace
 - Sector weights: time_weight = leftWeight, space_weight = 1/(rightDiv+1),
   interface_weight = coupling/denom
-- Key finding: **no logic is space-biased** under current `NodeCost.apply`
-  formula — formula always amplifies left (associative) side
-- File: `infra/tests/test_timespace_decomposition.py`
-- Updated: `docs/lab_protocol.md` (version 0.2)
+- Spacetime is now space-biased via the `mirror` flag (v0.3)
+  — `leftWeight=0, rightDiv=0, mirror=True` gives pure associator Φ = 1 + Φ(left)
+- Torus knot calibration verified: (2,3) trefoil winding confirmed
+- Files: `infra/tests/test_timespace_decomposition.py`,
+  `infra/tests/test_torus_knot_calibration.py`
+- Updated: `docs/lab_protocol.md` (version 0.3)
 
 ## Next Steps
 
-### 4. Split-Quaternion Calibration (Immediate)
+### 4. Split-Quaternion Calibration ✅
 - Split-quaternions have (2,2) signature and zero divisors but are ASSOCIATIVE
-  — makes them a cleaner calibration target before non-associative octonions
-- The torus knot is a topological object with crossing number
-  `min(p(q-1), q(p-1))` that lives on the null cone boundary in ℝ³
-- **Architectural question**: How to integrate a topological knot invariant
-  into the recursive tree cost framework?
-  - Option A: New cost function type for Spacetime (knot parameters → cost)
-  - Option B: Knot-to-tree encoding (map each knot to a tree whose size
-    equals crossing number, keeping Φ uniform)
+- Verified: all 64 basis triples have associator norm = 0
+- Verified: (1+j)(1-j) = 0 (null-cone zero divisor)
+- Verified: N(ab) = N(a)N(b) for generic elements (composition algebra)
+- Verified: zero divisors and non-associativity are INDEPENDENT
+  — split-quaternions have zero divisors without losing associativity
+- Torus knot crossing formula: c(T_{p,q}) = min(p(q-1), q(p-1))
+- Trefoil (2,3) maps to tree size 3, verified Φ gradient = 2
+- Key insight: rightDiv=0 cost class (flat landscape) corresponds to
+  split-quaternion LEVEL of associativity + metric zero divisors
+- File: `infra/tests/test_split_quaternion_calibration.py`
 
-### 5. Spacetime Logic Recalibration
-- Current: `leftWeight=2, rightDiv=1, coupling=2, denom=6` — placeholder,
-  no connection to split-octonion algebra
-- Target: Mirror the pure associator sector — either via formula extension
-  (leftWeight=0, commutator silent) or mirrored formula
-  `bias + a/(leftDiv+1) + rightWeight·b`
+### 5. Spacetime Logic Recalibration ✅ (v0.3)
+- Implemented: `mirror` flag on `NodeCost` swaps left/right treatment
+- Spacetime: `leftWeight=0, rightDiv=0, bias=1, mirror=True, coupling=0`
+- Result: Φ(Node l r) = 1 + Φ(l) — pure associator, commutator silent
+- Gradient reversal: Spacetime gradient drives toward leftComb (not rightComb)
+- Torus knot: (2,3) trefoil verified — p=2 (associator), q=3 (split) winding
 
 ### 6. Split-Octonion Continuation (Future)
 - After split-quaternion calibration is stable, move to full non-associative

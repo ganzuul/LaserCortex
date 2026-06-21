@@ -186,17 +186,17 @@ theorem crossImpact_nonneg (L : LogicTypes.LogicType) (r1 r2 : Route) :
     0 ≤ crossImpact L r1 r2 :=
   Nat.zero_le _
 
-/-- For classical logics (rightDiv=0, leftWeight=1), composition adds exactly
-    the bias (1) to the sum of costs. This gives positive cross-impact = 1. -/
+/-- For classical logics (rightDiv=0, leftWeight=1, coupling=0, mirror=false),
+    composition adds exactly the bias (1) to the sum of costs. This gives positive cross-impact = 1. -/
 theorem crossImpact_classical (L : LogicTypes.LogicType) (r1 r2 : Route)
-    (hD : (nodeParam L).rightDiv = 0) (hW : (nodeParam L).leftWeight = 1) :
+    (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
+    (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1) :
     crossImpact L r1 r2 = 1 := by
   dsimp [crossImpact]
-  rw [routeToTree_compose, Φ_Node, Cost.NodeCost.apply, hW, Cost.nodeParam_bias_one L]
-  have hden : (nodeParam L).rightDiv.succ = 1 := by omega
-  rw [hden]
-  have hdiv : Φ L (routeToTree r2) / 1 = Φ L (routeToTree r2) := by simp
-  rw [hdiv]
+  rw [routeToTree_compose, Φ_Node, Cost.NodeCost.apply_not_mirror _ _ _ hM]
+  simp only [hC, Cost.NodeConst.apply_zero_coupling, Nat.zero_mul, Nat.add_zero, Nat.zero_div]
+  rw [Cost.nodeParam_bias_one L, hW, hD]
+  simp [Nat.div_one, Nat.one_mul, Nat.succ_eq_add_one]
   omega
 
 /-- The associator difference: the cost difference between the two binary tree
@@ -209,13 +209,15 @@ def associatorCost (L : LogicTypes.LogicType) (r1 r2 r3 : Route) : Nat :=
 /-- The associator cost is zero for classical logics (cost is rotation-invariant),
     matching the pentagon coherence condition. -/
 theorem associatorCost_zero_classical (L : LogicTypes.LogicType) (r1 r2 r3 : Route)
-    (hD : (nodeParam L).rightDiv = 0) : associatorCost L r1 r2 r3 = 0 := by
+    (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
+    (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1) :
+    associatorCost L r1 r2 r3 = 0 := by
   dsimp [associatorCost, absDiff]
   have h_eq : Φ L (routeToTree (compose (compose r1 r2) r3)) = Φ L (routeToTree (compose r1 (compose r2 r3))) := by
     rw [routeToTree_compose, routeToTree_compose]
     have hΦeq : Φ L (EMLTree.Node (EMLTree.Node (routeToTree r1) (routeToTree r2)) (routeToTree r3)) =
                Φ L (EMLTree.Node (routeToTree r1) (EMLTree.Node (routeToTree r2) (routeToTree r3))) :=
-      Cost.Φ_contracts_one_eq_classical L hD (by
+      Cost.Φ_contracts_one_eq_classical L hD hC hM hW (by
         apply EMLRegistry.contracts_one.rotate)
     exact hΦeq
   simp [h_eq]
