@@ -9,8 +9,10 @@ name = "LaserCortex"
 name = "lasercortex"
 root = "Main"
 
-[dependencies]
-mathlib = { git = "https://github.com/leanprover-community/mathlib4.git" }
+[[require]]
+name = "mathlib"
+path = ".lake/packages/mathlib4"
+# Pinned to rev ab5497e460f08b0e35e30b404eba9f317b6eea36
 
 [[require]]
 name = "checkdecls"
