@@ -18,3 +18,4 @@ import LaserCortex.Cost
 import LaserCortex.Candidates
 import LaserCortex.SplitOctonionCost
 import LaserCortex.SplitQuaternionClifford
+import LaserCortex.FrictionLagrangian
