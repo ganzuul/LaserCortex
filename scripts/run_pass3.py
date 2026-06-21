@@ -32,6 +32,17 @@ ON_URL = "http://localhost:5055/api"
 LLM_URL = "http://localhost:8080"  # Direct llama-server (bypass ON for determinism)
 TRANSFORMATION_CROSS_LAYER_LINKER = "transformation:j2puh5eolx32sc5b431s"
 
+# Versioning: increment when generation params change
+CURRENT_VERSION = 1
+CROSS_LAYER_PARAMS = {
+    "temperature": 1.0,
+    "seed_mode": "random",
+    "model": "Qwen3.6-35B-A3B-Q4_K_M",
+    "transformation_id": TRANSFORMATION_CROSS_LAYER_LINKER,
+    "max_tokens": 8192,
+    "cache_prompt": True,
+}
+
 # Cache the cross-layer linker prompt (fetched once from ON)
 _cross_layer_prompt: str = ""
 def _get_cross_layer_prompt() -> str:
@@ -442,6 +453,9 @@ def main():
             e["layer_source"] = src_entry["layer"] if src_entry else "UNKNOWN"
             e["layer_target"] = tgt_entry["layer"] if tgt_entry else "UNKNOWN"
             e["_pass"] = 3
+            e["_version"] = CURRENT_VERSION
+            e["_params"] = CROSS_LAYER_PARAMS.copy()
+            e["_versioned_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     # Persistently merge Pass 3 edges (survives stochastic failures)
     pass3_out = REPO_ROOT / "PASS3_EDGES.json"
