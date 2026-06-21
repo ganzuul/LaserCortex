@@ -131,6 +131,15 @@ def EMLTree.size : EMLTree → Nat
   | .Leaf       => 0
   | .Node l r   => 1 + l.size + r.size
 
+/-- Tree height (maximum path length from root to leaf).
+    For combs (maximally skewed trees), height = size.
+    For balanced trees, height = ⌈log₂(size+1)⌉.
+    Depth-2 cost functions (max-semantics) use height instead of size:
+    Φ(Intuitionistic, t) = t.height (proof depth, not proof size). -/
+def EMLTree.height : EMLTree → Nat
+  | .Leaf       => 0
+  | .Node l r   => 1 + max l.height r.height
+
 /-- Binary preorder encoding: '0' = Leaf, '1' + left + right = Node. -/
 def EMLTree.toBits : EMLTree → String
   | .Leaf      => "0"
