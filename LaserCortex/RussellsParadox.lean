@@ -8,15 +8,15 @@ Formalizes Russell's set-theoretic diagonalization as a tree contraction problem
 
 ## Contracts
 
-russellsTree : EMLTree | russellsProblem : Problem | russellsWrapper (lt : LogicTypes.LogicType) : WrappedProblem russellsProblem lt | russellsTower : Tower russellsProblem | russellsCost (lt : LogicTypes.LogicType) : Nat | russellsFrictionLagrangian : Nat | theorem russellsCost_le_cdStep (lt : LogicTypes.LogicType) : russellsCost lt ≤ lt.cdStep
+russellsTree : EMLTree | russellsProblem : Problem | russellsWrapper (lt : LogicTypes.LogicType) : WrappedProblem russellsProblem lt | russellsTower : Tower russellsProblem | russellsCost (lt : LogicTypes.LogicType) : Nat | russellsFrictionLagrangian : Nat | theorem russellsCost_ge_cdStep (lt : LogicTypes.LogicType) : russellsCost lt ≥ lt.cdStep
 
 ## Cross-refs
 
-EMLRegistry → EMLTree, contracts_to, contracts_to_rightComb, rightComb, Tower | LogicTypes → LogicType, LogicContraction, cdStep | LiarParadox → namespace/paradigm context
+EMLRegistry → EMLTree, contracts_to, contracts_to_rightComb, rightComb, Tower | LogicTypes → LogicType, LogicContraction, cdStep | FrictionLagrangian → layerCost, layerCost_ge_cdStep, frictionLagrangian
 
 ## Invariants
 
-russellsTree topology fixed to leftComb size 3 | contraction target fixed to rightComb 3 | cost bound russellsCost lt ≤ lt.cdStep explicitly postpones regularization axis computation | resolution guaranteed by EMLRegistry.contracts_to_rightComb for any tree/logic | suitable logic space restricted to [Paraconsistent, Classical, ManyValued, Intuitionistic, Relevance, Free, Modal] | Friction Lagrangian defined as sum of per-layer wrapper costs
+russellsTree topology fixed to leftComb size 3 | contraction target fixed to rightComb 3 | cost bound russellsCost lt ≥ lt.cdStep (true Lagrangian cost includes associator barrier at CD ≥ 3) | CD-axis cost is now correct (layerCost replaces cdStep) but regularization axis is still future work | resolution guaranteed by EMLRegistry.contracts_to_rightComb for any tree/logic | suitable logic space restricted to [Paraconsistent, Classical, ManyValued, Intuitionistic, Relevance, Free, Modal] | russellsFrictionLagrangian delegates to FrictionLagrangian.frictionLagrangian
 
 ## Tags
 
@@ -26,10 +26,12 @@ russellsTree topology fixed to leftComb size 3 | contraction target fixed to rig
 
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
-import LaserCortex.LiarParadox
+import LaserCortex.Problem
+import LaserCortex.FrictionLagrangian
 
 open EMLRegistry
-open LiarParadox
+open ProblemTypes
+open FrictionLagrangian
 
 /-!
 # DISCLAIMER: The formalization of Russell's paradox here is deliberately
@@ -54,13 +56,16 @@ open LiarParadox
   regularization axis (endless → eternity → actual ∞ → boundlessness)
   is NOT formalized here. It is future work.
 
-  CHEAT:
-  We set cost = cdStep lt, which is correct for the CD axis but ignores
-  the regularization axis entirely. This is the "cheat" — the cost
-  should eventually be a product of both axes. We procrastinate that
-  by using the same cost function as every other problem class, which
-  Lean accepts because contracts_to_rightComb works for any tree in
-  any logic. No sorries, no dishonesty — just postponement.
+  The CD-axis cost is NOW CORRECT: we use FrictionLagrangian.layerCost lt
+  instead of lt.cdStep, which accounts for the associator energy barrier at
+  CD ≥ 3 (the strut_weight activation at the split octonion boundary).
+  This replaces the old "cheat" on the CD axis.
+
+  However, the regularization axis is still unaccounted for. The true cost
+  should eventually be a product of both axes. We use layerCost here because
+  it is the correct CD-axis cost and Lean accepts contracts_to_rightComb
+  for any tree in any logic. No sorries, no dishonesty — just postponement
+  of the full 2-axis cost.
 
   The Grelling-Nelson "paradox" (semantic self-reference, words about
   words) is structurally identical to Russell's (set-theoretic self-
@@ -94,14 +99,14 @@ def russellsProblem : Problem := {
   normalForm := λ lt => rightComb russellsTree.size
 }
 
-/-- Generic Russell wrapper for any logic type. Cost = cdStep.
-  This is the cheat: the cost does not yet account for the
-  regularization axis (endless/eternity/actual ∞/boundlessness). -/
+/-- Generic Russell wrapper for any logic type. Cost = FrictionLagrangian.layerCost lt.
+  The CD-axis cost is now correct (accounts for the associator barrier at CD ≥ 3).
+  The regularization axis (endless/eternity/actual ∞/boundlessness) is still future work. -/
 def russellsWrapper (lt : LogicTypes.LogicType) : WrappedProblem russellsProblem lt :=
   {
     tree   := russellsProblem.tree lt
     target := russellsProblem.normalForm lt
-    cost   := lt.cdStep
+    cost   := FrictionLagrangian.layerCost lt
     proof  := by
       show LogicTypes.LogicContraction lt (russellsProblem.tree lt) (russellsProblem.normalForm lt)
       have hLC : LogicTypes.LogicContraction lt = EMLRegistry.contracts_to := by
@@ -118,12 +123,19 @@ def russellsTower : Tower russellsProblem := {
     |>.map (λ lt => ⟨lt, russellsWrapper lt⟩)
 }
 
-def russellsCost (lt : LogicTypes.LogicType) : Nat := lt.cdStep
+/-- Russell cost: true Lagrangian cost for set-theoretic diagonalization.
+  The CD-axis is now correct; the regularization axis is left for future work. -/
+def russellsCost (lt : LogicTypes.LogicType) : Nat :=
+  FrictionLagrangian.layerCost lt
 
-theorem russellsCost_le_cdStep (lt : LogicTypes.LogicType) : russellsCost lt ≤ lt.cdStep := by
-  simp [russellsCost]
+/-- russellsCost ≥ cdStep — the true Lagrangian cost is at least the old flat cost. -/
+theorem russellsCost_ge_cdStep (lt : LogicTypes.LogicType) : russellsCost lt ≥ lt.cdStep := by
+  dsimp [russellsCost]
+  exact FrictionLagrangian.layerCost_ge_cdStep lt
 
+/-- The total Friction Lagrangian for Russell's paradox.
+  Delegates to `FrictionLagrangian.frictionLagrangian` for the true associator-weighted cost. -/
 def russellsFrictionLagrangian : Nat :=
-  russellsTower.layers.map (λ (x : Σ lt, WrappedProblem russellsProblem lt) => x.2.cost) |>.sum
+  FrictionLagrangian.frictionLagrangian russellsTower
 
 end RussellsParadox

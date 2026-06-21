@@ -4,6 +4,7 @@ import LaserCortex.Basic
 import LaserCortex.EMLRegistry
 import LaserCortex.LiarParadox
 import LaserCortex.LogicTypes
+import LaserCortex.Problem
 import LaserCortex.SoritesParadox
 import LaserCortex.TemporalParadox
 import LaserCortex.RussellsParadox

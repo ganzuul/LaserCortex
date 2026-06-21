@@ -8,15 +8,15 @@ Formalizes the Grandfather causal loop as a tree contraction problem over indexe
 
 ## Contracts
 
-grandfatherTree : EMLTree, grandfatherProblem : Problem, grandfatherWrapper : LogicType → WrappedProblem grandfatherProblem, grandfatherTower : Tower grandfatherProblem, grandfatherCost : LogicType → Nat, grandfatherCost_le_cdStep : ∀ (lt : LogicType), grandfatherCost lt ≤ lt.cdStep, grandfatherFrictionLagrangian : Nat
+grandfatherTree : EMLTree, grandfatherProblem : Problem, grandfatherWrapper : LogicType → WrappedProblem grandfatherProblem, grandfatherTower : Tower grandfatherProblem, grandfatherCost : LogicType → Nat, grandfatherCost_ge_cdStep : ∀ (lt : LogicType), grandfatherCost lt ≥ lt.cdStep, grandfatherFrictionLagrangian : Nat
 
 ## Cross-refs
 
-LaserCortex.LogicTypes → LogicType, cdStep, LogicContraction; LaserCortex.EMLRegistry → EMLTree, contracts_to_rightComb; LaserCortex.LiarParadox → leftComb, rightComb
+LaserCortex.LogicTypes → LogicType, cdStep, LogicContraction; LaserCortex.EMLRegistry → EMLTree, contracts_to_rightComb; LaserCortex.Problem → Problem, Tower, WrappedProblem; LaserCortex.FrictionLagrangian → frictionLagrangian, layerCost, layerCost_ge_cdStep
 
 ## Invariants
 
-Contraction from grandfatherTree to rightComb 4 is provable via EMLRegistry.contracts_to_rightComb; Resolution cost is upper-bounded by lt.cdStep; Tower layer costs are summable as Nat; Normal form is strictly deterministic (rightComb tree.size); Proof construction relies on case analysis over LogicType followed by definitional reduction.
+Contraction from grandfatherTree to rightComb 4 is provable via EMLRegistry.contracts_to_rightComb; Resolution cost is lower-bounded by lt.cdStep (true Lagrangian cost includes associator barrier); Tower layer costs are summable as Nat; Normal form is strictly deterministic (rightComb tree.size); Proof construction relies on case analysis over LogicType followed by definitional reduction; grandfatherFrictionLagrangian delegates to FrictionLagrangian.frictionLagrangian.
 
 ## Tags
 
@@ -26,10 +26,12 @@ Contraction from grandfatherTree to rightComb 4 is provable via EMLRegistry.cont
 
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
-import LaserCortex.LiarParadox
+import LaserCortex.Problem
+import LaserCortex.FrictionLagrangian
 
 open EMLRegistry
-open LiarParadox
+open ProblemTypes
+open FrictionLagrangian
 
 namespace TemporalParadox
 
@@ -56,12 +58,13 @@ def grandfatherProblem : Problem := {
   normalForm := λ lt => rightComb grandfatherTree.size
 }
 
-/-- Generic Grandfather wrapper for any logic type. Cost = cdStep. -/
+/-- Generic Grandfather wrapper for any logic type. Cost = FrictionLagrangian.layerCost lt.
+  Uses the true Friction Lagrangian cost (accounts for the associator energy barrier at CD ≥ 3). -/
 def grandfatherWrapper (lt : LogicTypes.LogicType) : WrappedProblem grandfatherProblem lt :=
   {
     tree   := grandfatherProblem.tree lt
     target := grandfatherProblem.normalForm lt
-    cost   := lt.cdStep
+    cost   := FrictionLagrangian.layerCost lt
     proof  := by
       show LogicTypes.LogicContraction lt (grandfatherProblem.tree lt) (grandfatherProblem.normalForm lt)
       have hLC : LogicTypes.LogicContraction lt = EMLRegistry.contracts_to := by
@@ -78,12 +81,19 @@ def grandfatherTower : Tower grandfatherProblem := {
     |>.map (λ lt => ⟨lt, grandfatherWrapper lt⟩)
 }
 
-def grandfatherCost (lt : LogicTypes.LogicType) : Nat := lt.cdStep
+/-- Grandfather cost: true Lagrangian cost for the Grandfather (time-travel) paradox.
+  Replaces the old flat cdStep cheat. -/
+def grandfatherCost (lt : LogicTypes.LogicType) : Nat :=
+  FrictionLagrangian.layerCost lt
 
-theorem grandfatherCost_le_cdStep (lt : LogicTypes.LogicType) : grandfatherCost lt ≤ lt.cdStep := by
-  simp [grandfatherCost]
+/-- grandfatherCost ≥ cdStep — the true Lagrangian cost is at least the old flat cost. -/
+theorem grandfatherCost_ge_cdStep (lt : LogicTypes.LogicType) : grandfatherCost lt ≥ lt.cdStep := by
+  dsimp [grandfatherCost]
+  exact FrictionLagrangian.layerCost_ge_cdStep lt
 
+/-- The total Friction Lagrangian for the Grandfather paradox.
+  Delegates to `FrictionLagrangian.frictionLagrangian` for the true associator-weighted cost. -/
 def grandfatherFrictionLagrangian : Nat :=
-  grandfatherTower.layers.map (λ (x : Σ lt, WrappedProblem grandfatherProblem lt) => x.2.cost) |>.sum
+  FrictionLagrangian.frictionLagrangian grandfatherTower
 
 end TemporalParadox

@@ -99,3 +99,58 @@ def phi_coupled(lt: LogicType, t: EMLTree, coupling: int, denom: int = 10) -> in
 def phi_right_comb(lt: LogicType, n: int) -> int:
     from ._eml_tree import rightComb
     return phi(lt, rightComb(n))
+
+
+# =========================================================================
+# Friction Lagrangian — Python mirror of FrictionLagrangian.lean
+# =========================================================================
+# Mirrors the Lean definitions for numerical experiments and parameter
+# sweeps.  The strut_weight is the fundamental unit of non-associativity,
+# verified as 4 from the (e₁, e₂, e₄) associator norm in SplitOctonionCost.
+#
+#   assocDefect(k) = 0           for k ≤ 2  (associative regime)
+#                  = strut_weight for k ≥ 3  (non-associative regime)
+#
+#   commDefect(k)  = k  (each CD step adds one unit of commutator cost)
+#
+#   frictionDensity(k) = commDefect(k) + strut_weight * assocDefect(k)
+#                      = k + strut_weight * (0 if k ≤ 2 else strut_weight)
+#
+#   layerCost(lt) = frictionDensity(lt.cdStep)
+
+STRUT_WEIGHT: int = 4  # fundamental quantum of non-associativity
+
+
+def assoc_defect(k: int) -> int:
+    """Associator defect magnitude at CD step k.
+    
+    Zero for k ≤ 2 (associative regime: ℝ, ℂ, ℍ, Cl(1,1) ≅ ℍ̃).
+    Activates to strut_weight for k ≥ 3 (split octonions + beyond).
+    """
+    return 0 if k <= 2 else STRUT_WEIGHT
+
+
+def comm_defect(k: int) -> int:
+    """Commutator defect magnitude at CD step k.
+    
+    Grows linearly: each Cayley-Dickson doubling adds one unit of
+    non-commutativity (path-dependence).
+    """
+    return k
+
+
+def friction_density(k: int) -> int:
+    """Friction density Γ_k at CD step k.
+    
+    Γ_k = k + strut_weight * assoc_defect(k)
+    
+    This is the combined commutator + associator cost.  The associator
+    term dominates at k ≥ 3, creating the "enormous energy density" at
+    the CD 2→3 boundary.
+    """
+    return comm_defect(k) + STRUT_WEIGHT * assoc_defect(k)
+
+
+def layer_cost_from_cdstep(k: int) -> int:
+    """Layer cost for a given CD step (no LogicType needed)."""
+    return friction_density(k)

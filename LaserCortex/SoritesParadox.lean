@@ -8,15 +8,15 @@ Formalizes the Sorites vagueness paradox as a transformable problem structure, c
 
 ## Contracts
 
-soritesTree : EMLTree, soritesProblem : Problem, soritesWrapper : LogicTypes.LogicType → WrappedProblem soritesProblem lt, soritesTower : Tower soritesProblem, soritesCost : LogicTypes.LogicType → Nat, soritesCost_le_cdStep : ∀ lt, soritesCost lt ≤ lt.cdStep, soritesFrictionLagrangian : Nat
+soritesTree : EMLTree, soritesProblem : Problem, soritesWrapper : LogicTypes.LogicType → WrappedProblem soritesProblem lt, soritesTower : Tower soritesProblem, soritesCost : LogicTypes.LogicType → Nat, soritesCost_ge_cdStep : ∀ lt, soritesCost lt ≥ lt.cdStep, soritesFrictionLagrangian : Nat
 
 ## Cross-refs
 
-LaserCortex.EMLRegistry → EMLTree, leftComb, rightComb, contracts_to_rightComb, LaserCortex.LogicTypes → LogicType, LogicContraction, cdStep, LaserCortex.LiarParadox → Problem, Tower, WrappedProblem
+LaserCortex.EMLRegistry → EMLTree, leftComb, rightComb, contracts_to_rightComb, LaserCortex.LogicTypes → LogicType, LogicContraction, cdStep, LaserCortex.Problem → Problem, Tower, WrappedProblem, LaserCortex.FrictionLagrangian → frictionLagrangian, layerCost, layerCost_ge_cdStep
 
 ## Invariants
 
-soritesTree is fixed to leftComb 5; soritesCost lt is bounded by lt.cdStep; soritesTower.layers cardinality equals 10 (size of suitableLogics); soritesFrictionLagrangian is deterministic sum of WrappedProblem.cost across all logic layers; normalForm transformation enforces rightComb 5 via LogicContraction proof obligation; soritesWrapper.cost evaluates to lt.cdStep.
+soritesTree is fixed to leftComb 5; soritesCost lt is higher or equal to lt.cdStep (accounting for associator barrier at CD ≥ 3); soritesTower.layers cardinality equals 10 (size of suitableLogics); soritesFrictionLagrangian delegates to FrictionLagrangian.frictionLagrangian; normalForm transformation enforces rightComb 5 via LogicContraction proof obligation; soritesWrapper.cost evaluates to FrictionLagrangian.layerCost lt.
 
 ## Tags
 
@@ -26,10 +26,12 @@ soritesTree is fixed to leftComb 5; soritesCost lt is bounded by lt.cdStep; sori
 
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
-import LaserCortex.LiarParadox
+import LaserCortex.Problem
+import LaserCortex.FrictionLagrangian
 
 open EMLRegistry
-open LiarParadox
+open ProblemTypes
+open FrictionLagrangian
 
 namespace SoritesParadox
 
@@ -54,12 +56,13 @@ def soritesProblem : Problem := {
   normalForm := λ lt => rightComb soritesTree.size
 }
 
-/-- Generic Sorites wrapper for any logic type. Cost = cdStep. -/
+/-- Generic Sorites wrapper for any logic type. Cost = FrictionLagrangian.layerCost lt.
+  Uses the true Friction Lagrangian cost (accounts for the associator energy barrier at CD ≥ 3). -/
 def soritesWrapper (lt : LogicTypes.LogicType) : WrappedProblem soritesProblem lt :=
   {
     tree   := soritesProblem.tree lt
     target := soritesProblem.normalForm lt
-    cost   := lt.cdStep
+    cost   := FrictionLagrangian.layerCost lt
     proof  := by
       show LogicTypes.LogicContraction lt (soritesProblem.tree lt) (soritesProblem.normalForm lt)
       have hLC : LogicTypes.LogicContraction lt = EMLRegistry.contracts_to := by
@@ -76,14 +79,19 @@ def soritesTower : Tower soritesProblem := {
     |>.map (λ lt => ⟨lt, soritesWrapper lt⟩)
 }
 
-/-- Sorites cost: same metric as Liar, but now applied to vagueness. -/
-def soritesCost (lt : LogicTypes.LogicType) : Nat := lt.cdStep
+/-- Sorites cost: same true Friction Lagrangian cost as Liar, applied to vagueness.
+  This replaces the old flat cdStep cheat. -/
+def soritesCost (lt : LogicTypes.LogicType) : Nat :=
+  FrictionLagrangian.layerCost lt
 
-theorem soritesCost_le_cdStep (lt : LogicTypes.LogicType) : soritesCost lt ≤ lt.cdStep := by
-  simp [soritesCost]
+/-- soritesCost ≥ cdStep — the true Lagrangian cost is at least the old flat cost. -/
+theorem soritesCost_ge_cdStep (lt : LogicTypes.LogicType) : soritesCost lt ≥ lt.cdStep := by
+  dsimp [soritesCost]
+  exact FrictionLagrangian.layerCost_ge_cdStep lt
 
-/-- The total Friction Lagrangian for the Sorites paradox. -/
+/-- The total Friction Lagrangian for the Sorites paradox.
+  Delegates to `FrictionLagrangian.frictionLagrangian` for the true associator-weighted cost. -/
 def soritesFrictionLagrangian : Nat :=
-  soritesTower.layers.map (λ (x : Σ lt, WrappedProblem soritesProblem lt) => x.2.cost) |>.sum
+  FrictionLagrangian.frictionLagrangian soritesTower
 
 end SoritesParadox

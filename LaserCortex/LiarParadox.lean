@@ -8,15 +8,15 @@ Formalizes self-referential logical paradoxes as indexed tree structures, comput
 
 ## Contracts
 
-ProblemClass, Problem, WrappedProblem, Tower, liarProblem : Problem, liarTower : Tower liarProblem, frictionLagrangian : Nat, liarCost : LogicTypes.LogicType → Nat, missingProofParadox : Problem → LogicTypes.LogicType → Problem, liarWrapper : LogicTypes.LogicType → WrappedProblem liarProblem, liarCost_le_cdStep, liarCost_matches_classical, liarCost_matches_fuzzy
+ProblemClass, Problem, WrappedProblem, Tower, liarProblem, liarTower, frictionLagrangian, liarCost, missingProofParadox, liarWrapper, liarCost_ge_cdStep, liarCost_matches_classical, liarCost_matches_fuzzy
 
 ## Cross-refs
 
-LaserCortex.EMLRegistry → EMLTree, contracts_to, contracts_to_rightComb, rightComb | LaserCortex.LogicTypes → LogicType, LogicContraction, cdStep
+LaserCortex.EMLRegistry → EMLTree, contracts_to, contracts_to_rightComb, rightComb | LaserCortex.LogicTypes → LogicType, LogicContraction, cdStep | LaserCortex.Problem → ProblemTypes.Problem, Tower, WrappedProblem, ProblemClass | LaserCortex.FrictionLagrangian → frictionLagrangian, layerCost, layerCost_ge_cdStep
 
 ## Invariants
 
-liarCost lt = lt.cdStep (hardness metric); liarTower.layers cardinality matches liarProblem.suitableLogics.length; frictionLagrangian equals Σ(WrappedProblem.cost) across all layers; liarWrapper proof obligation reduces to EMLRegistry.contracts_to_rightComb via structural case analysis on LogicType; normal form mapping enforces rightComb 2 for .ManyValued and rightComb 3 for all other logics; Tower layers store dependent pairs Σ lt, WrappedProblem p lt ensuring type-safe logic-problem alignment.
+liarCost lt = FrictionLagrangian.layerCost lt (true Lagrangian cost, higher than cdStep for k ≥ 3); liarTower.layers cardinality matches liarProblem.suitableLogics.length; frictionLagrangian delegates to FrictionLagrangian.frictionLagrangian liarTower; liarWrapper proof obligation reduces to EMLRegistry.contracts_to_rightComb via structural case analysis on LogicType; normal form mapping enforces rightComb 2 for .ManyValued and rightComb 3 for all other logics; Tower layers store dependent pairs Σ lt, WrappedProblem p lt ensuring type-safe logic-problem alignment.
 
 ## Tags
 
@@ -26,57 +26,13 @@ liarCost lt = lt.cdStep (hardness metric); liarTower.layers cardinality matches 
 
 import LaserCortex.EMLRegistry
 import LaserCortex.LogicTypes
+import LaserCortex.Problem
+import LaserCortex.FrictionLagrangian
 
 open EMLRegistry
+open ProblemTypes
 
 namespace LiarParadox
-
-/-- A class of paradoxes sharing a common structural pattern.
-  Each maps to a native logic type (the one best suited to resolve it),
-  but can be addressed by multiple logics. -/
-inductive ProblemClass : Type where
-  | selfReference       -- Liar, Truth-teller, Curry's (native: ManyValued)
-  | vagueness           -- Sorites, Ship of Theseus (native: Fuzzy)
-  | inconsistentDef     -- Russell's, Barber (native: Paraconsistent)
-  | temporalDecision    -- Grandfather, Newcomb's (native: Temporal)
-  | deontic             -- Contrary-to-Duty (native: Deontic)
-  | epistemic           -- Surprise Examination (native: Epistemic)
-  | quantumSuperposition -- Schrödinger's Cat (native: Quantum)
-  | constructive        -- Brouwer's Continuity (native: Intuitionistic)
-  | relevance           -- Material Implication (native: Relevance)
-  | emptyReference      -- Non-existent objects (native: Free)
-  | infinity            -- Galileo's, Hilbert's Hotel (native: Infinitary)
-  | modality            -- Fitch's Knowability (native: Modal)
-  | metaParadox         -- Missing proof / incomplete framework (native: Classical)
-  deriving DecidableEq, Repr
-
-/-- A problem: a logical puzzle encoded as a family of trees,
-  one per logic type that can resolve it.
-  
-  `cls` — the problem class
-  `suitableLogics` — which logics can resolve this
-  `tree` — the encoding in each logic (a family indexed by LogicType)
-  `normalForm` — the target tree for each logic -/
-structure Problem where
-  cls : ProblemClass
-  name : String
-  suitableLogics : List LogicTypes.LogicType
-  tree : LogicTypes.LogicType → EMLTree
-  normalForm : LogicTypes.LogicType → EMLTree
-
-/-- A WrappedProblem pairs a Problem with a LogicType.
-  This is the WfCA collapse rule: the logic's contraction relation
-  resolves the problem's superposition to a definite outcome.
-  
-  `tree`    — the problem as interpreted in this logic
-  `target`  — the normal form under this logic
-  `cost`    — pentagonator distance (Verification Gap Φ)
-  `proof`   — the contraction path (placeholder until LogicContraction is defined) -/
-structure WrappedProblem (p : Problem) (lt : LogicTypes.LogicType) where
-  tree   : EMLTree
-  target : EMLTree
-  cost   : Nat
-  proof  : LogicTypes.LogicContraction lt tree target
 
 /-- The canonical size-3 symmetric tree used by most Liar encodings:
   Node (Node Leaf Leaf) (Node Leaf Leaf). -/
@@ -133,14 +89,17 @@ def missingProofParadox (p : Problem) (lt : LogicTypes.LogicType) : Problem := {
 -- Liar Wrappers (All Mail Slots Filled)
 -- ================================================================
 
-/-- Generic Liar wrapper for any logic type. Cost = cdStep.
+/-- Generic Liar wrapper for any logic type. Cost = FrictionLagrangian.layerCost lt.
   Each CD property-loss adds exactly one contraction step to
-  resolve the Liar (perfect anti-coherence). -/
+  resolve the Liar (perfect anti-coherence).
+  
+  Uses the true Friction Lagrangian cost instead of the flat cdStep,
+  accounting for the associator energy barrier at CD ≥ 3. -/
 def liarWrapper (lt : LogicTypes.LogicType) : WrappedProblem liarProblem lt :=
   {
     tree   := liarProblem.tree lt
     target := liarProblem.normalForm lt
-    cost   := lt.cdStep
+    cost   := FrictionLagrangian.layerCost lt
     proof  := by
       show LogicTypes.LogicContraction lt (liarProblem.tree lt) (liarProblem.normalForm lt)
       have hLC : LogicTypes.LogicContraction lt = EMLRegistry.contracts_to := by
@@ -163,24 +122,21 @@ def fuzzyLiar : WrappedProblem liarProblem (.Fuzzy) :=
 -- Nested Wrappers (WfCA stacked collapse)
 -- ================================================================
 
-/-- A Tower is a sequence of logic-wrapped problems, each collapsing the
-  output of the previous.  From Lumo section B:
-  
-    Layer 3 (Quantum):       liar_superposition
-         ↓ wrapper
-    Layer 2 (Intuitionistic): proof_of_quantum_state
-         ↓ wrapper
-    Layer 1 (Fuzzy):         confidence_in_proof
-         ↓ wrapper
-    Layer 0 (Classical):     assertion_value
-  
-  Each wrapper converts the previous layer's normal form into the
-  next layer's tree, then contracts it.  The total cost is the sum.
-  
-  The dependent pair Σ lt, WrappedProblem p lt stores each layer's
-  logic type alongside its wrapped problem. -/
-structure Tower (p : Problem) where
-  layers : List (Σ lt : LogicTypes.LogicType, WrappedProblem p lt)
+-- A Tower is a sequence of logic-wrapped problems, each collapsing the
+-- output of the previous.  From Lumo section B:
+--   Layer 3 (Quantum):       liar_superposition
+--        ↓ wrapper
+--   Layer 2 (Intuitionistic): proof_of_quantum_state
+--        ↓ wrapper
+--   Layer 1 (Fuzzy):         confidence_in_proof
+--        ↓ wrapper
+--   Layer 0 (Classical):     assertion_value
+-- Each wrapper converts the previous layer's normal form into the
+-- next layer's tree, then contracts it.  The total cost is the sum.
+-- The dependent pair Σ lt, WrappedProblem p lt stores each layer's
+-- logic type alongside its wrapped problem.
+-- NOTE: The `Tower` structure itself is now defined in `Problem.lean`
+-- under `ProblemTypes.Tower`.  This docstring is preserved for context.
 
 /-- The full Liar tower: one layer per suitable logic, in CD step order.
   Each layer wraps the Liar in that logic's structural language.
@@ -192,23 +148,35 @@ def liarTower : Tower liarProblem := {
 
 /-- The total Friction Lagrangian: sum of costs across the full tower.
   This measures the total resistance of the logical ecosystem to
-  the Liar paradox. -/
+  the Liar paradox.
+  
+  Delegates to `FrictionLagrangian.frictionLagrangian` for the
+  true associator-weighted cost. -/
 def frictionLagrangian : Nat :=
-  liarTower.layers.map (λ (x : Σ lt, WrappedProblem liarProblem lt) => x.2.cost) |>.sum
+  FrictionLagrangian.frictionLagrangian liarTower
 
 -- ================================================================
 -- Liar Cost: hardness measure for each logic against the Liar
 -- ================================================================
 
 /-- The cost Φ for resolving the Liar in each logic.
-  By definition: liarCost lt = lt.cdStep (the Cayley-Dickson step).
+  By definition: liarCost lt = FrictionLagrangian.layerCost lt (the true
+  Friction Lagrangian layer cost, which includes the associator energy
+  barrier at CD ≥ 3).
   Measures resistance to perfect anti-coherence (X = ¬X).
-  Each CD property-loss adds exactly one contraction step. -/
-def liarCost (lt : LogicTypes.LogicType) : Nat := lt.cdStep
+  Each CD property-loss adds exactly one contraction step.
+  
+  This is a strict increase over the old flat cdStep for non-associative
+  logics (CD ≥ 3): liarCost lt = lt.cdStep + strut_weight * assocDefect(lt.cdStep). -/
+def liarCost (lt : LogicTypes.LogicType) : Nat :=
+  FrictionLagrangian.layerCost lt
 
-/-- liarCost = cdStep, so inequality is trivial (≤). -/
-theorem liarCost_le_cdStep (lt : LogicTypes.LogicType) : liarCost lt ≤ lt.cdStep := by
-  simp [liarCost]
+/-- liarCost ≥ cdStep — the true Lagrangian cost is at least the old flat cost.
+  The direction reverses from the old liarCost_le_cdStep because the true cost
+  is HIGHER (accounts for the associator barrier), not lower. -/
+theorem liarCost_ge_cdStep (lt : LogicTypes.LogicType) : liarCost lt ≥ lt.cdStep := by
+  dsimp [liarCost]
+  exact FrictionLagrangian.layerCost_ge_cdStep lt
 
 /-- liarCost matches the actual WrappedProblem cost for Classical. -/
 theorem liarCost_matches_classical : liarCost (.Classical) = classicalLiar.cost := by

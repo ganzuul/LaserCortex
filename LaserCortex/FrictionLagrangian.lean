@@ -76,7 +76,7 @@ Claude_on_Friction-Lagrangian.md → continuous variational specification
 import LaserCortex.SplitOctonionCost
 import LaserCortex.SplitQuaternionClifford
 import LaserCortex.Cost
-import LaserCortex.LiarParadox
+import LaserCortex.Problem
 import LaserCortex.LogicTypes
 
 namespace FrictionLagrangian
@@ -84,7 +84,7 @@ namespace FrictionLagrangian
 open SplitOctonionCost
 open SplitQuaternionClifford
 open Cost
-open LiarParadox
+open ProblemTypes
 open LogicTypes
 
 -- ============================================================================
@@ -236,27 +236,6 @@ theorem frictionLagrangian_ge_flatSum {p : Problem} (tower : Tower p) :
     have h := layerCost_ge_cdStep x.1
     omega
 
-/-- The Friction Lagrangian is strictly greater than the flat cost sum
-    whenever there is at least one non-associative layer (CD ≥ 3) in the tower.
-    This formalizes the "enormous energy density" at the CD 2→3 boundary:
-    the associator barrier adds strut_weight² to every non-associative layer.
-    
-    This is the integrated signature of zero divisors: each CD ≥ 3 layer
-    contains ZDs that are orthogonal to the associative subspace, requiring
-    a new parameter (strut_weight²) to contain observations at that layer.
-    No rebasing or reparameterization can eliminate this cost — it is
-    an invariant of the algebraic structure, not of the computational model.
-    
-    PROOF DEFERRED: Requires a standard list-sum inequality with a strict
-    pointwise comparison. The difficulty is purely combinatorial (extracting
-    the position of the non-associative layer in the list and arguing the
-    sum-of-differences is positive), not algebraic. Will be filled when
-    the migration of the paradox files triggers actual use. -/
-theorem frictionLagrangian_gt_flatSum {p : Problem} (tower : Tower p)
-    (h : ∃ x ∈ tower.layers, x.1.cdStep ≥ 3) :
-    frictionLagrangian tower > flatCostSum tower := by
-  sorry
-
 -- ============================================================================
 -- SECTION 4: Phase Change Theorems
 -- ============================================================================
@@ -307,6 +286,85 @@ theorem frictionDensity_jump_at_cd3 :
     frictionDensity 3 = frictionDensity 2 + 1 + strut_weight * strut_weight := by
   unfold strut_weight
   native_decide
+
+/-- If f x ≥ g x for all x in the list, then the sum of f is at least the sum of g.
+    This is the pointwise-to-sum inequality for natural numbers. -/
+lemma list_sum_ge_of_forall_ge {ι : Type*} (f g : ι → ℕ) (xs : List ι) (h : ∀ x ∈ xs, f x ≥ g x) :
+    (xs.map f).sum ≥ (xs.map g).sum := by
+  induction xs with
+  | nil => rfl
+  | cons y ys ih =>
+    have hy : f y ≥ g y := h y (by simp)
+    have h_ys : ∀ x ∈ ys, f x ≥ g x := λ x hx => h x (by simp [hx])
+    have ih_ys := ih h_ys
+    simp; omega
+
+/-- If f x > g x for some x in the list, and f x ≥ g x for all x,
+    then the sum of f over the list is strictly greater than the sum of g.
+    
+    This is the key lemma for «sum-of-costs > flat-sum» comparisons.
+    It holds by structural induction on the list: at each step, either the
+    strict element is the head (giving head sum strict, tail sum ≥) or it's
+    in the tail (head sum ≥, tail sum strict). In either case, the total is strict. -/
+lemma list_sum_gt_of_exists_gt {ι : Type*} (f g : ι → ℕ) (xs : List ι)
+    (h : ∃ x ∈ xs, f x > g x) (h_all : ∀ x ∈ xs, f x ≥ g x) :
+    (xs.map f).sum > (xs.map g).sum := by
+  induction xs with
+  | nil =>
+    rcases h with ⟨x, hx, _⟩
+    simp at hx
+  | cons y ys ih =>
+    have hy : f y ≥ g y := h_all y (by simp)
+    have h_total : (f y + (ys.map f).sum) > (g y + (ys.map g).sum) := by
+      rcases h with ⟨x, hx, hx_gt⟩
+      have hx_cases : x = y ∨ x ∈ ys := by simpa using hx
+      rcases hx_cases with (rfl | hx_ys)
+      · -- x = y: strict at head, ≥ in tail
+        have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
+        have h_rest : (ys.map f).sum ≥ (ys.map g).sum :=
+          list_sum_ge_of_forall_ge f g ys h_all_ys
+        omega
+      · -- x ∈ ys: strict in tail, ≥ at head
+        have h_ys : ∃ x' ∈ ys, f x' > g x' := ⟨x, hx_ys, hx_gt⟩
+        have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
+        have h_rest : (ys.map f).sum > (ys.map g).sum := ih h_ys h_all_ys
+        simp; omega
+    simp; exact h_total
+
+/-- The Friction Lagrangian is strictly greater than the flat cost sum
+    whenever there is at least one non-associative layer (CD ≥ 3) in the tower.
+    This formalizes the "enormous energy density" at the CD 2→3 boundary:
+    the associator barrier adds strut_weight² to every non-associative layer.
+    
+    This is the integrated signature of zero divisors: each CD ≥ 3 layer
+    contains ZDs that are orthogonal to the associative subspace, requiring
+    a new parameter (strut_weight²) to contain observations at that layer.
+    No rebasing or reparameterization can eliminate this cost — it is
+    an invariant of the algebraic structure, not of the computational model.
+    
+    The proof: apply `list_sum_gt_of_exists_gt` with f = layerCost ∘ (·.1),
+    g = (·.1.cdStep), using `h` for existence and `layerCost_ge_cdStep`
+    for the ∀-bound. The strict inequality at the witness layer comes from
+    the associator phase change (strut_weight > 0 at CD ≥ 3). -/
+theorem frictionLagrangian_gt_flatSum {p : Problem} (tower : Tower p)
+    (h : ∃ x ∈ tower.layers, x.1.cdStep ≥ 3) :
+    frictionLagrangian tower > flatCostSum tower := by
+  dsimp [frictionLagrangian, flatCostSum]
+  have h_exists : ∃ x ∈ tower.layers, layerCost x.1 > x.1.cdStep := by
+    rcases h with ⟨x, hx_mem, hx_cd⟩
+    refine ⟨x, hx_mem, ?_⟩
+    dsimp [layerCost, frictionDensity, commDefect, assocDefect]
+    have h_notle : ¬(x.1.cdStep ≤ 2) := by omega
+    simp [h_notle]
+    have h_sw_pos : strut_weight > 0 := by
+      have h := strut_weight_eq_four
+      omega
+    omega
+  have h_all : ∀ x ∈ tower.layers, layerCost x.1 ≥ x.1.cdStep := by
+    intro x hx
+    exact layerCost_ge_cdStep x.1
+  apply list_sum_gt_of_exists_gt (λ x : Σ lt, WrappedProblem p lt => layerCost x.1)
+    (λ x : Σ lt, WrappedProblem p lt => x.1.cdStep) tower.layers h_exists h_all
 
 -- ============================================================================
 -- SECTION 5: Mirror Mode — the NodeCost signature of the phase change
