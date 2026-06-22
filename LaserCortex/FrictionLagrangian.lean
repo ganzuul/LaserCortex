@@ -410,6 +410,47 @@ theorem heightMap_discontinuity_at_cd2_3 :
   native_decide
 
 -- ============================================================================
+-- SECTION 6b: Zero-Divisor Bridge Theorem
+-- ============================================================================
+-- This theorem is the proof term carried by rejection witnesses in the
+-- self-improvement loop. When a reasoning trace claims a partial order
+-- (source contracts to target) across the CD 2→3 boundary, the zero
+-- divisor makes that contraction algebraically impossible. The friction
+-- barrier — strut_weight² — is the quantitative signature of that
+-- impossibility.
+--
+-- The ZD appears when incompatible types are put in partial order: e.g.,
+-- a SPECIFICATION edge (commutative, CD 0) whose invariant text implies
+-- non-associative structure (self-reference, recursion, circularity).
+-- The linear cdStep sees 0→3 (a step of 3); the Friction Lagrangian
+-- sees 0→19 (a step of 19, dominated by strut_weight²=16). The gap
+-- between those views IS the zero divisor.
+
+/-- The friction barrier across the CD 2→3 boundary is at least strut_weight².
+    This is the quantitative signature of a zero divisor: the irreducible
+    cost of composing types from incompatible algebraic regimes.
+
+    If k₁ ≤ 2 (associative regime) and k₂ ≥ 3 (non-associative regime),
+    then Γ_k₂ - Γ_k₁ ≥ strut_weight * strut_weight = 16.
+
+    This theorem is the proof term that rejection witnesses in the
+    self-improvement loop carry. It says: "crossing this boundary costs
+    at least strut_weight², which is the zero divisor's signature." -/
+theorem friction_barrier_across_cd23 (k₁ k₂ : ℕ) (h₁ : k₁ ≤ 2) (h₂ : 3 ≤ k₂) :
+    frictionDensity k₂ - frictionDensity k₁ ≥ strut_weight * strut_weight := by
+  -- Γ_k₂ = k₂ + strut_weight * strut_weight  (assocDefect = strut_weight since k₂ ≥ 3)
+  -- Γ_k₁ = k₁                                (assocDefect = 0 since k₁ ≤ 2)
+  -- diff = k₂ + strut_weight² - k₁ ≥ 3 + 16 - 2 = 17 ≥ 16
+  have ha2 : assocDefect k₁ = 0 := assocDefect_zero_up_to_cd2 k₁ h₁
+  have ha3 : assocDefect k₂ = strut_weight := assocDefect_positive_for_cd3plus k₂ h₂
+  unfold frictionDensity commDefect
+  rw [ha2, ha3]
+  -- Now: (k₂ + strut_weight * strut_weight) - k₁ ≥ strut_weight * strut_weight
+  -- iff k₂ - k₁ ≥ 0, which is true since k₂ ≥ 3 > 2 ≥ k₁
+  have hk : k₂ ≥ k₁ := by omega
+  omega
+
+-- ============================================================================
 -- SECTION 7: Migration Guide — replacing the paradox file cheats
 -- ============================================================================
 

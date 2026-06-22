@@ -1,0 +1,246 @@
+{
+  "description": "Curated test set for the certification loop. 10 traces spanning the CD boundary: 6 expected to certify (CD 0-1), 4 expected to trigger zero divisor rejection (incompatible types across CD 2→3).",
+  "task_config_hash": "a396bace5529",
+  "traces": [
+    {
+      "pair_key": "test:EMLRegistry.lean:_eml_tree.py",
+      "inputs": {
+        "source_module": "EMLRegistry",
+        "target_module": "_eml_tree",
+        "source_layer": "FORMALIZATION",
+        "target_layer": "API_GATEWAY",
+        "source_content": "Module: EMLRegistry\nFile: LaserCortex/EMLRegistry.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization",
+        "target_content": "Module: _eml_tree\nFile: infra/_cortex/_eml_tree.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
+      },
+      "reasoning_content": "The Lean4 formalization defines EMLTree, contracts_to, and rightComb. The Python mirror must preserve these type invariants exactly.",
+      "final_content": "DEPENDENCY|SPECIFICATION|Formal type invariants and proof witnesses must be mirrored in Python implementation|Semantic drift breaks certified bindings",
+      "result": {
+        "edge_type": "SPECIFICATION",
+        "invariant_at_boundary": "Formal type invariants and proof witnesses must be mirrored in Python implementation",
+        "failure_mode": "Semantic drift breaks certified bindings"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 150,
+      "timestamp": 1782138400.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "CERTIFY"
+    },
+    {
+      "pair_key": "test:_bridge.py:api.ts",
+      "inputs": {
+        "source_module": "_bridge",
+        "target_module": "api",
+        "source_layer": "API_GATEWAY",
+        "target_layer": "PRESENTATION",
+        "source_content": "Module: _bridge\nFile: infra/_cortex/_bridge.py\nLayer: API_GATEWAY\nTags: #python #api_gateway",
+        "target_content": "Module: api\nFile: canvas_app/frontend/src/services/api.ts\nLayer: PRESENTATION\nTags: #typescript #presentation"
+      },
+      "reasoning_content": "The bridge exposes certificate data via FastAPI endpoints. The frontend API service must match the response schema exactly.",
+      "final_content": "DEPENDENCY|CONSTRAINT|API response schema must match frontend TypeScript types|Frontend parsing fails or displays corrupted data",
+      "result": {
+        "edge_type": "CONSTRAINT",
+        "invariant_at_boundary": "API response schema must match frontend TypeScript types",
+        "failure_mode": "Frontend parsing fails or displays corrupted data"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 150,
+      "timestamp": 1782138401.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "CERTIFY"
+    },
+    {
+      "pair_key": "test:Cost.lean:_cost.py",
+      "inputs": {
+        "source_module": "Cost",
+        "target_module": "_cost",
+        "source_layer": "FORMALIZATION",
+        "target_layer": "API_GATEWAY",
+        "source_content": "Module: Cost\nFile: LaserCortex/Cost.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization",
+        "target_content": "Module: _cost\nFile: infra/_cortex/_cost.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
+      },
+      "reasoning_content": "The Cost.lean module defines NodeCost parameters and the Phi cost function. The Python mirror must preserve these parameter values.",
+      "final_content": "DEPENDENCY|SPECIFICATION|Cost function parameters and Phi computation must be preserved across layers|Incorrect cost landscape leads to wrong regime classification",
+      "result": {
+        "edge_type": "SPECIFICATION",
+        "invariant_at_boundary": "Cost function parameters and Phi computation must be preserved across layers",
+        "failure_mode": "Incorrect cost landscape leads to wrong regime classification"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 150,
+      "timestamp": 1782138402.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "CERTIFY"
+    },
+    {
+      "pair_key": "test:_orchestrator.py:execution_router.py",
+      "inputs": {
+        "source_module": "_orchestrator",
+        "target_module": "execution_router",
+        "source_layer": "API_GATEWAY",
+        "target_layer": "API_GATEWAY",
+        "source_content": "Module: _orchestrator\nFile: infra/_orchest/_orchestrator.py\nLayer: API_GATEWAY\nTags: #python #api_gateway",
+        "target_content": "Module: execution_router\nFile: canvas_app/backend/routers/execution_router.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
+      },
+      "reasoning_content": "The orchestrator produces execution state that the execution router exposes as HTTP endpoints.",
+      "final_content": "DEPENDENCY|DATA_SOURCE|Execution state and run metadata feeds router endpoints|Router returns stale or missing execution data",
+      "result": {
+        "edge_type": "DATA_SOURCE",
+        "invariant_at_boundary": "Execution state and run metadata feeds router endpoints",
+        "failure_mode": "Router returns stale or missing execution data"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 150,
+      "timestamp": 1782138403.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "CERTIFY"
+    },
+    {
+      "pair_key": "test:EMLRegistry.lean:_eml_tree.py:ZD_SELF_REF",
+      "inputs": {
+        "source_module": "EMLRegistry",
+        "target_module": "_eml_tree",
+        "source_layer": "FORMALIZATION",
+        "target_layer": "API_GATEWAY",
+        "source_content": "Module: EMLRegistry\nFile: LaserCortex/EMLRegistry.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization",
+        "target_content": "Module: _eml_tree\nFile: infra/_cortex/_eml_tree.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
+      },
+      "reasoning_content": "The EMLTree data structure is self-referential: Node contains two EMLTree children. This recursive structure means the type definition references itself, creating a non-associative composition when building complex trees.",
+      "final_content": "DEPENDENCY|SPECIFICATION|Tree structure is self-referential: nodes contain subtrees of the same type|Type recursion causes infinite loop in naive tree construction",
+      "result": {
+        "edge_type": "SPECIFICATION",
+        "invariant_at_boundary": "Tree structure is self-referential: nodes contain subtrees of the same type",
+        "failure_mode": "Type recursion causes infinite loop in naive tree construction"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 200,
+      "timestamp": 1782138404.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "ZD_REJECT"
+    },
+    {
+      "pair_key": "test:_bridge.py:_orchestrator.py:ZD_CIRCULAR",
+      "inputs": {
+        "source_module": "_bridge",
+        "target_module": "_orchestrator",
+        "source_layer": "API_GATEWAY",
+        "target_layer": "API_GATEWAY",
+        "source_content": "Module: _bridge\nFile: infra/_cortex/_bridge.py\nLayer: API_GATEWAY\nTags: #python #api_gateway",
+        "target_content": "Module: _orchestrator\nFile: infra/_orchest/_orchestrator.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
+      },
+      "reasoning_content": "The bridge calls the orchestrator's on_inference_complete, which in turn calls the bridge's lift_inference. This circular dependency means the two modules are mutually recursive.",
+      "final_content": "DEPENDENCY|CONSTRAINT|Circular dependency: bridge calls orchestrator which calls bridge back|Mutual recursion may cause stack overflow or infinite loop",
+      "result": {
+        "edge_type": "CONSTRAINT",
+        "invariant_at_boundary": "Circular dependency: bridge calls orchestrator which calls bridge back",
+        "failure_mode": "Mutual recursion may cause stack overflow or infinite loop"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 200,
+      "timestamp": 1782138405.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "ZD_REJECT"
+    },
+    {
+      "pair_key": "test:LiarParadox.lean:_paradox.py:ZD_PARADOX",
+      "inputs": {
+        "source_module": "LiarParadox",
+        "target_module": "_paradox",
+        "source_layer": "FORMALIZATION",
+        "target_layer": "API_GATEWAY",
+        "source_content": "Module: LiarParadox\nFile: LaserCortex/LiarParadox.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization",
+        "target_content": "Module: _paradox\nFile: infra/_cortex/_paradox.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
+      },
+      "reasoning_content": "The LiarParadox formalization encodes a self-contradictory statement: the invariant is true if and only if it is false. This paradox cannot be resolved within classical logic.",
+      "final_content": "DEPENDENCY|SPECIFICATION|The paradox is self-contradictory: the invariant is true iff it is false|Paraconsistent logic required to handle the contradiction",
+      "result": {
+        "edge_type": "SPECIFICATION",
+        "invariant_at_boundary": "The paradox is self-contradictory: the invariant is true iff it is false",
+        "failure_mode": "Paraconsistent logic required to handle the contradiction"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 200,
+      "timestamp": 1782138406.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "ZD_REJECT"
+    },
+    {
+      "pair_key": "test:Decomposition.lean:_decomposition.py:ZD_NONASSOC",
+      "inputs": {
+        "source_module": "Decomposition",
+        "target_module": "_decomposition",
+        "source_layer": "FORMALIZATION",
+        "target_layer": "API_GATEWAY",
+        "source_content": "Module: Decomposition\nFile: LaserCortex/Decomposition.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization",
+        "target_content": "Module: _decomposition\nFile: infra/_cortex/_decomposition.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
+      },
+      "reasoning_content": "The contraction path in the Tamari lattice is non-associative: bracketing order matters when decomposing trees. Different bracketings produce structurally distinct decomposition paths.",
+      "final_content": "DEPENDENCY|SPECIFICATION|Contraction path is non-associative: bracketing order matters for decomposition|Wrong bracketing produces invalid path reconstruction",
+      "result": {
+        "edge_type": "SPECIFICATION",
+        "invariant_at_boundary": "Contraction path is non-associative: bracketing order matters for decomposition",
+        "failure_mode": "Wrong bracketing produces invalid path reconstruction"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 200,
+      "timestamp": 1782138407.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "ZD_REJECT"
+    },
+    {
+      "pair_key": "test:_tamari_lattice.py:TamariExplorer.tsx",
+      "inputs": {
+        "source_module": "_tamari_lattice",
+        "target_module": "TamariExplorer",
+        "source_layer": "API_GATEWAY",
+        "target_layer": "PRESENTATION",
+        "source_content": "Module: _tamari_lattice\nFile: infra/_cortex/_tamari_lattice.py\nLayer: API_GATEWAY\nTags: #python #api_gateway",
+        "target_content": "Module: TamariExplorer\nFile: canvas_app/frontend/src/components/tamari/TamariExplorer.tsx\nLayer: PRESENTATION\nTags: #typescript #presentation"
+      },
+      "reasoning_content": "The tamari lattice module computes lattice vertices and coordinates. The TamariExplorer component visualizes them in 3D.",
+      "final_content": "DEPENDENCY|DATA_SOURCE|Lattice vertices and coordinates feed visualization component|Visualization shows incorrect or missing lattice structure",
+      "result": {
+        "edge_type": "DATA_SOURCE",
+        "invariant_at_boundary": "Lattice vertices and coordinates feed visualization component",
+        "failure_mode": "Visualization shows incorrect or missing lattice structure"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 150,
+      "timestamp": 1782138408.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "CERTIFY"
+    },
+    {
+      "pair_key": "test:_spec.py:cortex_router.py",
+      "inputs": {
+        "source_module": "_spec",
+        "target_module": "cortex_router",
+        "source_layer": "API_GATEWAY",
+        "target_layer": "API_GATEWAY",
+        "source_content": "Module: _spec\nFile: infra/_cortex/_spec.py\nLayer: API_GATEWAY\nTags: #python #api_gateway",
+        "target_content": "Module: cortex_router\nFile: canvas_app/backend/routers/cortex_router.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
+      },
+      "reasoning_content": "The spec registry defines the CortexSpec statutes. The cortex router exposes them as HTTP endpoints for the UI.",
+      "final_content": "DEPENDENCY|SPECIFICATION|Spec registry defines the API contract for cortex endpoints|Router returns specs that don't match registry contents",
+      "result": {
+        "edge_type": "SPECIFICATION",
+        "invariant_at_boundary": "Spec registry defines the API contract for cortex endpoints",
+        "failure_mode": "Router returns specs that don't match registry contents"
+      },
+      "is_positive": true,
+      "embedding": null,
+      "total_tokens": 150,
+      "timestamp": 1782138409.0,
+      "task_config_hash": "a396bace5529",
+      "_expected": "CERTIFY"
+    }
+  ]
+}
