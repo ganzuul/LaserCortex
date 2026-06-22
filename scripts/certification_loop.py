@@ -431,19 +431,49 @@ def certify_trace_via_bridge(
             coupling_signature=coupling,
         )
 
-        # Lift inference
+        # Build trace_data for structural LogicType resolution
+        # This is the evolution beyond string matching: the bridge
+        # independently resolves a LogicType from the module's structural
+        # properties (tags, layers, spec matching) and checks for
+        # CD boundary crossing.
+        trace_data = {
+            "source_content": inputs.get("source_content", ""),
+            "target_content": inputs.get("target_content", ""),
+            "source_layer": inputs.get("source_layer", ""),
+            "target_layer": inputs.get("target_layer", ""),
+        }
+
+        # Lift inference with trace_data for ZD detection
         lift_result = bridge.core.lift_inference(
             flow_index=flow_index,
             concept_name=concept_name,
             sequence_type=seq_type,
             coupling_signature=coupling,
             eml_tree=tree,
+            trace_data=trace_data,
         )
 
         cert_key = f"cert_loop:{flow_index}"
 
         # Store in bridge cache for verification
         bridge._lift_cache[cert_key] = lift_result
+
+        # Check for zero divisor detected during lift
+        if lift_result.zd_witness is not None:
+            return CertificationResult(
+                certified=False,
+                rejection_reason=lift_result.zd_witness.format_reason(),
+                zd_witness=ZDWitness(
+                    boundary=lift_result.zd_witness.boundary,
+                    claimed_cdstep=lift_result.zd_witness.claimed_cdstep,
+                    actual_cdstep=lift_result.zd_witness.structural_cdstep,
+                    strut_weight_sq=lift_result.zd_witness.strut_weight_sq,
+                    friction_ratio=lift_result.zd_witness.friction_ratio,
+                    barrier_theorem=lift_result.zd_witness.barrier_theorem,
+                    claimed_edge_type=edge_type,
+                    matched_pattern=lift_result.zd_witness.resolution_source,
+                ),
+            )
 
         # Verify certificate
         cert = lift_result.certificate
@@ -479,6 +509,12 @@ def process_trace(
 ) -> tuple[CertificationResult, Optional[Dict[str, Any]]]:
     """Process a single trace through the full certification loop.
 
+    The ZD detection is now performed INSIDE lift_inference via the
+    trace_data parameter. The bridge independently resolves a structural
+    LogicType from the module's properties (tags, layers, spec matching)
+    and checks for CD boundary crossing. No string matching on the
+    invariant text is performed.
+
     Returns:
         Tuple of (CertificationResult, feedback_trace_or_None).
         The feedback_trace is a new trace to write back to the library
@@ -486,8 +522,6 @@ def process_trace(
     """
     result = trace.get("result") or {}
     edge_type = result.get("edge_type", "")
-    invariant = result.get("invariant_at_boundary", "")
-    failure_mode = result.get("failure_mode", "")
 
     # Skip traces that are already rejections
     if edge_type == "REJECTED":
@@ -497,24 +531,9 @@ def process_trace(
     if not result or not edge_type:
         return CertificationResult(certified=False, rejection_reason="no result"), None
 
-    # Step 1: ZD detection
-    claimed_cdstep = edge_type_to_cdstep(edge_type)
-    actual_cdstep, matched_pattern = detect_actual_cdstep(
-        invariant, failure_mode, edge_type
-    )
-    zd = detect_zd(claimed_cdstep, actual_cdstep, edge_type, matched_pattern)
-
-    if zd:
-        # Zero divisor found — format rejection and return
-        cert_result = CertificationResult(
-            certified=False,
-            rejection_reason=zd.format_reason(),
-            zd_witness=zd,
-        )
-        feedback = format_rejection_trace(trace, zd)
-        return cert_result, feedback
-
-    # Step 2: No ZD — try certification via bridge
+    # Single step: lift + ZD detection + certification via bridge
+    # The bridge's lift_inference now performs dual LogicType resolution
+    # and CD boundary crossing detection when trace_data is provided.
     cert_result = certify_trace_via_bridge(trace, bridge)
 
     if cert_result.certified:

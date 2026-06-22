@@ -53,6 +53,20 @@ class CortexBridgeError(Exception):
     """Base error for bridge operations."""
 
 
+class _MinimalConcept:
+    """Minimal Concept-like object for bridge operations.
+
+    Used when a full Concept is not available (e.g., when lifting a
+    reasoning trace that doesn't come from the NC orchestrator).
+    """
+    def __init__(self, name: str = "unknown", coupling_signature: Optional[str] = None,
+                 form_type: Optional[str] = None, context: str = ""):
+        self.name = name
+        self.coupling_signature = coupling_signature
+        self.form_type = form_type
+        self.context = context
+
+
 @dataclass
 class LiftResult:
     """Result of lifting an NC inference to the LC layer."""
@@ -62,6 +76,9 @@ class LiftResult:
     logic_type: LogicType
     gate_results: Dict[str, bool]
     spec_name: Optional[str] = None  # statute citation
+    zd_witness: Optional[ZDWitness] = None  # zero-divisor witness if detected
+    structural_logic: Optional[LogicType] = None  # independently resolved LogicType
+    structural_source: Optional[str] = None  # how structural LogicType was determined
 
 
 @dataclass
@@ -70,6 +87,42 @@ class GroundResult:
     certificate: CortexCertificate
     decompositions: List[Decomposition]
     decision: Decision
+
+
+@dataclass
+class ZDWitness:
+    """Formal witness for a zero-divisor rejection.
+
+    When incompatible LogicTypes are put in partial order (one in the
+    associative regime CD ≤ 2, the other in the non-associative regime
+    CD ≥ 3), the associator defect activates and the friction barrier
+    (strut_weight² = 16) makes contraction impossible.
+
+    The Lean theorem ``friction_barrier_across_cd23`` is the proof term:
+    Γ_k₂ - Γ_k₁ ≥ strut_weight² when k₁ ≤ 2 and k₂ ≥ 3.
+    """
+    claimed_logic: LogicType
+    structural_logic: LogicType
+    claimed_cdstep: int
+    structural_cdstep: int
+    boundary: str = "CD_2_to_3"
+    strut_weight_sq: int = 16
+    friction_ratio: float = 9.5
+    barrier_theorem: str = "FrictionLagrangian.friction_barrier_across_cd23"
+    resolution_source: str = ""  # how the structural LogicType was determined
+
+    def format_reason(self) -> str:
+        return (
+            f"Zero divisor at {self.boundary} boundary. "
+            f"Claimed logic: {self.claimed_logic.display_name()} "
+            f"(CD {self.claimed_cdstep}), but structural resolution gives "
+            f"{self.structural_logic.display_name()} "
+            f"(CD {self.structural_cdstep}). "
+            f"Friction barrier strut_weight² = {self.strut_weight_sq} "
+            f"(ratio {self.friction_ratio}). "
+            f"Proof: {self.barrier_theorem}. "
+            f"Source: {self.resolution_source}."
+        )
 
 
 class CortexBridge:
@@ -146,6 +199,7 @@ class CortexBridge:
         concept: Any = None,
         spec: Optional[CortexSpec] = None,
         eml_tree: Optional[EMLTree] = None,
+        trace_data: Optional[Dict[str, str]] = None,
     ) -> LiftResult:
         """Convert an NC inference execution to LC types.
 
@@ -162,6 +216,10 @@ class CortexBridge:
                   overrides the heuristic ``flow_index_to_tree`` mapping.
                   This is the formal path — use ``tree_from_inference_entry``
                   to build a tree from the actual dependency structure.
+            trace_data: Optional dict with structural properties of the trace
+                  (source_content, target_content, source_layer, target_layer).
+                  When provided, the bridge independently resolves a structural
+                  LogicType and checks for zero-divisor boundary crossing.
         """
         if eml_tree is not None:
             tree = eml_tree
@@ -173,11 +231,38 @@ class CortexBridge:
         if effective_coupling is None and spec is not None:
             effective_coupling = spec.coupling_signature
 
-        # Determine LogicType: prefer Concept.to_logic_type(), fall back to spec, then coupling
+        # Determine claimed LogicType: prefer Concept.to_logic_type(),
+        # fall back to spec, then coupling
         if concept is not None:
-            logic_type = self.infer_logic_type(concept)
+            claimed_logic = self.infer_logic_type(concept)
         else:
-            logic_type = self._coupling_to_logic_type(effective_coupling)
+            claimed_logic = self._coupling_to_logic_type(effective_coupling)
+
+        # ── Zero-divisor detection via dual LogicType resolution ──
+        # When trace_data is provided, independently resolve a structural
+        # LogicType from the module's structural properties (tags, layers,
+        # spec matching). If claimed and structural LogicTypes straddle
+        # the CD 2→3 boundary, the composition is algebraically impossible.
+        zd_witness: Optional[ZDWitness] = None
+        structural_logic: Optional[LogicType] = None
+        structural_source: Optional[str] = None
+
+        if trace_data is not None:
+            structural_logic, structural_source = self.resolve_logic_type_from_structure(
+                source_content=trace_data.get("source_content", ""),
+                target_content=trace_data.get("target_content", ""),
+                source_layer=trace_data.get("source_layer", ""),
+                target_layer=trace_data.get("target_layer", ""),
+                concept_name=concept_name,
+            )
+            zd_witness = self.detect_cd_boundary_crossing(
+                claimed_logic, structural_logic
+            )
+            if zd_witness is not None:
+                zd_witness.resolution_source = structural_source
+
+        # Use structural LogicType if no ZD (it's more precise than claimed)
+        logic_type = structural_logic if (structural_logic is not None and zd_witness is None) else claimed_logic
 
         # Generate router index
         flat_idx = flow_to_index(flow_index)
@@ -203,6 +288,9 @@ class CortexBridge:
             logic_type=logic_type,
             gate_results=gate_results,
             spec_name=spec.cortex_name if spec is not None else None,
+            zd_witness=zd_witness,
+            structural_logic=structural_logic,
+            structural_source=structural_source,
         )
 
     def _coupling_to_logic_type(self, sig: Optional[str]) -> LogicType:
@@ -233,6 +321,109 @@ class CortexBridge:
         form_type = getattr(concept, 'form_type', None)
         coupling = getattr(concept, 'coupling_signature', None)
         return self._coupling_to_logic_type(coupling)
+
+    # ── Structural LogicType resolution (evolves beyond string matching) ──
+
+    # Module content tags → LogicType. These map structural properties
+    # of a module (from its content description) to a LogicType, without
+    # scanning the invariant text for keywords.
+    #
+    # The tags come from the trace's source_content / target_content
+    # fields, which include hashtags like #paradox, #temporal, etc.
+    TAG_TO_LOGIC: Dict[str, LogicType] = {
+        "#paradox": LogicType.PARACONSISTENT,
+        "#liar": LogicType.PARACONSISTENT,
+        "#self-reference": LogicType.QUANTUM,
+        "#non-associative": LogicType.QUANTUM,
+        "#quantum": LogicType.QUANTUM,
+        "#temporal": LogicType.TEMPORAL,
+        "#fuzzy": LogicType.FUZZY,
+        "#intuitionistic": LogicType.INTUITIONISTIC,
+    }
+
+    # Module layer → default LogicType. When no tags or spec match
+    # provide a stronger signal, the layer gives a default.
+    LAYER_TO_LOGIC: Dict[str, LogicType] = {
+        "FORMALIZATION": LogicType.CLASSICAL,
+        "API_GATEWAY": LogicType.CLASSICAL,
+        "PRESENTATION": LogicType.CLASSICAL,
+        "DOCUMENTATION": LogicType.CLASSICAL,
+    }
+
+    def resolve_logic_type_from_structure(
+        self,
+        source_content: str = "",
+        target_content: str = "",
+        source_layer: str = "",
+        target_layer: str = "",
+        concept_name: str = "",
+    ) -> Tuple[LogicType, str]:
+        """Resolve LogicType from a trace's structural properties.
+
+        This is the evolution beyond string matching on invariant text.
+        Instead of scanning the invariant for keywords, we resolve the
+        LogicType from the module's structural signals:
+
+        1. Content tags (e.g., #paradox → PARACONSISTENT, #quantum → QUANTUM)
+        2. CortexSpec registry best_match on the concept name
+        3. Layer defaults (FORMALIZATION/API_GATEWAY/PRESENTATION → CLASSICAL)
+
+        Returns:
+            Tuple of (LogicType, source_description) where source_description
+            explains how the LogicType was determined.
+        """
+        combined_content = f"{source_content} {target_content}".lower()
+
+        # 1. Tag-based resolution — scan content for #tags
+        for tag, logic in self.TAG_TO_LOGIC.items():
+            if tag in combined_content:
+                return logic, f"tag:{tag}"
+
+        # 2. Spec registry matching — try best_match on concept name
+        if concept_name:
+            minimal_concept = _MinimalConcept(name=concept_name)
+            spec = SEED_REGISTRY.best_match(minimal_concept)
+            if spec is not None:
+                return spec.to_logic_type(), f"spec:{spec.cortex_name}"
+
+        # 3. Layer-based default
+        for layer in [source_layer, target_layer]:
+            if layer in self.LAYER_TO_LOGIC:
+                return self.LAYER_TO_LOGIC[layer], f"layer:{layer}"
+
+        # 4. Ultimate fallback
+        return LogicType.CLASSICAL, "fallback:default"
+
+    def detect_cd_boundary_crossing(
+        self,
+        claimed_logic: LogicType,
+        structural_logic: LogicType,
+    ) -> Optional[ZDWitness]:
+        """Detect whether two LogicTypes straddle the CD 2→3 boundary.
+
+        This is the formal zero-divisor check. If the claimed LogicType
+        (from the edge type's coupling signature) is in the associative
+        regime (cdStep ≤ 2) but the structurally-resolved LogicType is
+        in the non-associative regime (cdStep ≥ 3), or vice versa, the
+        composition crosses the phase boundary where the associator
+        defect activates.
+
+        The friction barrier strut_weight² = 16 is the irreducible cost
+        of this crossing — proven by friction_barrier_across_cd23 in Lean.
+        """
+        claimed_cd = claimed_logic.cd_step()
+        structural_cd = structural_logic.cd_step()
+        lo = min(claimed_cd, structural_cd)
+        hi = max(claimed_cd, structural_cd)
+
+        if lo <= 2 and hi >= 3:
+            return ZDWitness(
+                claimed_logic=claimed_logic,
+                structural_logic=structural_logic,
+                claimed_cdstep=claimed_cd,
+                structural_cdstep=structural_cd,
+            )
+        return None
 
     def _coupling_to_tree(self, coupling_signature: str) -> EMLTree:
         """Build an EMLTree shape from a coupling signature.

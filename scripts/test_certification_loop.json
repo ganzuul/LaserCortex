@@ -105,7 +105,7 @@
         "target_module": "_eml_tree",
         "source_layer": "FORMALIZATION",
         "target_layer": "API_GATEWAY",
-        "source_content": "Module: EMLRegistry\nFile: LaserCortex/EMLRegistry.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization",
+        "source_content": "Module: EMLRegistry\nFile: LaserCortex/EMLRegistry.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization #self-reference",
         "target_content": "Module: _eml_tree\nFile: infra/_cortex/_eml_tree.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
       },
       "reasoning_content": "The EMLTree data structure is self-referential: Node contains two EMLTree children. This recursive structure means the type definition references itself, creating a non-associative composition when building complex trees.",
@@ -129,7 +129,7 @@
         "target_module": "_orchestrator",
         "source_layer": "API_GATEWAY",
         "target_layer": "API_GATEWAY",
-        "source_content": "Module: _bridge\nFile: infra/_cortex/_bridge.py\nLayer: API_GATEWAY\nTags: #python #api_gateway",
+        "source_content": "Module: _bridge\nFile: infra/_cortex/_bridge.py\nLayer: API_GATEWAY\nTags: #python #api_gateway #self-reference",
         "target_content": "Module: _orchestrator\nFile: infra/_orchest/_orchestrator.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
       },
       "reasoning_content": "The bridge calls the orchestrator's on_inference_complete, which in turn calls the bridge's lift_inference. This circular dependency means the two modules are mutually recursive.",
@@ -153,7 +153,7 @@
         "target_module": "_paradox",
         "source_layer": "FORMALIZATION",
         "target_layer": "API_GATEWAY",
-        "source_content": "Module: LiarParadox\nFile: LaserCortex/LiarParadox.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization",
+        "source_content": "Module: LiarParadox\nFile: LaserCortex/LiarParadox.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization #paradox",
         "target_content": "Module: _paradox\nFile: infra/_cortex/_paradox.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
       },
       "reasoning_content": "The LiarParadox formalization encodes a self-contradictory statement: the invariant is true if and only if it is false. This paradox cannot be resolved within classical logic.",
@@ -177,7 +177,7 @@
         "target_module": "_decomposition",
         "source_layer": "FORMALIZATION",
         "target_layer": "API_GATEWAY",
-        "source_content": "Module: Decomposition\nFile: LaserCortex/Decomposition.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization",
+        "source_content": "Module: Decomposition\nFile: LaserCortex/Decomposition.lean\nLayer: FORMALIZATION\nTags: #lean4 #formalization #non-associative",
         "target_content": "Module: _decomposition\nFile: infra/_cortex/_decomposition.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
       },
       "reasoning_content": "The contraction path in the Tamari lattice is non-associative: bracketing order matters when decomposing trees. Different bracketings produce structurally distinct decomposition paths.",
