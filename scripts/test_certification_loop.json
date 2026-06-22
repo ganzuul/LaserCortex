@@ -109,10 +109,10 @@
         "target_content": "Module: _eml_tree\nFile: infra/_cortex/_eml_tree.py\nLayer: API_GATEWAY\nTags: #python #api_gateway"
       },
       "reasoning_content": "The EMLTree data structure is self-referential: Node contains two EMLTree children. This recursive structure means the type definition references itself, creating a non-associative composition when building complex trees.",
-      "final_content": "DEPENDENCY|SPECIFICATION|Tree structure is self-referential: nodes contain subtrees of the same type|Type recursion causes infinite loop in naive tree construction",
+      "final_content": "DEPENDENCY|SPECIFICATION|Tree structure is a self-referential dependency: nodes contain subtrees of the same type|Type recursion causes infinite loop in naive tree construction",
       "result": {
         "edge_type": "SPECIFICATION",
-        "invariant_at_boundary": "Tree structure is self-referential: nodes contain subtrees of the same type",
+        "invariant_at_boundary": "Tree structure is a self-referential dependency: nodes contain subtrees of the same type",
         "failure_mode": "Type recursion causes infinite loop in naive tree construction"
       },
       "is_positive": true,

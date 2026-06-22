@@ -61,24 +61,46 @@ EDGE_TYPE_TO_CDSTEP: Dict[str, int] = {
     "MUTATION_TRIGGER": 1,
 }
 
-# Keyword patterns that indicate non-associative structure (CD ≥ 3)
-# These are the linguistic signatures of self-reference, recursion,
-# circularity — the algebraic properties that activate the associator
-# defect and produce zero divisors in the split octonion algebra.
+# Keyword patterns that indicate non-associative composition structure (CD ≥ 3)
+# These describe the *algebraic structure of the dependency itself*, not
+# incidental mentions of these words. We scan only the invariant_at_boundary
+# field (the structural claim), NOT the failure_mode (which describes
+# consequences and often references module names).
+#
+# The patterns are phrased to match compositional claims:
+#   "composition is non-associative" → the dependency itself is non-assoc
+#   "self-referential dependency" → the dependency references itself
+#   "bracketing order matters" → the composition is non-associative
+#
+# Single words like "recursion" or "paradox" are NOT sufficient — recursive
+# data structures are common in associative regimes, and "paradox" often
+# appears in module names (e.g., _paradox.py).
 ZD_PATTERNS: Dict[int, List[str]] = {
     3: [
-        "self-reference", "self-referential", "self referential",
-        "recursive", "recursion",
-        "circular", "circular dependency", "feedback loop",
-        "non-associative", "bracketing matters",
-        "order-dependent composition", "composition order matters",
-        "mutually recursive", "co-recursive",
+        "self-referential dependency",
+        "self-referential composition",
+        "self-referential structure",
+        "self-referential invariant",
+        "composition is non-associative",
+        "non-associative composition",
+        "non-associative dependency",
+        "is non-associative",
+        "bracketing order matters",
+        "composition order matters",
+        "order-dependent composition",
+        "circular dependency",
+        "mutually recursive dependency",
+        "co-recursive dependency",
     ],
     4: [
-        "paradox", "self-contradictory", "self contradictory",
-        "contradiction", "liar", "inconsistent",
-        "both true and false", "true iff false",
-        "russell", "self-defeating",
+        "self-contradictory invariant",
+        "self-contradictory dependency",
+        "is self-contradictory",
+        "true iff false",
+        "both true and false",
+        "self-defeating invariant",
+        "paradoxical invariant",
+        "paradoxical dependency",
     ],
 }
 
@@ -166,16 +188,21 @@ def detect_actual_cdstep(invariant: str, failure_mode: str = "",
                          edge_type: str = "") -> tuple[int, Optional[str]]:
     """Detect the actual cdStep from invariant text content.
 
-    Scans for keyword patterns that indicate non-associative structure
-    (self-reference, recursion, circularity → CD 3) or paradox-level
-    structure (contradiction, liar → CD 4).
+    Scans the invariant (the structural claim about the dependency
+    composition) for patterns that indicate non-associative structure.
+
+    Only the invariant_at_boundary field is scanned — NOT the failure_mode.
+    The failure mode describes consequences (e.g., "infinite recursion",
+    "breaks paradox collapse") which often reference module names or
+    incidental properties that don't reflect the dependency's algebraic
+    structure.
 
     Returns:
         Tuple of (cdstep, matched_pattern). If no pattern matches,
         returns (edge_type_to_cdstep(edge_type), None) — i.e., the
         claimed cdStep is accepted as the actual cdStep.
     """
-    text = f"{invariant} {failure_mode}".lower()
+    text = invariant.lower()
 
     # Check CD 4 patterns first (more specific)
     for pattern in ZD_PATTERNS[4]:
