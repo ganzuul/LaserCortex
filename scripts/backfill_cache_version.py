@@ -28,22 +28,22 @@ DEPENDENCY_GRAPH_FILE = REPO_ROOT / "DEPENDENCY_GRAPH.json"
 
 ON_API = "http://localhost:5055/api"
 
-CURRENT_VERSION = 1
+CURRENT_VERSION = 2
 CURRENT_PARAMS = {
-    "temperature": 1.0,
-    "seed_mode": "random",
+    "temperature": 0,
+    "seed_mode": "content_hash",
     "model": "Qwen3.6-35B-A3B-Q4_K_M",
     "transformation_id": "transformation:0tkrn2ru01xj0zd4cp09",
     "max_tokens": 8192,
-    "cache_prompt": True,
+    "cache_prompt": False,
 }
 CROSS_LAYER_PARAMS = {
-    "temperature": 1.0,
-    "seed_mode": "random",
+    "temperature": 0,
+    "seed_mode": "content_hash",
     "model": "Qwen3.6-35B-A3B-Q4_K_M",
     "transformation_id": "transformation:j2puh5eolx32sc5b431s",
     "max_tokens": 8192,
-    "cache_prompt": True,
+    "cache_prompt": False,
 }
 
 ON_SESSION = requests.Session()

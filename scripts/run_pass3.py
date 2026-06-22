@@ -33,14 +33,14 @@ LLM_URL = "http://localhost:8080"  # Direct llama-server (bypass ON for determin
 TRANSFORMATION_CROSS_LAYER_LINKER = "transformation:j2puh5eolx32sc5b431s"
 
 # Versioning: increment when generation params change
-CURRENT_VERSION = 1
+CURRENT_VERSION = 2
 CROSS_LAYER_PARAMS = {
-    "temperature": 1.0,
-    "seed_mode": "random",
+    "temperature": 0,
+    "seed_mode": "content_hash",
     "model": "Qwen3.6-35B-A3B-Q4_K_M",
     "transformation_id": TRANSFORMATION_CROSS_LAYER_LINKER,
     "max_tokens": 8192,
-    "cache_prompt": True,
+    "cache_prompt": False,
 }
 
 # Cache the cross-layer linker prompt (fetched once from ON)
