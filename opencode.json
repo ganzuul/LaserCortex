@@ -4,11 +4,9 @@
     "SAFETY.md"
   ],
   "mcp": {
-    "servers": {
-      "normcode": {
-        "command": "python3",
-        "args": ["scripts/mcp_normcode_server.py"]
-      }
+    "normcode": {
+      "type": "local",
+      "command": ["python3", "scripts/mcp_normcode_server.py"]
     }
   }
 }
