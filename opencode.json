@@ -2,5 +2,13 @@
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
     "SAFETY.md"
-  ]
+  ],
+  "mcp": {
+    "servers": {
+      "normcode": {
+        "command": "python3",
+        "args": ["scripts/mcp_normcode_server.py"]
+      }
+    }
+  }
 }

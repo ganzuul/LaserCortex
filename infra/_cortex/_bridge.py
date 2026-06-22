@@ -17,9 +17,9 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 from ._eml_tree import (
-    EMLTree, LEAF, rightComb, contracts_one, contracts_to,
+    EMLTree, LEAF, rightComb, balanced_tree, contracts_one, contracts_to,
     contracts_one_successors, decidable_contracts_to,
-    tree_from_flow_index,
+    tree_from_flow_index, tree_from_inference_entry,
 )
 from ._types import (
     RouterIndex, RouterIndexError, TypeRegistry,
@@ -145,6 +145,7 @@ class CortexBridge:
         coupling_signature: Optional[str] = None,
         concept: Any = None,
         spec: Optional[CortexSpec] = None,
+        eml_tree: Optional[EMLTree] = None,
     ) -> LiftResult:
         """Convert an NC inference execution to LC types.
 
@@ -157,8 +158,15 @@ class CortexBridge:
             spec: Optional CortexSpec — the statute authorising this inference.
                   If provided, its ``coupling_signature`` and ``form_type``
                   take precedence over heuristics.
+            eml_tree: Optional explicit EMLTree to use. When provided,
+                  overrides the heuristic ``flow_index_to_tree`` mapping.
+                  This is the formal path — use ``tree_from_inference_entry``
+                  to build a tree from the actual dependency structure.
         """
-        tree = self.flow_index_to_tree(flow_index)
+        if eml_tree is not None:
+            tree = eml_tree
+        else:
+            tree = self.flow_index_to_tree(flow_index)
 
         # Use spec's coupling signature if available and concept lacks one
         effective_coupling = coupling_signature
@@ -521,11 +529,21 @@ class NormCodeCortexBridge:
         concept: Any,
         sequence_type: str,
         run_id: str,
+        value_concept_count: int = 0,
+        has_function_concept: bool = False,
+        supporting_count: int = 0,
+        coupling_signature: Optional[str] = None,
     ) -> LiftResult:
         """Called when an NC inference completes.
 
         Resolves the applicable statute (CortexSpec) from the concept,
         then lifts the inference under that statute's authority.
+
+        When ``value_concept_count``, ``has_function_concept``, and
+        ``supporting_count`` are provided, the EMLTree is built from
+        the actual dependency structure via ``tree_from_inference_entry``
+        (the *formal mapping*). When omitted, falls back to the heuristic
+        ``tree_from_flow_index`` (flow index depth only).
 
         GAP (previously): Must be called from Orchestrator. Now wired
         via ``Orchestrator.cortex_bridge`` in ``_process_inference_state``.
@@ -533,9 +551,21 @@ class NormCodeCortexBridge:
         # Resolve the applicable statute before lifting
         spec = self.resolve_spec(concept)
 
-        sig = None
-        if hasattr(concept, 'coupling_signature'):
+        sig = coupling_signature
+        if sig is None and hasattr(concept, 'coupling_signature'):
             sig = concept.coupling_signature
+
+        # Build formal EMLTree when dependency structure is available,
+        # falling back to heuristic depth-based tree otherwise.
+        if value_concept_count > 0 or supporting_count > 0 or has_function_concept:
+            tree = tree_from_inference_entry(
+                value_concept_count=value_concept_count,
+                has_function_concept=has_function_concept,
+                supporting_count=supporting_count,
+                coupling_signature=sig,
+            )
+        else:
+            tree = None  # Fall back to flow_index heuristic
 
         result = self.core.lift_inference(
             flow_index=flow_index,
@@ -544,6 +574,7 @@ class NormCodeCortexBridge:
             coupling_signature=sig,
             concept=concept,
             spec=spec,
+            eml_tree=tree,
         )
 
         # Register in TypeRegistry

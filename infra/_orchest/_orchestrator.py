@@ -334,11 +334,21 @@ class Orchestrator:
             if self.cortex_bridge is not None and status == 'completed':
                 concept = item.inference_entry.concept_to_infer.concept
                 if concept is not None:
+                    # Compute dependency structure for formal tree mapping
+                    value_concept_count = len(item.inference_entry.value_concepts)
+                    has_function_concept = item.inference_entry.function_concept is not None
+                    supporting_count = len(self.waitlist.get_supporting_items(item))
+                    coupling_signature = getattr(concept, 'coupling_signature', None)
+
                     self.cortex_bridge.on_inference_complete(
                         flow_index=flow_index,
                         concept=concept,
                         sequence_type=item.inference_entry.inference_sequence,
                         run_id=self.run_id,
+                        value_concept_count=value_concept_count,
+                        has_function_concept=has_function_concept,
+                        supporting_count=supporting_count,
+                        coupling_signature=coupling_signature,
                     )
 
             # Capture and save logs
