@@ -289,6 +289,49 @@ def isVacuous {p : Problem} {lt : LogicType} (wp : WrappedProblem p lt) : Prop :
   wp.cost = 0 ∧ lt.isAssociativeSector
 
 -- ============================================================================
+-- SECTION 7B: Revise — filter vacuous poles from an anti-coherent pair
+-- ============================================================================
+
+/--
+A LogicType is "vacuously explosive" at the type level if it has cdStep = 0
+and is in the associative sector. Such logics resolve all paradoxes by
+explosion at zero structural cost — they are "empty" in the generative sense.
+
+Classical and Boolean are vacuous: they always resolve by explosion.
+All other logics have some structural cost (cdStep > 0) even when the
+WrappedProblem-specific cost is zero.
+
+See also: `isVacuous` on `WrappedProblem` (which checks the actual cost).
+-/
+def isVacuousType (lt : LogicType) : Bool :=
+  lt.cdStep = 0 ∧ lt.isAssociativeSector
+
+/--
+revise: given an AntiCoherentPair, filter out vacuous poles.
+
+A pole is vacuous if `isVacuousType` returns true — it would resolve
+the paradox by explosion (cost 0) rather than through structural content.
+
+Returns a Superposition containing only the non-vacuous (content-bearing)
+poles. If both poles are vacuous, the result is an empty Superposition
+(a zero divisor).
+
+This is the "revision" step in the generation/collapse roundtrip:
+1. inflate a zero divisor → AntiCoherentPair
+2. temporalConflate the pair → EMLTree oscillation
+3. Resonates with host → structural compatibility
+4. revise → filter out vacuous poles, return content-bearing superposition
+
+For the barber: Classical is vacuous → filtered out, Paraconsistent remains.
+-/
+def revise (pair : AntiCoherentPair) : Superposition :=
+  let vacuous (lt : LogicType) : Bool := lt.cdStep = 0 ∧ lt.isAssociativeSector
+  let candidates :=
+    (if vacuous pair.coherent then [] else [pair.coherent]) ++
+    (if vacuous pair.antiCoherent then [] else [pair.antiCoherent])
+  ⟨candidates⟩
+
+-- ============================================================================
 -- SECTION 8: Theorems about specific paradoxes
 -- ============================================================================
 
@@ -418,35 +461,130 @@ theorem free_bridges_barber_boundary :
   native_decide
 
 -- ============================================================================
--- SECTION 9: Conjectures (stated but not proven in this version)
+-- SECTION 9: Revise Theorems — vacuity detection for each paradox
+-- ============================================================================
+
+/-- Revise on the barber pair filters Classical (vacuous) → keeps Paraconsistent. -/
+theorem revise_barber : (revise AntiCoherentPair.barber).candidates = [.Paraconsistent] := by
+  native_decide
+
+/-- Revise on the liar pair filters Classical (vacuous) → keeps ManyValued. -/
+theorem revise_liar : (revise AntiCoherentPair.liar).candidates = [.ManyValued] := by
+  native_decide
+
+/-- Revise on the grandfather pair filters Classical (vacuous) → keeps Temporal. -/
+theorem revise_grandfather : (revise AntiCoherentPair.grandfather).candidates = [.Temporal] := by
+  native_decide
+
+-- ============================================================================
+-- SECTION 10: Emptiness Roundtrip Theorems
 -- ============================================================================
 
 /--
-CONJECTURE: Emptiness Roundtrip (barber case)
+Emptiness Roundtrip (barber case): `inflate → revise` detects that the classical
+pole is vacuous and filters it out. The remaining superposition has exactly one
+candidate (Paraconsistent), so it is NOT a zero divisor in isolation. However,
+Paraconsistent cannot coexist with Classical, so any attempt to host the result
+in a classical context creates a zero divisor at the boundary.
 
-Inflating the barber paradox (→ CLASSICAL + PARACONSISTENT), temporally
-conflating it, finding resonance with a minimally compatible host tree,
-and re-collapsing yields a zero divisor — because the classical pole
-contradicts any non-classical neighbor via the CD 2→3 boundary.
-
-In the full duality: `inflate(pc) → temporalConflate → Resonates(_, host)
-→ revise` detects the vacuous classical pole and withholds the certificate.
-
-The deep proof requires showing that `SplitOctonionCost.strut_weight = 4`
-provides the algebraic barrier that prevents the classical pole from crossing
-into the non-associative sector — and that this barrier IS the time-travel /
-two-time-dimension constraint that generates the grandfather paradox structure.
-
-Co-logically: the split octonion (4,4) signature has exactly enough room to
-host the temporal oscillation (two time-like dimensions), but the classical
-pole's explosion collapses the extra dimension immediately, returning to
-zero divisor. Free Logic (Gödelian incompleteness) is the meta-logic that
-*can* host this oscillation by recognizing it as undecidable rather than
-trivializing it via explosion.
-
-TODO: Prove in Phase 2.
+This is the formal content of the barber paradox: the barber is not inherently
+a contradiction — it's only contradictory when forced into a classical frame.
 -/
-theorem emptiness_roundtrip_barber_conjecture : True :=
+theorem emptiness_roundtrip_barber :
+    let pair := inflate ProblemClass.inconsistentDef
+    let tree := temporalConflate pair
+    let revised := revise pair
+    -- The classical pole is filtered out
+    revised.candidates = [.Paraconsistent] ∧
+    -- The resulting superposition is collapsed (single candidate), not a zero divisor
+    revised.isCollapsed ∧
+    ¬revised.isContradicted ∧
+    -- The temporal oscillation structure is verified
+    tree = EMLRegistry.EMLTree.Node (EMLRegistry.rightComb 0) (EMLRegistry.rightComb 4) ∧
+    -- The classical pole IS vacuous (associative, cdStep=0)
+    (pair.coherent.cdStep = 0 ∧ pair.coherent.isAssociativeSector) ∧
+    -- The paraconsistent pole is NOT vacuous (non-associative, cdStep > 0)
+    (pair.antiCoherent.cdStep = 4 ∧ ¬pair.antiCoherent.isAssociativeSector) ∧
+    -- Paraconsistent cannot coexist with Classical → re-collapse in classical context = ZD
+    canCoexist pair.antiCoherent pair.coherent = false := by
+  native_decide
+
+/--
+Emptiness Roundtrip (liar case): the liar's classical pole is vacuous and
+filtered out. The remaining ManyValued pole IS in the associative sector,
+so it CAN coexist with Classical. No zero divisor at the boundary.
+
+This is why the liar is resolvable in classical contexts: classical logic can
+accept a truth-value gap (ManyValued) without contradiction.
+-/
+theorem emptiness_roundtrip_liar :
+    let pair := inflate ProblemClass.selfReference
+    let revised := revise pair
+    revised.candidates = [.ManyValued] ∧
+    revised.isCollapsed ∧
+    ¬revised.isContradicted ∧
+    (pair.coherent.cdStep = 0 ∧ pair.coherent.isAssociativeSector) ∧
+    (pair.antiCoherent.cdStep = 1 ∧ pair.antiCoherent.isAssociativeSector) ∧
+    canCoexist pair.antiCoherent pair.coherent = true := by
+  native_decide
+
+/--
+Emptiness Roundtrip (grandfather case): the grandfather's classical pole is
+vacuous and filtered out. The remaining Temporal pole is in the associative
+sector and can coexist with Classical. No zero divisor.
+
+This is why grandfather paradoxes are resolvable with time-indexed truth:
+they don't require crossing the sector boundary.
+-/
+theorem emptiness_roundtrip_grandfather :
+    let pair := inflate ProblemClass.temporalDecision
+    let revised := revise pair
+    revised.candidates = [.Temporal] ∧
+    revised.isCollapsed ∧
+    ¬revised.isContradicted ∧
+    (pair.coherent.cdStep = 0 ∧ pair.coherent.isAssociativeSector) ∧
+    (pair.antiCoherent.cdStep = 1 ∧ pair.antiCoherent.isAssociativeSector) ∧
+    canCoexist pair.antiCoherent pair.coherent = true := by
+  native_decide
+
+/--
+Summary theorem: the barber is the only paradox among the three canonical
+cases whose surviving anti-coherent pole cannot coexist with Classical.
+This is the formal sense in which the barber is a "real" zero divisor:
+it straddles the sector boundary.
+-/
+theorem barber_is_unique_sector_straddler :
+    let barber_pair := inflate ProblemClass.inconsistentDef
+    let liar_pair := inflate ProblemClass.selfReference
+    let grandfather_pair := inflate ProblemClass.temporalDecision
+    canCoexist barber_pair.antiCoherent barber_pair.coherent = false ∧
+    canCoexist liar_pair.antiCoherent liar_pair.coherent = true ∧
+    canCoexist grandfather_pair.antiCoherent grandfather_pair.coherent = true := by
+  native_decide
+
+-- ============================================================================
+-- SECTION 11: Open Questions (beyond the proven roundtrip)
+-- ============================================================================
+
+/--
+The deep proof connecting the emptiness roundtrip to the split octonion
+algebra remains conjectural. The barrier preventing the classical pole from
+crossing into the non-associative sector is hypothesized to be
+`SplitOctonionCost.strut_weight = 4`, which provides the algebraic constraint
+that generates the barber's two-time-dimension structure.
+
+The required proof:
+  `strut_weight = 4 ⇒ ∀ a ∈ NonAssocSector, frictionDensity(a) - frictionDensity(Classical) ≥ 16`
+
+This would show that the CD 2→3 boundary is not arbitrary — it's the algebraic
+consequence of the split octonion's (4,4) signature having exactly 4 strut-like
+dimensions (the non-associative ones). The classical pole's explosion collapses
+the extra dimension immediately, returning to zero divisor.
+
+Free Logic (Gödelian incompleteness) is the meta-logic that *can* host this
+oscillation by recognizing it as undecidable rather than trivializing via explosion.
+-/
+theorem strut_weight_conjecture : True :=
   True.intro
 
 end Generation
