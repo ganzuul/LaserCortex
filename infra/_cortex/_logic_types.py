@@ -140,6 +140,70 @@ class LogicType(Enum):
         """
         return self is LogicType.FREE
 
+    def pentagon_weakening(self) -> 'PentagonWeakening':
+        """Mirror of LogicType.pentagonWeakening.
+        The pentagon identity failure mode for this logic type.
+        """
+        strict = {LogicType.CLASSICAL, LogicType.BOOLEAN}
+        capped = {
+            LogicType.FUZZY, LogicType.MANY_VALUED,
+            LogicType.TEMPORAL, LogicType.DEONTIC, LogicType.EPISTEMIC,
+        }
+        lattice = {LogicType.INTUITIONISTIC}
+        phase = {
+            LogicType.QUANTUM, LogicType.RELEVANCE,
+            LogicType.INFINITARY, LogicType.MODAL, LogicType.SPACETIME,
+        }
+        explosive = {LogicType.PARACONSISTENT, LogicType.FREE}
+
+        if self in strict:
+            return PentagonWeakening.STRICT
+        elif self in capped:
+            return PentagonWeakening.CAPPED
+        elif self in lattice:
+            return PentagonWeakening.LATTICE
+        elif self in phase:
+            return PentagonWeakening.PHASE
+        elif self in explosive:
+            return PentagonWeakening.EXPLOSIVE
+        raise ValueError(f"Unknown logic type: {self}")
+
+    def pentagonator_depth(self) -> int:
+        """Mirror of LogicType.pentagonatorDepth.
+        The depth of pentagon identity failure, equal to cd_step().
+        """
+        return self.pentagon_weakening().depth()
+
+
+class PentagonWeakening(Enum):
+    """The weakening mode of the pentagon identity for a logic type's cost algebra.
+    Mirror of: inductive PentagonWeakening.
+
+    Each logic type's cost operation ⊕ fails to be fully associative in a
+    characteristic way. The pentagon identity compares two re-bracketing paths:
+        Path 1: ((a⊕b)⊕c)⊕d → (a⊕b)⊕(c⊕d) → a⊕(b⊕(c⊕d))
+        Path 2: ((a⊕b)⊕c)⊕d → a⊕((b⊕c)⊕d) → a⊕(b⊕(c⊕d))
+    When these paths disagree, the mode of failure characterizes the logic type.
+
+    The `depth` is the minimum n such that the n-th derived associator vanishes —
+    equal to the Cayley-Dickson step (cd_step).
+    """
+    STRICT = "strict"       # Depth 0: identity holds (Classical, Boolean)
+    CAPPED = "capped"       # Depth 1: cap/bound/weight (Fuzzy, ManyValued, Temporal, ...)
+    LATTICE = "lattice"     # Depth 2: lattice meet/join (Intuitionistic)
+    PHASE = "phase"         # Depth 3: non-distributive phase (Quantum, Relevance, ...)
+    EXPLOSIVE = "explosive" # Depth 4: contradiction tolerance (Paraconsistent, Free)
+
+    def depth(self) -> int:
+        """Mirror of PentagonWeakening.depth."""
+        return {
+            PentagonWeakening.STRICT: 0,
+            PentagonWeakening.CAPPED: 1,
+            PentagonWeakening.LATTICE: 2,
+            PentagonWeakening.PHASE: 3,
+            PentagonWeakening.EXPLOSIVE: 4,
+        }[self]
+
 
 # ── LogicContraction ─────────────────────────────────────────────────
 
