@@ -14,6 +14,7 @@ FORM_TYPES = {
     "risk_assessment": "Composite risk evaluation over one or more witnesses.",
     "topological_equivalence": "Hypothesis comparison over witness sets.",
     "narrative_justification": "Human-auditable explanation of a decision chain.",
+    "self_referential": "Self-referential classification where the predicate applies to itself (Barber, Russell). Non-associative: no consistent binary assignment exists under classical logic.",
 }
 
 FORM_TO_LOGIC = {
@@ -22,6 +23,7 @@ FORM_TO_LOGIC = {
     "risk_assessment": LogicType.MANY_VALUED,
     "topological_equivalence": LogicType.INTUITIONISTIC,
     "narrative_justification": LogicType.TEMPORAL,
+    "self_referential": LogicType.QUANTUM,
 }
 
 COUPLING_SIGNATURES = {

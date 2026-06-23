@@ -450,7 +450,7 @@ CONFLICTING_ALIBIS_SPEC = CortexSpec(
 # Seed 8 — Barber Paradox
 BARBER_SPEC = CortexSpec(
     cortex_name="barber_self_reference",
-    form_type="threshold_category",
+    form_type="self_referential",
     form_schema_version="0.1.0",
     coupling_signature="non-associative",
     axes=["f"],
@@ -467,11 +467,11 @@ BARBER_SPEC = CortexSpec(
         title="Barber Paradox (classification)",
         source_text="In a town, the barber shaves all who do not shave themselves. Is the barber a self-shaver?",
         witness_extraction="not_directly_numeric; narrative description of shaving relation must be parsed for logical structure",
-        mapping_hint="binary_outcome is paradoxical — no consistent assignment exists under classical logic. Agent recommends 'narrative_justification' form_type instead of threshold_category for self-referential cases.",
+        mapping_hint="binary_outcome is paradoxical — no consistent assignment exists under classical logic. The self-referential form_type correctly places this in the non-associative (QUANTUM) regime — no consistent binary assignment exists.",
     )],
     provenance=SpecProvenance(
         prompt="Seed: Barber Paradox — self-referential classification, no numeric witness",
-        human_notes="AGENT RECOMMENDATION: This seed warrants form_type 'narrative_justification' rather than 'threshold_category'. Self-reference prevents consistent binary assignment. Default uncertainty 0.9 is MAXIMUM — no computable witness exists. DO NOT register autonomously.",
+        human_notes="FIXED: form_type upgraded from 'threshold_category' to 'self_referential'. The original 'threshold_category' mapped to FUZZY (CD 1), masking the non-associative coupling (CD 3). This naming error caused the Barber to resolve to the wrong LogicType. Now 'self_referential' → QUANTUM (CD 3), consistent with coupling_signature='non-associative'. Self-reference prevents consistent binary assignment. Default uncertainty 0.9 is MAXIMUM — no computable witness exists.",
     ),
 )
 
