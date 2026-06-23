@@ -74,7 +74,7 @@ CACHE = Path(REPO) / ".phonebook_cache.json"
 GRAPH = Path(REPO) / "DEPENDENCY_GRAPH.json"
 EMBED_CACHE = Path("/tmp/lasercortex_embeddings.json")
 CANDIDATES_FILE = Path("/tmp/phase5_candidates.json")
-LIBRARY_PATH = "/tmp/reasoning_library.json"
+LIBRARY_PATH = str(Path(REPO) / ".open-notebook" / "reasoning_library.json")
 
 EMBED_MODEL = "bge-m3"
 LLM_MODEL = "Qwen3.6-35B-A3B-Q4_K_M"
@@ -792,6 +792,165 @@ def stage2_verify(candidates_file, batch_size):
 
 
 # ═══════════════════════════════════════════════════════════════════
+# Seed Library — meta-compression
+# ═══════════════════════════════════════════════════════════════════
+
+def seed_library():
+    """Seed the reasoning library from collected traces.
+
+    Groups existing traces by (layer_pair, edge_type) cluster, runs
+    the MetaCompressor on each cluster with ≥3 traces, and saves the
+    resulting scripts back to the library.
+    """
+    print("═══ Seed Library — Meta-Compression ═══")
+    lib = get_library()
+    task_hash = CROSS_LAYER_CONFIG.input_schema_hash()
+
+    # Group traces by cluster
+    clusters = lib.traces_by_cluster(task_hash)
+    print(f"Found {len(clusters)} trace clusters")
+    for ck, traces in sorted(clusters.items()):
+        print(f"  {ck}: {len(traces)} traces")
+
+    if not clusters:
+        print("No traces to compress. Run verification first with --reverify")
+        return
+
+    compressor = MetaCompressor(
+        llm_api=LLM_API,
+        llm_model=LLM_MODEL,
+        min_traces=3,
+        max_traces=8,
+    )
+
+    scripts_created = 0
+    for cluster_key, traces in sorted(clusters.items()):
+        print(f"\nCompressing cluster '{cluster_key}' ({len(traces)} traces)...")
+        script = compressor.compress(traces, CROSS_LAYER_CONFIG, cluster_key)
+        if script:
+            lib.add_script(script)
+            scripts_created += 1
+            print(f"  → Created script '{script.id}' "
+                  f"(confidence={script.confidence:.2f}, "
+                  f"{len(script.system_prompt)} chars)")
+        else:
+            print(f"  → Skipped (not enough traces or compression failed)")
+
+    # Also generate hardcoded rules from high-confidence patterns
+    rules_created = _seed_hardcoded_rules(lib, task_hash)
+
+    lib.save()
+    print(f"\nLibrary update complete: {scripts_created} scripts, {rules_created} rules")
+    print(f"Total: {len(lib.list_scripts(task_hash))} scripts, "
+          f"{len(lib.get_rules(task_hash))} rules, "
+          f"{len(lib.get_traces(task_hash))} traces")
+
+
+def _seed_hardcoded_rules(lib, task_hash):
+    """Generate hardcoded rules from high-confidence, stereotyped patterns.
+
+    Rules are cheaper than scripts (no LLM call at all). We look for
+    patterns where every pair with source matching pattern X and target
+    matching pattern Y always produces the same edge type.
+    """
+    from collections import defaultdict
+    rules_created = 0
+
+    # Collect all positive traces
+    traces = lib.get_traces(task_config_hash=task_hash, min_confidence=0.5)
+
+    # Group by (source_pattern, target_pattern, edge_type)
+    # where patterns are globs like "*_router.py" → "*Api.ts"
+    pattern_groups = defaultdict(list)
+    for t in traces:
+        if not t.result or not t.is_positive:
+            continue
+        src = t.inputs.get("source_module", "")
+        tgt = t.inputs.get("target_module", "")
+        et = t.result.get("edge_type", "")
+
+        # Generate candidate patterns
+        src_patterns = _candidate_patterns(src)
+        tgt_patterns = _candidate_patterns(tgt)
+
+        for sp in src_patterns:
+            for tp in tgt_patterns:
+                key = (sp, tp, et)
+                pattern_groups[key].append(t)
+
+    # For each group with ≥3 traces AND all same edge type, create a rule
+    for (sp, tp, et), group in pattern_groups.items():
+        if len(group) < 3:
+            continue
+        # Verify all traces in this group have the same edge type
+        if all(t.result.get("edge_type") == et for t in group if t.result):
+            rule_id = f"rule_{sp}_{tp}".replace("*", "star").replace(".", "_")
+            rule = HardcodedRule(
+                id=rule_id,
+                task_config_hash=task_hash,
+                field_patterns={
+                    "source_module": sp,
+                    "target_module": tp,
+                },
+                result={
+                    "edge_type": et,
+                    "invariant_at_boundary": group[0].result.get("invariant_at_boundary", ""),
+                    "failure_mode": group[0].result.get("failure_mode", ""),
+                },
+                is_positive=True,
+            )
+            lib.add_rule(rule)
+            rules_created += 1
+            logger.info(f"Hardcoded rule '{rule_id}': {sp} → {tp} [{et}] ({len(group)} traces)")
+
+    return rules_created
+
+
+def _candidate_patterns(name: str) -> list[str]:
+    """Generate candidate glob patterns for a module name.
+
+    Examples:
+      "agent_service.py" → ["agent_service.py", "*_service.py", "agent_*"]
+      "EMLRegistry.lean" → ["EMLRegistry.lean", "*.lean"]
+      "cortexApi.ts" → ["cortexApi.ts", "*Api.ts"]
+      "_eml_tree.py" → ["_eml_tree.py", "_*.py"]
+    """
+    patterns = [name]
+
+    # If it has a file extension, also try wildcard prefix
+    if "." in name:
+        base, ext = name.rsplit(".", 1)
+        patterns.append(f"*.{ext}")
+        # Try suffix-based patterns (e.g. *_service.py)
+        if "_" in base:
+            parts = base.split("_")
+            # Get last part as suffix: agent_service → *_service
+            if len(parts) >= 2:
+                patterns.append(f"*_{parts[-1]}.{ext}")
+            # Or first part: agent_service → agent_*
+            if len(parts) >= 2:
+                patterns.append(f"{parts[0]}_.{ext}")
+        # CamelCase suffix: cortexApi → *Api.ts
+        # Find uppercase letters
+        for i, ch in enumerate(base):
+            if ch.isupper() and i > 0:
+                prefix = base[:i]
+                suffix = base[i:]
+                patterns.append(f"{prefix}*.{ext}")
+                patterns.append(f"*{suffix}.{ext}")
+                break
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique = []
+    for p in patterns:
+        if p not in seen:
+            seen.add(p)
+            unique.append(p)
+    return unique
+
+
+# ═══════════════════════════════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════════════════════════════
 
@@ -809,6 +968,7 @@ def main():
     candidates_file = None
 
     i = 2
+    reverify = False
     while i < len(sys.argv):
         if sys.argv[i] == "--threshold" and i + 1 < len(sys.argv):
             threshold = float(sys.argv[i + 1])
@@ -822,16 +982,30 @@ def main():
         elif sys.argv[i] == "--candidates-file" and i + 1 < len(sys.argv):
             candidates_file = sys.argv[i + 1]
             i += 2
+        elif sys.argv[i] == "--reverify":
+            reverify = True
+            i += 1
         else:
             i += 1
 
     if command == "candidates":
         stage1_candidates(threshold, max_pairs)
     elif command == "verify":
+        if reverify:
+            vc = Path("/tmp/phase5_verify_cache.json")
+            if vc.exists():
+                vc.unlink()
+                logger.info("Cleared verification cache for --reverify")
+            rl = Path(LIBRARY_PATH)
+            if rl.exists():
+                rl.unlink()
+                logger.info("Cleared reasoning library for --reverify")
         stage2_verify(candidates_file, batch_size)
     elif command == "run":
         stage1_candidates(threshold, max_pairs)
         stage2_verify(candidates_file, batch_size)
+    elif command == "seed-library":
+        seed_library()
     else:
         print(f"Unknown command: {command}")
         print(__doc__)
