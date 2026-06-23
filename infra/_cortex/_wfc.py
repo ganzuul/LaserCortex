@@ -105,16 +105,24 @@ def can_coexist(lt1: LogicType, lt2: LogicType) -> bool:
     """Can two LogicTypes coexist on adjacent nodes (an edge)?
 
     They can coexist iff they DON'T straddle the associative /
-    non-associative sector boundary. Crossing that boundary triggers
-    the zero-divisor condition: the friction barrier strut_weight² = 16
-    makes the composition algebraically impossible.
+    non-associative sector boundary — UNLESS at least one is a meta-logic
+    (Free Logic / Gödelian Incompleteness), which can coexist with any
+    logic because it reasons meta-linguistically about all systems.
 
     The sector boundary is determined by ``is_associative_sector()``,
     which partitions logics into the associative sector (Cl(1,1) ≅ ℍ̃,
     associativity holds) and the non-associative sector (split octonions
     𝕆ˢ, associativity fails). This is the same boundary that the
     Friction Lagrangian's ``assocDefect`` activates at.
+
+    Meta-logics are exempt because they reason ABOUT the boundary rather
+    than WITHIN it. Free Logic (Gödelian incompleteness) is the "logic of
+    will" that can contain perfect anti-coherence.
+
+    Mirror of Generation.lean: canCoexist.
     """
+    if lt1.is_meta_logic() or lt2.is_meta_logic():
+        return True
     return lt1.is_associative_sector() == lt2.is_associative_sector()
 
 
@@ -499,3 +507,90 @@ def run_barber_wfc(seed: int = 42) -> WFCResult:
     """
     propagator = create_barber_wfc(seed=seed)
     return propagator.run()
+
+
+# ── Generation Mode: inflate, temporal conflate, resonate ──────────────
+#
+# Mirror of LaserCortex/Generation.lean.
+#
+# Generation is primitive; collapse is critique. These functions implement
+# the generative side of the duality: from a zero divisor (contradiction),
+# inflate a coherent/anti-coherent pair, temporally conflate it into a tree,
+# and let it seek resonance with a host tree.
+#
+
+from ._paradox import ProblemClass
+from ._eml_tree import EMLTree as _EMLTree, LEAF as _LEAF, rightComb as _rightComb
+from ._eml_tree import contracts_to as _contracts_to
+
+
+@dataclass
+class AntiCoherentPair:
+    """The two poles of a paradox — mirror of Generation.AntiCoherentPair.
+
+    - coherent: the vacuous approach (associative sector, collapse by
+      explosion, cost 0). Typically CLASSICAL.
+    - antiCoherent: the content-bearing approach (native logic of the
+      paradox class). For Barber: PARACONSISTENT. For Liar: MANY_VALUED.
+      For Grandfather: TEMPORAL.
+    """
+    coherent: LogicType
+    antiCoherent: LogicType
+
+
+# Canonical pairs for specific paradoxes — mirror of Generation.lean defs.
+BARBER_PAIR = AntiCoherentPair(coherent=LogicType.CLASSICAL, antiCoherent=LogicType.PARACONSISTENT)
+LIAR_PAIR = AntiCoherentPair(coherent=LogicType.CLASSICAL, antiCoherent=LogicType.MANY_VALUED)
+GRANDFATHER_PAIR = AntiCoherentPair(coherent=LogicType.CLASSICAL, antiCoherent=LogicType.TEMPORAL)
+
+
+def inflate(problem_class: ProblemClass) -> AntiCoherentPair:
+    """Inflate a zero divisor back into an anti-coherent pair.
+
+    Mirror of Generation.lean: inflate.
+
+    Given a ProblemClass, produce the AntiCoherentPair where:
+    - coherent = CLASSICAL (vacuous, explosive resolution)
+    - antiCoherent = the native logic of the ProblemClass
+
+    This is the generative act: from nothingness (zero divisor), produce a
+    pair representing the two poles of the paradox. The pair is then
+    available for temporal conflation and resonance.
+    """
+    if problem_class == ProblemClass.SELF_REFERENCE:
+        return LIAR_PAIR
+    elif problem_class == ProblemClass.INCONSISTENT_DEF:
+        return BARBER_PAIR
+    elif problem_class == ProblemClass.TEMPORAL_DECISION:
+        return GRANDFATHER_PAIR
+    else:
+        return AntiCoherentPair(coherent=LogicType.CLASSICAL, antiCoherent=LogicType.CLASSICAL)
+
+
+def temporal_conflate(pair: AntiCoherentPair) -> _EMLTree:
+    """Build a tree representing the temporal oscillation between poles.
+
+    Mirror of Generation.lean: temporalConflate.
+
+    The tree is Node(rightComb(cd(coherent)), rightComb(cd(anti))) —
+    a binary tree where the left subtree encodes the coherent pole at
+    time t₁ and the right subtree encodes the anti-coherent pole at t₂.
+    """
+    coh_tree = _rightComb(pair.coherent.cd_step())
+    anti_tree = _rightComb(pair.antiCoherent.cd_step())
+    return _EMLTree.node(coh_tree, anti_tree)
+
+
+def resonates(inflated: _EMLTree, host: _EMLTree) -> bool:
+    """Check whether an inflated tree resonates with a host tree.
+
+    Mirror of Generation.lean: Resonates.
+
+    Resonance requires:
+    1. Tamari ancestor: inflated contracts to host (structural compatibility)
+    2. Type compatibility: the LogicType assignments are can_coexist
+
+    Together: the inflated paradox structure can be "digested" by the host
+    logic without creating a zero divisor at the boundary.
+    """
+    return _contracts_to(inflated, host)

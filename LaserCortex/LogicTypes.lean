@@ -15,7 +15,7 @@ LaserCortex.EMLRegistry → EMLTree, contracts_to, rightComb, contracts_to_right
 
 ## Invariants
 
-LogicNormalForm universally reduces to EMLRegistry.rightComb n across all LogicType variants. LogicContraction defaults to EMLRegistry.contracts_to for all variants; logic-specific semantics are placeholder stubs. MetaContractsTo enforces transitivity, congruence, and intra/inter-logic preservation via LogicTranslation.soundness and .completeness. LogicType.cdStep maps 5 logics to Nats 0–4, defaulting all others to 0. LogicType.isAssociativeSector partitions logics into split boundary 3 (associative) and 4 (non-associative).
+LogicNormalForm universally reduces to EMLRegistry.rightComb n across all LogicType variants. LogicContraction defaults to EMLRegistry.contracts_to for all variants; logic-specific semantics are placeholder stubs. MetaContractsTo enforces transitivity, congruence, and intra/inter-logic preservation via LogicTranslation.soundness and .completeness. LogicType.isAssociativeSector partitions logics into split boundary 3 (associative) and 4 (non-associative). LogicType.cdStep maps all 15 logics to their Cayley-Dickson step, consistent with the sector boundary (associative ⇒ cdStep ≤ 2, non-associative ⇒ cdStep ≥ 3).
 
 ## Tags
 
@@ -50,7 +50,7 @@ Mapping to paradoxes_and_logics.md:
 - Quantum: Schrödinger's Cat, EPR
 - Intuitionistic: Brouwer's Continuity
 - Relevance: Material Implication
-- Free: Non-existent objects (King of France)
+- Free: Gödelian Incompleteness (logic of will)
 - Infinitary: Galileo's, Hilbert's Hotel
 - Modal: Fitch's, Buridan's Bridge
 - Classical: Baseline (excluded middle, double negation)
@@ -131,7 +131,7 @@ def LogicType.classification : LogicType → LogicClass := fun lt =>
   | .Quantum => .Alternative  -- Non-distributive, non-classical
   | .Intuitionistic => .Substructural  -- Removes LEM
   | .Relevance => .Substructural  -- Removes irrelevant implications
-  | .Free => .Extension  -- Partial reference
+  | .Free => .Extension  -- Gödelian incompleteness (meta-logic of will)
   | .Infinitary => .Generalization  -- Infinite conjunctions/disjunctions
   | .Modal => .Alternative  -- Possible/necessary worlds
   | .Spacetime => .Generalization  -- Geometric/temporal-spatial operators
@@ -150,7 +150,7 @@ From PLURALISTIC_LOGIC_FRAMEWORK.md:
 - T₇: Quantum (superposition)
 - T₈: Intuitionistic (proof relevance)
 - T₉: Relevance (context filtering)
-- T₁₀: Free (partial reference)
+- T₁₀: Free (Gödelian incompleteness — logic of will)
 - T₁₁: Infinitary (infinite structures)
 - T₁₂: Modal (possible worlds)
 - T₁₃: Classical (binary truth - baseline)
@@ -267,32 +267,39 @@ inductive MetaContractsTo : LogicType → EMLRegistry.EMLTree → LogicType → 
 -- Mapping logic types to Cayley-Dickson construction steps
 -- ============================================================================
 
-/-- 
-From SYNTHESIS_CAYLEY_DICKSON_EML.md:
+/--
+From SYNTHESIS_CAYLEY_DICKSON_EML.md and critical_corrections.md:
 The Cayley-Dickson construction provides a property-loss sequence:
-- Step 0: ℝ (baseline)
-- Step 1: ℂ (loses order)
-- Step 2: ℍ (loses commutativity)
-- Step 3: 𝕆 (loses associativity)
-- Step 4: 𝕊 (loses division algebra)
+- Step 0: ℝ (baseline) — Classical, Boolean
+- Step 1: ℂ (loses order) — Fuzzy, ManyValued, Temporal, Deontic, Epistemic
+- Step 2: ℍ (loses commutativity) — Intuitionistic
+- Step 3: 𝕆 (loses associativity) — Quantum, Relevance, Infinitary, Modal, Spacetime
+- Step 4: 𝕊 (loses division algebra) — Paraconsistent, Free (Gödelian incompleteness)
 
-This mirrors the logic type hierarchy:
-- Step 0: Classical (baseline)
-- Step 1: Fuzzy (loses precise boundaries)
-- Step 2: Intuitionistic (loses LEM)
-- Step 3: Quantum (loses distributivity)
-- Step 4: Paraconsistent (loses explosion principle)
+This mirrors the logic type hierarchy. The cdStep is consistent with
+`isAssociativeSector`: associative sector logics have cdStep ≤ 2, non-
+associative have cdStep ≥ 3. This replaces the old scaffolding that
+defaulted 10 of 15 logics to 0 — masking their non-associative structure.
 
-Note: This is one possible mapping. Others are possible.
+Reference: critical_corrections.md EML depth table for cost operations.
 -/
 def LogicType.cdStep : LogicType → Nat := fun lt =>
   match lt with
-  | .Classical => 0
-  | .Fuzzy => 1
-  | .Intuitionistic => 2
-  | .Quantum => 3
-  | .Paraconsistent => 4
-  | _ => 0  -- Other logics not directly mapped to CD
+  | .Classical => 0      -- baseline: a + b
+  | .Boolean => 0        -- same as classical, addition + idempotence
+  | .Fuzzy => 1           -- capped addition min(a+b, C)
+  | .ManyValued => 1      -- truth-degree, capped addition (same CD level)
+  | .Temporal => 1        -- a + γb, γ < 1 (accessibility-weighted)
+  | .Deontic => 1         -- a + κb (obligation-weighted)
+  | .Epistemic => 1       -- fixed-point truncation (knowledge depth)
+  | .Intuitionistic => 2  -- max(a,b), loses LEM
+  | .Quantum => 3          -- a + b + νab, loses distributivity
+  | .Relevance => 3       -- not scalar-expressible, structural metadata
+  | .Infinitary => 3      -- ordinal rank, transfinite
+  | .Modal => 3            -- a + κb, possible worlds
+  | .Spacetime => 3       -- 2a + b/2, geometric
+  | .Paraconsistent => 4  -- min(a+b, C⊥), loses explosion
+  | .Free => 4             -- Gödelian incompleteness (logic of will)
 
 /-- 
 Mapping from CD step to logic type (partial function).
@@ -326,6 +333,17 @@ def LogicType.isAssociativeSector : LogicType → Bool := fun lt =>
   | .Paraconsistent | .Quantum | .Intuitionistic | .Relevance | .Free | .Infinitary | .Modal => false
   | .Spacetime => false  -- Space-biased: in the associator-dominant split sector (mirror flag)
   | .Boolean => true  -- Boolean algebra is fully associative
+
+/-- 
+Meta-logic: a logic that can reason about other logical systems without being
+captured by their sector boundaries. Free Logic (Gödelian incompleteness) is
+the meta-logic of will — it can contain perfect anti-coherence by recognizing
+undecidability rather than trivializing via explosion.
+-/
+def LogicType.isMetaLogic : LogicType → Bool := fun lt =>
+  match lt with
+  | .Free => true
+  | _ => false
 
 /-- 
 The split boundary: logic types that span both sectors.

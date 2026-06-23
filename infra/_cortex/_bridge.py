@@ -47,6 +47,10 @@ from ._closure import (
     HISTORY_TREE,
 )
 from ._spec import CortexSpec, SpecRegistry, SEED_REGISTRY
+from ._wfc import (
+    WFCPropagator, WFCEdge, WFCResult, SuperpositionNode,
+    apply_self_reference_constraint, can_coexist, friction_density,
+)
 
 
 class CortexBridgeError(Exception):
@@ -79,6 +83,8 @@ class LiftResult:
     zd_witness: Optional[ZDWitness] = None  # zero-divisor witness if detected
     structural_logic: Optional[LogicType] = None  # independently resolved LogicType
     structural_source: Optional[str] = None  # how structural LogicType was determined
+    wfc_result: Optional[WFCResult] = None  # WFC constraint propagation result
+    certificate_withheld: bool = False  # True if certificate is withheld due to ZD
 
 
 @dataclass
@@ -291,6 +297,8 @@ class CortexBridge:
             zd_witness=zd_witness,
             structural_logic=structural_logic,
             structural_source=structural_source,
+            wfc_result=None,
+            certificate_withheld=zd_witness is not None,
         )
 
     def _coupling_to_logic_type(self, sig: Optional[str]) -> LogicType:

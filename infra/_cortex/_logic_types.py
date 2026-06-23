@@ -88,17 +88,32 @@ class LogicType(Enum):
 
     def cd_step(self) -> int:
         """Cayley-Dickson step index. Mirror of LogicType.cdStep.
-        Only Classical, Fuzzy, Intuitionistic, Quantum, Paraconsistent
-        have non-zero CD steps.
+
+        Maps all 15 logics to their CD step, consistent with
+        is_associative_sector (associative ⇒ cdStep ≤ 2, non-associative
+        ⇒ cdStep ≥ 3). Replaces the old scaffolding that defaulted 10 of
+        15 logics to 0 — masking their non-associative structure.
+
+        Reference: critical_corrections.md EML depth table.
         """
         steps = {
-            LogicType.CLASSICAL: 0,
-            LogicType.FUZZY: 1,
-            LogicType.INTUITIONISTIC: 2,
-            LogicType.QUANTUM: 3,
-            LogicType.PARACONSISTENT: 4,
+            LogicType.CLASSICAL: 0,       # baseline: a + b
+            LogicType.BOOLEAN: 0,         # same as classical + idempotence
+            LogicType.FUZZY: 1,          # capped addition min(a+b, C)
+            LogicType.MANY_VALUED: 1,    # truth-degree, capped addition
+            LogicType.TEMPORAL: 1,       # a + γb, γ < 1
+            LogicType.DEONTIC: 1,         # a + κb (obligation-weighted)
+            LogicType.EPISTEMIC: 1,       # fixed-point truncation
+            LogicType.INTUITIONISTIC: 2,  # max(a,b), loses LEM
+            LogicType.QUANTUM: 3,         # a + b + νab, loses distributivity
+            LogicType.RELEVANCE: 3,       # not scalar-expressible
+            LogicType.INFINITARY: 3,      # ordinal rank, transfinite
+            LogicType.MODAL: 3,           # a + κb, possible worlds
+            LogicType.SPACETIME: 3,       # 2a + b/2, geometric
+            LogicType.PARACONSISTENT: 4,  # min(a+b, C⊥), loses explosion
+            LogicType.FREE: 4,             # Gödelian incompleteness (logic of will)
         }
-        return steps.get(self, 0)
+        return steps[self]
 
     def is_associative_sector(self) -> bool:
         """Mirror of LogicType.isAssociativeSector.
@@ -114,6 +129,16 @@ class LogicType(Enum):
             LogicType.EPISTEMIC,
             LogicType.BOOLEAN,
         }
+
+    def is_meta_logic(self) -> bool:
+        """Mirror of LogicType.isMetaLogic.
+
+        Free Logic (Gödelian Incompleteness) is the meta-logic of will — it
+        can contain perfect anti-coherence by recognizing undecidability
+        rather than trivializing via explosion. It reasons meta-linguistically
+        about both sides of the sector boundary and can coexist with any logic.
+        """
+        return self is LogicType.FREE
 
 
 # ── LogicContraction ─────────────────────────────────────────────────

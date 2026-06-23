@@ -1,0 +1,50 @@
+# Barber Paradox — NormCode Draft
+# 
+# The Barber shaves all who do not shave themselves.
+# Does the barber shave himself?
+#
+# shaves(b,b) ↔ ¬shaves(b,b) — a self-referential contradiction.
+#
+# Under classical logic (associative sector, CD 0), this trivializes
+# via explosion: from ⊥ derive anything. The barber cannot be consistently
+# typed in the associative regime. The WFC propagator eliminates all
+# associative-sector logics from the barber node, leaving only the
+# non-associative sector (QUANTUM, PARACONSISTENT).
+#
+# If the barber's context (the town) is fixed to CLASSICAL, the edge
+# between barber and town crosses the CD 2→3 boundary — a zero divisor.
+# No certificate can be issued. This is a no-go bootstrap proposition:
+# the system cannot consistently type the barber in a classical context.
+#
+# form_type: self_referential (→ QUANTUM, CD 3)
+# coupling_signature: non-associative
+# spec: barber_self_reference
+
+:<:({barber classification}) | ?{flow_index}: 1 | ?{sequence}: simple
+    <= $. %>({barber classification})
+    
+    # The barber: a person who shaves all who do not shave themselves
+    <- {barber} | ?{flow_index}: 1.1 | ?{sequence}: imperative
+        <= :%(composition):(define the barber as the person who shaves all non-self-shavers)
+    
+    # The self-application question: does the barber shave himself?
+    <- <self-application> | ?{flow_index}: 1.2 | ?{sequence}: judgement
+        <= :%(composition):(does {1}<$({barber})%> shave {2}<$({barber})%>?)
+        <- {barber}<:{1}>
+        <- {barber}<:{2}>
+    
+    # The paradox: if the barber shaves himself, he must not shave himself
+    # (he only shaves non-self-shavers). If he does not shave himself,
+    # he must shave himself (he shaves all non-self-shavers).
+    <- <paradox> | ?{flow_index}: 1.3 | ?{sequence}: judgement
+        <= :%(composition):({1}<$({barber})%> shaves {2}<$({barber})%> iff {1}<$({barber})%> does not shave {2}<$({barber})%>)
+        <- {barber}<:{1}>
+        <- {barber}<:{2}>
+    
+    # The contradiction is self-referential: shaves(b,b) ↔ ¬shaves(b,b)
+    # This eliminates all associative-sector logics by propagation.
+    # What remains: QUANTUM and PARACONSISTENT (non-associative sector).
+    <- {barber classification} | ?{flow_index}: 1.4 | ?{sequence}: imperative
+        <= :%(composition):(classify the barber: self-referential contradiction requires non-associative logic)
+        <- <paradox><:{1}>
+        <- <self-application><:{2}>
