@@ -50,9 +50,9 @@ from ._spec import CortexSpec, SpecRegistry, SEED_REGISTRY
 from ._wfc import (
     WFCPropagator, WFCEdge, WFCResult, SuperpositionNode,
     apply_self_reference_constraint, can_coexist, friction_density,
+    AntiCoherentPair, inflate as wfc_inflate, temporal_conflate, resonates,
+    BARBER_PAIR, LIAR_PAIR, GRANDFATHER_PAIR,
 )
-
-
 class CortexBridgeError(Exception):
     """Base error for bridge operations."""
 
@@ -85,6 +85,12 @@ class LiftResult:
     structural_source: Optional[str] = None  # how structural LogicType was determined
     wfc_result: Optional[WFCResult] = None  # WFC constraint propagation result
     certificate_withheld: bool = False  # True if certificate is withheld due to ZD
+    # ── Generation mode (inflated structure when ZD is detected) ──────
+    problem_class: Optional[ProblemClass] = None  # inferred problem class
+    anti_coherent_pair: Optional[AntiCoherentPair] = None  # the two poles
+    temporal_tree: Optional[EMLTree] = None  # temporal conflation tree
+    generation_host_found: bool = False  # True if temporal tree resonates with host
+    generation_summary: str = ""  # human-readable summary of generation result
 
 
 @dataclass
@@ -253,6 +259,13 @@ class CortexBridge:
         structural_logic: Optional[LogicType] = None
         structural_source: Optional[str] = None
 
+        # ── Generation mode state ──
+        problem_class: Optional[ProblemClass] = None
+        anti_coherent_pair: Optional[AntiCoherentPair] = None
+        temporal_tree: Optional[EMLTree] = None
+        generation_host_found: bool = False
+        generation_summary: str = ""
+
         if trace_data is not None:
             structural_logic, structural_source = self.resolve_logic_type_from_structure(
                 source_content=trace_data.get("source_content", ""),
@@ -266,6 +279,26 @@ class CortexBridge:
             )
             if zd_witness is not None:
                 zd_witness.resolution_source = structural_source
+
+            # ── Generation: when ZD is detected, inflate and temporally conflate ──
+            # The generation mode transforms a zero divisor into a productive
+            # anti-coherent pair. This implements the generation/collapse duality:
+            # collapse (ZD) → critique (this method) → generation (inflated pair)
+            if zd_witness is not None:
+                # Use the structural logic (the "what survives") to infer the
+                # problem class. For the barber: PARACONSISTENT → inconsistentDef.
+                gen_logic = structural_logic if structural_logic is not None else claimed_logic
+                problem_class = self.infer_problem_class(gen_logic, concept_name)
+
+                if problem_class is not None:
+                    pair, tree, host_found, summary = self.run_generation(
+                        problem_class,
+                        host_tree=None,  # host resonance requires explicit host tree
+                    )
+                    anti_coherent_pair = pair
+                    temporal_tree = tree
+                    generation_host_found = host_found
+                    generation_summary = summary
 
         # Use structural LogicType if no ZD (it's more precise than claimed)
         logic_type = structural_logic if (structural_logic is not None and zd_witness is None) else claimed_logic
@@ -299,6 +332,12 @@ class CortexBridge:
             structural_source=structural_source,
             wfc_result=None,
             certificate_withheld=zd_witness is not None,
+            # ── Generation mode fields ──
+            problem_class=problem_class,
+            anti_coherent_pair=anti_coherent_pair,
+            temporal_tree=temporal_tree,
+            generation_host_found=generation_host_found,
+            generation_summary=generation_summary,
         )
 
     def _coupling_to_logic_type(self, sig: Optional[str]) -> LogicType:
@@ -432,6 +471,82 @@ class CortexBridge:
                 structural_cdstep=structural_cd,
             )
         return None
+
+    # ── Generation mode: inflate + temporal conflation for ZD resolution ──
+
+    @staticmethod
+    def infer_problem_class(
+        logic_type: LogicType,
+        concept_name: str = "",
+    ) -> Optional[ProblemClass]:
+        """Infer the ProblemClass from a LogicType and optional concept name.
+
+        This is the reverse of ``inflate``: given the anti-coherent pole's
+        LogicType (e.g., PARACONSISTENT for the barber), determine which
+        problem class generated it. Falls back to concept name matching
+        for disambiguation.
+
+        Returns:
+            The inferred ProblemClass, or None if no mapping exists.
+        """
+        # Direct mapping from anti-coherent logic type
+        direct: Dict[LogicType, ProblemClass] = {
+            LogicType.PARACONSISTENT: ProblemClass.INCONSISTENT_DEF,
+            LogicType.MANY_VALUED: ProblemClass.SELF_REFERENCE,
+            LogicType.TEMPORAL: ProblemClass.TEMPORAL_DECISION,
+        }
+        if logic_type in direct:
+            return direct[logic_type]
+        # Fall back to concept name matching
+        name_lower = concept_name.lower()
+        if "barber" in name_lower or "russell" in name_lower:
+            return ProblemClass.INCONSISTENT_DEF
+        if "liar" in name_lower or "truth-teller" in name_lower or "curry" in name_lower:
+            return ProblemClass.SELF_REFERENCE
+        if "grandfather" in name_lower or "newcomb" in name_lower:
+            return ProblemClass.TEMPORAL_DECISION
+        return None
+
+    def run_generation(
+        self,
+        problem_class: ProblemClass,
+        host_tree: Optional[EMLTree] = None,
+    ) -> Tuple[AntiCoherentPair, EMLTree, bool, str]:
+        """Run the generation pipeline on a problem class.
+
+        This is the core of the generation/collapse duality:
+        1. ``inflate`` a zero divisor → AntiCoherentPair (two poles)
+        2. ``temporal_conflate`` the pair → oscillating EMLTree
+        3. Optionally check resonance with a host tree
+
+        Args:
+            problem_class: The paradox class to inflate.
+            host_tree: Optional host tree to check resonance against.
+                When provided, the generation result includes whether the
+                inflated tree can be "digested" by the host.
+
+        Returns:
+            Tuple of (pair, temporal_tree, host_resonates, summary_string).
+        """
+        pair = wfc_inflate(problem_class)
+        tree = temporal_conflate(pair)
+        host_found = False
+        if host_tree is not None:
+            host_found = resonates(tree, host_tree)
+
+        # Build human-readable summary
+        summary_parts = [
+            f"inflated {problem_class.display_name()}",
+            f"→ coherent={pair.coherent.display_name()} (vacuous)",
+            f"antiCoherent={pair.antiCoherent.display_name()} (content)",
+        ]
+        if host_tree is not None:
+            summary_parts.append(
+                f"host_resonates={host_found}"
+            )
+        summary = "; ".join(summary_parts)
+
+        return pair, tree, host_found, summary
 
     def _coupling_to_tree(self, coupling_signature: str) -> EMLTree:
         """Build an EMLTree shape from a coupling signature.
