@@ -189,9 +189,12 @@ theorem closure_sound (tree : EMLTree) (g : Gate) (mem : g ∈ LogicPipeline.gat
 -- Entry point: decide
 -- ================================================================
 
-/-- Run the full institutional closure pipeline on `LogicM Event`. -/
-def decide (events : LogicM Event) : Decision (closurePipeline.logics.map Gate.ofLogicType) :=
-  let norm : LogicM Norm := InstitutionalClosure.closure events
+/-- Run the full institutional closure pipeline on LogicM GameOutcome.
+  Default cdStep = 1 (Fuzzy regime — graded evaluation suitable for
+  meta-reasoning auditor aggregation). -/
+def decide (events : LogicM GameOutcome) : Decision (closurePipeline.logics.map Gate.ofLogicType) :=
+  let norm : LogicM Norm :=
+    InstitutionalClosure.closure 1 events { rule := "gate closure threshold", threshold := 10 }
   closurePipeline.run (norm.toEMLTree)
 
 theorem decide_sound (events : LogicM Event) (g : Gate) (mem : g ∈ LogicPipeline.gates closurePipeline) :
