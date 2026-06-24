@@ -1,0 +1,1421 @@
+[
+  {
+    "cluster_id": 2,
+    "size": 11,
+    "intent": "docker_lifecycle",
+    "tags": [
+      "API",
+      "Docker",
+      "Lean",
+      "Python",
+      "TypeScript",
+      "memory",
+      "page_cache"
+    ],
+    "member_indices": [
+      3,
+      5,
+      6,
+      13,
+      14,
+      15,
+      16,
+      18,
+      22,
+      30
+    ]
+  },
+  {
+    "cluster_id": 3,
+    "size": 9,
+    "intent": "planning_design",
+    "tags": [
+      "Lean",
+      "WebGPU",
+      "certificate",
+      "cortex",
+      "embedding",
+      "normcode",
+      "pipeline",
+      "theorem"
+    ],
+    "member_indices": [
+      4,
+      88,
+      190,
+      224,
+      286,
+      320,
+      421,
+      489,
+      729
+    ]
+  },
+  {
+    "cluster_id": 7,
+    "size": 7,
+    "intent": "script_development",
+    "tags": [],
+    "member_indices": [
+      10,
+      29,
+      35,
+      246,
+      556,
+      734,
+      742
+    ]
+  },
+  {
+    "cluster_id": 9,
+    "size": 3,
+    "intent": "general_problem_solving",
+    "tags": [],
+    "member_indices": [
+      12,
+      467,
+      744
+    ]
+  },
+  {
+    "cluster_id": 12,
+    "size": 5,
+    "intent": "debug_troubleshoot",
+    "tags": [],
+    "member_indices": [
+      20,
+      21,
+      476,
+      540,
+      616
+    ]
+  },
+  {
+    "cluster_id": 13,
+    "size": 4,
+    "intent": "docker_lifecycle",
+    "tags": [
+      "API",
+      "Docker",
+      "memory"
+    ],
+    "member_indices": [
+      23,
+      38,
+      40,
+      44
+    ]
+  },
+  {
+    "cluster_id": 14,
+    "size": 19,
+    "intent": "verification",
+    "tags": [],
+    "member_indices": [
+      24,
+      25,
+      26,
+      36,
+      61,
+      155,
+      251,
+      430,
+      569,
+      638
+    ]
+  },
+  {
+    "cluster_id": 18,
+    "size": 3,
+    "intent": "script_development",
+    "tags": [],
+    "member_indices": [
+      33,
+      34,
+      632
+    ]
+  },
+  {
+    "cluster_id": 21,
+    "size": 7,
+    "intent": "theorem_proving",
+    "tags": [],
+    "member_indices": [
+      43,
+      66,
+      67,
+      103,
+      404,
+      527,
+      584
+    ]
+  },
+  {
+    "cluster_id": 22,
+    "size": 8,
+    "intent": "planning_design",
+    "tags": [
+      "API",
+      "TypeScript",
+      "embedding",
+      "librarian",
+      "phonebook",
+      "pipeline"
+    ],
+    "member_indices": [
+      46,
+      47,
+      49,
+      50,
+      51,
+      60,
+      62,
+      561
+    ]
+  },
+  {
+    "cluster_id": 25,
+    "size": 3,
+    "intent": "theorem_proving",
+    "tags": [
+      "phonebook"
+    ],
+    "member_indices": [
+      54,
+      64,
+      721
+    ]
+  },
+  {
+    "cluster_id": 30,
+    "size": 3,
+    "intent": "theorem_proving",
+    "tags": [
+      "Docker",
+      "Lean",
+      "LogicType",
+      "Python",
+      "certificate",
+      "cortex",
+      "embedding",
+      "librarian",
+      "memory",
+      "normcode",
+      "pipeline",
+      "theorem"
+    ],
+    "member_indices": [
+      63,
+      68,
+      491
+    ]
+  },
+  {
+    "cluster_id": 32,
+    "size": 3,
+    "intent": "planning_design",
+    "tags": [
+      "Lean",
+      "LogicType",
+      "pipeline"
+    ],
+    "member_indices": [
+      69,
+      205,
+      301
+    ]
+  },
+  {
+    "cluster_id": 33,
+    "size": 4,
+    "intent": "decision_tradeoff",
+    "tags": [
+      "Lean",
+      "LogicType",
+      "memory"
+    ],
+    "member_indices": [
+      70,
+      121,
+      206,
+      302
+    ]
+  },
+  {
+    "cluster_id": 34,
+    "size": 19,
+    "intent": "module_refactoring",
+    "tags": [
+      "Docker",
+      "Lean",
+      "LogicType",
+      "Python",
+      "TypeScript",
+      "certificate",
+      "memory",
+      "normcode",
+      "pipeline"
+    ],
+    "member_indices": [
+      71,
+      77,
+      82,
+      97,
+      106,
+      109,
+      110,
+      112,
+      126,
+      185
+    ]
+  },
+  {
+    "cluster_id": 35,
+    "size": 21,
+    "intent": "debug_troubleshoot",
+    "tags": [
+      "Lean",
+      "LogicType"
+    ],
+    "member_indices": [
+      72,
+      74,
+      75,
+      78,
+      80,
+      81,
+      133,
+      138,
+      208,
+      210
+    ]
+  },
+  {
+    "cluster_id": 36,
+    "size": 12,
+    "intent": "self_correction",
+    "tags": [
+      "Lean",
+      "LogicType"
+    ],
+    "member_indices": [
+      73,
+      76,
+      79,
+      102,
+      204,
+      209,
+      212,
+      215,
+      300,
+      305
+    ]
+  },
+  {
+    "cluster_id": 37,
+    "size": 3,
+    "intent": "module_refactoring",
+    "tags": [],
+    "member_indices": [
+      83,
+      219,
+      315
+    ]
+  },
+  {
+    "cluster_id": 38,
+    "size": 5,
+    "intent": "planning_design",
+    "tags": [
+      "Lean",
+      "normcode",
+      "pipeline"
+    ],
+    "member_indices": [
+      84,
+      188,
+      220,
+      284,
+      316
+    ]
+  },
+  {
+    "cluster_id": 39,
+    "size": 8,
+    "intent": "planning_design",
+    "tags": [
+      "Lean",
+      "LogicType",
+      "normcode",
+      "pipeline"
+    ],
+    "member_indices": [
+      85,
+      194,
+      198,
+      221,
+      290,
+      294,
+      317,
+      553
+    ]
+  },
+  {
+    "cluster_id": 40,
+    "size": 3,
+    "intent": "planning_design",
+    "tags": [
+      "LogicType",
+      "memory",
+      "normcode"
+    ],
+    "member_indices": [
+      86,
+      222,
+      318
+    ]
+  },
+  {
+    "cluster_id": 41,
+    "size": 3,
+    "intent": "planning_design",
+    "tags": [
+      "Lean",
+      "normcode",
+      "pipeline"
+    ],
+    "member_indices": [
+      87,
+      223,
+      319
+    ]
+  },
+  {
+    "cluster_id": 42,
+    "size": 3,
+    "intent": "planning_design",
+    "tags": [
+      "Docker",
+      "Lean",
+      "certificate",
+      "memory",
+      "pipeline",
+      "theorem"
+    ],
+    "member_indices": [
+      89,
+      225,
+      321
+    ]
+  },
+  {
+    "cluster_id": 44,
+    "size": 4,
+    "intent": "planning_design",
+    "tags": [
+      "Docker",
+      "Lean",
+      "LogicType",
+      "Python",
+      "normcode",
+      "pipeline",
+      "theorem"
+    ],
+    "member_indices": [
+      91,
+      92,
+      227,
+      228
+    ]
+  },
+  {
+    "cluster_id": 45,
+    "size": 3,
+    "intent": "theorem_proving",
+    "tags": [
+      "Docker",
+      "Lean",
+      "LogicType",
+      "Python",
+      "certificate",
+      "pipeline",
+      "theorem"
+    ],
+    "member_indices": [
+      93,
+      229,
+      330
+    ]
+  },
+  {
+    "cluster_id": 46,
+    "size": 7,
+    "intent": "script_development",
+    "tags": [
+      "Docker",
+      "Lean",
+      "LogicType",
+      "Python",
+      "certificate",
+      "memory",
+      "pipeline",
+      "theorem"
+    ],
+    "member_indices": [
+      94,
+      96,
+      98,
+      230,
+      232,
+      234,
+      340
+    ]
+  },
+  {
+    "cluster_id": 47,
+    "size": 4,
+    "intent": "verification",
+    "tags": [
+      "Lean"
+    ],
+    "member_indices": [
+      95,
+      152,
+      231,
+      248
+    ]
+  },
+  {
+    "cluster_id": 48,
+    "size": 3,
+    "intent": "script_development",
+    "tags": [
+      "Lean",
+      "normcode"
+    ],
+    "member_indices": [
+      99,
+      101,
+      145
+    ]
+  },
+  {
+    "cluster_id": 49,
+    "size": 5,
+    "intent": "planning_design",
+    "tags": [
+      "Lean",
+      "pipeline"
+    ],
+    "member_indices": [
+      100,
+      165,
+      179,
+      261,
+      275
+    ]
+  },
+  {
+    "cluster_id": 50,
+    "size": 13,
+    "intent": "general_problem_solving",
+    "tags": [],
+    "member_indices": [
+      104,
+      191,
+      287,
+      564,
+      565,
+      566,
+      568,
+      575,
+      649,
+      650
+    ]
+  },
+  {
+    "cluster_id": 51,
+    "size": 4,
+    "intent": "module_refactoring",
+    "tags": [
+      "API",
+      "Lean",
+      "LogicType",
+      "Python",
+      "TypeScript",
+      "WebGPU"
+    ],
+    "member_indices": [
+      105,
+      124,
+      159,
+      255
+    ]
+  },
+  {
+    "cluster_id": 53,
+    "size": 4,
+    "intent": "script_development",
+    "tags": [
+      "Lean",
+      "Python"
+    ],
+    "member_indices": [
+      108,
+      243,
+      245,
+      688
+    ]
+  },
+  {
+    "cluster_id": 56,
+    "size": 3,
+    "intent": "debug_troubleshoot",
+    "tags": [
+      "Lean"
+    ],
+    "member_indices": [
+      115,
+      116,
+      613
+    ]
+  },
+  {
+    "cluster_id": 58,
+    "size": 5,
+    "intent": "verification",
+    "tags": [
+      "Lean"
+    ],
+    "member_indices": [
+      118,
+      120,
+      127,
+      571,
+      651
+    ]
+  },
+  {
+    "cluster_id": 59,
+    "size": 5,
+    "intent": "debug_troubleshoot",
+    "tags": [
+      "API",
+      "Lean",
+      "normcode"
+    ],
+    "member_indices": [
+      119,
+      128,
+      130,
+      397,
+      412
+    ]
+  },
+  {
+    "cluster_id": 60,
+    "size": 5,
+    "intent": "script_development",
+    "tags": [
+      "Docker",
+      "Lean",
+      "LogicType",
+      "Python",
+      "certificate",
+      "normcode",
+      "pipeline"
+    ],
+    "member_indices": [
+      122,
+      186,
+      282,
+      328,
+      485
+    ]
+  },
+  {
+    "cluster_id": 64,
+    "size": 3,
+    "intent": "script_development",
+    "tags": [
+      "Lean"
+    ],
+    "member_indices": [
+      132,
+      135,
+      347
+    ]
+  },
+  {
+    "cluster_id": 67,
+    "size": 4,
+    "intent": "planning_design",
+    "tags": [
+      "cortex",
+      "normcode"
+    ],
+    "member_indices": [
+      137,
+      141,
+      187,
+      283
+    ]
+  },
+  {
+    "cluster_id": 68,
+    "size": 4,
+    "intent": "debug_troubleshoot",
+    "tags": [
+      "Lean",
+      "LogicType",
+      "theorem"
+    ],
+    "member_indices": [
+      139,
+      353,
+      360,
+      599
+    ]
+  },
+  {
+    "cluster_id": 78,
+    "size": 3,
+    "intent": "script_development",
+    "tags": [
+      "API",
+      "Docker",
+      "Lean",
+      "Python",
+      "TypeScript",
+      "embedding",
+      "memory",
+      "pipeline"
+    ],
+    "member_indices": [
+      153,
+      238,
+      249
+    ]
+  },
+  {
+    "cluster_id": 81,
+    "size": 6,
+    "intent": "module_refactoring",
+    "tags": [
+      "API",
+      "Lean",
+      "Python",
+      "theorem"
+    ],
+    "member_indices": [
+      157,
+      181,
+      253,
+      277,
+      346,
+      686
+    ]
+  },
+  {
+    "cluster_id": 82,
+    "size": 4,
+    "intent": "module_refactoring",
+    "tags": [
+      "API",
+      "Lean",
+      "Python",
+      "TypeScript",
+      "WebGPU",
+      "cortex",
+      "normcode",
+      "theorem"
+    ],
+    "member_indices": [
+      158,
+      254,
+      359,
+      745
+    ]
+  },
+  {
+    "cluster_id": 83,
+    "size": 4,
+    "intent": "script_development",
+    "tags": [
+      "API",
+      "Django",
+      "Lean",
+      "Python",
+      "TypeScript",
+      "WebGPU",
+      "theorem"
+    ],
+    "member_indices": [
+      160,
+      242,
+      256,
+      719
+    ]
+  },
+  {
+    "cluster_id": 84,
+    "size": 6,
+    "intent": "server_tuning",
+    "tags": [
+      "Lean"
+    ],
+    "member_indices": [
+      161,
+      163,
+      182,
+      257,
+      259,
+      278
+    ]
+  },
+  {
+    "cluster_id": 85,
+    "size": 3,
+    "intent": "script_development",
+    "tags": [
+      "Lean"
+    ],
+    "member_indices": [
+      162,
+      247,
+      258
+    ]
+  },
+  {
+    "cluster_id": 90,
+    "size": 3,
+    "intent": "general_problem_solving",
+    "tags": [],
+    "member_indices": [
+      169,
+      265,
+      552
+    ]
+  },
+  {
+    "cluster_id": 93,
+    "size": 6,
+    "intent": "verification",
+    "tags": [
+      "API",
+      "Django",
+      "Python",
+      "TypeScript",
+      "normcode"
+    ],
+    "member_indices": [
+      172,
+      177,
+      178,
+      268,
+      273,
+      274
+    ]
+  },
+  {
+    "cluster_id": 95,
+    "size": 4,
+    "intent": "theorem_proving",
+    "tags": [
+      "API",
+      "Django",
+      "Lean",
+      "LogicType",
+      "Python",
+      "TypeScript",
+      "WebGPU",
+      "certificate",
+      "cortex",
+      "normcode",
+      "theorem"
+    ],
+    "member_indices": [
+      174,
+      270,
+      493,
+      496
+    ]
+  },
+  {
+    "cluster_id": 99,
+    "size": 6,
+    "intent": "script_development",
+    "tags": [
+      "API",
+      "Lean",
+      "LogicType",
+      "Python",
+      "TypeScript",
+      "WebGPU",
+      "certificate",
+      "cortex",
+      "memory",
+      "normcode",
+      "pipeline"
+    ],
+    "member_indices": [
+      183,
+      189,
+      241,
+      279,
+      285,
+      495
+    ]
+  },
+  {
+    "cluster_id": 101,
+    "size": 5,
+    "intent": "dependency_analysis",
+    "tags": [],
+    "member_indices": [
+      192,
+      197,
+      288,
+      293,
+      603
+    ]
+  },
+  {
+    "cluster_id": 106,
+    "size": 3,
+    "intent": "debug_troubleshoot",
+    "tags": [
+      "API",
+      "Lean",
+      "LogicType",
+      "librarian",
+      "pipeline"
+    ],
+    "member_indices": [
+      200,
+      296,
+      587
+    ]
+  },
+  {
+    "cluster_id": 107,
+    "size": 3,
+    "intent": "verification",
+    "tags": [
+      "Lean"
+    ],
+    "member_indices": [
+      201,
+      244,
+      297
+    ]
+  },
+  {
+    "cluster_id": 115,
+    "size": 4,
+    "intent": "general_problem_solving",
+    "tags": [
+      "Lean",
+      "LogicType",
+      "Python"
+    ],
+    "member_indices": [
+      323,
+      324,
+      510,
+      547
+    ]
+  },
+  {
+    "cluster_id": 118,
+    "size": 7,
+    "intent": "script_development",
+    "tags": [
+      "API",
+      "Lean",
+      "Python",
+      "WebGPU",
+      "theorem"
+    ],
+    "member_indices": [
+      327,
+      348,
+      351,
+      462,
+      464,
+      601,
+      619
+    ]
+  },
+  {
+    "cluster_id": 119,
+    "size": 3,
+    "intent": "script_development",
+    "tags": [
+      "Docker",
+      "Lean",
+      "LogicType",
+      "Python"
+    ],
+    "member_indices": [
+      329,
+      333,
+      334
+    ]
+  },
+  {
+    "cluster_id": 124,
+    "size": 3,
+    "intent": "general_problem_solving",
+    "tags": [],
+    "member_indices": [
+      338,
+      339,
+      715
+    ]
+  },
+  {
+    "cluster_id": 137,
+    "size": 3,
+    "intent": "verification",
+    "tags": [
+      "Lean",
+      "LogicType",
+      "Python"
+    ],
+    "member_indices": [
+      362,
+      377,
+      594
+    ]
+  },
+  {
+    "cluster_id": 146,
+    "size": 3,
+    "intent": "debug_troubleshoot",
+    "tags": [
+      "LogicType",
+      "certificate",
+      "normcode"
+    ],
+    "member_indices": [
+      371,
+      372,
+      373
+    ]
+  },
+  {
+    "cluster_id": 150,
+    "size": 4,
+    "intent": "self_correction",
+    "tags": [
+      "Lean",
+      "LogicType",
+      "Python"
+    ],
+    "member_indices": [
+      378,
+      590,
+      623,
+      636
+    ]
+  },
+  {
+    "cluster_id": 158,
+    "size": 5,
+    "intent": "server_tuning",
+    "tags": [
+      "API",
+      "Python",
+      "cortex",
+      "normcode"
+    ],
+    "member_indices": [
+      386,
+      387,
+      389,
+      390,
+      426
+    ]
+  },
+  {
+    "cluster_id": 186,
+    "size": 3,
+    "intent": "script_development",
+    "tags": [
+      "API",
+      "Docker",
+      "Python",
+      "cortex",
+      "normcode"
+    ],
+    "member_indices": [
+      431,
+      437,
+      497
+    ]
+  },
+  {
+    "cluster_id": 187,
+    "size": 3,
+    "intent": "verification",
+    "tags": [],
+    "member_indices": [
+      432,
+      640,
+      746
+    ]
+  },
+  {
+    "cluster_id": 189,
+    "size": 3,
+    "intent": "verification",
+    "tags": [
+      "Lean"
+    ],
+    "member_indices": [
+      434,
+      572,
+      573
+    ]
+  },
+  {
+    "cluster_id": 192,
+    "size": 8,
+    "intent": "general_problem_solving",
+    "tags": [
+      "WebGPU"
+    ],
+    "member_indices": [
+      438,
+      468,
+      483,
+      576,
+      631,
+      706,
+      743,
+      753
+    ]
+  },
+  {
+    "cluster_id": 195,
+    "size": 5,
+    "intent": "debug_troubleshoot",
+    "tags": [],
+    "member_indices": [
+      441,
+      442,
+      445,
+      446,
+      456
+    ]
+  },
+  {
+    "cluster_id": 199,
+    "size": 9,
+    "intent": "script_development",
+    "tags": [
+      "API",
+      "Lean",
+      "Python",
+      "theorem"
+    ],
+    "member_indices": [
+      449,
+      450,
+      452,
+      454,
+      457,
+      458,
+      460,
+      675,
+      683
+    ]
+  },
+  {
+    "cluster_id": 204,
+    "size": 4,
+    "intent": "script_development",
+    "tags": [
+      "API",
+      "Lean",
+      "Python",
+      "TypeScript",
+      "WebGPU",
+      "theorem"
+    ],
+    "member_indices": [
+      461,
+      463,
+      687,
+      757
+    ]
+  },
+  {
+    "cluster_id": 205,
+    "size": 3,
+    "intent": "resource_constraints",
+    "tags": [
+      "WebGPU",
+      "pipeline"
+    ],
+    "member_indices": [
+      465,
+      691,
+      693
+    ]
+  },
+  {
+    "cluster_id": 221,
+    "size": 7,
+    "intent": "module_refactoring",
+    "tags": [
+      "Lean",
+      "Python"
+    ],
+    "member_indices": [
+      499,
+      501,
+      502,
+      507,
+      508,
+      509,
+      544
+    ]
+  },
+  {
+    "cluster_id": 224,
+    "size": 3,
+    "intent": "general_problem_solving",
+    "tags": [],
+    "member_indices": [
+      504,
+      506,
+      554
+    ]
+  },
+  {
+    "cluster_id": 226,
+    "size": 10,
+    "intent": "module_refactoring",
+    "tags": [
+      "Lean",
+      "librarian",
+      "theorem"
+    ],
+    "member_indices": [
+      511,
+      512,
+      519,
+      531,
+      546,
+      551,
+      555,
+      585,
+      598,
+      629
+    ]
+  },
+  {
+    "cluster_id": 230,
+    "size": 3,
+    "intent": "module_refactoring",
+    "tags": [
+      "Lean",
+      "LogicType",
+      "Python",
+      "theorem"
+    ],
+    "member_indices": [
+      517,
+      518,
+      558
+    ]
+  },
+  {
+    "cluster_id": 234,
+    "size": 3,
+    "intent": "theorem_proving",
+    "tags": [
+      "theorem"
+    ],
+    "member_indices": [
+      523,
+      604,
+      607
+    ]
+  },
+  {
+    "cluster_id": 237,
+    "size": 3,
+    "intent": "theorem_proving",
+    "tags": [
+      "Lean",
+      "LogicType",
+      "theorem"
+    ],
+    "member_indices": [
+      526,
+      528,
+      602
+    ]
+  },
+  {
+    "cluster_id": 239,
+    "size": 3,
+    "intent": "debug_troubleshoot",
+    "tags": [
+      "Lean"
+    ],
+    "member_indices": [
+      530,
+      533,
+      538
+    ]
+  },
+  {
+    "cluster_id": 249,
+    "size": 4,
+    "intent": "module_refactoring",
+    "tags": [
+      "WebGPU"
+    ],
+    "member_indices": [
+      550,
+      701,
+      703,
+      704
+    ]
+  },
+  {
+    "cluster_id": 252,
+    "size": 3,
+    "intent": "module_refactoring",
+    "tags": [
+      "Lean",
+      "Python",
+      "pipeline"
+    ],
+    "member_indices": [
+      560,
+      563,
+      567
+    ]
+  },
+  {
+    "cluster_id": 254,
+    "size": 3,
+    "intent": "module_refactoring",
+    "tags": [
+      "Lean",
+      "Python"
+    ],
+    "member_indices": [
+      574,
+      634,
+      635
+    ]
+  },
+  {
+    "cluster_id": 277,
+    "size": 3,
+    "intent": "theorem_proving",
+    "tags": [
+      "Lean",
+      "theorem"
+    ],
+    "member_indices": [
+      622,
+      625,
+      626
+    ]
+  },
+  {
+    "cluster_id": 283,
+    "size": 5,
+    "intent": "verification",
+    "tags": [],
+    "member_indices": [
+      641,
+      642,
+      648,
+      654,
+      660
+    ]
+  },
+  {
+    "cluster_id": 284,
+    "size": 3,
+    "intent": "script_development",
+    "tags": [],
+    "member_indices": [
+      643,
+      645,
+      652
+    ]
+  },
+  {
+    "cluster_id": 287,
+    "size": 4,
+    "intent": "module_refactoring",
+    "tags": [],
+    "member_indices": [
+      655,
+      657,
+      658,
+      659
+    ]
+  },
+  {
+    "cluster_id": 302,
+    "size": 3,
+    "intent": "module_refactoring",
+    "tags": [
+      "API",
+      "Lean",
+      "TypeScript",
+      "WebGPU"
+    ],
+    "member_indices": [
+      694,
+      695,
+      696
+    ]
+  },
+  {
+    "cluster_id": 303,
+    "size": 3,
+    "intent": "debug_troubleshoot",
+    "tags": [
+      "TypeScript",
+      "WebGPU"
+    ],
+    "member_indices": [
+      698,
+      699,
+      700
+    ]
+  },
+  {
+    "cluster_id": 316,
+    "size": 3,
+    "intent": "script_development",
+    "tags": [],
+    "member_indices": [
+      726,
+      731,
+      738
+    ]
+  },
+  {
+    "cluster_id": 317,
+    "size": 3,
+    "intent": "module_refactoring",
+    "tags": [],
+    "member_indices": [
+      728,
+      740,
+      741
+    ]
+  }
+]

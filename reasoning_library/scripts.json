@@ -1,0 +1,1963 @@
+{
+  "id": "script_2_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on docker_lifecycle: Let me continue gathering info - check the Docker container config fully, test the chat API, and look at more project structure....",
+  "debug_runbook": "1. Check the relevant API Docker Lean Python TypeScript memory page_cache\n2. Follow the tool chain: bash -> read -> edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> read -> edit",
+  "intent_category": "docker_lifecycle",
+  "domain_tags": [
+    "API",
+    "Docker",
+    "Lean",
+    "Python",
+    "TypeScript",
+    "memory",
+    "page_cache"
+  ],
+  "source_trace_count": 11,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.993152,
+  "_centroid_preview": [
+    -0.02641850227320736,
+    -0.008279916399095038,
+    -0.027483987473798068
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_3_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: Now I have a good picture of the system. Let me gather a bit more info about the Lean project and the overall codebase structure....",
+  "debug_runbook": "1. Check the relevant Lean WebGPU certificate cortex embedding normcode pipeline theorem\n2. Follow the tool chain: read -> bash -> todowrite -> glob\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> bash -> todowrite -> glob",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "Lean",
+    "WebGPU",
+    "certificate",
+    "cortex",
+    "embedding",
+    "normcode",
+    "pipeline",
+    "theorem"
+  ],
+  "source_trace_count": 9,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9931815,
+  "_centroid_preview": [
+    -0.05083627667691973,
+    0.008819096928669347,
+    -0.014850186151711063
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_7_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Now let me write a comprehensive inventory file....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: write -> edit -> bash -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "write -> edit -> bash -> todowrite",
+  "intent_category": "script_development",
+  "domain_tags": [],
+  "source_trace_count": 7,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9932003,
+  "_centroid_preview": [
+    -0.044017450351800234,
+    0.0054997307847120935,
+    -0.022512217052280903
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_9_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on general_problem_solving: Now let me provide a summary to the user based on everything I've gathered.\n\n\nHere's the inventory summary. I've written two files in `.agents/invento...",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "todowrite",
+  "intent_category": "general_problem_solving",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9932134,
+  "_centroid_preview": [
+    -0.02616083746155103,
+    -0.0018246687638262908,
+    -0.035200667257110275
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_12_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: Now let me also update the MCP integration note and the known issues section....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: edit -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> read",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9932272,
+  "_centroid_preview": [
+    -0.01697818611719413,
+    0.009388521453365684,
+    -0.02132425121963024
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_13_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on docker_lifecycle: The user wants a script to restart the llama-server container safely, stored at `/home/nos/labware/LaserCortex/.agents/scripts/restart_llm.sh` (or sim...",
+  "debug_runbook": "1. Check the relevant API Docker memory\n2. Follow the tool chain: write -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "write -> read",
+  "intent_category": "docker_lifecycle",
+  "domain_tags": [
+    "API",
+    "Docker",
+    "memory"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9932487,
+  "_centroid_preview": [
+    -0.035722048953175545,
+    0.018577380571514368,
+    -0.027397988829761744
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_14_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on verification: Now let me make it executable and test it with --dry-run and --verify to make sure it works....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: bash -> read -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> read -> todowrite",
+  "intent_category": "verification",
+  "domain_tags": [],
+  "source_trace_count": 19,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9932787,
+  "_centroid_preview": [
+    -0.026041929499785368,
+    0.02303497347441551,
+    -0.033886377944758066
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_18_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Good. Now let me also update the dry-run output to mention the 7-minute timeout, and let me verify the script is still valid....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: bash -> edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> edit",
+  "intent_category": "script_development",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9932919,
+  "_centroid_preview": [
+    -0.05737370500961939,
+    0.005947206635028124,
+    -0.02143627133530875
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_21_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on theorem_proving: Let me verify the final state of both files....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: read -> bash -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> bash -> todowrite",
+  "intent_category": "theorem_proving",
+  "domain_tags": [],
+  "source_trace_count": 7,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9933069,
+  "_centroid_preview": [
+    -0.018726147561600164,
+    0.019423532565789565,
+    -0.014505136558519942
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_22_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: Good, the pipeline directory has many scripts. Let me explore the open-notebook repo structure to understand the full system....",
+  "debug_runbook": "1. Check the relevant API TypeScript embedding librarian phonebook pipeline\n2. Follow the tool chain: read -> bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> bash",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "API",
+    "TypeScript",
+    "embedding",
+    "librarian",
+    "phonebook",
+    "pipeline"
+  ],
+  "source_trace_count": 8,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9933236,
+  "_centroid_preview": [
+    -0.05823127971962094,
+    0.0040034908161032945,
+    -0.04069480556063354
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_25_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on theorem_proving: Now let me check the actual state of the phonebook to understand the current index state....",
+  "debug_runbook": "1. Check the relevant phonebook\n2. Follow the tool chain: bash -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> read",
+  "intent_category": "theorem_proving",
+  "domain_tags": [
+    "phonebook"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.993336,
+  "_centroid_preview": [
+    -0.009399911699195703,
+    0.016212479521830876,
+    -0.016254710654417675
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_30_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on theorem_proving: The user is asking what we've done so far in this session. Let me look at the conversation context. It seems like we've been working with the LaserCor...",
+  "debug_runbook": "1. Check the relevant Docker Lean LogicType Python certificate cortex embedding librarian memory normcode pipeline theorem\n2. Follow the tool chain: skill\n3. Verify changes don't break dependent modules",
+  "tool_chain": "skill",
+  "intent_category": "theorem_proving",
+  "domain_tags": [
+    "Docker",
+    "Lean",
+    "LogicType",
+    "Python",
+    "certificate",
+    "cortex",
+    "embedding",
+    "librarian",
+    "memory",
+    "normcode",
+    "pipeline",
+    "theorem"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9933505,
+  "_centroid_preview": [
+    -0.035973744466900826,
+    0.03893777852257093,
+    -0.003528799240787824
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_32_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: `DecisionComposition.lean:194` calls `InstitutionalClosure.closure events` where `events` is of type `LogicM Event`. But we changed `closure` to take ...",
+  "debug_runbook": "1. Check the relevant Lean LogicType pipeline\n2. Follow the tool chain: read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "Lean",
+    "LogicType",
+    "pipeline"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9933646,
+  "_centroid_preview": [
+    -0.04342338815331459,
+    -0.012573644518852234,
+    -0.021520307287573814
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_33_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on decision_tradeoff: I see. `DecisionComposition.lean` has its own `Event` type defined locally (probably in this file or earlier). Let me check:\n\nThe function `decide (ev...",
+  "debug_runbook": "1. Check the relevant Lean LogicType memory\n2. Follow the tool chain: grep -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "grep -> todowrite",
+  "intent_category": "decision_tradeoff",
+  "domain_tags": [
+    "Lean",
+    "LogicType",
+    "memory"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9933774,
+  "_centroid_preview": [
+    -0.030305055435746908,
+    -0.03320039343088865,
+    -0.01954041328281164
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_34_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: `Event` in `DecisionComposition.lean` refers to the `Event` from `InstitutionalClosure` (the module header lists `LogicM, Event, Norm` as exports from...",
+  "debug_runbook": "1. Check the relevant Docker Lean LogicType Python TypeScript certificate memory normcode pipeline\n2. Follow the tool chain: edit -> bash -> write -> question -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> bash -> write -> question -> read",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "Docker",
+    "Lean",
+    "LogicType",
+    "Python",
+    "TypeScript",
+    "certificate",
+    "memory",
+    "normcode",
+    "pipeline"
+  ],
+  "source_trace_count": 19,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.993401,
+  "_centroid_preview": [
+    -0.039634735764641514,
+    -0.01886100280343702,
+    -0.0011980358119073667
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_35_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: Wait, that won't work either. The issue is that `closure` now expects `LogicM GameOutcome` and `decide` is calling it with `LogicM Event`. With `Event...",
+  "debug_runbook": "1. Check the relevant Lean LogicType\n2. Follow the tool chain: edit -> read -> bash -> grep -> write\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> read -> bash -> grep -> write",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [
+    "Lean",
+    "LogicType"
+  ],
+  "source_trace_count": 21,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9934237,
+  "_centroid_preview": [
+    -0.037855807869207295,
+    -0.0068907351343936865,
+    -0.015208409300872259
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_36_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on self_correction: I need to fix `DecisionComposition.lean` line 193-194 to match the new `closure` signature. The old call was:\n```\ndef decide (events : LogicM Event) :...",
+  "debug_runbook": "1. Check the relevant Lean LogicType\n2. Follow the tool chain: edit -> grep -> skill\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> grep -> skill",
+  "intent_category": "self_correction",
+  "domain_tags": [
+    "Lean",
+    "LogicType"
+  ],
+  "source_trace_count": 12,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9934409,
+  "_centroid_preview": [
+    -0.03131215771039327,
+    -0.007182121800724417,
+    -0.01172943648028498
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_37_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: Full clean build succeeded. The earlier error was from a stale `.olean` cache. Now everything builds.\n\nLet me update the todo list and summarize what ...",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "todowrite",
+  "intent_category": "module_refactoring",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9934525,
+  "_centroid_preview": [
+    -0.0011510984040796757,
+    0.03580256924033165,
+    -0.03980671241879463
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_38_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: The user might want me to continue \u2014 they said \"Lean file first, then NormCode plan.\" Let me ask if they want me to proceed with the NormCode plan nex...",
+  "debug_runbook": "1. Check the relevant Lean normcode pipeline\n2. Follow the tool chain: read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "Lean",
+    "normcode",
+    "pipeline"
+  ],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9934666,
+  "_centroid_preview": [
+    -0.05777887180447579,
+    0.00607787212356925,
+    -0.007184322737157345
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_39_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: The user is sharing a key insight from a parallel session. Let me unpack this:\n\n1. **Named logics are TDD test cases** \u2014 The specific logics we have (...",
+  "debug_runbook": "1. Check the relevant Lean LogicType normcode pipeline\n2. Follow the tool chain: read -> edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> edit",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "Lean",
+    "LogicType",
+    "normcode",
+    "pipeline"
+  ],
+  "source_trace_count": 8,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9934828,
+  "_centroid_preview": [
+    -0.052596986293792725,
+    0.018547855434007943,
+    -0.01335150667000562
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_40_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: This is getting deep. Let me parse what the user is saying:\n\n1. **Sorites paradox**: Fuzzy logic translates vague predicates to Nat (a graded value). ...",
+  "debug_runbook": "1. Check the relevant LogicType memory normcode\n2. Follow the tool chain: read -> edit -> verify\n3. Verify changes don't break dependent modules",
+  "tool_chain": "",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "LogicType",
+    "memory",
+    "normcode"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9934993,
+  "_centroid_preview": [
+    -0.06493999063968658,
+    -0.01796690933406353,
+    0.004629338625818491
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_41_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: This is a dense, rich insight. Let me unpack it.\n\nThe Edict on Maximum Prices (Diocletian, 301 AD) took ~1700 years to find closure \u2014 and in our hyper...",
+  "debug_runbook": "1. Check the relevant Lean normcode pipeline\n2. Follow the tool chain: glob\n3. Verify changes don't break dependent modules",
+  "tool_chain": "glob",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "Lean",
+    "normcode",
+    "pipeline"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9935122,
+  "_centroid_preview": [
+    -0.038377389311790466,
+    -0.038288552314043045,
+    -0.0181645005941391
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_42_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: Now I see the full picture. AMM.lean formalizes:\n\n1. Constant-product pools (reserveA, reserveB, k = x*y)\n2. `swapOut` \u2014 the fair price formula (dy = ...",
+  "debug_runbook": "1. Check the relevant Docker Lean certificate memory pipeline theorem\n2. Follow the tool chain: read -> edit -> verify\n3. Verify changes don't break dependent modules",
+  "tool_chain": "",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "Docker",
+    "Lean",
+    "certificate",
+    "memory",
+    "pipeline",
+    "theorem"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9935248,
+  "_centroid_preview": [
+    -0.05083053062359492,
+    -0.028136363873879116,
+    -0.0297595610221227
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_44_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: Now I understand the full picture. SplitOctonionCost.lean is the \"super-logic\" engine \u2014 a dynamical system that:\n1. Computes the split-octonion algebr...",
+  "debug_runbook": "1. Check the relevant Docker Lean LogicType Python normcode pipeline theorem\n2. Follow the tool chain: read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "Docker",
+    "Lean",
+    "LogicType",
+    "Python",
+    "normcode",
+    "pipeline",
+    "theorem"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9935381,
+  "_centroid_preview": [
+    -0.05383811332285404,
+    -0.00550788315013051,
+    0.000645865686237812
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_45_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on theorem_proving: The user is deepening the picture significantly. Let me parse this carefully.\n\nWhat the user is saying:\n\n1. **AMM uses Generation.lean to close the ma...",
+  "debug_runbook": "1. Check the relevant Docker Lean LogicType Python certificate pipeline theorem\n2. Follow the tool chain: grep -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "grep -> todowrite",
+  "intent_category": "theorem_proving",
+  "domain_tags": [
+    "Docker",
+    "Lean",
+    "LogicType",
+    "Python",
+    "certificate",
+    "pipeline",
+    "theorem"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9935513,
+  "_centroid_preview": [
+    -0.06637410819530487,
+    -0.012991939050455889,
+    0.009109670296311378
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_46_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Important confirmations from the import graph:\n\n1. **AMM.lean does NOT import Generation.lean or FrictionLagrangian.lean** \u2014 it only imports EMLRegist...",
+  "debug_runbook": "1. Check the relevant Docker Lean LogicType Python certificate memory pipeline theorem\n2. Follow the tool chain: grep -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "grep -> todowrite",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "Docker",
+    "Lean",
+    "LogicType",
+    "Python",
+    "certificate",
+    "memory",
+    "pipeline",
+    "theorem"
+  ],
+  "source_trace_count": 7,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9935665,
+  "_centroid_preview": [
+    -0.06676272515739713,
+    -0.028326182227049555,
+    -0.0165638872240379
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_47_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on verification: Now I have a clearer picture. Let me check the actual CortexCertificate definition in EMLRegistry.lean to see what it's about:\n\nLet me see the actual ...",
+  "debug_runbook": "1. Check the relevant Lean\n2. Follow the tool chain: read -> bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> bash",
+  "intent_category": "verification",
+  "domain_tags": [
+    "Lean"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.99358,
+  "_centroid_preview": [
+    -0.04679412953555584,
+    -0.0005987351760268211,
+    -0.021322951186448336
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_48_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: The user wants me to save the plan to `docs/PLAN_market_closure.md`. I'm now in build mode, so I can write files. Let me save the plan document....",
+  "debug_runbook": "1. Check the relevant Lean normcode\n2. Follow the tool chain: read -> write -> question\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> write -> question",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "Lean",
+    "normcode"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9935951,
+  "_centroid_preview": [
+    -0.05070247252782186,
+    0.0014164619691049059,
+    -0.02731528195242087
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_49_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: Let me analyze the conversation history to identify what's changed and what should be in the updated summary.\n\nKey changes from this session:\n\n1. The ...",
+  "debug_runbook": "1. Check the relevant Lean pipeline\n2. Follow the tool chain: write -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "write -> read",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "Lean",
+    "pipeline"
+  ],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9936092,
+  "_centroid_preview": [
+    -0.0772279903292656,
+    -0.0008300992660224438,
+    -0.02530992217361927
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_50_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on general_problem_solving: Let me read the relevant files in parallel to understand their current structure....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: read -> bash -> glob -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> bash -> glob -> todowrite",
+  "intent_category": "general_problem_solving",
+  "domain_tags": [],
+  "source_trace_count": 13,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9936273,
+  "_centroid_preview": [
+    -0.025463123821492236,
+    0.005000305738156805,
+    -0.02173997821787802
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_51_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: Now I have a thorough understanding of the codebase. Let me also check the Cost module to understand \u03a6, since I need it for MarketClosure.lean and AMM...",
+  "debug_runbook": "1. Check the relevant API Lean LogicType Python TypeScript WebGPU\n2. Follow the tool chain: read -> grep\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> grep",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "LogicType",
+    "Python",
+    "TypeScript",
+    "WebGPU"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9936416,
+  "_centroid_preview": [
+    -0.05427339393645525,
+    -0.005456224083900452,
+    -0.012322147842496634
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_53_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Let me create the KernelChoice.lean file first since it's the simplest and foundational....",
+  "debug_runbook": "1. Check the relevant Lean Python\n2. Follow the tool chain: write -> glob -> todowrite -> bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "write -> glob -> todowrite -> bash",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "Lean",
+    "Python"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9936543,
+  "_centroid_preview": [
+    -0.05663182679563761,
+    0.020221185928676277,
+    -0.033561323303729296
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_56_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: I have two issues:\n\n1. **Comment-out errors**: The doc comment `/--` lines inside the commented-out block are being parsed as if they were top-level L...",
+  "debug_runbook": "1. Check the relevant Lean\n2. Follow the tool chain: edit -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> read",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [
+    "Lean"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.993667,
+  "_centroid_preview": [
+    -0.01856290673216184,
+    -0.005418772343546152,
+    -0.04324141268928846
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_58_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on verification: Good, AMM.lean should be clean now. Let me verify with diagnostic messages....",
+  "debug_runbook": "1. Check the relevant Lean\n2. Follow the tool chain: bash -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> read",
+  "intent_category": "verification",
+  "domain_tags": [
+    "Lean"
+  ],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9936795,
+  "_centroid_preview": [
+    -0.031112321466207505,
+    -0.010528039187192917,
+    -0.0233912636525929
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_59_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: Seems like a LSP tool path issue. Let me use the LSP tools correctly with project-root-relative paths....",
+  "debug_runbook": "1. Check the relevant API Lean normcode\n2. Follow the tool chain: grep -> bash -> edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "grep -> bash -> edit",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "normcode"
+  ],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9936936,
+  "_centroid_preview": [
+    -0.0470467884093523,
+    0.01729597561061382,
+    -0.018543073977343737
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_60_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Now let me create MarketClosure.lean. I need to think about all the imports and how this ties together.\n\nImports needed:\n- `LaserCortex.EMLRegistry` \u2192...",
+  "debug_runbook": "1. Check the relevant Docker Lean LogicType Python certificate normcode pipeline\n2. Follow the tool chain: glob -> write -> question -> read -> bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "glob -> write -> question -> read -> bash",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "Docker",
+    "Lean",
+    "LogicType",
+    "Python",
+    "certificate",
+    "normcode",
+    "pipeline"
+  ],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9937096,
+  "_centroid_preview": [
+    -0.07354078814387321,
+    -3.279496449977159e-05,
+    -0.00127350352704525
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_64_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Let me run the build. This could take a while since the project has 3568 jobs....",
+  "debug_runbook": "1. Check the relevant Lean\n2. Follow the tool chain: todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "todowrite",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "Lean"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.993721,
+  "_centroid_preview": [
+    -0.05293262625734011,
+    0.013503962147903318,
+    -0.03047757036983967
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_67_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on planning_design: Now let me create the .ncd file based on the plan. The NormCode format needs to follow the .ncd conventions. Looking at the plan document, I'll follow...",
+  "debug_runbook": "1. Check the relevant cortex normcode\n2. Follow the tool chain: skill -> write\n3. Verify changes don't break dependent modules",
+  "tool_chain": "skill -> write",
+  "intent_category": "planning_design",
+  "domain_tags": [
+    "cortex",
+    "normcode"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9937336,
+  "_centroid_preview": [
+    -0.0488663399592042,
+    0.01381257880711928,
+    -0.018231027759611607
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_68_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: The edit was applied. Lines 164 and 169 now show `LogicTypes.LogicType.Classical`. The LSP error was from a stale cache. Let me try building again wit...",
+  "debug_runbook": "1. Check the relevant Lean LogicType theorem\n2. Follow the tool chain: write -> edit -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "write -> edit -> read",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [
+    "Lean",
+    "LogicType",
+    "theorem"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9937468,
+  "_centroid_preview": [
+    -0.035499015590175986,
+    -0.00174235412850976,
+    -0.010276647983118892
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_78_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Let me analyze what's changed since the last summary:\n\n1. **LangChain workaround**: We found that LangChain's stripping is intentional but we implemen...",
+  "debug_runbook": "1. Check the relevant API Docker Lean Python TypeScript embedding memory pipeline\n2. Follow the tool chain: read -> edit -> verify\n3. Verify changes don't break dependent modules",
+  "tool_chain": "",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "API",
+    "Docker",
+    "Lean",
+    "Python",
+    "TypeScript",
+    "embedding",
+    "memory",
+    "pipeline"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.99376,
+  "_centroid_preview": [
+    -0.033038862980902195,
+    -0.02561163219312827,
+    0.019022011508544285
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_81_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: The V1 pass on Generation.lean produced excellent output:\n\n1. **Identified \"critical\" dead leaf**: Generation.lean is imported by zero downstream modu...",
+  "debug_runbook": "1. Check the relevant API Lean Python theorem\n2. Follow the tool chain: question -> todowrite -> edit -> bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "question -> todowrite -> edit -> bash",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "Python",
+    "theorem"
+  ],
+  "source_trace_count": 6,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9937751,
+  "_centroid_preview": [
+    -0.04469967819750309,
+    0.015349402635668715,
+    -0.025236822043855984
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_82_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: The user has an important insight: the V1 prompts are too specific \u2014 they ask for exactly the kinds of things we already know about the codebase. The ...",
+  "debug_runbook": "1. Check the relevant API Lean Python TypeScript WebGPU cortex normcode theorem\n2. Follow the tool chain: read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "Python",
+    "TypeScript",
+    "WebGPU",
+    "cortex",
+    "normcode",
+    "theorem"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9937892,
+  "_centroid_preview": [
+    -0.059081790037453175,
+    0.014462386257946491,
+    -0.017956151627004147
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_83_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Now I understand the full picture. Let me analyze what's wrong with each prompt:\n\n**Prompt 01 (Exploration)**: \n- Too specific \u2014 names Generation.lean...",
+  "debug_runbook": "1. Check the relevant API Django Lean Python TypeScript WebGPU theorem\n2. Follow the tool chain: todowrite -> question\n3. Verify changes don't break dependent modules",
+  "tool_chain": "todowrite -> question",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "API",
+    "Django",
+    "Lean",
+    "Python",
+    "TypeScript",
+    "WebGPU",
+    "theorem"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9938028,
+  "_centroid_preview": [
+    -0.07002019230276346,
+    -0.010787698440253735,
+    -0.0333010028116405
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_84_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on server_tuning: Let me write the new V1 prompt. The key principle: describe domain norms for each layer and ask the model to identify deviations, without naming any s...",
+  "debug_runbook": "1. Check the relevant Lean\n2. Follow the tool chain: write\n3. Verify changes don't break dependent modules",
+  "tool_chain": "write",
+  "intent_category": "server_tuning",
+  "domain_tags": [
+    "Lean"
+  ],
+  "source_trace_count": 6,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.993815,
+  "_centroid_preview": [
+    -0.06635794850687186,
+    0.001498324874167641,
+    -0.04125997610390186
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_85_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Good, V1 rewritten. Now V2 \u2014 the aggregation prompt. Currently the most leading of the three (it literally has tables mapping known files to known voi...",
+  "debug_runbook": "1. Check the relevant Lean\n2. Follow the tool chain: todowrite -> write\n3. Verify changes don't break dependent modules",
+  "tool_chain": "todowrite -> write",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "Lean"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9938269,
+  "_centroid_preview": [
+    -0.062470306952794395,
+    0.009220154994788269,
+    -0.05412017305692037
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_90_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on general_problem_solving: Three occurrences. Let me replace all three at once....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: edit -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> todowrite",
+  "intent_category": "general_problem_solving",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9938383,
+  "_centroid_preview": [
+    -0.0020260469367106757,
+    0.015084446718295416,
+    -0.033032240346074104
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_93_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on verification: The user is pointing out that the prompts I wrote still reference Django/Python API gateway as one of the three layers, but there is no Django in this...",
+  "debug_runbook": "1. Check the relevant API Django Python TypeScript normcode\n2. Follow the tool chain: glob -> read -> bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "glob -> read -> bash",
+  "intent_category": "verification",
+  "domain_tags": [
+    "API",
+    "Django",
+    "Python",
+    "TypeScript",
+    "normcode"
+  ],
+  "source_trace_count": 6,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.993853,
+  "_centroid_preview": [
+    -0.039325861570735775,
+    -0.012859649684590599,
+    -0.04045742812256018
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_95_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on theorem_proving: OK, so the actual architecture is:\n\n1. **Lean4 formalization layer** (`LaserCortex/*.lean`) \u2014 mathematical structures, theorems, proofs\n2. **Python Fa...",
+  "debug_runbook": "1. Check the relevant API Django Lean LogicType Python TypeScript WebGPU certificate cortex normcode theorem\n2. Follow the tool chain: edit -> bash -> read -> question\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> bash -> read -> question",
+  "intent_category": "theorem_proving",
+  "domain_tags": [
+    "API",
+    "Django",
+    "Lean",
+    "LogicType",
+    "Python",
+    "TypeScript",
+    "WebGPU",
+    "certificate",
+    "cortex",
+    "normcode",
+    "theorem"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9938684,
+  "_centroid_preview": [
+    -0.027358606923371553,
+    0.02221230696886778,
+    0.005498312180861831
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_99_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: The user is asking me to step back even further \u2014 beyond Build mode (writing code, fixing bugs) and Plan mode (architectural decisions). They want a *...",
+  "debug_runbook": "1. Check the relevant API Lean LogicType Python TypeScript WebGPU certificate cortex memory normcode pipeline\n2. Follow the tool chain: read -> question\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> question",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "LogicType",
+    "Python",
+    "TypeScript",
+    "WebGPU",
+    "certificate",
+    "cortex",
+    "memory",
+    "normcode",
+    "pipeline"
+  ],
+  "source_trace_count": 6,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9938836,
+  "_centroid_preview": [
+    -0.07347394277652104,
+    -0.007441817317157984,
+    -0.005135721294209361
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_101_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on dependency_analysis: There's a document called `docs/WITNESS_SKEPTIC_GAME_SPEC.md` and `docs/Claude_on_witness-skeptic_game.md`. Let me read those, plus maybe `docs/connec...",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read",
+  "intent_category": "dependency_analysis",
+  "domain_tags": [],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9938962,
+  "_centroid_preview": [
+    -0.04186314195394516,
+    0.008062205836176872,
+    -0.04695896953344345
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_106_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: Now I understand the full picture. The three layers map to:\n\n1. **Temporal layer** \u2192 `TemporalParadox.lean` \u2014 handles causal loops, time-indexed trees...",
+  "debug_runbook": "1. Check the relevant API Lean LogicType librarian pipeline\n2. Follow the tool chain: write -> task\n3. Verify changes don't break dependent modules",
+  "tool_chain": "write -> task",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "LogicType",
+    "librarian",
+    "pipeline"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.993912,
+  "_centroid_preview": [
+    -0.03593908747037252,
+    -0.021552707999944687,
+    -0.02601657435297966
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_107_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on verification: The LSP errors are all from `EMLRegistry_test.lean` which is a pre-existing test file with errors. The InstitutionalClosure file itself has no errors ...",
+  "debug_runbook": "1. Check the relevant Lean\n2. Follow the tool chain: read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read",
+  "intent_category": "verification",
+  "domain_tags": [
+    "Lean"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9939315,
+  "_centroid_preview": [
+    -0.042230229203899704,
+    -0.008327667911847433,
+    -0.002012501315524181
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_115_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on general_problem_solving: Let me read the LiarParadox.lean to understand the liarExample pattern \u2014 particularly `liarWrapper` and how the contradiction is handled.\n\nActually, I...",
+  "debug_runbook": "1. Check the relevant Lean LogicType Python\n2. Follow the tool chain: read -> question -> edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> question -> edit",
+  "intent_category": "general_problem_solving",
+  "domain_tags": [
+    "Lean",
+    "LogicType",
+    "Python"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9939456,
+  "_centroid_preview": [
+    -0.02201727792271413,
+    -0.003670633479487151,
+    -0.0076691677095368505
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_118_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Good, I understand the build setup. Adding a new Lean file means:\n1. Create the .lean file under `LaserCortex/`\n2. Add `import LaserCortex.NewModule` ...",
+  "debug_runbook": "1. Check the relevant API Lean Python WebGPU theorem\n2. Follow the tool chain: read -> bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> bash",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "Python",
+    "WebGPU",
+    "theorem"
+  ],
+  "source_trace_count": 7,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9939625,
+  "_centroid_preview": [
+    -0.05138121598533222,
+    0.01821073962907706,
+    -0.019135101897908107
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_119_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Excellent! Now I have full clarity:\n\n1. **Scope**: Approved \u2014 AGENTS.md + Generation.lean + Python partial mirror + one generation test, defer deep pr...",
+  "debug_runbook": "1. Check the relevant Docker Lean LogicType Python\n2. Follow the tool chain: write -> edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "write -> edit",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "Docker",
+    "Lean",
+    "LogicType",
+    "Python"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.993975,
+  "_centroid_preview": [
+    -0.06218054766456286,
+    -0.01271128747612238,
+    -0.0028091841377317905
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_124_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on general_problem_solving: Now update the dimension index comment for Free:...",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit",
+  "intent_category": "general_problem_solving",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9939864,
+  "_centroid_preview": [
+    -0.0486652081211408,
+    0.00477770616998896,
+    -0.005963063954065244
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_137_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on verification: Good \u2014 all the LSP errors are pre-existing (they were there before my edits). Now let me update the certification_loop.py to use the lift-based ZD det...",
+  "debug_runbook": "1. Check the relevant Lean LogicType Python\n2. Follow the tool chain: read -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> todowrite",
+  "intent_category": "verification",
+  "domain_tags": [
+    "Lean",
+    "LogicType",
+    "Python"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9939988,
+  "_centroid_preview": [
+    -0.056940281142791115,
+    -0.020205266463259857,
+    -0.01962716590302686
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_146_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: Let me read the file the user is pointing me to \u2014 it seems there's a naming error issue that we should fix, and it's related to the barber paradox for...",
+  "debug_runbook": "1. Check the relevant LogicType certificate normcode\n2. Follow the tool chain: read -> grep\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> grep",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [
+    "LogicType",
+    "certificate",
+    "normcode"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9940114,
+  "_centroid_preview": [
+    -0.057544127106666565,
+    0.013610095736415436,
+    -0.01660238377129038
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_150_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on self_correction: The user is saying that the Friction Lagrangian's `cdStep` mapping (which only covers 5 logics) is scaffolding that should be replaced by a proper com...",
+  "debug_runbook": "1. Check the relevant Lean LogicType Python\n2. Follow the tool chain: read -> grep -> bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> grep -> bash",
+  "intent_category": "self_correction",
+  "domain_tags": [
+    "Lean",
+    "LogicType",
+    "Python"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994024,
+  "_centroid_preview": [
+    -0.04513081000186503,
+    -0.01384448364842683,
+    -0.04036178719252348
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_158_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on server_tuning: Let me check what the NormCodeParser looks like and what FastMCP version we have available, so I know the API.\n\nLet me check what's needed for the MCP...",
+  "debug_runbook": "1. Check the relevant API Python cortex normcode\n2. Follow the tool chain: bash -> read -> grep\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> read -> grep",
+  "intent_category": "server_tuning",
+  "domain_tags": [
+    "API",
+    "Python",
+    "cortex",
+    "normcode"
+  ],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994038,
+  "_centroid_preview": [
+    -0.03462638668715954,
+    0.005386862438172102,
+    -0.012898312788456679
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_186_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: I need to update the anchored summary with the new facts from this session. Let me carefully analyze what changed:\n\n**Phases completed:**\n1. Phase A: ...",
+  "debug_runbook": "1. Check the relevant API Docker Python cortex normcode\n2. Follow the tool chain: bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "API",
+    "Docker",
+    "Python",
+    "cortex",
+    "normcode"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9940503,
+  "_centroid_preview": [
+    -0.04470448692639669,
+    -0.016091553804775078,
+    -0.000953419366851449
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_187_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on verification: Let me verify the current state, check git status, and complete Phase D....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash",
+  "intent_category": "verification",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9940612,
+  "_centroid_preview": [
+    -0.01688232583304246,
+    0.0038346881046891212,
+    -0.014304136236508688
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_189_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on verification: The file exists but git didn't list it. Let me check if `.agents/` is in `.gitignore`....",
+  "debug_runbook": "1. Check the relevant Lean\n2. Follow the tool chain: bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash",
+  "intent_category": "verification",
+  "domain_tags": [
+    "Lean"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9940717,
+  "_centroid_preview": [
+    -0.0667137826482455,
+    -0.013925984501838684,
+    -0.046299565583467484
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_192_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on general_problem_solving: Good, committed. Now let me push and update the todo list....",
+  "debug_runbook": "1. Check the relevant WebGPU\n2. Follow the tool chain: bash -> edit -> todowrite -> write\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> edit -> todowrite -> write",
+  "intent_category": "general_problem_solving",
+  "domain_tags": [
+    "WebGPU"
+  ],
+  "source_trace_count": 8,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9940856,
+  "_centroid_preview": [
+    -0.033925207797437906,
+    0.010340387387259398,
+    -0.0257882074220106
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_195_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: 12: \n13: Let me read around line 537.\n14: \n15: **Tool: read**\n16: \n17: **Input:**\n18: ```json\n19: {\n20:   \"filePath\": \"/home/nos/labware/LaserCortex/c...",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: read -> edit -> verify\n3. Verify changes don't break dependent modules",
+  "tool_chain": "",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9940977,
+  "_centroid_preview": [
+    -0.003020258812466636,
+    -0.004474579263478518,
+    -0.037769797735381874
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_199_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: 298: \n299: Now let me update the lattice builder to use tree_centroid instead of root_coord.\n300: \n301: **Tool: edit**\n302: \n303: **Input:**\n304: ```j...",
+  "debug_runbook": "1. Check the relevant API Lean Python theorem\n2. Follow the tool chain: edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "Python",
+    "theorem"
+  ],
+  "source_trace_count": 9,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994112,
+  "_centroid_preview": [
+    -0.04262234249876605,
+    0.007196350049020516,
+    -0.018658966653876834
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_204_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: 729: \n730: No Tamari-specific TypeScript errors. Let me now update the Lean file to add a few more useful definitions, and then create a summary of wh...",
+  "debug_runbook": "1. Check the relevant API Lean Python TypeScript WebGPU theorem\n2. Follow the tool chain: edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit",
+  "intent_category": "script_development",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "Python",
+    "TypeScript",
+    "WebGPU",
+    "theorem"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994125,
+  "_centroid_preview": [
+    -0.05256992857903242,
+    0.003705136477947235,
+    -0.030637276358902454
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_205_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on resource_constraints: 1004: \n1005: The user is asking whether we're using WebGPU as described in the Three-js_pentagonator-demo.md document. Let me re-read the relevant par...",
+  "debug_runbook": "1. Check the relevant WebGPU pipeline\n2. Follow the tool chain: webfetch\n3. Verify changes don't break dependent modules",
+  "tool_chain": "webfetch",
+  "intent_category": "resource_constraints",
+  "domain_tags": [
+    "WebGPU",
+    "pipeline"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9941366,
+  "_centroid_preview": [
+    -0.06088000908493996,
+    -0.001103910617530346,
+    -0.031413208693265915
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_221_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: Sorites uses `Problem`, `Tower`, `WrappedProblem` from LiarParadox (via `open LiarParadox`). After the extraction, these are in `ProblemTypes`. So I n...",
+  "debug_runbook": "1. Check the relevant Lean Python\n2. Follow the tool chain: bash -> edit -> todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> edit -> todowrite",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "Lean",
+    "Python"
+  ],
+  "source_trace_count": 7,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9941497,
+  "_centroid_preview": [
+    -0.015187922865152359,
+    0.009845816663333349,
+    -0.002173119390915547
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_224_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on general_problem_solving: Same pattern. And RussellsParadox too. Let me update both....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit",
+  "intent_category": "general_problem_solving",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9941607,
+  "_centroid_preview": [
+    -0.006646141021822889,
+    0.01766706242536505,
+    -0.030965400859713554
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_226_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: Now update the frictionLagrangian definition and liarCost, and the theorems:...",
+  "debug_runbook": "1. Check the relevant Lean librarian theorem\n2. Follow the tool chain: edit -> read -> grep -> write\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> read -> grep -> write",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "Lean",
+    "librarian",
+    "theorem"
+  ],
+  "source_trace_count": 10,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994179,
+  "_centroid_preview": [
+    -0.02757773520424962,
+    -0.002249720972031355,
+    -0.01611387962475419
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_230_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: OK there are some issues:\n\n1. `assocDefect_positive_for_cd3plus` is not available because the `assocDefect` function is not imported or opened correct...",
+  "debug_runbook": "1. Check the relevant Lean LogicType Python theorem\n2. Follow the tool chain: edit -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> read",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "Lean",
+    "LogicType",
+    "Python",
+    "theorem"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9941914,
+  "_centroid_preview": [
+    -0.04582903099556764,
+    -0.011317990332220992,
+    -0.033561245145392604
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_234_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on theorem_proving: I'll insert the `frictionLagrangian_gt_flatSum` theorem right after Section 4 (after `frictionDensity_jump_at_cd3` at line 288) and before Section 5 (...",
+  "debug_runbook": "1. Check the relevant theorem\n2. Follow the tool chain: edit -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> read",
+  "intent_category": "theorem_proving",
+  "domain_tags": [
+    "theorem"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994203,
+  "_centroid_preview": [
+    -0.03542392576734225,
+    -0.006796113195984314,
+    -0.013005168798069159
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_237_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on theorem_proving: The main issue is that `list_sum_gt_of_exists_gt` doesn't exist yet. Let me write it as a lemma. Also, there's a problem at lines 317-318: the `hx_gt`...",
+  "debug_runbook": "1. Check the relevant Lean LogicType theorem\n2. Follow the tool chain: edit -> read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit -> read",
+  "intent_category": "theorem_proving",
+  "domain_tags": [
+    "Lean",
+    "LogicType",
+    "theorem"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9942143,
+  "_centroid_preview": [
+    -0.0206747700770696,
+    0.008857734578972062,
+    -0.020735945630197723
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_239_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: So:\n- `octonion_norm` is defined as a function `SplitOctonion \u2192 Int` on line 117\n- `strut_weight` is defined as `(-octonion_norm tensegrity_strut).toN...",
+  "debug_runbook": "1. Check the relevant Lean\n2. Follow the tool chain: read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [
+    "Lean"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9942257,
+  "_centroid_preview": [
+    -0.032693732529878616,
+    0.01619901554659009,
+    -0.02456929348409176
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_249_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: Good, now replace imports....",
+  "debug_runbook": "1. Check the relevant WebGPU\n2. Follow the tool chain: edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "WebGPU"
+  ],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994237,
+  "_centroid_preview": [
+    -0.037735230289399624,
+    0.0185468663694337,
+    -0.02461930294521153
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_252_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: Python mirror works. Now let me do the Open Notebook indexing and notes.\n\nPython mirror verified. Now let me index Phase 2 modules in Open Notebook an...",
+  "debug_runbook": "1. Check the relevant Lean Python pipeline\n2. Follow the tool chain: todowrite\n3. Verify changes don't break dependent modules",
+  "tool_chain": "todowrite",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "Lean",
+    "Python",
+    "pipeline"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9942484,
+  "_centroid_preview": [
+    -0.009954306840275725,
+    0.0007859636098146439,
+    -0.014105523936450481
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_254_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: There are 3 session files, one already tracked (`session-ses_148f.md`). Since the other two (`session-ses_114f.md`, `session-ses_1155.md`) are untrack...",
+  "debug_runbook": "1. Check the relevant Lean Python\n2. Follow the tool chain: bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "Lean",
+    "Python"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9942603,
+  "_centroid_preview": [
+    -0.0667906403541565,
+    -0.00566860552256306,
+    -0.04438050525883833
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_277_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on theorem_proving: The user is asking a deep conceptual question about `norm_mul` and the connection to zero divisors in split octonions. This is a significant mathemati...",
+  "debug_runbook": "1. Check the relevant Lean theorem\n2. Follow the tool chain: read -> grep\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> grep",
+  "intent_category": "theorem_proving",
+  "domain_tags": [
+    "Lean",
+    "theorem"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9942718,
+  "_centroid_preview": [
+    -0.06678363432486852,
+    0.03199137809375922,
+    -0.01346974509457747
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_283_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on verification: Let me check what's on the main branch vs our feature branch, and then merge....",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: bash -> question\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> question",
+  "intent_category": "verification",
+  "domain_tags": [],
+  "source_trace_count": 5,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9942837,
+  "_centroid_preview": [
+    -0.019021830707788467,
+    -0.004533453239127993,
+    -0.015326811466366053
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_284_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: So the feature branch has 7 commits on top of main. The divergence is at the mathlib4 dependency commit:\n- `30f89af` on feature branch: \"build(dep): a...",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash",
+  "intent_category": "script_development",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9942951,
+  "_centroid_preview": [
+    -0.03866806315879027,
+    0.004682325758039951,
+    -0.009385670186020434
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_287_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: There are 3 commits on `notebook-plot-exports` that are NOT on main:\n1. `a03b3b7` \u2014 \"Move requirements into notebooks/ (for notebook PR)\" (note: \"PR\" ...",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: bash -> question\n3. Verify changes don't break dependent modules",
+  "tool_chain": "bash -> question",
+  "intent_category": "module_refactoring",
+  "domain_tags": [],
+  "source_trace_count": 4,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994307,
+  "_centroid_preview": [
+    -0.04704692680388689,
+    -0.017892345204018056,
+    -0.019986869272543117
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_302_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: Excellent! Now I have a clear picture:\n\n**WebGPU browser support (June 2026):**\n- Chrome 113+: Supported (82.3% global support)\n- Edge 113+: Supported...",
+  "debug_runbook": "1. Check the relevant API Lean TypeScript WebGPU\n2. Follow the tool chain: todowrite -> bash -> write\n3. Verify changes don't break dependent modules",
+  "tool_chain": "todowrite -> bash -> write",
+  "intent_category": "module_refactoring",
+  "domain_tags": [
+    "API",
+    "Lean",
+    "TypeScript",
+    "WebGPU"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9943192,
+  "_centroid_preview": [
+    -0.0528115580479304,
+    0.003034389593570571,
+    -0.007314848403135936
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_303_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on debug_troubleshoot: The TypeScript errors show that `WebGPURenderer` is not in the `@types/three` type definitions. This is because `WebGPURenderer` is part of the `three...",
+  "debug_runbook": "1. Check the relevant TypeScript WebGPU\n2. Follow the tool chain: edit\n3. Verify changes don't break dependent modules",
+  "tool_chain": "edit",
+  "intent_category": "debug_troubleshoot",
+  "domain_tags": [
+    "TypeScript",
+    "WebGPU"
+  ],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.9943306,
+  "_centroid_preview": [
+    -0.07046847293774287,
+    -0.005318261993428071,
+    -0.028171923011541367
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_316_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on script_development: Good. Now let me switch to research mode. I need to:\n\n1. Read conversation.md (done \u2014 it's the earliest doc, a Claude conversation about the project's...",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: read -> bash\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read -> bash",
+  "intent_category": "script_development",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994342,
+  "_centroid_preview": [
+    -0.045860582341750465,
+    -0.0003779355126122634,
+    -0.023351981304585934
+  ],
+  "_centroid_len": 1024
+}
+{
+  "id": "script_317_heuristic",
+  "session_id": "",
+  "priming_prompt": "When working on module_refactoring: Now let me read the remaining key docs to complete the picture. I need:\n- TIME_LIKE_DIMENSIONS.md\n- Grok_on_alignment_and_directions.md\n- Grok_on_impl...",
+  "debug_runbook": "1. Check the relevant source files\n2. Follow the tool chain: read\n3. Verify changes don't break dependent modules",
+  "tool_chain": "read",
+  "intent_category": "module_refactoring",
+  "domain_tags": [],
+  "source_trace_count": 3,
+  "confidence": 0.0,
+  "version": 0,
+  "created_at": 1782333825.994353,
+  "_centroid_preview": [
+    -0.030610293460388977,
+    0.01124571884671847,
+    -0.00824268658955892
+  ],
+  "_centroid_len": 1024
+}
