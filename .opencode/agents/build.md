@@ -64,11 +64,9 @@ RULE: After receiving librarian results, immediately call file-reading tools on 
 When creating semantic index entries, use ingest_source + create_note so they are visible in the ON web UI.
 
 MODEL ROUTING (Day/Night Rhythm):
-- **Daytime (9B student)**: Chat and quick queries use Qwen3.5-9B on `:11434`.
-- **Nighttime (35B teacher)**: Transformations (full pipeline) use the 35B teacher on `:8080`.
-- ON defaults: `default_chat_model` → 9B, `default_transformation_model` → 35B.
-- If transformations fail during daytime, the 35B server is not running — log the question for the nightly batch run.
-- The 9B runs with `--no-jinja` (Qwen3.5 is a thinking model; `preserve_thinking` puts output in `reasoning_content` which ON can't read).
+- **Single model**: The 35B (agentworld, port 8080) handles both chat and transformations.
+- ON defaults: `default_chat_model` and `default_transformation_model` both point to the 35B.
+- The 35B runs with `--jinja` and `preserve_thinking=true`; ON strips reasoning tokens from chat output.
 - Embedding server (bge-m3) runs independently on `:8082` (CPU, 1024-dim, OpenAI-compatible).
 
 COLD-START ELIMINATION (35B):
@@ -116,20 +114,18 @@ Principles:
     with `--restart=unless-stopped`, managed via `docker compose`.
   - Docker bind-mounts the model directory read-only — NO file copies.
   - A model stays in VRAM until explicitly swapped. Never auto-unload.
-  - vmtouch is used ONLY for the 35B (21 GB) and ONLY just before launch,
-    not at boot. The 9B (5.8 GB) loads fast enough without it.
+  - vmtouch is used ONLY for the 35B (20 GB) and ONLY just before launch,
+    not at boot.
   - Parallel pre-flight: vmtouch (I/O, ~100s for 20G) and file relevance ranking
     (CPU, ~5 min first run, <1s cached) run concurrently.
     Total wall time ≈ max(100s, 5min) = ~5 min first run, ~100s subsequently.
   - If estimated pipeline time > 3h, warns (does not block).
 
 Tooling (all in /home/nos/labware/llocollama/):
-  - `docker-compose.yml` — defines model-9b (:11434) and model-35b (:8080)
+  - `docker-compose.models.yml` — defines model-35b on :8080
     using upstream ghcr.io/ggml-org/llama.cpp:server-cuda image.
     CUDA kernel cache volume, --cache-prompt, and model dir bind-mount
-    configured. Each flag and value is a separate YAML list entry.
-    Uses `--jinja` for the 35B (with `preserve_thinking`) and `--no-jinja`
-    for the 9B (no reasoning extraction needed).
+    configured. Uses `--jinja` with `preserve_thinking`.
   - `manage.sh` — lifecycle wrapper (see below).
 
 Pipeline scripts (in /home/nos/labware/open-notebook/scripts/pipeline/):
@@ -201,11 +197,10 @@ process the listed files through the 35B teacher pass.
 
 manage.sh commands:
   manage.sh status                 # model state, page cache, VRAM, last ranking summary
-  manage.sh swap 9b                # stop 35B → start 9B (no vmtouch, no ranking)
   manage.sh swap 35b [--query ".."] # parallel vmtouch+rank → estimate → start 35B
   manage.sh rank [--query ".."]    # standalone relevance ranking (no model swap)
   manage.sh preload                # explicit vmtouch 35B only
-  manage.sh bake-cache 9b|35b      # instructions for KV-cache pre-baking
+  manage.sh bake-cache             # instructions for KV-cache pre-baking
   manage.sh logs [svc]             # tail logs
 
 Swap 35b workflow:
@@ -223,7 +218,7 @@ Swap 35b workflow:
       manage.sh waits for ranking to finish.
    4. Reads `/tmp/lasercortex_ranking.json` → computes top-K from time budget.
       Prints pipeline estimate. Warns if > 3h.
-   5. Stops model-9b (if running), starts model-35b with `docker compose up -d`.
+    5. Starts model-35b with `docker compose up -d`.
       CUDA kernel cache + page cache → server ready in ~45-150s (CUDA cached)
       or ~6 min (first-ever start, no CUDA cache).
    6. Ranking file persists for the pipeline (nightly_batch.sh reads it).
@@ -237,7 +232,7 @@ Nightly batch (`nightly_batch.sh`) delegates to `manage.sh swap 35b` for
 model swapping. Cleanup trap only removes the lockfile — never kills model.
 
 35B THINKING BEHAVIOR:
-  The Qwen3.6-35B-A3B is a reasoning model. It generates internal "thinking"
+  The 35B (agentworld, based on Qwen3.6-35B-A3B) is a reasoning model. It generates internal "thinking"
   traces before producing its final answer:
   - Thinking is returned in the `reasoning_content` field of the response
   - The final answer is in the standard `content` field
@@ -245,10 +240,8 @@ model swapping. Cleanup trap only removes the lockfile — never kills model.
     take 200+ tokens of reasoning before producing "Hello!" (1 token)
   - With `--chat-template-kwargs '{"preserve_thinking":true}'` the reasoning
     trace is preserved and returned separately (not stripped from content)
-  - The 9B (Qwen3.5) also has this behavior but uses `--no-jinja` to keep
-    things simple for daytime chat
   - Typical speed: prompt ~12 t/s, generation ~7 t/s (8 GB VRAM, most layers
     running on CPU via GPU offloading)
 
-Note: The 35B uses Q4_K_M (21 GB) not Q5_K_M (25 GB) for a better fit in
+Note: The 35B uses Q4_K_M (20 GB) not Q5_K_M (25 GB) for a better fit in
 24 GB RAM. GPU: RTX 2070 SUPER (8 GB VRAM) — only one model at a time.
