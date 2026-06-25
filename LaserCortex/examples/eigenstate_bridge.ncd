@@ -1,0 +1,229 @@
+/: Eigenstate Bridge — EVM Smart Contract ↔ LaserCortex Formal Layer
+/: Phase 1: lift EVM bytecode → Eigenstate structure + Lean theorems
+/: Phase 2: ground Eigenstate proofs → EVM-compatible verification artifacts
+/: Phase 3: end-to-end: Solidity contract → Eigenstate lift → invoke_market_closure → EVM settle
+:/
+
+concept evm_contract           /: Ethereum smart contract (bytecode + ABI)
+concept evm_state_root         /: Global state root (Merkle Patricia Trie root)
+concept storage_layout         /: Contract storage slot → LaserCortex type mapping
+concept eigenstate             /: The bridge state: Lean type + cdStep + contraction trace + EVM binding
+concept transition             /: A contract method as a state transition function
+concept invariant              /: A Lean theorem about the contract's behavior
+concept certificate            /: A CortexCertificate that proves the invariant holds
+concept evm_proof              /: An EVM-compatible proof artifact (calldata + witness)
+
+/: 
+Relation catalogue — the Eigenstate bridge's formal interface
+:/
+
+relation lift_bytecode : evm_contract -> eigenstate
+    /: Parse EVM bytecode + ABI into an Eigenstate structure.
+       Extracts: storage slots → cdStep, method sigs → transitions,
+       constructor args → initial state.
+       Uses Generation.inflate to handle any zero-divisor encountered
+       during decompilation (e.g. unrecognized opcodes → paradox). 
+       Mirrors: lift_inference in NormCodeCortexBridge (:)
+
+relation extract_storage : evm_state_root -> storage_layout
+    /: Read on-chain state from an Ethereum state root.
+       Maps storage slot positions (32-byte keys) to their formal
+       LaserCortex type (Nat, Bool, LogicType, EMLTree...).
+       Commutative: storage slot order does not matter.
+
+relation parse_transition : evm_contract -> transition
+    /: Extract a single contract method as a typed state transition.
+       Input: method signature + calldata encoding
+       Output: e₄-split (Z dimension) — the coupling dimension
+       of the Friction Lagrangian that generates the cost bound.
+
+relation define_invariant : eigenstate × storage_layout -> invariant
+    /: Generate the Lean theorem that must hold for this contract.
+       Invariant form: ∀ state_root, eigenstate ⊨ Φ(state) < reserveB
+       where Φ is the FrictionLagrangian cost function.
+       This is the bridge's core — connects EVM state roots to
+       Lean's cost algebra.
+
+relation prove_invariant : eigenstate × invariant -> certificate
+    /: Run the Lean theorem prover to produce a CortexCertificate.
+       The certificate's path is the contraction path from the
+       contract's EMLTree to its rightComb normal form.
+       verify() checks that the contraction path is valid.
+
+relation ground_certificate : certificate -> evm_proof
+    /: Ground a CortexCertificate back to an EVM-compatible proof.
+       The evm_proof can be submitted on-chain as calldata to a
+       verifier contract that checks the Merkle proof against the
+       state root and confirms the invariant.
+
+relation verify_on_chain : evm_proof × evm_state_root -> bool
+    /: EVM verifier contract checks the grounded proof.
+       Returns true iff the proof is valid against the state root.
+       This is the final link: Lean theorem → EVM execution.
+
+/: 
+Coupling signatures — how the bridge components compose
+  - evm execution: non-commutative (tx order matters for state transitions)
+  - storage: commutative (slot layout is order-independent)
+  - invariant proofs: commutative-associative (theorems compose freely)
+  - eigenstate: non-associative (the cdStep hierarchy is a partial order)
+:/
+
+coupling execution_path: non_commutative
+coupling storage_path: commutative
+coupling theorem_path: commutative_associative (rightComb)
+coupling eigenstate_lattice: non_associative
+
+/: 
+==========================================================================
+LIFT PATH: EVM contract → Eigenstate → Lean theorem
+==========================================================================
+
+Pipeline:
+  1. Parse contract bytecode + ABI → extract storage slots, methods
+  2. Map each storage slot to a LaserCortex type (via storage_layout relation)
+  3. Map each method to a transition function (via parse_transition relation)
+  4. Compute the contract's cdStep = max(method cdSteps) — the worst-case cost
+  5. Build an EMLTree from the contract's dependency graph
+  6. Compute Φ(tree) = friction cost
+  7. Define the invariant: Φ(tree) < reserveB (solvency)
+  8. Prove invariant → CortexCertificate
+
+The Eigenstate carries:
+  - evm_contract: original bytecode + ABI reference
+  - cdStep: the contract's position in the collapse hierarchy
+  - storage_layout: the type map
+  - eml_tree: the contract's cost tree
+  - logic_type: the governing logic (CLASSICAL by default, can be overridden)
+  - contract_path: the contraction path from eml_tree to rightComb normal form
+  - invariant: the Lean theorem statement
+  - certificate: the proven CortexCertificate
+
+This mirrors the existing LiftResult structure in NormCodeCortexBridge,
+extended with EVM-specific fields. The lift is the same abstraction:
+  NC flow_index → EMLTree + certificate  (existing)
+  EVM contract → Eigenstate + certificate  (this plan)
+:/
+
+path: lift_evm_contract(evm_contract, evm_state_root) -> eigenstate
+    <- evm_contract
+    <- evm_state_root
+    <= lift_bytecode(evm_contract)
+    <= extract_storage(evm_state_root)
+    <- eigenstate           /: the carrier: cdStep, storage_layout, eml_tree
+    <= define_invariant(eigenstate, storage_layout)
+    <- invariant
+    :closure:
+    /: Result: Eigenstate with eml_tree, cdStep, logic_type, but NOT yet proven.
+       The invariant is stated but unproven — proof is the GROUND path.
+    :/
+
+/: 
+==========================================================================
+PROVE PATH: Eigenstate → CortexCertificate (the Lean proof step)
+==========================================================================
+
+  Takes an Eigenstate with a stated invariant, runs the Lean proof,
+  and produces a CortexCertificate whose verify() method confirms the
+  contraction path from the contract's EMLTree to its normal form.
+
+  The theorem is: the cost Φ(eml_tree) < reserveB for the given logic_type.
+  This is the same computation as AMM.reserveGuard in Lean, now applied
+  to an arbitrary EVM contract's cost tree.
+:/
+
+path: prove_evm_invariant(eigenstate) -> certificate
+    <- eigenstate
+    <= prove_invariant(eigenstate, eigenstate.invariant)
+    <- certificate
+    :closure:
+    /: Result: CortexCertificate with verify() == true.
+       The certificate proves Φ(tree) < reserveB for this contract's state.
+    :/
+
+/: 
+==========================================================================
+GROUND PATH: Certificate → EVM proof (on-chain verification)
+==========================================================================
+
+  Takes a proven CortexCertificate and produces an EVM-compatible
+  proof artifact (calldata + Merkle witness) that a verifier contract
+  on Ethereum can check.
+
+  The verifier contract:
+    1. Accepts (cert_hash, state_root, calldata)
+    2. Checks that cert_hash matches the stored CortexCertificate
+    3. Checks the Merkle proof against state_root
+    4. Emits VERIFIED event or reverts
+
+  This is the EVM analogue of stamp_seal in NormCodeCortexBridge.
+:/
+
+path: ground_evm_proof(certificate) -> evm_proof
+    <- certificate
+    <= ground_certificate(certificate)
+    <- evm_proof
+    :closure:
+    /: Result: evm_proof { calldata, merkle_witness, state_root }
+       Ready for on-chain submission.
+    :/
+
+/: 
+==========================================================================
+END-TO-END: Prediction Market Contract → Eigenstate → Certified Close
+==========================================================================
+
+  The full pipeline for the prediction market:
+
+  1. Deploy PredictionMarket.sol on Ethereum
+  2. Read its state_root + ABI
+  3. lift_evm_contract → Eigenstate with eml_tree (cost=rightComb-5)
+  4. decide_market_type → closedMarket (cost < reserveB)
+  5. market_closure → CertifiedPrice {price, costDeduction, residue}
+  6. ground_evm_proof → evm_proof for on-chain settlement
+
+  This connects the two NormCode plans:
+    prediction_market.ncd (the business logic)
+    eigenstate_bridge.ncd (the formal bridge)
+:/
+
+path: certified_evm_settle(evm_contract, pool_state, kernel) -> evm_proof
+    <= lift_bytecode(evm_contract)
+    <= parse_transition(evm_contract)    /: extract predict() method
+    <- transition
+    <= define_invariant(transition, pool_state)
+    <- invariant                          /: Φ(predict()) < reserveB
+    <= prove_invariant(eigenstate, invariant)
+    <- certificate
+    <= ground_certificate(certificate)
+    <- evm_proof
+    :closure:
+    /: evm_proof ready for on-chain verification.
+       The verifier contract checks: cert.verify() + Merkle proof.
+    :/
+
+/: 
+==========================================================================
+PHASE 2 (TODO): Multi-source Eigenstate — concurrent contract bridging
+==========================================================================
+
+  When multiple EVM contracts interact (e.g. a DeFi protocol with
+  several contracts), their Eigenstates must be composed:
+
+  - Contract A (USDC) → Eigenstate_A (cdStep=1, eml_tree_A)
+  - Contract B (Pool) → Eigenstate_B (cdStep=3, eml_tree_B)
+  - Composition: Eigenstate_A ⊗ Eigenstate_B → composite Eigenstate
+    - cdStep = max(cdStep_A, cdStep_B) = 3
+    - eml_tree = Node(eml_tree_A, eml_tree_B)  (cross-impact)
+    - crossImpactTree = Φ(Node(A,B)) - (Φ(A) + Φ(B))
+
+  This composition is where the CD 2→3 zero-divisor appears:
+  If Contract_A is CLASSICAL (cdStep=1, associative) and
+  Contract_B is PARACONSISTENT (cdStep=4, non-associative),
+  the composite crosses the boundary and the reserve guard
+  triggers paradox — the DeFi protocol is formally ZD.
+
+  See: docs/PLAN_market_closure.md §6 for the economic interpretation.
+:/
+
+coupling multi_source_composition: non_associative
