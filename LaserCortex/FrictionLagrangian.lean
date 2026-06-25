@@ -44,8 +44,10 @@ be reached by multiplying elements of the previous algebra.
  assocDefect_zero_up_to_cd2, assocDefect_positive_for_cd3plus,
  frictionDensity_at_cl11_boundary, frictionLagrangian_gt_flatSum,
  layerCost_ge_cdStep, engine_mirror_iff_local_debt_positive,
+ engine_leftWeight_zero_iff_local_debt_positive, engine_rightDiv_formula,
+ engine_coupling_always_zero,
  layerCost_eq_cdStep_for_assoc, frictionDensity_jump_at_cd3,
- heightMap_discontinuity_at_cd2_3]
+ heightMap_discontinuity_at_cd2_3, continuous_lagrangian_stub]
 
 ## Cross-refs
 
@@ -78,6 +80,9 @@ import LaserCortex.SplitQuaternionClifford
 import LaserCortex.Cost
 import LaserCortex.Problem
 import LaserCortex.LogicTypes
+import LaserCortex.LodayCoords
+
+open LodayCoords
 
 namespace FrictionLagrangian
 
@@ -277,7 +282,7 @@ theorem assocDefect_positive_for_cd3plus : ∀ k, 3 ≤ k → assocDefect k = st
     the baseline against which the non-associative energy barrier is measured. -/
 theorem frictionDensity_at_cl11_boundary : frictionDensity 2 = 2 := by
   unfold frictionDensity commDefect assocDefect strut_weight
-  native_decide
+  decide
 
 /-- The friction density jumps sharply at CD 3 (split octonion layer).
     Γ₃ = Γ₂ + 1 + strut_weight² = 2 + 1 + 16 = 19 — the energy barrier includes
@@ -387,6 +392,102 @@ theorem engine_mirror_iff_local_debt_positive (engine : EngineState) :
   · simp [h]
   · simp [h]
 
+/-- The engine sets leftWeight to 0 in the non-associative sector (debt > 0)
+    and to 1 in the associative sector (debt = 0).
+    leftWeight = 0 makes the left-subtree cost contribution vanish — this is
+    the "commutator silent" mode: path-dependence from left/right ordering
+    is suppressed. Together with mirror=true, this produces the Spacetime
+    cost regime where Φ follows the left spine. -/
+theorem engine_leftWeight_zero_iff_local_debt_positive (engine : EngineState) :
+    (engine_to_nodecost engine).leftWeight = 0 ↔ engine.local_debt > 0 := by
+  dsimp [engine_to_nodecost]
+  by_cases h : engine.local_debt > 0
+  · simp [h]
+  · simp [h]
+
+/-- The engine rightDiv is the debt-compressed right divisor:
+    rightDiv = max(0, capacity/(debt+1) - 1) when debt > 0,
+    rightDiv = 0 when debt = 0 (associative sector → no compression).
+    
+    As debt increases, rightDiv → 0 (the Spacetime limit), meaning the
+    right subtree is increasingly compressed — the temporal channel
+    (right subtree = time/continuations) contracts as associator debt mounts. -/
+theorem engine_rightDiv_formula (engine : EngineState) :
+    (engine_to_nodecost engine).rightDiv =
+    if engine.local_debt > 0 then max 0 (engine.capacity / (engine.local_debt + 1) - 1) else 0 := by
+  dsimp [engine_to_nodecost]
+  by_cases h : engine.local_debt > 0
+  · simp [h]
+  · simp [h]
+
+/-- The engine projection always sets coupling to 0.
+    This means coupling (cross-term interaction) is NOT derived from the
+    one-dimensional EngineState — it must arise from the tree structure
+    itself (the pentagonator), or from higher-dimensional state not captured
+    by the current (debt, capacity, weight) model.
+    
+    This is a notable negative result: the engine's 3-parameter state
+    only sets 4 of the 8 NodeCost fields (leftWeight, rightDiv, mirror,
+    coupling=0 by fiat). The remaining fields (bias, denom, maxSem, satCap)
+    are constant across all engine states. -/
+theorem engine_coupling_always_zero (engine : EngineState) :
+    (engine_to_nodecost engine).coupling = 0 := by
+  dsimp [engine_to_nodecost]
+  by_cases h : engine.local_debt > 0
+  · simp [h]
+  · simp [h]
+
+-- ============================================================================
+-- LAYER 5b: Loday Coordinates Bridge
+-- ============================================================================
+-- The Loday coordinate embedding provides a faithful coordinate representation
+-- of EML trees. These theorems connect the cost landscape (Φ) to the Loday
+-- coordinate representation, establishing that the cost function factors
+-- through the Loday embedding for the classical regime.
+
+/-- Standard binary tree identity: size = numLeaves - 1 for any tree.
+    For a binary tree with n internal nodes, there are n+1 leaves. -/
+theorem size_eq_numLeaves_sub_one (t : EMLRegistry.EMLTree) : t.size = LodayCoords.numLeaves t - 1 := by
+  induction t with
+  | Leaf =>
+    simp [EMLRegistry.EMLTree.size, LodayCoords.numLeaves]
+  | Node l r ih_l ih_r =>
+    have pos_l : 0 < LodayCoords.numLeaves l := LodayCoords.numLeaves_pos l
+    have pos_r : 0 < LodayCoords.numLeaves r := LodayCoords.numLeaves_pos r
+    calc
+      EMLRegistry.EMLTree.size (EMLRegistry.EMLTree.Node l r)
+          = 1 + l.size + r.size := by rfl
+      _ = 1 + (LodayCoords.numLeaves l - 1) + (LodayCoords.numLeaves r - 1) := by rw [ih_l, ih_r]
+      _ = (LodayCoords.numLeaves l + LodayCoords.numLeaves r) - 1 := by omega
+      _ = LodayCoords.numLeaves (EMLRegistry.EMLTree.Node l r) - 1 := by
+        simp [LodayCoords.numLeaves]
+
+/-- For logics in the classical regime (rightDiv=0, coupling=0, mirror=false,
+    leftWeight=1, maxSem=false, satCap=0), the cost Φ equals the length of
+    the tree's Loday coordinate list.
+    
+    This establishes that the Friction Lagrangian factors through the Loday
+    embedding for the classical cost landscape — the cost is a linear function
+    of the coordinate representation. -/
+theorem Φ_classical_eq_lodayCoord_length (L : LogicTypes.LogicType) (t : EMLRegistry.EMLTree)
+    (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
+    (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
+    (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0) :
+    Φ L t = (LodayCoords.lodayCoord t).length := by
+  rw [Cost.Φ_eq_size_classical L t hD hC hM hW hMS hSC]
+  rw [size_eq_numLeaves_sub_one t]
+  rw [LodayCoords.lodayCoord_length t]
+
+/-- For non-classical NodeCost parameters, the relationship between Φ and
+    Loday coordinates is an open research question (see TDD Domain 7).
+    
+    The injectivity of lodayCoord guarantees that Φ IS determined by the
+    coordinates (since the tree can be reconstructed), but the direct
+    formula in terms of coordinate entries is unknown for non-vanishing
+    rightDiv, coupling, or asymmetric leftWeight/mirror. -/
+theorem Φ_of_nc_factor_through_lodayCoord_open : True :=
+  True.intro
+
 -- ============================================================================
 -- SECTION 6: Height Map Interpretation
 -- ============================================================================
@@ -396,8 +497,22 @@ theorem engine_mirror_iff_local_debt_positive (engine : EngineState) :
     discontinuity at CD 2→3. -/
 theorem heightMap_monotone (j k : ℕ) (h : j < k) : frictionDensity j ≤ frictionDensity k := by
   dsimp [frictionDensity, commDefect, assocDefect]
-  -- Need to consider cases at the boundary 2→3
-  sorry
+  have hsw : strut_weight = 4 := strut_weight_eq_four
+  by_cases hk2 : k ≤ 2
+  · -- Both j, k ≤ 2 (since j < k ≤ 2): assocDefect = 0 for both
+    have hj2 : j ≤ 2 := by omega
+    simp [hj2, hk2, hsw]
+    omega
+  · -- k ≥ 3
+    have hk3 : 3 ≤ k := by omega
+    by_cases hj2 : j ≤ 2
+    · -- j ≤ 2, k ≥ 3: assocDefect(j) = 0, assocDefect(k) = strut_weight
+      simp [hj2, hk2, hsw]
+      omega
+    · -- Both j, k ≥ 3: assocDefect = strut_weight for both
+      have hj3 : 3 ≤ j := by omega
+      simp [hj2, hk2, hsw]
+      omega
 
 /-- The height map is not just monotone but has a discontinuity at CD 2→3.
     The density more than triples: Γ₃ / Γ₂ = (3 + 16) / 2 = 9.5. -/
@@ -522,7 +637,12 @@ theorem friction_barrier_across_cd23 (k₁ k₂ : ℕ) (h₁ : k₁ ≤ 2) (h₂
 -- one CD step. Its verified value of 4 (from the split octonion (e₁, e₂, e₄)
 -- triple) calibrates the continuous coupling: β₀ / strut_weight² ≈ 4/16 = 0.25,
 -- meaning each associator crossing costs 1/4 of the deep non-assoc limit.
-theorem convergence_to_continuous_lagrangian : True :=
+/-- The continuous Lagrangian theory is aspirational prose (Sections 8-9 above).
+    This is a placeholder: the discrete Γ is formalized and kernel-checked, but
+    the continuous calulus L(x) = e^{α·x} − β·ln(x²+ε) − δ and its convergence
+    to the discrete strut_weight² barrier remain unformalized. The stub exists
+    so that any theorem depending on convergence is visibly blocked here. -/
+theorem continuous_lagrangian_stub : True :=
   True.intro
 
 end FrictionLagrangian

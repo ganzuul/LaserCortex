@@ -11,7 +11,7 @@ Depth-2 extensions:
 
 ## Contracts
 
-[NodeCost, NodeCost.apply, nodeParam, nodeParam_bias_one, nodeParam_leftWeight_ge_one_of_not_mirror, nodeParam_leftWeight_nonneg, nodeParam_mirror_iff_spacetime, nodeParam_spacetime, nodeParam_intuitionistic, nodeParam_fuzzy, Φ, Φ_Leaf, Φ_Node, Φ_eq_size_classical, Φ_contracts_one_eq_classical, Φ_contracts_to_eq_classical, Φ_spacetime_node, Φ_intuitionistic_eq_height, Φ_fuzzy_le_satCap]
+[NodeCost, NodeCost.apply, nodeParam, nodeParam_bias_one, nodeParam_leftWeight_ge_one_of_not_mirror, nodeParam_leftWeight_nonneg, nodeParam_mirror_iff_spacetime, nodeParam_spacetime, nodeParam_intuitionistic, nodeParam_fuzzy, Φ, Φ_Leaf, Φ_Node, Φ_of_nc, Φ_of_nc_Leaf, Φ_of_nc_Node, Φ_eq_Φ_of_nc, Φ_eq_size_classical, Φ_contracts_one_eq_classical, Φ_contracts_to_eq_classical, Φ_spacetime_node, Φ_intuitionistic_eq_height, Φ_fuzzy_le_satCap]
 
 ## Cross-refs
 
@@ -170,6 +170,33 @@ theorem Φ_Leaf (L : LogicTypes.LogicType) : Φ L .Leaf = 0 := rfl
 
 theorem Φ_Node (L : LogicTypes.LogicType) (l r : EMLRegistry.EMLTree) :
     Φ L (.Node l r) = (nodeParam L).apply (Φ L l) (Φ L r) := rfl
+
+-- ============================================================================
+-- Φ over NodeCost (generic, not tied to a named logic type)
+-- ============================================================================
+
+/-- Cross-impact cost of an EML tree under generic NodeCost parameters.
+    This is the same recursive structure as Φ, but parameterized by a NodeCost
+    directly rather than going through a named LogicType.
+    Needed by SplitOctonionLogic tests that probe arbitrary points in the
+    8D parameter space, not just the 15 named landmarks. -/
+def Φ_of_nc (nc : NodeCost) : EMLRegistry.EMLTree → Nat
+  | .Leaf => 0
+  | .Node l r => nc.apply (Φ_of_nc nc l) (Φ_of_nc nc r)
+
+theorem Φ_of_nc_Leaf (nc : NodeCost) : Φ_of_nc nc .Leaf = 0 := rfl
+
+theorem Φ_of_nc_Node (nc : NodeCost) (l r : EMLRegistry.EMLTree) :
+    Φ_of_nc nc (.Node l r) = nc.apply (Φ_of_nc nc l) (Φ_of_nc nc r) := rfl
+
+/-- The two Φ definitions agree on named logics:
+    Φ L = Φ_of_nc (nodeParam L) for any LogicType L. -/
+theorem Φ_eq_Φ_of_nc (L : LogicTypes.LogicType) (t : EMLRegistry.EMLTree) :
+    Φ L t = Φ_of_nc (nodeParam L) t := by
+  induction t with
+  | Leaf => rfl
+  | Node l r ih_l ih_r =>
+    rw [Φ_Node, Φ_of_nc_Node, ih_l, ih_r]
 
 -- ============================================================================
 -- Helper theorems for NodeCost.apply
