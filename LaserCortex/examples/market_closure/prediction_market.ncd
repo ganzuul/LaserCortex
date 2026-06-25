@@ -1,0 +1,81 @@
+/: Prediction Market — AMM-based price forecasting
+/: Phase 1: feed → AMM fair price → solvency check → certified prediction
+/: Phase 2: multi-source confidence weighting (TODO)
+
+concept price_feed, volatility, volume, predicted_price, confidence_score
+concept pool_state, solvency_flag, certified_prediction, norm
+
+relation ingest_feed : price_feed -> volume              /: extract trade volume
+relation compute_vol : price_feed -> volatility          /: historical volatility
+relation amm_price : price_feed × pool_state -> predicted_price  /: AMM swapOut formula
+relation confidence : predicted_price × volatility -> confidence_score  /: inverse to volatility
+relation check_solvency : predicted_price × pool_state -> solvency_flag  /: reserveGuard
+relation certify_pred : predicted_price × confidence_score × solvency_flag -> certified_prediction
+relation self_check_norm : norm -> norm                   /: fixed-point on norm revision
+
+/: 
+Simple prediction path (open loop, no solvency check):
+  price_feed → ingest_feed → volume
+  price_feed → compute_vol → volatility  
+  price_feed × pool_state → amm_price → predicted_price
+  predicted_price × volatility → confidence → score
+  open market = no guard, no certificate
+:/
+path: simple_prediction(price_feed, pool_state) -> predicted_price
+    <- volume
+    <- volatility
+    <= amm_price(price_feed, pool_state)
+    <= confidence(predicted_price, volatility)
+    <- confidence_score
+    <* self_check_norm(confidence_score)   /: ampliative: confidence alters itself
+
+/: 
+Certified prediction path (institutional closure):
+  Same as above + solvency check + certificate
+  KernelChoice.fairPrice → reserveGuard → closedMarket
+  CortexCertificate emitted with price, cost, residue
+:/
+path: certified_prediction(price_feed, pool_state, norm) -> certified_prediction
+    <= ingest_feed(price_feed)
+    <= compute_vol(price_feed)
+    <- volume
+    <- volatility
+    <= amm_price(price_feed, pool_state)
+    <- predicted_price
+    <= check_solvency(predicted_price, pool_state)
+    <- solvency_flag
+    <= certify_pred(predicted_price, confidence_score, solvency_flag)
+    :closure:
+
+/: 
+Arbitrary norm path (decree, no AMM):
+  Bypass amm_price entirely — set threshold by fiat
+  KernelChoice.arbitrary → paradoxMarket
+  No certificate emitted
+:/
+path: decree_prediction(price_feed, norm) -> norm
+    <= compute_vol(price_feed)
+    <- volatility
+    <= self_check_norm(norm)
+    :closure:
+    /: paradox: arbitrary threshold produces no certified prediction
+
+/: 
+Coupling signatures:
+  - AMM path: commutative-associative (rightComb canonical — pool state is symmetric)
+  - Volatility path: non-commutative (time series order matters)
+  - Norm path: commutative (no ordering constraints)
+:/
+coupling amm_path: commutative_associative (rightComb)
+coupling volatility_path: non_commutative
+coupling norm_path: commutative
+
+/: 
+============================================================
+Phase 2 (TODO): multi-source confidence weighting
+  - Multiple price_feeds → weighted average by confidence
+  - Confidence = 1 / (1 + volatility)  (inverse sigmoid)
+  - If confidence < threshold → open market (no prediction)
+  - If all sources disagree → paradox (zero divisor)
+============================================================
+:/

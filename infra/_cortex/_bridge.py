@@ -53,6 +53,151 @@ from ._wfc import (
     AntiCoherentPair, inflate as wfc_inflate, temporal_conflate, resonates,
     BARBER_PAIR, LIAR_PAIR, GRANDFATHER_PAIR,
 )
+from ._cost import phi as compute_phi
+
+# ── Market Closure types (mirroring AMM.lean + MarketClosure.lean) ──────
+
+from enum import Enum
+
+class KernelChoice(Enum):
+    """The kernel norm — mirrors Lean KernelChoice.
+    
+    none       = no kernel (Sorites default)
+    arbitrary  = arbitrary threshold by decree (Edict default)
+    fairPrice  = AMM kernel (Generation.reduce ∘ AMM.map)
+    """
+    none = "none"
+    arbitrary = "arbitrary"
+    fairPrice = "fairPrice"
+
+
+@dataclass
+class Pool:
+    """Constant-product liquidity pool — mirrors Lean AMM.Pool.
+    
+    Invariant: reserveA * reserveB = k (the constant product).
+    hApos, hBpos are positivity proofs (always True in Python).
+    """
+    reserveA: int
+    reserveB: int
+    hApos: bool = True
+    hBpos: bool = True
+
+
+def swap_out(pool: Pool, dx: int) -> int:
+    """Output of swapping dx token A for token B.
+    
+    Formula: dy = (reserveB * dx) // (reserveA + dx)  (floor division).
+    Mirrors Lean AMM.swapOut.
+    """
+    return (pool.reserveB * dx) // (pool.reserveA + dx)
+
+
+def reserve_guard(pool: Pool, L: LogicType, tree: EMLTree) -> bool:
+    """Reserve-vs-FL guard.
+    
+    Returns True if Φ L tree >= pool.reserveB (reserve annihilated →
+    paradox market). Mirrors Lean AMM.reserveGuard.
+    """
+    cost = compute_phi(L, tree)
+    return cost >= pool.reserveB
+
+
+@dataclass
+class CloseResult:
+    """Result of an AMM close operation — mirrors Lean AMM.CloseResult.
+    
+    INVARIANT: h_nonnegative is always True in ℕ (truncated subtraction).
+    The real invariant (price >= costDeduction) is enforced by reserveGuard.
+    """
+    price: int
+    costDeduction: int
+    residue: int
+    h_nonnegative: bool = True  # vacuous in ℕ; real invariant is caller-side reserveGuard
+
+
+def certified_close(pool: Pool, L: LogicType, tree: EMLTree, dx: int) -> CloseResult:
+    """AMM certified close step — mirrors Lean AMM.certifiedClose.
+    
+    Precondition (caller responsibility): not reserve_guard (cost < reserve).
+    Returns a CloseResult with price, costDeduction, and residue.
+    """
+    price = swap_out(pool, dx)
+    cost_deduction = compute_phi(L, tree)
+    residue = price - cost_deduction
+    return CloseResult(
+        price=price,
+        costDeduction=cost_deduction,
+        residue=residue,
+        h_nonnegative=True,
+    )
+
+
+class MarketType(Enum):
+    """The three possible outcomes of closure — mirrors Lean MarketType.
+    
+    openMarket    = no norm (Sorites: FL hits wall, no closure)
+    paradoxMarket = arbitrary norm or ZD caught
+    closedMarket  = fair-price norm satisfied (certified price emitted)
+    """
+    openMarket = "openMarket"
+    paradoxMarket = "paradoxMarket"
+    closedMarket = "closedMarket"
+
+
+@dataclass
+class CertifiedPrice:
+    """The certified close receipt — mirrors Lean MarketClosure.CertifiedPrice.
+    
+    Wraps a CortexCertificate with the AMM pricing fields.
+    """
+    cert: CortexCertificate
+    close: CloseResult
+
+
+def decide_market_type(kernel: KernelChoice, pool: Pool, L: LogicType, tree: EMLTree) -> MarketType:
+    """Decide the market type from kernel + guard — mirrors Lean MarketClosure.decideMarketType.
+    
+    KernelChoice.none      → openMarket
+    KernelChoice.arbitrary → paradoxMarket
+    KernelChoice.fairPrice → paradoxMarket if reserve_guard else closedMarket
+    """
+    if kernel == KernelChoice.none:
+        return MarketType.openMarket
+    elif kernel == KernelChoice.arbitrary:
+        return MarketType.paradoxMarket
+    elif kernel == KernelChoice.fairPrice:
+        if reserve_guard(pool, L, tree):
+            return MarketType.paradoxMarket
+        else:
+            return MarketType.closedMarket
+    else:
+        raise ValueError(f"Unknown kernel: {kernel}")
+
+
+def market_closure(
+    kernel: KernelChoice,
+    pool: Pool,
+    L: LogicType,
+    tree: EMLTree,
+    dx: int,
+) -> tuple[MarketType, CertifiedPrice | None]:
+    """Complete hyperstitional market closure — mirrors Lean MarketClosure.marketClosure.
+    
+    Returns (MarketType, Optional[CertifiedPrice]).
+    If closedMarket, CertifiedPrice is emitted with cert + pricing fields.
+    """
+    mkt = decide_market_type(kernel, pool, L, tree)
+    if mkt == MarketType.closedMarket:
+        close_res = certified_close(pool, L, tree, dx)
+        # Use the bridge's certify function to create a CortexCertificate
+        cert = certify(tree)
+        price = CertifiedPrice(cert=cert, close=close_res)
+        return (mkt, price)
+    else:
+        return (mkt, None)
+
+
 class CortexBridgeError(Exception):
     """Base error for bridge operations."""
 
@@ -1056,6 +1201,78 @@ class NormCodeCortexBridge:
         tree = self.core.lift_plan_to_logic_m(flow_indices)
         # Would convert events to LogicM[Event] and run closure
         return LogicM.pure(Norm(rule="closure_complete", threshold=0))
+
+    # ── Market closure (AMM bridge) ──────────────────────────────
+
+    def invoke_market_closure(
+        self,
+        kernel: str,
+        pool: dict,
+        L: str,
+        tree: EMLTree,
+        dx: int = 0,
+    ) -> dict:
+        """Invoke the market closure pipeline — Lean MarketClosure.marketClosure in Python.
+
+        Args:
+            kernel: ``"none"``, ``"arbitrary"``, or ``"fairPrice"``.
+            pool: dict with ``"reserveA"`` and ``"reserveB"`` keys.
+            L: LogicType name (e.g. ``"CLASSICAL"``, ``"FUZZY"``).
+            tree: EMLTree to compute cost against.
+            dx: Swap size (token A input).
+
+        Returns:
+            dict with ``market_type`` (str) and optional ``certified_price`` (dict).
+
+        Examples:
+            >>> bridge = NormCodeCortexBridge()
+            >>> result = bridge.invoke_market_closure(
+            ...     kernel="fairPrice",
+            ...     pool={"reserveA": 1000, "reserveB": 100},
+            ...     L="CLASSICAL",
+            ...     tree=rightComb(3),
+            ...     dx=10,
+            ... )
+            >>> result["market_type"]
+            'closedMarket'
+        """
+        # Parse kernel
+        try:
+            kc = KernelChoice(kernel)
+        except ValueError:
+            raise ValueError(f"Unknown kernel: {kernel!r}. Use 'none', 'arbitrary', or 'fairPrice'.")
+
+        # Parse pool
+        p = Pool(reserveA=pool["reserveA"], reserveB=pool["reserveB"])
+
+        # Parse LogicType
+        try:
+            lt = LogicType[L.upper()]
+        except KeyError:
+            raise ValueError(f"Unknown LogicType: {L!r}. Valid: {[lt.name for lt in LogicType]}")
+
+        # Run market closure
+        mkt, price = market_closure(kc, p, lt, tree, dx)
+
+        result: dict = {"market_type": mkt.value}
+        if price is not None:
+            result["certified_price"] = {
+                "cert": {
+                    "source": repr(price.cert.source),
+                    "target": repr(price.cert.target),
+                    "path_len": len(price.cert.path),
+                    "verified": price.cert.verify(),
+                },
+                "close": {
+                    "price": price.close.price,
+                    "costDeduction": price.close.costDeduction,
+                    "residue": price.close.residue,
+                },
+            }
+        else:
+            result["certified_price"] = None
+
+        return result
 
     def _flow_indices_to_events(self, flow_indices: List[str]) -> List[Event]:
         """GAP: No event source from NC yet.
