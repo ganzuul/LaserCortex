@@ -343,4 +343,5 @@ normcode_lift_inference(flow_index="0", concept_name="amm_close",
 
 ## License
 
-AGPLv3 — see `LICENSE`.
+LaserCortex - LaserCortex/`LICENSE`.
+Normcode - `LICENSE`.
