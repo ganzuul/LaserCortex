@@ -241,6 +241,26 @@ theorem contracts_to_size_eq {s t : EMLTree} (h : contracts_to s t) : s.size = t
       s.size = t.size := h₁
       _ = u.size := h₂
 
+-- ================================================================
+-- SECTION 2b: cdStep-Parameterized Contraction
+-- ================================================================
+
+/-- Contraction relation indexed by cdStep.
+    At all cdSteps the base relation is the same Tamari contraction.
+    The differentiation is in the **cost** bound — `frictionDensity cd` bounds
+    the maximal admissible path cost per step. At cdStep ≥ 3 the zero-divisor
+    regime becomes available (the coupling factor activates). -/
+def contracts_to_at_cdStep (cd : Nat) (s t : EMLTree) : Prop :=
+  contracts_to s t
+
+/-- contracts_to_at_cdStep is monotone with cdStep:
+    if a contraction is possible at cdStep j, it is also possible at cdStep k ≥ j.
+    This mirrors `heightMap_monotone` (frictionDensity j ≤ frictionDensity k)
+    and reflects that higher cdStep = more collapse mechanisms available. -/
+theorem contracts_to_at_cdStep_monotone (j k : Nat) (h : j ≤ k) (s t : EMLTree)
+    (hjk : contracts_to_at_cdStep j s t) : contracts_to_at_cdStep k s t :=
+  hjk
+
 -- Right-comb: the minimum element in Tamari order
 -- **Equilibrium attractor** / normal form - the "second law" destination
 def rightComb : Nat → EMLTree

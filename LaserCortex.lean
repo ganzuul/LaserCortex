@@ -19,5 +19,8 @@ import LaserCortex.AMM
 import LaserCortex.Cost
 import LaserCortex.Candidates
 import LaserCortex.SplitOctonionCost
+import LaserCortex.SplitOctonionLogic
 import LaserCortex.SplitQuaternionClifford
 import LaserCortex.FrictionLagrangian
+import LaserCortex.KernelChoice
+import LaserCortex.MarketClosure

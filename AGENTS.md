@@ -13,7 +13,13 @@ then mirrored to Python. This ensures:
 **Exception**: Quick scripts, test data, and UI scaffolding may be written in
 Python/TypeScript first when the purpose is exploratory.
 
-## Generation / Collapse Duality
+**Skills**
+Directory: LaserCortex/.skills/lean4-skills/ has skills that work together with 
+the Lean4 MCP server `lean-lsp` for fast tool calling. - The core guideline is 
+to use the MCP server to get compiler messages for lightweight and high-
+frequency gudance and to iterate in small steps on .lean files. 
+
+## LaserCortex architecture: Generation / Collapse Duality
 
 - **Generation is primitive** — the WFC (Wave Function Collapse) engine is
   fundamentally generative. It produces candidate structures from a
@@ -34,7 +40,7 @@ documents specific containment protocols.
 
 ## Pipeline Index
 
-The Open Notebook librarian indexes four architectural layers:
+The Open Notebook MCP librarian indexes four architectural layers:
 - `FORMALIZATION` — Lean4 proofs, theorems, axioms
 - `API_GATEWAY` — Python/Django models, endpoints, middleware
 - `PRESENTATION` — TypeScript/WebGPU shaders, pipelines, buffers

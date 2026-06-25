@@ -204,18 +204,36 @@ This is the generative act: from nothingness (zero divisor), produce a pair
 that represents the two poles of the paradox. The pair is then available for
 temporal conflation and resonance.
 
-The mapping follows `ProblemClass`:
+The mapping follows `ProblemClass` (all 13 variants are explicitly mapped):
 - `selfReference` (Liar, Truth-teller) → CLASSICAL + MANYVALUED
+- `vagueness` (Sorites, Ship of Theseus) → CLASSICAL + FUZZY
 - `inconsistentDef` (Russell's, Barber) → CLASSICAL + PARACONSISTENT
 - `temporalDecision` (Grandfather, Newcomb's) → CLASSICAL + TEMPORAL
-- All others: CLASSICAL + CLASSICAL (no anti-coherence generated)
+- `deontic` (Contrary-to-Duty) → CLASSICAL + DEONTIC
+- `epistemic` (Surprise Examination) → CLASSICAL + EPISTEMIC
+- `quantumSuperposition` (Schrödinger's Cat) → CLASSICAL + QUANTUM
+- `constructive` (Brouwer's Continuity) → CLASSICAL + INTUITIONISTIC
+- `relevance` (Material Implication) → CLASSICAL + RELEVANCE
+- `emptyReference` (Free Logic / Gödelian) → CLASSICAL + FREE
+- `infinity` (Galileo's, Hilbert's Hotel) → CLASSICAL + INFINITARY
+- `modality` (Fitch's Knowability) → CLASSICAL + MODAL
+- `metaParadox` (missing proof / incomplete framework) → CLASSICAL + CLASSICAL
 -/
 def inflate (pc : ProblemClass) : AntiCoherentPair :=
   match pc with
-  | .selfReference => AntiCoherentPair.liar
-  | .inconsistentDef => AntiCoherentPair.barber
-  | .temporalDecision => AntiCoherentPair.grandfather
-  | _ => ⟨.Classical, .Classical⟩
+  | .selfReference       => AntiCoherentPair.liar
+  | .vagueness           => ⟨.Classical, .Fuzzy⟩
+  | .inconsistentDef     => AntiCoherentPair.barber
+  | .temporalDecision    => AntiCoherentPair.grandfather
+  | .deontic             => ⟨.Classical, .Deontic⟩
+  | .epistemic           => ⟨.Classical, .Epistemic⟩
+  | .quantumSuperposition => ⟨.Classical, .Quantum⟩
+  | .constructive        => ⟨.Classical, .Intuitionistic⟩
+  | .relevance           => ⟨.Classical, .Relevance⟩
+  | .emptyReference      => ⟨.Classical, .Free⟩
+  | .infinity            => ⟨.Classical, .Infinitary⟩
+  | .modality            => ⟨.Classical, .Modal⟩
+  | .metaParadox         => ⟨.Classical, .Classical⟩
 
 -- ============================================================================
 -- SECTION 5: Temporal Conflate — build a tree from an anti-coherent pair
@@ -345,6 +363,46 @@ theorem inflate_liar : inflate ProblemClass.selfReference = AntiCoherentPair.lia
 
 /-- The Grandfather inflates to (CLASSICAL, TEMPORAL). -/
 theorem inflate_grandfather : inflate ProblemClass.temporalDecision = AntiCoherentPair.grandfather :=
+  rfl
+
+/-- The Sorites inflates to (CLASSICAL, FUZZY). -/
+theorem inflate_sorites : inflate ProblemClass.vagueness = ⟨.Classical, .Fuzzy⟩ :=
+  rfl
+
+/-- The Deontic (Contrary-to-Duty) inflates to (CLASSICAL, DEONTIC). -/
+theorem inflate_deontic : inflate ProblemClass.deontic = ⟨.Classical, .Deontic⟩ :=
+  rfl
+
+/-- The Epistemic (Surprise Examination) inflates to (CLASSICAL, EPISTEMIC). -/
+theorem inflate_epistemic : inflate ProblemClass.epistemic = ⟨.Classical, .Epistemic⟩ :=
+  rfl
+
+/-- The Quantum (Schrödinger's Cat) inflates to (CLASSICAL, QUANTUM). -/
+theorem inflate_quantum : inflate ProblemClass.quantumSuperposition = ⟨.Classical, .Quantum⟩ :=
+  rfl
+
+/-- The Constructive (Brouwer's Continuity) inflates to (CLASSICAL, INTUITIONISTIC). -/
+theorem inflate_constructive : inflate ProblemClass.constructive = ⟨.Classical, .Intuitionistic⟩ :=
+  rfl
+
+/-- The Relevance (Material Implication) inflates to (CLASSICAL, RELEVANCE). -/
+theorem inflate_relevance : inflate ProblemClass.relevance = ⟨.Classical, .Relevance⟩ :=
+  rfl
+
+/-- The Empty Reference (Free/Gödelian) inflates to (CLASSICAL, FREE). -/
+theorem inflate_emptyReference : inflate ProblemClass.emptyReference = ⟨.Classical, .Free⟩ :=
+  rfl
+
+/-- The Infinity (Galileo's, Hilbert's Hotel) inflates to (CLASSICAL, INFINITARY). -/
+theorem inflate_infinity : inflate ProblemClass.infinity = ⟨.Classical, .Infinitary⟩ :=
+  rfl
+
+/-- The Modality (Fitch's Knowability) inflates to (CLASSICAL, MODAL). -/
+theorem inflate_modal : inflate ProblemClass.modality = ⟨.Classical, .Modal⟩ :=
+  rfl
+
+/-- The Meta-Paradox (missing proof) inflates to (CLASSICAL, CLASSICAL) — trivial. -/
+theorem inflate_metaParadox : inflate ProblemClass.metaParadox = ⟨.Classical, .Classical⟩ :=
   rfl
 
 /-- The barber's temporal conflated tree is a non-empty Node. -/

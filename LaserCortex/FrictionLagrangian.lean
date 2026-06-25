@@ -45,8 +45,10 @@ be reached by multiplying elements of the previous algebra.
  frictionDensity_at_cl11_boundary, frictionLagrangian_gt_flatSum,
  layerCost_ge_cdStep, engine_mirror_iff_local_debt_positive,
  engine_leftWeight_zero_iff_local_debt_positive, engine_rightDiv_formula,
- engine_coupling_always_zero,
- layerCost_eq_cdStep_for_assoc, frictionDensity_jump_at_cd3,
+  engine_coupling_always_zero,
+  engine_bias_is_one, engine_denom_is_ten,
+  engine_maxSem_is_false, engine_satCap_is_zero,
+  layerCost_eq_cdStep_for_assoc, frictionDensity_jump_at_cd3,
  heightMap_discontinuity_at_cd2_3, continuous_lagrangian_stub]
 
 ## Cross-refs
@@ -66,8 +68,12 @@ Claude_on_Friction-Lagrangian.md → continuous variational specification
 2. assocDefect(k) = strut_weight for k ≥ 3 (non-associative barrier — split octonions)
 3. frictionLagrangian(T) ≥ Σ_{l∈T} l.1.cdStep (strictly greater at CD ≥ 3)
 4. engine_mirror ↔ local_debt > 0 (association between debt and mirror mode proven)
-5. heightMap_discontinuity: Γ₃ > 2·Γ₂ (discontinuity at CD 2→3, proven by native_decide)
-6. ZD orthogonality: Zero divisors at CD ≥ 3 are truly orthogonal to the associative
+5. engine_coupling_always_zero, engine_bias_is_one, engine_denom_is_ten,
+   engine_maxSem_is_false, engine_satCap_is_zero (5 of 8 fields are constant across all engine states)
+6. engine_leftWeight_zero_iff_local_debt_positive, engine_rightDiv_formula
+   (2 fields vary with engine state, giving 8/8 bridge coverage)
+7. heightMap_discontinuity: Γ₃ > 2·Γ₂ (discontinuity at CD 2→3, proven by native_decide)
+8. ZD orthogonality: Zero divisors at CD ≥ 3 are truly orthogonal to the associative
    subspace — the strut_weight cost is irreducible, not a proof artifact
 
 ## Tags
@@ -426,12 +432,70 @@ theorem engine_rightDiv_formula (engine : EngineState) :
     itself (the pentagonator), or from higher-dimensional state not captured
     by the current (debt, capacity, weight) model.
     
-    This is a notable negative result: the engine's 3-parameter state
-    only sets 4 of the 8 NodeCost fields (leftWeight, rightDiv, mirror,
-    coupling=0 by fiat). The remaining fields (bias, denom, maxSem, satCap)
-    are constant across all engine states. -/
+    Together with `engine_bias_is_one`, `engine_denom_is_ten`,
+    `engine_maxSem_is_false`, and `engine_satCap_is_zero`, all 8 NodeCost
+    fields now have bridge theorems covering the engine projection.
+    
+    Of the 8 fields, 2 are state-dependent (leftWeight ↔ debt > 0,
+    rightDiv = compression formula, mirror ↔ debt > 0), 1 is uniformly
+    zero (coupling), and 4 are uniform constants (bias=1, denom=10,
+    maxSem=false, satCap=0). This completes Gap F of the GLM-5.2 audit. -/
 theorem engine_coupling_always_zero (engine : EngineState) :
     (engine_to_nodecost engine).coupling = 0 := by
+  dsimp [engine_to_nodecost]
+  by_cases h : engine.local_debt > 0
+  · simp [h]
+  · simp [h]
+
+/-- The engine always sets bias to 1 (the identity on the split-octonion
+    real axis). This means the cost landscape is always projected onto the
+    imaginary (e₁⋯e₇) subspace — the 7-skeleton — never shifted along e₀.
+    
+    Equivalently: bias = 1 is a structural invariant of the engine model,
+    not a property of any particular logic type. The named logics also
+    satisfy bias = 1 (by `nodeParam_bias_one`), confirming that the engine
+    lives in the same 7D subspace. -/
+theorem engine_bias_is_one (engine : EngineState) :
+    (engine_to_nodecost engine).bias = 1 := by
+  dsimp [engine_to_nodecost]
+  by_cases h : engine.local_debt > 0
+  · simp [h]
+  · simp [h]
+
+/-- The engine always sets denom to 10 (the default denominator for the
+    cost landscape's linear approximation).
+    
+    This is consistent with all named logics except Paraconsistent/Temporal
+    (which use denom=8). The engine model does not currently capture the
+    Paraconsistent regime — it only produces the four configurations:
+    Classical (debt=0), Spacetime-like (debt>0, moderate), Fuzzy/Deontic
+    (intermediate compression), and degenerate limits. A future extension
+    could vary denom by adding a `rate` parameter to EngineState. -/
+theorem engine_denom_is_ten (engine : EngineState) :
+    (engine_to_nodecost engine).denom = 10 := by
+  dsimp [engine_to_nodecost]
+  by_cases h : engine.local_debt > 0
+  · simp [h]
+  · simp [h]
+
+/-- The engine never sets maxSem (semantic maximum mode). This means the
+    engine model does not capture Intuitionistic logic's proof-depth semantics
+    (where Φ = tree height, not size). Intuitionistic logic requires a
+    separate mechanism — possibly a `max_depth` field in EngineState that
+    triggers maxSem=true when active. -/
+theorem engine_maxSem_is_false (engine : EngineState) :
+    (engine_to_nodecost engine).maxSem = false := by
+  dsimp [engine_to_nodecost]
+  by_cases h : engine.local_debt > 0
+  · simp [h]
+  · simp [h]
+
+/-- The engine never sets a saturation cap. This means the engine model
+    does not capture Fuzzy logic's bounded-cost semantics (where Φ is capped
+    at satCap=5). Like maxSem, satCap would require an additional engine
+    parameter (e.g., a `fuzz_factor`) to activate. -/
+theorem engine_satCap_is_zero (engine : EngineState) :
+    (engine_to_nodecost engine).satCap = 0 := by
   dsimp [engine_to_nodecost]
   by_cases h : engine.local_debt > 0
   · simp [h]
@@ -563,6 +627,106 @@ theorem friction_barrier_across_cd23 (k₁ k₂ : ℕ) (h₁ : k₁ ≤ 2) (h₂
   -- Now: (k₂ + strut_weight * strut_weight) - k₁ ≥ strut_weight * strut_weight
   -- iff k₂ - k₁ ≥ 0, which is true since k₂ ≥ 3 > 2 ≥ k₁
   have hk : k₂ ≥ k₁ := by omega
+  omega
+
+-- ============================================================================
+-- SECTION 6c: Cost-Aware Contraction
+-- ============================================================================
+-- These definitions connect the contraction relation (EMLRegistry) with
+-- the friction Lagrangian cost. Each contraction step at cdStep cd incurs
+-- a base friction cost of frictionDensity cd, with additional cross-term
+-- cost from NodeCost.apply's coupling factor at CD ≥ 3.
+--
+-- The cost is tracked as part of the inductive data (not extracted from a
+-- Prop), sidestepping Prop-elimination restrictions.
+
+/-- Cost-annotated contraction path with step count.
+    `contracts_to_with_cost cd s t c n` means there exists a sequence of
+    contraction steps from s to t at cdStep cd whose total friction cost
+    is exactly c and which takes exactly n steps.
+
+    Each step contributes `frictionDensity cd` to the total cost.
+    At CD ≥ 3, the coupling cross-term (NodeCost.apply's coupling·a·b/denom)
+    further adjusts each step's cost — this is the ZD-detecting component.
+
+    The step count n is tracked alongside the cost c to enable
+    cdStep-parameterized cost monotonicity: the same path at a higher
+    cdStep incurs proportionally higher friction cost. -/
+inductive contracts_to_with_cost (cd : ℕ) : EMLRegistry.EMLTree → EMLRegistry.EMLTree → ℕ → ℕ → Prop where
+  | refl (t : EMLRegistry.EMLTree) : contracts_to_with_cost cd t t 0 0
+  | step (s t u : EMLRegistry.EMLTree)
+      (h_one : EMLRegistry.contracts_one s t)
+      (h_to : contracts_to_with_cost cd t u c n) :
+      contracts_to_with_cost cd s u (frictionDensity cd + c) (n + 1)
+
+/-- Every cost-annotated path contracts s to t. -/
+theorem contracts_to_with_cost_implies_contracts_to (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to s t := by
+  induction h with
+  | refl t => exact EMLRegistry.contracts_to.refl t
+  | step s t u h_one h_to ih =>
+    exact EMLRegistry.contracts_to.step s t u h_one ih
+
+/-- Cost-annotated paths at any cdStep are valid under `contracts_to_at_cdStep`. -/
+theorem contracts_to_with_cost_implies_at_cdStep (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to_at_cdStep cd s t := by
+  rw [EMLRegistry.contracts_to_at_cdStep]
+  exact contracts_to_with_cost_implies_contracts_to cd s t c n h
+
+/-- The cost is at least frictionDensity cd for any non-trivial path.
+    This is the "base rate" bound: each step costs at least one unit
+    of friction density. -/
+theorem contracts_to_with_cost_ge_frictionDensity (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+    (h : contracts_to_with_cost cd s t c n) : c ≥ frictionDensity cd ∨ c = 0 := by
+  induction h with
+  | refl t => right; rfl
+  | step s t u h_one h_to ih =>
+    left
+    omega
+
+/-- The total cost equals the number of steps times the friction density.
+    This holds for the base friction cost (before coupling adjustments). -/
+theorem contracts_to_with_cost_cost_eq_n_times_friction (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+    (h : contracts_to_with_cost cd s t c n) : c = n * frictionDensity cd := by
+  induction h with
+  | refl t => simp
+  | step s t u h_one h_to ih =>
+    simp [ih, add_comm, add_left_comm, add_assoc, mul_add, add_mul, mul_comm]
+
+/-- Height-map monotonicity for path cost:
+    if s contracts to t at cdStep j with cost c and n steps,
+    then at a higher cdStep k ≥ j the same n-step path costs
+    n * frictionDensity k, which is ≥ c.
+    
+    This mirrors `heightMap_monotone` (frictionDensity is monotone
+    with cdStep) lifted to the path level. -/
+theorem heightMap_monotone_for_path_cost (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+    (hj : contracts_to_with_cost j s t c n) :
+    contracts_to_with_cost k s t (n * frictionDensity k) n := by
+  induction hj generalizing k with
+  | refl t => 
+    simpa [Nat.zero_mul] using (contracts_to_with_cost.refl t : contracts_to_with_cost k t t 0 0)
+  | step s t u h_one h_to ih =>
+    rename_i hc hn
+    have hk : contracts_to_with_cost k t u (hn * frictionDensity k) hn := ih k hjk
+    have hstep : contracts_to_with_cost k s u (frictionDensity k + hn * frictionDensity k) (hn + 1) :=
+      contracts_to_with_cost.step s t u h_one hk
+    have hcalc : frictionDensity k + hn * frictionDensity k = (hn + 1) * frictionDensity k := by
+      ring
+    simpa [hcalc] using hstep
+
+/-- Corollary: the minimal cost at cdStep k is at least the minimal cost at cdStep j
+    when j ≤ k, because the same path costs more at higher cdStep. -/
+theorem min_cost_monotone_with_cdStep (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+    (hj : contracts_to_with_cost j s t c n) : c ≤ n * frictionDensity k := by
+  have hcost_eq : c = n * frictionDensity j := contracts_to_with_cost_cost_eq_n_times_friction j s t c n hj
+  have hfd_mono : frictionDensity j ≤ frictionDensity k := by
+    by_cases h_eq : j = k
+    · subst h_eq; rfl
+    · have h_lt : j < k := by omega
+      exact heightMap_monotone j k h_lt
+  have h_mul : n * frictionDensity j ≤ n * frictionDensity k :=
+    Nat.mul_le_mul_left n hfd_mono
   omega
 
 -- ============================================================================

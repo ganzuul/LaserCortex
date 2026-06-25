@@ -196,21 +196,28 @@ For other logics, this will be logic-specific contraction relations.
 This is a TYPE FAMILY indexed by LogicType.
 -/
 def LogicContraction : LogicType → EMLRegistry.EMLTree → EMLRegistry.EMLTree → Prop
-  | .Classical => EMLRegistry.contracts_to
-  | .Fuzzy => EMLRegistry.contracts_to  -- Membership-based contraction (same Tamari dynamics)
-  | .ManyValued => EMLRegistry.contracts_to  -- Truth-degree contraction (Tamari dynamics)
-  | .Paraconsistent => EMLRegistry.contracts_to  -- Dialethia-preserving contraction
-  | .Temporal => EMLRegistry.contracts_to  -- Temporal rewriting
-  | .Deontic => EMLRegistry.contracts_to  -- Obligation propagation
-  | .Epistemic => EMLRegistry.contracts_to  -- Knowledge update
-  | .Quantum => EMLRegistry.contracts_to  -- Entanglement contraction
-  | .Intuitionistic => EMLRegistry.contracts_to  -- Constructive reduction
-  | .Relevance => EMLRegistry.contracts_to  -- Relevance filtering
-  | .Free => EMLRegistry.contracts_to  -- Entity existence handling
-  | .Infinitary => EMLRegistry.contracts_to  -- Coinductive reduction (finite approximation)
-  | .Modal => EMLRegistry.contracts_to  -- Modal reduction
-  | .Spacetime => EMLRegistry.contracts_to  -- Geometric spacetime contraction
-  | .Boolean => EMLRegistry.contracts_to  -- Boolean minimisation as Tamari contraction
+  | .Classical => EMLRegistry.contracts_to_at_cdStep 0
+  | .Fuzzy => EMLRegistry.contracts_to_at_cdStep 1
+  | .ManyValued => EMLRegistry.contracts_to_at_cdStep 1
+  | .Paraconsistent => EMLRegistry.contracts_to_at_cdStep 4
+  | .Temporal => EMLRegistry.contracts_to_at_cdStep 1
+  | .Deontic => EMLRegistry.contracts_to_at_cdStep 1
+  | .Epistemic => EMLRegistry.contracts_to_at_cdStep 1
+  | .Quantum => EMLRegistry.contracts_to_at_cdStep 3
+  | .Intuitionistic => EMLRegistry.contracts_to_at_cdStep 2
+  | .Relevance => EMLRegistry.contracts_to_at_cdStep 3
+  | .Free => EMLRegistry.contracts_to_at_cdStep 4
+  | .Infinitary => EMLRegistry.contracts_to_at_cdStep 3
+  | .Modal => EMLRegistry.contracts_to_at_cdStep 3
+  | .Spacetime => EMLRegistry.contracts_to_at_cdStep 3
+  | .Boolean => EMLRegistry.contracts_to_at_cdStep 0
+  -- The base relation is the Tamari contraction. The cdStep parameter
+  -- differentiates logics by their Cayley-Dickson stage:
+  --   cdStep ≤ 2 (associative, Sector 3): Classical, Fuzzy, ManyValued, Paraconsistent, etc.
+  --   cdStep ≥ 3 (non-associative, Sector 4): Quantum, Intuitionistic, Relevance, etc.
+  -- At cdStep ≥ 3, the coupling factor activates and ZD-dependent contraction rules apply.
+  -- Logic-specific refinements can be added per logic by strengthening the
+  -- condition (e.g., adding a coupling-dependent cost bound).
 
 -- ============================================================================
 -- SECTION 4: Meta-Contraction (Between Logics)

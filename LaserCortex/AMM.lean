@@ -28,6 +28,7 @@ import LaserCortex.EMLRegistry
 import LaserCortex.Cost
 
 open EMLRegistry
+open Cost
 
 namespace AMM
 
@@ -169,59 +170,200 @@ The difference measures the cross-impact — how executing r1 changes the
 reserves that r2 sees, amplifying or compressing the total cost.
 -/
 
-open Cost
+/-! ### Route-typed cross-impact (preserved for design wisdom)
+
+    The following `crossImpact` and `associatorCost` definitions (Route-typed)
+    are commented out, NOT deleted. They carry design information about AMM's
+    concept of binary-tree swap routes that should be assimilated before removal.
+    Once the EMLTree generalizations below are fully verified, these can be
+    removed or their design wisdom documented separately.
+
+    Generalized to EMLTree below — these Route-typed versions are preserved here
+    for design wisdom until the assimilation is verified. Once EMLTree version is
+    fully tested, these can be removed.
+-/
 
 /-- Absolute difference of two natural numbers: |a - b| in ℕ. -/
 def absDiff (a b : Nat) : Nat := (a - b) + (b - a)
 
-/-- The cross-impact of composing two routes: how much extra cost (or savings)
-    arises from executing r1 before r2 compared to treating them independently.
-    Uses truncated ℕ subtraction (0 when Φ(compose) < Φ(r1) + Φ(r2) —
-    negative cross-impact means right-compression dampens the second route). -/
-def crossImpact (L : LogicTypes.LogicType) (r1 r2 : Route) : Nat :=
-  Φ L (routeToTree (compose r1 r2)) - (Φ L (routeToTree r1) + Φ L (routeToTree r2))
+-- [Original crossImpact definition, commented out]
+-- def crossImpact (L : LogicTypes.LogicType) (r1 r2 : Route) : Nat :=
+--   Φ L (routeToTree (compose r1 r2)) - (Φ L (routeToTree r1) + Φ L (routeToTree r2))
 
-/-- Cross-impact is always non-negative in ℕ (truncated subtraction). -/
-theorem crossImpact_nonneg (L : LogicTypes.LogicType) (r1 r2 : Route) :
-    0 ≤ crossImpact L r1 r2 :=
+-- [Original crossImpact_nonneg theorem, commented out]
+-- theorem crossImpact_nonneg (L : LogicTypes.LogicType) (r1 r2 : Route) :
+--     0 ≤ crossImpact L r1 r2 :=
+--   Nat.zero_le _
+
+-- [Original crossImpact_classical theorem, commented out]
+-- theorem crossImpact_classical (L : LogicTypes.LogicType) (r1 r2 : Route)
+--     (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
+--     (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
+--     (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0) :
+--     crossImpact L r1 r2 = 1 := by
+--   dsimp [crossImpact]
+--   rw [routeToTree_compose, Φ_Node, NodeCost.apply_not_mirror _ _ _ hMS hM hSC]
+--   simp only [hC, Nat.zero_mul, Nat.add_zero, Nat.zero_div]
+--   rw [nodeParam_bias_one L, hW, hD]
+--   simp [Nat.div_one, Nat.one_mul, Nat.succ_eq_add_one]
+--   omega
+
+-- [Original associatorCost definition, commented out]
+-- def associatorCost (L : LogicTypes.LogicType) (r1 r2 r3 : Route) : Nat :=
+--   absDiff (Φ L (routeToTree (compose (compose r1 r2) r3)))
+--           (Φ L (routeToTree (compose r1 (compose r2 r3))))
+
+-- [Original associatorCost_zero_classical theorem, commented out]
+-- theorem associatorCost_zero_classical (L : LogicTypes.LogicType) (r1 r2 r3 : Route)
+--     (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
+--     (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
+--     (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0) :
+--     associatorCost L r1 r2 r3 = 0 := by
+--   dsimp [associatorCost, absDiff]
+--   have h_eq : Φ L (routeToTree (compose (compose r1 r2) r3)) = Φ L (routeToTree (compose r1 (compose r2 r3))) := by
+--     rw [routeToTree_compose, routeToTree_compose]
+--     have hΦeq : Φ L (EMLTree.Node (EMLTree.Node (routeToTree r1) (routeToTree r2)) (routeToTree r3)) =
+--                Φ L (EMLTree.Node (routeToTree r1) (EMLTree.Node (routeToTree r2) (routeToTree r3))) :=
+--       Φ_contracts_one_eq_classical L hD hC hM hW hMS hSC (by
+--         apply EMLRegistry.contracts_one.rotate)
+--     exact hΦeq
+--   simp [h_eq]
+
+/-! ### EMLTree-typed cross-impact (generalized from Route)
+
+    The following generalizations replace the Route-specific versions above.
+    EMLTree is the natural habitat because Generation.temporalConflate produces
+    EMLTrees directly; Route was an intermediate form that lost information.
+-/
+
+/-- Generalized cross-impact: the cost difference between composing two trees
+    vs treating them independently. EMLTree is the natural habitat (tree size
+    is the canonical cost parameter). Replaces the Route-specific version
+    above, which is preserved for design reference. -/
+def crossImpactTree (L : LogicTypes.LogicType) (t1 t2 : EMLTree) : Nat :=
+  Φ L (.Node t1 t2) - (Φ L t1 + Φ L t2)
+
+/-- Generalized associator cost: the cost difference between the two bracketings
+    of a triple composition. The discrete analogue of the pentagon defect norm. -/
+def associatorCostTree (L : LogicTypes.LogicType) (t1 t2 t3 : EMLTree) : Nat :=
+  absDiff (Φ L (.Node (.Node t1 t2) t3))
+          (Φ L (.Node t1 (.Node t2 t3)))
+
+/-- crossImpactTree is always non-negative. In ℕ with truncated subtraction
+    this is a tautology (`Nat.zero_le`), but the theorem is declared to match
+    the proof surface of the original Route-typed `crossImpact_nonneg` and
+    as a hook for a future migration to Int arithmetic. -/
+theorem crossImpactTree_nonneg (L : LogicTypes.LogicType) (t1 t2 : EMLTree) :
+    0 ≤ crossImpactTree L t1 t2 :=
   Nat.zero_le _
 
-/-- For classical logics (rightDiv=0, leftWeight=1, coupling=0, mirror=false, maxSem=false, satCap=0),
-    composition adds exactly the bias (1) to the sum of costs. This gives positive cross-impact = 1. -/
-theorem crossImpact_classical (L : LogicTypes.LogicType) (r1 r2 : Route)
+/-- For classical logics (rightDiv=0, coupling=0, not mirror, leftWeight=1,
+    not maxSem, satCap=0), crossImpactTree = 1 for any pair of trees.
+
+    Under classical Φ = t.size (the tree-size cost), composing two trees adds
+    one internal node: size(EMLTree.Node t1 t2) = 1 + t1.size + t2.size.
+    So crossImpactTree = (1 + t1.size + t2.size) - (t1.size + t2.size) = 1. -/
+theorem crossImpactTree_classical (L : LogicTypes.LogicType) (t1 t2 : EMLTree)
     (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
     (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
     (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0) :
-    crossImpact L r1 r2 = 1 := by
-  dsimp [crossImpact]
-  rw [routeToTree_compose, Φ_Node, Cost.NodeCost.apply_not_mirror _ _ _ hMS hM hSC]
-  simp only [hC, Nat.zero_mul, Nat.add_zero, Nat.zero_div]
-  rw [Cost.nodeParam_bias_one L, hW, hD]
-  simp [Nat.div_one, Nat.one_mul, Nat.succ_eq_add_one]
+    crossImpactTree L t1 t2 = 1 := by
+  dsimp [crossImpactTree]
+  have hΦnode : Φ L (EMLTree.Node t1 t2) = (EMLTree.Node t1 t2).size :=
+    Φ_eq_size_classical L (EMLTree.Node t1 t2) hD hC hM hW hMS hSC
+  have hΦt1 : Φ L t1 = t1.size :=
+    Φ_eq_size_classical L t1 hD hC hM hW hMS hSC
+  have hΦt2 : Φ L t2 = t2.size :=
+    Φ_eq_size_classical L t2 hD hC hM hW hMS hSC
+  rw [hΦnode, hΦt1, hΦt2]
+  have hsize : (EMLTree.Node t1 t2).size = 1 + t1.size + t2.size := rfl
+  rw [hsize]
   omega
 
-/-- The associator difference: the cost difference between the two binary tree
-    orientations of a triple composition. This is the discrete analogue of the
-    pentagon defect norm in the spacetime engine. -/
-def associatorCost (L : LogicTypes.LogicType) (r1 r2 r3 : Route) : Nat :=
-  absDiff (Φ L (routeToTree (compose (compose r1 r2) r3)))
-          (Φ L (routeToTree (compose r1 (compose r2 r3))))
+/-- For classical logics, the associator cost is zero (pentagon coherence):
+    both bracketings of a triple composition have the same Φ cost.
 
-/-- The associator cost is zero for classical logics (cost is rotation-invariant),
-    matching the pentagon coherence condition. -/
-theorem associatorCost_zero_classical (L : LogicTypes.LogicType) (r1 r2 r3 : Route)
+    Proof: Tamari rotation relates the two bracketings, and
+    Φ_contracts_one_eq_classical says cost is preserved by Tamari rotation
+    for classical logics. -/
+theorem associatorCostTree_zero_classical (L : LogicTypes.LogicType) (t1 t2 t3 : EMLTree)
     (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
     (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
     (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0) :
-    associatorCost L r1 r2 r3 = 0 := by
-  dsimp [associatorCost, absDiff]
-  have h_eq : Φ L (routeToTree (compose (compose r1 r2) r3)) = Φ L (routeToTree (compose r1 (compose r2 r3))) := by
-    rw [routeToTree_compose, routeToTree_compose]
-    have hΦeq : Φ L (EMLTree.Node (EMLTree.Node (routeToTree r1) (routeToTree r2)) (routeToTree r3)) =
-               Φ L (EMLTree.Node (routeToTree r1) (EMLTree.Node (routeToTree r2) (routeToTree r3))) :=
-      Cost.Φ_contracts_one_eq_classical L hD hC hM hW hMS hSC (by
-        apply EMLRegistry.contracts_one.rotate)
-    exact hΦeq
+    associatorCostTree L t1 t2 t3 = 0 := by
+  dsimp [associatorCostTree, absDiff]
+  have h_eq : Φ L (EMLTree.Node (EMLTree.Node t1 t2) t3) = Φ L (EMLTree.Node t1 (EMLTree.Node t2 t3)) :=
+    Φ_contracts_one_eq_classical L hD hC hM hW hMS hSC (by
+      apply EMLRegistry.contracts_one.rotate)
   simp [h_eq]
+
+-- ============================================================================
+-- CloseResult: the AMM side of the IC↔AMM bridge
+-- ============================================================================
+
+/-- The result of an AMM close operation: the fair price, the friction cost
+    deduction, and the net residue. This is the AMM-local structure that
+    MarketClosure.CertifiedPrice wraps with a CortexCertificate.
+
+    INVARIANT NOTE: the field `h_nonnegative : residue ≥ 0` is intentionally
+    VACUOUS in ℕ arithmetic (truncated subtraction means residue is always
+    ≥ 0). The *operational* guarantee that price ≥ costDeduction is enforced
+    by the caller-side `reserveGuard` returning false, which ensures
+    Φ L tree < pool.reserveB (the pool survives the computation).
+    A future migration to Int arithmetic would make h_nonnegative
+    a non-trivial proof obligation (see also docs/PLAN_market_closure.md §6).
+
+    See MarketClosure.lean for the full CertifiedPrice structure. -/
+structure CloseResult where
+  price         : Nat
+  costDeduction : Nat
+  residue       : Nat
+  h_nonnegative : residue ≥ 0    -- vacuous in ℕ; real invariant is caller-side reserveGuard
+
+/-- The reserve-vs-FL guard. Returns true if the computation cost Φ L tree
+    meets or exceeds the entire pool reserve (reserveB), meaning the attempt
+    would annihilate the pool's liquidity (zero-divisor territory).
+
+    Cases:
+    1. Φ L tree ≥ pool.reserveB → true (reserve annihilated → paradox market).
+    2. Φ L tree < pool.reserveB → false (safe to compute the price — the
+       pool survives the computation).
+
+    NOTE: ZD detection via Generation.revise (WFC zero-divisor when both
+    poles are vacuous) is NOT yet wired into this guard. That would catch
+    the vacuous case even before the cost check, and is tracked as a TODO
+    once the WFC engine integration stabilizes.
+
+    TODO (amortization): in a realistic system this guard would consult a
+    cached library of precomputed costs rather than calling Φ directly.
+    The pool reserves are externally supplied; this function does not derive
+    them from ProblemClass or BlamePool. -/
+def reserveGuard (pool : Pool) (L : LogicTypes.LogicType) (tree : EMLTree) : Bool :=
+  let cost := Φ L tree
+  -- Compare against pool.reserveB (total liquidity), NOT swapOut (trade proceeds).
+  -- plan: "would annihilate the reserve / ZD caught"
+  cost ≥ pool.reserveB
+
+/-- The certified close step: AMM computes fair price; FL provides cost;
+    EMLRegistry.certify produces a proof-carrying certificate.
+
+    Precondition (caller responsibility): not reserveGuard (cost < reserve).
+    The pool reserves are externally supplied; this function does not derive
+    them from ProblemClass or BlamePool.
+
+    Returns a CloseResult with price, costDeduction, and residue (net value).
+    MarketClosure.certifiedClose wraps this with a CortexCertificate.
+
+    TODO (amortization): cached lookup of precomputed Φ costs. -/
+def certifiedClose (pool : Pool) (L : LogicTypes.LogicType) (tree : EMLTree) (dx : Nat) : CloseResult :=
+  let price := swapOut pool dx
+  let costDeduction := Φ L tree
+  let residue := price - costDeduction
+  {
+    price := price
+    costDeduction := costDeduction
+    residue := residue
+    h_nonnegative := Nat.zero_le (price - costDeduction)
+  }
 
 end AMM

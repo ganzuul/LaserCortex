@@ -57,6 +57,7 @@ import LaserCortex.LogicMonad
 import LaserCortex.LiarParadox
 import LaserCortex.SoritesParadox
 import LaserCortex.TemporalParadox
+import LaserCortex.KernelChoice
 
 open EMLRegistry
 open LogicMonad
@@ -165,6 +166,7 @@ structure GameOutcome where
 structure Norm where
   rule      : String
   threshold : Nat    -- max acceptable D (or min confidence) before action
+  kernel    : MarketClosure.KernelChoice := .none  -- which kernel this norm selects
   deriving Repr
 
 /-- The blame pool: accumulated pentagonator obstructions across all processed
@@ -268,6 +270,12 @@ def fuzzyGradeByCdStep (cdStep : Nat) (outcomes : LogicM GameOutcome) : LogicM N
     else
       .pure (o.d_structure * (cdStep + 1) + 10)  -- draw / stalemate, scaled by cdStep
   )
+
+/- TODO: in the (b) development of KernelChoice, fuzzyGrade could delegate
+   to SplitOctonionCost.engine_to_nodecost rather than hardcoding the
+   D→impact mapping. The current hardcoded version is the (a) minimal
+   scaffold; the (b) version would unify BlamePool and NonAssociativeBudget.
+   See docs/PLAN_market_closure.md §3c and §6. -/
 
 /-- **Norm revision (deontic update)**: given the graded impact of a round and
   the current norm, produce a revised norm.

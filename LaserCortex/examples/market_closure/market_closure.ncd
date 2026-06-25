@@ -1,0 +1,90 @@
+/: Market Closure — the dual-capability Fuzzy→Nat plan
+/: Phase 1: minimal version (Sorites + Edict + AMM triple)
+/: Phase 2: expand to include auditor (V1→V2→V3) as a fourth path
+/:          see TODO at bottom of file
+
+concept market_events, degree, blame, fair_price, threshold, closure_cost
+
+relation fuzzy_grade : market_events -> degree         /: Fuzzy→Nat (dual capability)
+relation classifies_vagueness : degree -> outcome     /: Sorites path (no blame)
+relation classifies_blame : degree -> blame           /: Edict path (with blame)
+relation deontic_update : blame × threshold -> threshold  /: revise threshold
+relation compute_price : market_events -> fair_price  /: AMM short-circuit
+relation measure_cost : fair_price -> closure_cost   /: FL deduction
+relation self_recognize : norm -> norm                /: fixed point check
+
+/:
+Sorites path (open-loop, no closure):
+  market_events → fuzzy_grade → degree → classifies_vagueness → outcome
+  No blame feedback → no deontic update → no norm revision
+:/
+path: sorites_classification(market_events) -> outcome
+    <- degree
+    <= fuzzy_grade(market_events)
+    <= no consequence variable (Sorites has no blame feedback)
+
+/:
+Edict path (closed-loop with blame feedback → paradox):
+  market_events → temporal_normalize → fuzzy_grade → degree
+  → classifies_blame → blame → deontic_update(blame, threshold)
+  → revised_threshold → self_recognize(norm)
+  Arbitrary norm produces paradox output
+:/
+path: edict_closure(market_events, initial_threshold) -> norm
+    <= temporal_normalize(market_events)
+    <= fuzzy_grade(market_events)
+    <- blame
+    <= deontic_update(blame, initial_threshold)
+    <= self_recognize(norm)
+    :closure:
+
+/:
+AMM kernel path (closed-loop with consequence = crossImpact):
+  market_events → Generation.temporalConflate → EMLTree
+  → AMM.swapOut → fair_price
+  → FrictionLagrangian.Φ → closure_cost
+  → reserve_guard(fair_price, closure_cost) → ZD check
+  → EMLRegistry.certify → certified_price
+  Cost deducted from reserve if profitable
+:/
+path: amm_close(market_events, pool) -> certified_price
+    <= generate_tree(market_events)  /: Generation.temporalConflate
+    <- fair_price
+    <= compute_price(pool)            /: AMM.swapOut
+    <= measure_cost(generated_tree)  /: FrictionLagrangian.Φ
+    <- closure_cost
+    <= reserve_guard(fair_price, closure_cost)   /: ZD check
+    <= certify(generated_tree, fair_price)        /: EMLRegistry.certify
+    :closure:
+
+/:
+Coupling signatures:
+  - AMM path: commutative-associative (rightComb canonical)
+  - Sorites path: commutative (no ordering constraints)
+  - Edict path: non-commutative (time matters — historical events in order)
+:/
+coupling amm_path: commutative_associative (rightComb)
+coupling sorites_path: commutative
+coupling edict_path: non_commutative
+
+/:
+==========================================================================
+TODO Phase 2 — expand to (b): include the meta-reasoning auditor
+(V1→V2→V3) as a fourth path running the same closure pipeline on
+architectural findings.
+
+The LLM that NormCode relies on acts as the sensor from the continuous
+domain (architectural quality) to the discrete domain (V1 findings).
+The auditor's "domain-norm prompt" is its kernel — analogous to AMM
+being the kernel for fair-price requests.
+
+New concepts and a fourth path would be added here, running the
+same temporalNormalize → fuzzyGrade → deonticUpdate → selfRecognize
+pipeline but on V1 findings instead of market events. The fuzzyGrade
+would use confidence × severity; the deonticUpdate would tighten
+domain-norm thresholds when patterns accumulate.
+
+See scripts/meta_reason/run.py for the current runtime implementation
+and .open-notebook/prompts/0{1,2,3}_*.md for the domain-norm kernel.
+==========================================================================
+:/

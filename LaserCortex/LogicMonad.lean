@@ -8,15 +8,15 @@ Formalizes a free monad over binary trees (`LogicM`) and a logic-parameterized c
 
 ## Contracts
 
-`LogicM`, `LogicM.bind`, `LogicM.map`, `LogicM.toEMLTree`, `LogicM.size`, `LogicMonad`, `pure`, `seq`, `toTree`, `normalizeAcross`, `pure_bind`, `bind_pure`, `bind_assoc`, `seq_via_bind`, `monad_structure_invariant`
+`LogicM`, `LogicM.bind`, `LogicM.map`, `LogicM.toEMLTree`, `LogicM.size`, `leafValues`, `appendRightComb`, `toRightComb`, `LogicMonad`, `pure`, `seq`, `toTree`, `normalizeAcross`, `pure_bind`, `bind_pure`, `bind_assoc`, `seq_via_bind`, `monad_structure_invariant`
 
 ## Cross-refs
 
-`LaserCortex.EMLRegistry → EMLTree` (structural mapping target), `LaserCortex.LogicTypes → LogicType, LogicContraction, LogicNormalForm` (normalization parameters and type constraints)
+`LaserCortex.EMLRegistry → EMLTree, rightComb, contracts_to_rightComb, CortexCertificate` (structural mapping target, canonical normal form, contraction proof, quench witness), `LaserCortex.LogicTypes → LogicType, LogicContraction, LogicNormalForm` (normalization parameters and type constraints)
 
 ## Invariants
 
-`LogicM` strictly enforces binary tree topology via `pure` (leaf) and `node` (binary internal) constructors. `LogicMonad` enforces `lt`-normalized form on all `tree` fields. Monad laws (`pure_bind`, `bind_pure`, `bind_assoc`) structurally guaranteed by structural induction. `monad_structure_invariant` enforces `LogicType`-agnostic monadic identity. Normalization cost bounded by `cdStep lt` per `seq` operation.
+`LogicM` strictly enforces binary tree topology via `pure` (leaf) and `node` (binary internal) constructors. `LogicMonad` enforces `lt`-normalized form on all `tree` fields. Monad laws (`pure_bind`, `bind_pure`, `bind_assoc`) structurally guaranteed by structural induction. `monad_structure_invariant` enforces `LogicType`-agnostic monadic identity. `normalizeAcross` returns a `CortexCertificate × LogicM α` where the certificate proves the original tree contracts to `rightComb`-of-its-size, and the normalized tree preserves all leaf values (the "loose leaves"). Normalization cost bounded by `cdStep lt` per `seq` operation.
 
 ## Tags
 
@@ -100,6 +100,33 @@ theorem bind_assoc (m : LogicM α) (f : α → LogicM β) (g : β → LogicM γ)
       _ = LogicM.node ((l >>= f) >>= g) ((r >>= f) >>= g) := rfl
       _ = LogicM.node (l >>= (λ x => f x >>= g)) (r >>= (λ x => f x >>= g)) := by rw [ih_l, ih_r]
       _ = ((LogicM.node l r : LogicM α) >>= (λ x => f x >>= g)) := rfl
+
+-- ================================================================
+-- Structure-preserving normalization of LogicM trees
+-- ================================================================
+
+/-- Extract leaf values from a LogicM tree in depth-first order.
+    These are the "loose leaves" — underdetermined questions that
+    survive normalization. -/
+private def leafValues {α : Type} : LogicM α → List α
+  | .pure a => [a]
+  | .node l r => leafValues l ++ leafValues r
+
+/-- Append two rightComb-shaped LogicM trees into a single rightComb
+    of combined size. Assumes both arguments are already in rightComb form
+    (i.e., either `.pure a` or `.node (.pure _) rest`).
+    Termination: structural on the first argument. -/
+private def appendRightComb {α : Type} : LogicM α → LogicM α → LogicM α
+  | .pure a, r => .node (.pure a) r
+  | .node a rest, r => .node a (appendRightComb rest r)
+
+/-- Convert a LogicM tree to rightComb form, preserving all leaf values
+    in depth-first order. The result is a rightComb-shaped tree with the
+    same leaf values — the structure is canonicalized while the content
+    (the "loose leaves") is preserved. -/
+private partial def toRightComb {α : Type} : LogicM α → LogicM α
+  | .pure a => .pure a
+  | .node l r => appendRightComb (toRightComb l) (toRightComb r)
 
 -- ================================================================
 -- The Free Monad as Bootstrap
@@ -208,17 +235,38 @@ theorem seq_via_bind (lt : LogicTypes.LogicType) {α β : Type}
   is an isomorphism of monads: it preserves pure, bind, and the laws.
   Only the normalization (applied via LogicContraction) differs.
 -/
-theorem monad_structure_invariant (lt₁ lt₂ : LogicTypes.LogicType) {α : Type}
+theorem monad_structure_invariant (lt₁ _lt₂ : LogicTypes.LogicType) {α : Type}
     (m : LogicMonad lt₁ α) :
     m.toTree = (m.toTree : LogicM α) := rfl
 
 /--
-  The normalization for each logic type can be applied to any monad value
-  regardless of which logic it originated from. This is the "transcends
-  identity" property: the monad layer is common to all logics, and the
-  normalization layer sits on top.
--/
-def normalizeAcross (lt : LogicTypes.LogicType) {α : Type} (m : LogicM α) : LogicM α :=
-  m  -- placeholder: actual normalization via contracts_to_rightComb
+  Normalize an arbitrary `LogicM α` tree to rightComb canonical form,
+  preserving all leaf values (the "loose leaves" — underdetermined questions
+  that survive normalization).
+
+  Returns a `CortexCertificate` proving that the tree contracts to its
+  canonical rightComb normal form, alongside the normalized tree with
+  leaf values intact.
+
+  The certificate serves as an audit trail — a reference back to the
+  original tree's structure. It is the "loose leaf reference" the
+  Witness-Skeptic game uses to determine the next round of generation:
+
+    - If the certificate's source (the original question) is not yet
+      fully resolved, multiplication with bias=1 preserves the e₀ identity
+      axis, preventing zero-divisor annihilation and triggering another
+      round of the witness-skeptic game.
+    - If the source has collapsed fully (all non-identity SO axes = 0),
+      the certificate is a fixed-point proof: the question IS the answer.
+
+  See also: `CortexCertificate` (EMLRegistry.lean), `contracts_to_rightComb`,
+  `appendRightComb`, `toRightComb`. -/
+def normalizeAcross (_lt : LogicTypes.LogicType) {α : Type} (m : LogicM α) : CortexCertificate × LogicM α :=
+  let cert : CortexCertificate := {
+    source := m.toEMLTree
+    target := rightComb m.size
+    proof  := contracts_to_rightComb m.toEMLTree
+  }
+  (cert, toRightComb m)
 
 end LogicMonad

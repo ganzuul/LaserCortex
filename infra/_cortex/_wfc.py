@@ -553,18 +553,38 @@ def inflate(problem_class: ProblemClass) -> AntiCoherentPair:
     - coherent = CLASSICAL (vacuous, explosive resolution)
     - antiCoherent = the native logic of the ProblemClass
 
+    All 13 ProblemClass variants are explicitly mapped.
+
     This is the generative act: from nothingness (zero divisor), produce a
     pair representing the two poles of the paradox. The pair is then
     available for temporal conflation and resonance.
     """
-    if problem_class == ProblemClass.SELF_REFERENCE:
-        return LIAR_PAIR
-    elif problem_class == ProblemClass.INCONSISTENT_DEF:
-        return BARBER_PAIR
-    elif problem_class == ProblemClass.TEMPORAL_DECISION:
-        return GRANDFATHER_PAIR
-    else:
-        return AntiCoherentPair(coherent=LogicType.CLASSICAL, antiCoherent=LogicType.CLASSICAL)
+    mapping = {
+        ProblemClass.SELF_REFERENCE: LIAR_PAIR,
+        ProblemClass.VAGUENESS: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.FUZZY),
+        ProblemClass.INCONSISTENT_DEF: BARBER_PAIR,
+        ProblemClass.TEMPORAL_DECISION: GRANDFATHER_PAIR,
+        ProblemClass.DEONTIC: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.DEONTIC),
+        ProblemClass.EPISTEMIC: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.EPISTEMIC),
+        ProblemClass.QUANTUM_SUPERPOSITION: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.QUANTUM),
+        ProblemClass.CONSTRUCTIVE: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.INTUITIONISTIC),
+        ProblemClass.RELEVANCE: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.RELEVANCE),
+        ProblemClass.EMPTY_REFERENCE: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.FREE),
+        ProblemClass.INFINITY: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.INFINITARY),
+        ProblemClass.MODALITY: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.MODAL),
+        ProblemClass.META_PARADOX: AntiCoherentPair(
+            coherent=LogicType.CLASSICAL, antiCoherent=LogicType.CLASSICAL),
+    }
+    return mapping[problem_class]
 
 
 def temporal_conflate(pair: AntiCoherentPair) -> _EMLTree:

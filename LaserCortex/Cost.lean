@@ -64,6 +64,7 @@ structure NodeCost where
   denom : Nat := 10
   maxSem : Bool := false
   satCap : Nat := 0
+  deriving DecidableEq
 
 /-- Uncapped application: computes the raw cost before saturation.
     Separating this from the satCap cap makes proofs cleaner. -/

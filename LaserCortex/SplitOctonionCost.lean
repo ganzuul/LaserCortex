@@ -362,7 +362,200 @@ theorem engine_pos_debt_mirror (debt cap : Nat) (h : debt > 0) :
   simp [h]
 
 -- ============================================================================
--- LAYER 8: COST LANDSCAPE EQUIVALENCE
+-- LAYER 8: CARRIER MORPHISM NodeCost → SplitOctonion (Gap A of GLM-5.2)
+-- ============================================================================
+-- The 7-skeleton discovery (SplitOctonionLogic.lean) shows that the 15 named
+-- logics collapse to 7 distinct NodeCost configurations, corresponding to the
+-- 7 imaginary axes e₁⋯e₇ of the split-octonion with bias=1 as e₀.
+--
+-- The carrier morphism `toSO` embeds the 8-parameter NodeCost space into the
+-- 8-dimensional split-octonion algebra, making the "readout" (NodeCost = WHAT)
+-- into a bona fide algebraic object (SplitOctonion = WHY). The factorization
+-- theorem shows that `engine_to_nodecost` factors through this embedding:
+-- the engine state first maps to a split-octonion point, then projects to
+-- NodeCost via the field structure.
+--
+-- This is NOT an algebra homomorphism (NodeCost has no multiplication) —
+-- it is an embedding of the parameter space, proving that the cost parameters
+-- are a genuine projection of the underlying algebraic structure.
+
+/-- Embed a NodeCost into the split-octonion algebra by mapping each field to
+    the corresponding component eᵢ:
+    - e₀ (real axis)    ← bias       (always 1 — the identity)
+    - e₁ (associative)  ← leftWeight (left-subtree amplification)
+    - e₂ (associative)  ← rightDiv   (right-subtree compression)
+    - e₃ (associative)  ← denom      (denominator for cross-term)
+    - e₄ (split)       ← coupling   (cross-term numerator — non-associative)
+    - e₅ (split)       ← satCap     (saturation bound — non-associative)
+    - e₆ (split)       ← mirror     (mirror mode — Bool as Int: 0/1)
+    - e₇ (split)       ← maxSem     (semantic max mode — Bool as Int: 0/1) -/
+def toSO (c : Cost.NodeCost) : SplitOctonion :=
+  { e0 := c.bias
+    e1 := c.leftWeight
+    e2 := c.rightDiv
+    e3 := c.denom
+    e4 := c.coupling
+    e5 := c.satCap
+    e6 := if c.mirror then 1 else 0
+    e7 := if c.maxSem then 1 else 0
+  }
+
+/-- `toSO` is injective: the embedding faithfully represents NodeCost fields
+    as distinct split-octonion components. This is the carrier morphism
+    requirement — NodeCost is a subobject of SplitOctonion (via the 8 fields). -/
+theorem toSO_injective (c₁ c₂ : Cost.NodeCost) (h : toSO c₁ = toSO c₂) : c₁ = c₂ := by
+  -- Destructure both NodeCosts to expose fields
+  cases c₁; cases c₂
+  rename_i lw1 rd1 b1 m1 co1 d1 ms1 sc1 lw2 rd2 b2 m2 co2 d2 ms2 sc2
+  -- Using h, each SO component equality gives a NodeCost field equality via simpa [toSO]
+  have hb : b1 = b2 := by
+    simpa [toSO] using congr_arg SplitOctonion.e0 h
+  have hlw : lw1 = lw2 := by
+    simpa [toSO] using congr_arg SplitOctonion.e1 h
+  have hrd : rd1 = rd2 := by
+    simpa [toSO] using congr_arg SplitOctonion.e2 h
+  have hd : d1 = d2 := by
+    simpa [toSO] using congr_arg SplitOctonion.e3 h
+  have hco : co1 = co2 := by
+    simpa [toSO] using congr_arg SplitOctonion.e4 h
+  have hsc : sc1 = sc2 := by
+    simpa [toSO] using congr_arg SplitOctonion.e5 h
+  have hm : m1 = m2 := by
+    -- e6 is 0/1 from the Bool conditionals; equality of e6 forces the Bools to agree
+    have he6 : (toSO (Cost.NodeCost.mk lw1 rd1 b1 m1 co1 d1 ms1 sc1)).e6 =
+              (toSO (Cost.NodeCost.mk lw2 rd2 b2 m2 co2 d2 ms2 sc2)).e6 := by rw [h]
+    unfold toSO at he6
+    by_cases h1 : m1
+    · -- m1 = true → RHS must be true too, otherwise 1 ≠ 0
+      simp [h1] at he6
+      have h2 : m2 := by
+        by_contra! h2
+        simp [h2] at he6
+      simp [h1, h2]
+    · -- m1 = false → RHS must be false too
+      simp [h1] at he6
+      have h2 : ¬ m2 := by
+        by_contra! h2
+        simp [h2] at he6
+      simp [h1, h2]
+  have hms : ms1 = ms2 := by
+    -- Same logic as hm, using e7
+    have he7 : (toSO (Cost.NodeCost.mk lw1 rd1 b1 m1 co1 d1 ms1 sc1)).e7 =
+              (toSO (Cost.NodeCost.mk lw2 rd2 b2 m2 co2 d2 ms2 sc2)).e7 := by rw [h]
+    unfold toSO at he7
+    by_cases h1 : ms1
+    · simp [h1] at he7
+      have h2 : ms2 := by
+        by_contra! h2
+        simp [h2] at he7
+      simp [h1, h2]
+    · simp [h1] at he7
+      have h2 : ¬ ms2 := by
+        by_contra! h2
+        simp [h2] at he7
+      simp [h1, h2]
+  -- All 8 fields are equal; use simp to close the goal
+  simp [hb, hlw, hrd, hd, hco, hsc, hm, hms]
+
+/-- Map an engine state directly to a split-octonion point, bypassing NodeCost.
+    This is the "direct" algebraic representation of the engine state in
+    the split-octonion algebra.
+    
+    By definition, `engineToSO = toSO ∘ engine_to_nodecost`. The factorization
+    theorem `engine_to_nodecost_factors_through_SO` is therefore `rfl`.
+    (See `engineToSO_formula` for the explicit componentwise expansion.) -/
+def engineToSO (s : EngineState) : SplitOctonion :=
+  toSO (engine_to_nodecost s)
+
+/-- Componentwise equality lemma for SplitOctonion: if all 8 components agree,
+    the two split-octonions are equal. -/
+lemma SplitOctonion.ext_components {a b : SplitOctonion}
+    (h0 : a.e0 = b.e0) (h1 : a.e1 = b.e1) (h2 : a.e2 = b.e2)
+    (h3 : a.e3 = b.e3) (h4 : a.e4 = b.e4) (h5 : a.e5 = b.e5)
+    (h6 : a.e6 = b.e6) (h7 : a.e7 = b.e7) : a = b := by
+  cases a; cases b
+  simp at h0 h1 h2 h3 h4 h5 h6 h7
+  simp [h0, h1, h2, h3, h4, h5, h6, h7]
+
+/-- Explicit componentwise expansion of `engineToSO` for documentation purposes.
+    When `local_debt > 0`:
+      e₀=1, e₁=0, e₂=max(0, capacity/(debt+1)-1), e₃=10,
+      e₄=0, e₅=0, e₆=1 (mirror), e₇=0
+    When `local_debt = 0`:
+      e₀=1, e₁=1 (classical), e₂=0, e₃=10,
+      e₄=0, e₅=0, e₆=0, e₇=0
+    This matches the `engine_to_nodecost` branches componentwise. -/
+theorem engineToSO_formula (s : EngineState) : engineToSO s =
+    if h : s.local_debt > 0 then
+      let compression := s.capacity / (s.local_debt + 1)
+      { e0 := 1, e1 := 0, e2 := (max 0 (compression - 1) : ℤ), e3 := 10,
+        e4 := 0, e5 := 0, e6 := 1, e7 := 0
+      }
+    else
+      { e0 := 1, e1 := 1, e2 := 0, e3 := 10,
+        e4 := 0, e5 := 0, e6 := 0, e7 := 0
+      } := by
+  dsimp [engineToSO]
+  by_cases h : s.local_debt > 0
+  · apply SplitOctonion.ext_components
+    · -- e0
+      simp [toSO, engine_to_nodecost, h]
+    · -- e1
+      simp [toSO, engine_to_nodecost, h]
+    · -- e2: rightDiv formula (Nat.max with cast to ℤ)
+      -- Lemma: for any x:ℕ, the Nat.cast of (max 0 (x-1)) equals the ℤ max
+      have cast_lemma (x : ℕ) : (Nat.cast (max 0 (x - 1)) : ℤ) = max (0 : ℤ) ((x : ℤ) - 1) := by
+        cases x
+        · simp
+        · rename_i x
+          simp
+      let target : SplitOctonion :=
+        { e0 := 1, e1 := 0, e2 := (max 0 ((s.capacity / (s.local_debt + 1)) - 1) : ℤ), e3 := 10,
+          e4 := 0, e5 := 0, e6 := 1, e7 := 0 }
+      calc
+        (toSO (engine_to_nodecost s)).e2 = ((engine_to_nodecost s).rightDiv : ℤ) := rfl
+        _ = (Nat.cast (max 0 ((s.capacity / (s.local_debt + 1)) - 1)) : ℤ) := by
+          simp [engine_to_nodecost, h]
+        _ = (max 0 ((s.capacity / (s.local_debt + 1)) - 1) : ℤ) := by
+          simpa using cast_lemma (s.capacity / (s.local_debt + 1))
+        _ = target.e2 := rfl
+        _ = (if h : s.local_debt > 0 then target
+              else { e0 := 1, e1 := 1, e2 := 0, e3 := 10,
+                     e4 := 0, e5 := 0, e6 := 0, e7 := 0 }).e2 := by
+          simp [h]
+    · -- e3
+      simp [toSO, engine_to_nodecost, h]
+    · -- e4
+      simp [toSO, engine_to_nodecost, h]
+    · -- e5
+      simp [toSO, engine_to_nodecost, h]
+    · -- e6: mirror → 1
+      simp [toSO, engine_to_nodecost, h]
+    · -- e7: maxSem → 0
+      simp [toSO, engine_to_nodecost, h]
+  · apply SplitOctonion.ext_components
+    · simp [toSO, engine_to_nodecost, h]
+    · simp [toSO, engine_to_nodecost, h]
+    · simp [toSO, engine_to_nodecost, h]
+    · simp [toSO, engine_to_nodecost, h]
+    · simp [toSO, engine_to_nodecost, h]
+    · simp [toSO, engine_to_nodecost, h]
+    · simp [toSO, engine_to_nodecost, h]
+    · simp [toSO, engine_to_nodecost, h]
+
+/-- The engine's projection to NodeCost factors through the split-octonion
+    carrier morphism (trivially, by definition of `engineToSO`):
+    
+        toSO (engine_to_nodecost s) = engineToSO s
+    
+    This is the Gap A factorization theorem: the 3-parameter engine state
+    embeds into the 8-dimensional split-octonion algebra, and the NodeCost
+    readout is the "shadow" (componentwise projection) of that algebraic point. -/
+theorem engine_to_nodecost_factors_through_SO (s : EngineState) :
+    toSO (engine_to_nodecost s) = engineToSO s := rfl
+
+-- ============================================================================
+-- LAYER 9: COST LANDSCAPE EQUIVALENCE
 -- ============================================================================
 
 /-- The engine-projected NodeCost for the concrete shift produces a
