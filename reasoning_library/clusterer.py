@@ -6,15 +6,10 @@ pattern that can be distilled into a reusable script.
 """
 
 
-from __future__ import annotations
-import sys, os
-if __package__ is None:
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dataclasses import dataclass, field
 from collections import Counter
-from models import SessionReasoningTrace
-from embedder import cosine_similarity
-
+from .models import SessionReasoningTrace
+from .embedder import cosine_similarity
 
 
 @dataclass
@@ -29,26 +24,6 @@ class TraceCluster:
     @property
     def size(self) -> int:
         return len(self.members)
-
-    @property
-    def dominant_intent(self) -> str:
-        if not self.members:
-            return ""
-        intents = [self._traces[i].intent_category for i in self.members]
-        return Counter(intents).most_common(1)[0][0]
-
-    @property
-    def all_tags(self) -> list[str]:
-        if not self.members:
-            return []
-        tags_set: set[str] = set()
-        for i in self.members:
-            tags_set.update(self._traces[i].domain_tags)
-        return sorted(tags_set)
-
-    def set_traces(self, traces: list[SessionReasoningTrace]):
-        """Set the traces reference (needed for dominant_intent/all_tags)."""
-        self._traces = traces
 
 
 def _average_embedding(member_indices: list[int],
@@ -77,6 +52,22 @@ def _average_embedding(member_indices: list[int],
     for d in range(dim):
         centroid[d] /= count
     return centroid
+
+
+def _cluster_dominant_intent(cluster: TraceCluster,
+                             traces: list[SessionReasoningTrace]) -> str:
+    """Compute the dominant intent for a cluster given its traces."""
+    intents = [traces[i].intent_category for i in cluster.members]
+    return Counter(intents).most_common(1)[0][0]
+
+
+def _cluster_all_tags(cluster: TraceCluster,
+                      traces: list[SessionReasoningTrace]) -> list[str]:
+    """Compute the union of all domain tags in a cluster."""
+    tags_set: set[str] = set()
+    for i in cluster.members:
+        tags_set.update(traces[i].domain_tags)
+    return sorted(tags_set)
 
 
 def cluster_traces(traces: list[SessionReasoningTrace],
@@ -110,7 +101,6 @@ def cluster_traces(traces: list[SessionReasoningTrace],
 
         # Start a new cluster with trace i
         cluster = TraceCluster(cluster_id=cid, members=[i])
-        cluster.set_traces(traces)
         assigned[i] = True
 
         # Find nearest unassigned traces with matching intent
@@ -138,10 +128,10 @@ def cluster_traces(traces: list[SessionReasoningTrace],
         clusters.append(cluster)
         cid += 1
 
-    # Finalize
+    # Finalize: compute centroid, intent, and tags directly
     for c in clusters:
         c.centroid = _average_embedding(c.members, traces)
-        c.intent_category = c.dominant_intent
-        c.domain_tags = c.all_tags
+        c.intent_category = _cluster_dominant_intent(c, traces)
+        c.domain_tags = _cluster_all_tags(c, traces)
 
     return [c for c in clusters if c.size >= min_cluster_size]

@@ -1,7 +1,6 @@
 """MCP server for reasoning library pattern lookup.
 
-Start: python3 -m reasoning_library.mcp_server --port 8765
-       cd reasoning_library && python3 mcp_server.py --port 8765
+Start: python3 -m reasoning_library mcp_server --port 8765
 
 API:
   POST /lookup  {"query_text": "...", "threshold": 0.60}
@@ -10,23 +9,14 @@ API:
 """
 
 
-from __future__ import annotations
-import sys, os
-if __package__ is None:
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import argparse
 import json
 from pathlib import Path
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
-
-_script_dir = Path(__file__).parent
-if str(_script_dir) not in sys.path:
-    sys.path.insert(0, str(_script_dir))
-
-from embedder import _embed_batch
-from models import ScriptMatch
+from .embedder import _embed_batch, cosine_similarity
+from .models import ScriptMatch
 
 DEFAULT_PORT = 8765
 DEFAULT_SIMILARITY_THRESHOLD = 0.60
@@ -55,7 +45,6 @@ def lookup_pattern(query_text, library, threshold=DEFAULT_SIMILARITY_THRESHOLD):
         centroid = script.get("centroid", [])
         if not centroid:
             continue
-        from embedder import cosine_similarity
         sim = cosine_similarity(query_emb, centroid)
         if sim > best_sim:
             best_sim = sim
@@ -75,6 +64,16 @@ def lookup_pattern(query_text, library, threshold=DEFAULT_SIMILARITY_THRESHOLD):
         )
 
     return ScriptMatch()
+
+
+def cosine_similarity(a: list[float], b: list[float]) -> float:
+    """Compute cosine similarity between two vectors."""
+    dot = sum(x * y for x, y in zip(a, b))
+    norm_a = sum(x * x for x in a) ** 0.5
+    norm_b = sum(x * x for x in b) ** 0.5
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return dot / (norm_a * norm_b)
 
 
 class MCPRequestHandler(BaseHTTPRequestHandler):
@@ -159,7 +158,7 @@ def main():
         global LIBRARY_PATH
         LIBRARY_PATH = Path(args.library)
 
-    server = HTTPServer(("0.0.0.0", args.port), MCPRequestHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", args.port), MCPRequestHandler)
     print(f"Reasoning library MCP server on http://0.0.0.0:{args.port}")
     print(f"  POST /lookup  - Look up patterns")
     print(f"  GET  /health  - Health check")

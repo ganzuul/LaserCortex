@@ -25,15 +25,10 @@ Session format:
 """
 
 
-from __future__ import annotations
-import sys
-import os
-if __package__ is None:
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import re
+import os
 from pathlib import Path
-from models import SessionReasoningTrace, ARCHIVING_SCHEMA
-
+from .models import SessionReasoningTrace, ARCHIVING_SCHEMA
 
 
 # ── Regex patterns ───────────────────────────────────────────────────
@@ -45,10 +40,6 @@ _ASSISTANT_RE = re.compile(
     re.MULTILINE
 )
 _THINKING_RE = re.compile(r"_Thinking:_\s*\n(.*?)(?=\n\*\*Tool:|\n## |\Z)", re.DOTALL)
-_TOOL_RE = re.compile(
-    r"\*\*Tool:\s*(\w+)\s*\*\*(?:\n\*\*Input:\*\*\s*\n```.*?```\s*\n)?\*\*Output:\*\*\s*\n```.*?```\s*",
-    re.DOTALL
-)
 
 # Tool name patterns
 _TOOL_NAMES = {

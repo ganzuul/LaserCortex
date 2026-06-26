@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
+# #!/usr/bin/env python3
 """Batch pipeline for creating reasoning scripts from session traces.
 
 Usage:
-    python3 -m reasoning_library.pipeline [--no-model] [--min-cluster N]
+    python3 -m reasoning_library pipeline [--session-dir .] [--no-model]
     
-    # or as a script from the reasoning_library directory:
-    cd reasoning_library && python3 pipeline.py [--no-model]
+    # or as a module subcommand:
+    python3 -m reasoning_library pipeline --session-dir .. --no-model
 
 This script:
 1. Parses session files
@@ -21,20 +21,16 @@ Output files (in reasoning_library/):
 """
 
 
-from __future__ import annotations
-import sys, os
-if __package__ is None:
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import argparse
 import json
 from pathlib import Path
 from collections import Counter
 
-from parser import parse_all_sessions, detect_outcome
-from embedder import embed_batch, cosine_similarity
-from clusterer import cluster_traces
-from compressor import compress_cluster_via_model
-from models import SessionReasoningScript, trace_to_jsonl_line
+from .parser import parse_all_sessions, detect_outcome
+from .embedder import embed_batch, cosine_similarity
+from .clusterer import cluster_traces
+from .compressor import compress_cluster_via_model
+from .models import SessionReasoningScript, trace_to_jsonl_line
 
 
 OUTPUT_DIR = Path(__file__).parent  # Same directory as pipeline.py
@@ -54,8 +50,8 @@ def compress_heuristic(cluster, traces):
     tool_chain = " -> ".join(sorted_tools[:5])
 
     first = cluster_traces[0]
-    priming = f"When working on {cluster.dominant_intent}: {first.thinking_block[:150]}..."
-    runbook = f"1. Check the relevant {' '.join(cluster.all_tags) or 'source files'}\n"
+    priming = f"When working on {cluster.intent_category}: {first.thinking_block[:150]}..."
+    runbook = f"1. Check the relevant {' '.join(cluster.domain_tags) or 'source files'}\n"
     runbook += f"2. Follow the tool chain: {tool_chain or 'read -> edit -> verify'}\n"
     runbook += f"3. Verify changes don't break dependent modules"
 
@@ -64,8 +60,8 @@ def compress_heuristic(cluster, traces):
         priming_prompt=priming,
         debug_runbook=runbook,
         tool_chain=tool_chain,
-        intent_category=cluster.dominant_intent,
-        domain_tags=cluster.all_tags,
+        intent_category=cluster.intent_category,
+        domain_tags=cluster.domain_tags,
         centroid=cluster.centroid,
         source_trace_count=len(cluster.members),
         version=0,
@@ -101,6 +97,12 @@ def run_pipeline(session_dir=".", output_dir=None, use_model=True,
         traces[i].embedding = emb
     print(f"  -> {len(embeddings)} embeddings computed (1024-dim)")
 
+    # Phase 2b: Rewrite traces with embeddings
+    with open(traces_path, "w") as f:
+        for t in traces:
+            f.write(trace_to_jsonl_line(t) + "\n")
+    print(f"  -> Rewrote {traces_path} with embeddings")
+
     # Phase 3: Cluster
     print("\n[Phase 3] Clustering traces...")
     clusters = cluster_traces(traces, min_cluster_size=min_cluster_size,
@@ -112,8 +114,8 @@ def run_pipeline(session_dir=".", output_dir=None, use_model=True,
         cluster_data.append({
             "cluster_id": c.cluster_id,
             "size": c.size,
-            "intent": c.dominant_intent,
-            "tags": c.all_tags,
+            "intent": c.intent_category,
+            "tags": c.domain_tags,
             "member_indices": c.members[:10],
         })
     clusters_path = output_dir / "clusters.json"
@@ -127,7 +129,7 @@ def run_pipeline(session_dir=".", output_dir=None, use_model=True,
 
     for i, cluster in enumerate(clusters):
         print(f"  Cluster {i+1}/{len(clusters)} ({cluster.size} traces, "
-              f"intent={cluster.dominant_intent})...", end=" ")
+              f"intent={cluster.intent_category})...", end=" ")
 
         if use_model:
             script = compress_cluster_via_model(cluster, traces)
@@ -212,4 +214,5 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys
     sys.exit(main())
