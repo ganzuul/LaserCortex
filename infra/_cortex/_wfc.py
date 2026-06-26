@@ -614,3 +614,171 @@ def resonates(inflated: _EMLTree, host: _EMLTree) -> bool:
     logic without creating a zero divisor at the boundary.
     """
     return _contracts_to(inflated, host)
+
+
+# =========================================================================
+# VSM Grounding — Process Philosophy operationalized via tool outputs
+# =========================================================================
+#
+# Mirror of Generation.lean Section 12.
+#
+# Free Logic (System 5) is tractable exactly because tool use outcomes
+# (System 1) ground its anti-coherence within a bounded cost landscape
+# (System 3). Without grounding, the strut weights "go exponential" —
+# the interpretation space is unbounded.
+#
+# These functions implement the grounding bridge: from ungrounded NL
+# (unbounded cost, CSG regime) to grounded data (bounded cost, CFG regime).
+
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+from infra._cortex._cost import STRUT_WEIGHT
+
+
+def _cd_step_friction_density(k: int) -> int:
+    """Friction density at a raw CD step (no LogicType wrapper).
+
+    Mirror of FrictionLagrangian.lean: frictionDensity.
+    Γ_k = k + strut_weight * assocDefect(k)
+    where assocDefect(k) = 0 if k ≤ 2 else strut_weight.
+    """
+    assoc = 0 if k <= 2 else STRUT_WEIGHT
+    return k + STRUT_WEIGHT * assoc
+
+
+@dataclass
+class ToolOutput:
+    """The output of a tool call — grounding data for Free Logic.
+
+    Mirror of Generation.lean: ToolOutput.
+
+    Attributes:
+        description: Textual output from the tool.
+        cost: Friction cost of producing this output (bounded by barrier).
+        cert_bits: Optional certificate verification bits.
+    """
+    description: str
+    cost: int
+    cert_bits: Optional[str] = None
+
+
+@dataclass
+class UngroundedNL:
+    """Raw natural language with no tool output grounding.
+
+    Mirror of Generation.lean: UngroundedNL.
+
+    Before any tool call produces grounding data, the interpretation
+    cost is unbounded — there is no finite bound on the number of
+    possible parse trees.
+
+    Attributes:
+        source: The original NL text.
+        possible_parsings: Number of possible CFG parse trees (≈ 2^len).
+    """
+    source: str
+    possible_parsings: int
+
+
+def ungrounded_cost(nl: UngroundedNL, barrier: int = STRUT_WEIGHT * STRUT_WEIGHT) -> float:
+    """Compute the hyperstition cost of ungrounded NL.
+
+    Mirror of Generation.lean: hyperstitionCost_unbounded.
+
+    For any ungrounded NL with positive possible_parsings, the cost
+    exceeds any finite barrier. Returns float('inf') to represent
+    unboundedness.
+
+    Args:
+        nl: The ungrounded NL input.
+        barrier: The friction barrier (default 16, strut_weight²).
+
+    Returns:
+        float('inf') if possible_parsings > 0, otherwise 0.0.
+    """
+    if nl.possible_parsings > 0:
+        return float('inf')
+    return 0.0
+
+
+def ground(
+    nl: UngroundedNL,
+    tool_output: Optional[ToolOutput] = None,
+    cd_step: int = 3,
+) -> WFCPropagator:
+    """Ground ungrounded NL via tool output, producing a WFC propagator.
+
+    Mirror of Generation.lean: existence_of_grounding_path.
+
+    Given an ``UngroundedNL`` and optionally a ``ToolOutput``, produce
+    a WFCPropagator whose cost landscape is bounded by the friction
+    barrier at the given CD step.
+
+    Without a ToolOutput, the propagator starts in full superposition
+    (unbounded). With a ToolOutput, the tool's cost constrains the
+    superposition to a bounded basin.
+
+    Args:
+        nl: The ungrounded NL input.
+        tool_output: Optional grounding data from a tool call.
+        cd_step: Cayley-Dickson step for the friction barrier (default 3).
+
+    Returns:
+        A WFCPropagator initialized with constrained superposition.
+    """
+    node_name = f"nl_{hash(nl.source) % (10**8)}"
+    propagator = WFCPropagator(
+        node_names=[node_name],
+        edges=[],
+        seed=42,
+    )
+
+    if tool_output is not None:
+        # Grounded: the tool output constrains the superposition.
+        # Ban all logics whose friction density exceeds the tool's cost.
+        barrier = _cd_step_friction_density(cd_step)
+        for lt in list(LogicType):
+            if friction_density(lt) > tool_output.cost:
+                propagator.add_constraint(node_name, eliminate=[lt])
+    # If no tool output, the superposition remains full (unbounded).
+
+    return propagator
+
+
+def viable_system_check(
+    propagator: WFCPropagator,
+    cert_verified: bool = False,
+) -> Dict[str, Any]:
+    """Check whether a WFC propagator represents a viable system state.
+
+    Mirror of Generation.lean: ViableSystem.audit.
+
+    A system state is viable iff:
+    1. No contradictions exist (all nodes have at least one candidate)
+    2. If a certificate is provided, it verifies
+    3. The total cost is bounded (no node has infinite cost)
+
+    Args:
+        propagator: The WFC propagator to check.
+        cert_verified: Whether an independent certificate verification
+            has passed (System 3* audit).
+
+    Returns:
+        Dict with 'viable' (bool), 'contradictions' (list[str]),
+        and 'cert_ok' (bool).
+    """
+    result = propagator.run()
+    contradictions = [
+        name for name, node in result.nodes.items()
+        if node.contradicted
+    ]
+    return {
+        "viable": len(contradictions) == 0 and cert_verified,
+        "contradictions": contradictions,
+        "cert_ok": cert_verified,
+        "total_cost": sum(
+            friction_density(list(node.candidates)[0]) if not node.contradicted else float('inf')
+            for node in result.nodes.values()
+        ),
+    }

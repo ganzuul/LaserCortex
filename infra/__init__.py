@@ -36,6 +36,11 @@ from infra._orchest import (
     Orchestrator, ProcessTracker, ConceptEntry, InferenceEntry, ConceptRepo, InferenceRepo, WaitlistItem, Waitlist, Blackboard
 )
 
+# Graphiti temporal graph service
+from infra._graphiti_service import (
+    GraphitiService,
+)
+
 # Logging
 from infra._loggers import (
     log_states_progress,

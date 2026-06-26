@@ -88,13 +88,29 @@ class SpecProvenance:
         )
 
 
-# ── Coupling signature → LogicType (from Phase 5 taxonomy) ───────────
+# ── Coupling signature → LogicType ───────────────────────────────────
+#
+# Based on the Hopf 7-Skeleton (lab_notes/006_the_hopf_7_skeleton_of_logic_space.md)
+# and the Cayley-Dickson ladder:
+#
+#   cdStep 0 (ℝ):  commutative AND associative  → "commutative-associative"
+#   cdStep 1 (ℂ):  order lost, still commutative → "commutative"
+#   cdStep 2 (ℍ):  commutativity lost            → "non-commutative"
+#   cdStep 3 (𝕆):  associativity lost            → "non-associative"
+#   cdStep 4 (𝕊):  explosion lost (meta-logic)   → Free Logic (via generation mode only)
+#
+# Previous mapping had "non-commutative" → TEMPORAL, which is incorrect:
+# Temporal is cdStep 1 (ℂ level), still in the commutative regime.
+# "non-commutative" means commutativity is LOST, which happens at cdStep 2 (ℍ).
 
 COUPLING_TO_LOGIC: Dict[str, LogicType] = {
-    "commutative": LogicType.CLASSICAL,
-    "non-commutative": LogicType.TEMPORAL,
-    "non-associative": LogicType.QUANTUM,
-    "commutative-associative": LogicType.CLASSICAL,
+    "commutative": LogicType.CLASSICAL,           # cdStep 0 (ℝ) — default associative
+    "non-commutative": LogicType.INTUITIONISTIC,  # cdStep 2 (ℍ) — loses commutativity
+    "non-associative": LogicType.QUANTUM,         # cdStep 3 (𝕆) — loses associativity
+    "commutative-associative": LogicType.CLASSICAL,  # cdStep 0 (ℝ) — leaf, no loss
+    # NOTE: Free Logic (cdStep 4, sedenion) has no coupling signature —
+    # it is the meta-logic reachable only via the bridge's generation mode
+    # (ZD detection → inflate → Free Logic as the sector-bridging meta-logic).
 }
 
 
