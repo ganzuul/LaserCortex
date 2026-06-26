@@ -5,14 +5,9 @@ This module produces 1024-dim embeddings suitable for similarity search.
 """
 
 
-from __future__ import annotations
-import sys, os
-if __package__ is None:
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import http.client
 import json
-from models import SessionReasoningTrace
-
+from .models import SessionReasoningTrace
 
 
 EMBED_SERVER_URL = "localhost"
@@ -36,13 +31,6 @@ def _embed_batch(texts: list[str], url: str = EMBED_SERVER_URL,
         return [d["embedding"] for d in data["data"]]
     finally:
         conn.close()
-
-
-def embed_trace(trace: SessionReasoningTrace) -> list[float]:
-    """Compute embedding for a single trace."""
-    text = trace.embed_text()
-    embeddings = _embed_batch([text])
-    return embeddings[0]
 
 
 def embed_batch(traces: list[SessionReasoningTrace]) -> list[list[float]]:

@@ -1,0 +1,40 @@
+\section{Introduction}
+
+Large language models have enabled AI systems that reason, plan, and act across complex multi-step workflows. Frameworks like LangChain, AutoGPT, and AutoGen demonstrate how agents can decompose problems and coordinate actions through sequences of LLM calls. Yet as these systems move into high-stakes domains---legal analysis, medical reasoning, financial decision-making---a fundamental question emerges: \textbf{can we audit what these systems actually did?}
+
+\subsection{The Problem: Opaque Workflows and Unauditable Reasoning}
+
+For AI systems operating in regulated or high-consequence domains, auditability is not optional. The EU AI Act mandates decision traceability for high-impact systems. Professional standards in medicine and law require that practitioners justify their reasoning. Financial regulations demand that algorithmic decisions be explainable~\cite{sai2025}. Yet current LLM-based workflows are fundamentally opaque: when step 7 of a 10-step chain produces an unexpected result, developers cannot easily determine what step 7 actually saw.
+
+This opacity stems from \textbf{context pollution}---the accumulation of information across reasoning steps that causes models to hallucinate, confuse intermediate outputs with inputs, and lose track of original task constraints. Empirical studies show that LLMs ``forget'' earlier facts in long conversations, leading to contradictory decisions on lengthy tasks~\cite{chang2025, saga2025}. The compounding error effect is severe: small mistakes in early steps propagate through sequential reasoning, making complex multi-step solutions exponentially more error-prone than simple ones~\cite{wand2025}.
+
+Even state-of-the-art models like GPT-4 struggle to maintain global consistency on complicated plans, often abandoning earlier constraints as context grows. Simply expanding context windows does not solve the problem---research shows that very long prompts can confuse models or cause them to focus on irrelevant details, actually \textit{reducing} correctness despite larger windows~\cite{breunig2025}.
+
+Current approaches offer no path to auditability. Direct prompting bundles everything into one context window, creating cognitive overload with no separation of concerns. Chain-of-Thought (CoT) prompting extends interaction step-by-step but does not isolate context between steps---hallucinated thoughts in early reasoning leak forward into later prompts. Agent frameworks like LangChain and AutoGPT provide orchestration but leave data flow implicit~\cite{ibm2025, wang2024}. As practitioners note, debugging such agents often happens ``in the dark,'' requiring reverse-engineering of hidden state to find root causes~\cite{patel2025}. If developers cannot reconstruct what happened, auditors certainly cannot.
+
+\subsection{The Solution: Auditability Through Enforced Data Isolation}
+
+NormCode makes AI workflows \textbf{auditable by construction}. The key mechanism is explicit data isolation: rather than letting context bleed implicitly between steps, NormCode defines \textit{plans of inferences}---structured decompositions where each step is a self-contained logical unit with access only to explicitly passed inputs. If an early step processes a raw document and later steps receive only a summarized excerpt, no subsequent inference can accidentally peek at the original---it simply is not in that step's input by design.
+
+This architectural choice produces three forms of auditability. \textbf{Input auditability}: for any step, you can answer ``what exactly did this step see?'' by inspecting its explicitly declared inputs. \textbf{Process auditability}: the separation between semantic operations (LLM reasoning) and syntactic operations (deterministic data flow) lets you trace exactly which steps involved probabilistic inference and which were mechanical restructuring. \textbf{Output auditability}: every intermediate result is stored and inspectable, creating a complete audit trail from inputs to conclusions.
+
+This approach aligns with emerging strategies in advanced agent design. Experts advocate isolating context into separate threads or sub-agents, each handling narrow subtasks with only relevant data, rather than one monolithic agent juggling a combined context~\cite{ruan2024}. Recent work on execution isolation (e.g., IsolateGPT) proposes sandboxing LLM-based applications to prevent unauthorized data access~\cite{wu2025}. NormCode builds this isolation into the language itself---not as a guideline but as an enforced rule of the programming model, guaranteeing that every execution produces a verifiable audit trail.
+
+\subsection{Contributions}
+
+This paper presents NormCode, a semi-formal language and execution framework that makes AI planning auditable by construction. Our contributions are as follows.
+
+First, we introduce \textbf{an auditable intermediate representation} for AI planning based on inference decomposition and explicit data flow. The representation uses tensor-structured references with named axes to organize data flow precisely, ensuring that every step's inputs and outputs are fully traceable.
+
+Second, we establish \textbf{semantic/syntactic separation} as a clean architectural distinction between LLM-driven operations (expensive, non-deterministic) and data-restructuring operations (free, deterministic). This separation enables auditors to distinguish probabilistic reasoning from mechanical data routing, supporting precise cost and reliability attribution.
+
+Third, we provide \textbf{a multi-format ecosystem} (\texttt{.ncds} for draft authoring, \texttt{.ncd} for formal execution, \texttt{.ncn} for natural language verification, \texttt{.ncdn} for hybrid editing) that enables different stakeholders---developers, domain experts, auditors---to inspect the same underlying logic in formats suited to their needs.
+
+Fourth, we describe \textbf{a four-phase compilation pipeline} (Derivation, Formalization, Post-Formalization, Activation) that transforms natural language intent into executable JSON repositories through progressive refinement, with manual review opportunities at each phase.
+
+Fifth, we present \textbf{a working implementation} including an orchestrator with dependency-driven scheduling, SQLite-backed checkpointing, and loop management, as well as a visual Canvas App debugger built on React Flow and FastAPI providing real-time graph visualization, breakpoint debugging, and multi-agent configuration---making the audit trail not just available but visually explorable.
+
+Sixth, we validate the approach through \textbf{two demonstrations}: (a) 100\% accuracy on base-X addition tasks across arbitrary digit lengths, and (b) self-hosted execution of NormCode's own compiler pipeline, demonstrating both correctness and expressive completeness.
+
+The rest of this paper is organized as follows: Section 2 reviews related work in AI planning, agent frameworks, and intermediate representations. Sections 3-4 describe the NormCode language and reference system. Section 5 articulates the design philosophy. Sections 6-7 detail the execution model and compiler ecosystem. Section 8 presents case study evaluations. Section 9 discusses limitations and future work, and Section 10 concludes.
+

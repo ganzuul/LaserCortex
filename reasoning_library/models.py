@@ -162,19 +162,3 @@ def trace_to_jsonl_line(t: SessionReasoningTrace) -> str:
     """Serialize a trace as a single JSON line."""
     import json
     return json.dumps(t.to_dict())
-
-
-def traces_from_jsonl(path: str) -> list[SessionReasoningTrace]:
-    """Deserialize traces from JSONL file."""
-    import json
-    traces: list[SessionReasoningTrace] = []
-    with open(path, "r") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            d = json.loads(line)
-            traces.append(SessionReasoningTrace(**{
-                k: v for k, v in d.items() if not k.startswith("_")
-            }))
-    return traces

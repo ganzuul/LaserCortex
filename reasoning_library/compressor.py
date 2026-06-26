@@ -8,14 +8,9 @@ blocks and produce reusable reasoning scripts in three formats:
 """
 
 
-from __future__ import annotations
-import sys, os
-if __package__ is None:
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import json
-from models import SessionReasoningScript, SessionReasoningTrace
-from clusterer import TraceCluster
-
+from .models import SessionReasoningScript, SessionReasoningTrace
+from .clusterer import TraceCluster
 
 
 COMPRESS_PROMPT_TEMPLATE = """You are compressing reasoning traces into reusable scripts.
@@ -63,17 +58,17 @@ def _format_traces_for_compression(traces: list[SessionReasoningTrace]) -> str:
 
 
 def compress_cluster_via_model(cluster: TraceCluster, traces: list[SessionReasoningTrace],
-                                  model_url: str = "http://localhost:8080/v1/chat/completions",
-                                  model_name: str = "Qwen3.6-35B-A3B") -> SessionReasoningScript | None:
+                                model_url: str = "http://localhost:8080/v1/chat/completions",
+                                model_name: str = "Qwen3.6-35B-A3B") -> SessionReasoningScript | None:
     """Use the meta model to compress a cluster into reasoning scripts.
 
     Returns None if the model call fails or output is malformed.
     """
     cluster_traces = [traces[i] for i in cluster.members]
-    tags_str = ", ".join(cluster.all_tags) if cluster.all_tags else "general"
+    tags_str = ", ".join(cluster.domain_tags) if cluster.domain_tags else "general"
 
     prompt = COMPRESS_PROMPT_TEMPLATE.format(
-        intent=cluster.dominant_intent,
+        intent=cluster.intent_category,
         tags=tags_str,
         n_traces=len(cluster_traces),
         traces_text=_format_traces_for_compression(cluster_traces),
@@ -129,9 +124,9 @@ def _parse_compression_output(raw: str, cluster: TraceCluster) -> SessionReasoni
             for line in section.split("\n"):
                 line = line.strip()
                 if line.startswith("intent:"):
-                    cluster.intent_category = line.split(":", 1)[1].strip()
+                    pass  # cluster already has intent_category
                 elif line.startswith("tags:"):
-                    cluster.domain_tags = [t.strip() for t in line.split(":", 1)[1].split(",") if t.strip()]
+                    pass  # cluster already has domain_tags
 
     # Extract tool chain from runbook if not explicitly provided
     if not tool_chain:
@@ -141,12 +136,12 @@ def _parse_compression_output(raw: str, cluster: TraceCluster) -> SessionReasoni
             tool_chain = " -> ".join(found)
 
     return SessionReasoningScript(
-        id=f"script_{cluster.cluster_id}_{cluster.dominant_intent}",
+        id=f"script_{cluster.cluster_id}_{cluster.intent_category}",
         priming_prompt=priming,
         debug_runbook=runbook,
         tool_chain=tool_chain,
-        intent_category=cluster.dominant_intent,
-        domain_tags=cluster.all_tags,
+        intent_category=cluster.intent_category,
+        domain_tags=cluster.domain_tags,
         centroid=cluster.centroid,
         source_trace_count=len(cluster.members),
         version=1,
