@@ -159,6 +159,20 @@ from ._qc_adapter import (
     SignalEvent,
     BacktestResult,
 )
+from ._wfc import (
+    ToolOutput,
+    UngroundedNL,
+    ungrounded_cost,
+    ground,
+    viable_system_check,
+)
+from ._vsm_loop import (
+    ThinkingBlock,
+    VSMState,
+    VSMLoopResult,
+    run_vsm_loop,
+    ncds_to_blocks,
+)
 
 __all__ = [
     # Core tree types
@@ -291,4 +305,18 @@ __all__ = [
     "BARBER_SPEC",
     "MONTY_HALL_SPEC",
     "CONFESSIONAL_SPEC",
+
+    # VSM Grounding
+    "ToolOutput",
+    "UngroundedNL",
+    "ungrounded_cost",
+    "ground",
+    "viable_system_check",
+
+    # VSM Loop Orchestration
+    "ThinkingBlock",
+    "VSMState",
+    "VSMLoopResult",
+    "run_vsm_loop",
+    "ncds_to_blocks",
 ]

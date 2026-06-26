@@ -48,6 +48,29 @@ Start servers in a separate session/terminal so that interrupting the
 test client does not propagate signals to the server. Uncontained
 servers left running after a test abort are a hazard.
 
+### P5: Minimise context churn (token budget)
+
+Remote API calls have a finite token budget. Reading entire files burns
+budget on ingestion that should be spent on reasoning. The rule:
+
+1. **10-line limit per Read call.** If you need more than 10 lines from a
+   file, you are doing a search task, not a read task. Use `grep -n` to
+   find the line number, then Read with offset+limit=10 to spot-check.
+2. **Grep first, read second.** Always locate the relevant section with
+   `grep -n` or `rg` before opening a file. Never open a file blind.
+3. **No bulk ingestion without permission.** Reading >50 lines total from
+   a single file in one session requires explicit user approval. State
+   why the full content is needed.
+4. **Prefer CLI summaries.** Use `wc -l`, `grep -c`, `head -5`,
+   `tail -5`, and structured outlines (`grep -n "^#"`) to understand a
+   file's shape before reading any content.
+5. **Cache file shapes.** Once you know a file's heading structure or
+   line count, don't re-discover it. Reuse that knowledge.
+
+This applies to all files: source code, OWL ontologies, logs, JSON,
+documentation. The goal is to spend tokens on reasoning and writing code,
+not on ingesting text that could have been summarised by a tool.
+
 ## Incident Registry
 
 Specific incidents where a process caused system DoS. These remain

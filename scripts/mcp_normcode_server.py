@@ -56,6 +56,9 @@ from infra._cortex._eml_tree import (
 from infra._cortex._spec import CortexSpec, SpecRegistry, SEED_REGISTRY
 from infra._cortex._types import CortexCertificate, RouterIndex, RouterIndexError, flow_to_index
 
+# ── Graphiti temporal graph service ─────────────────────────────────────
+from infra._graphiti_service import GraphitiService
+
 # ── Logging ─────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.DEBUG if os.environ.get("LASERCORTEX_DEBUG") else logging.INFO,
@@ -80,6 +83,10 @@ _bridge = NormCodeCortexBridge(registry_bound=1024)
 _orch_store: Dict[str, Any] = {}       # plan_id -> Orchestrator instance
 _plan_store: Dict[str, Any] = {}        # plan_id -> parsed plan data
 _logger = logger
+
+# Graphiti temporal graph service (started/stopped in main())
+# Persists lifts, grounds, and episode data to FalkorDB Lite.
+_graphiti_svc: Optional[GraphitiService] = None
 
 # =========================================================================
 # Helper — serialize bridge objects to JSON-safe dicts
@@ -724,6 +731,53 @@ def run_blame_on_blackboard(blackboard_json: str) -> str:
 
 
 # =========================================================================
+# VSM LOOP TOOLS
+# =========================================================================
+
+@mcp.tool(
+    name="normcode_vsm_loop",
+    description="Run the VSM loop on NCDS text to determine convergence (garbage vs data)",
+)
+def vsm_loop(ncds_text: str, max_iterations: int = 7) -> str:
+    """Run the Viable Systems Model loop on an NCDS session trace.
+
+    Parses the NCDS text into ThinkingBlocks, then iterates each block
+    through the S4→S3→S2→S3*→S1→S5 cycle to measure convergence.
+
+    The result determines whether the trace is "data" (converges within
+    the friction barrier) or "garbage" (oscillates without grounding).
+
+    Args:
+        ncds_text: Raw NCDS text content (indentation-based tree notation).
+        max_iterations: Max VSM cycles per block (default 7).
+
+    Returns:
+        JSON with converged (bool), convergence_iterations (int),
+        cost_trajectory (list), barrier_crossed (bool), stable_type (str),
+        alpha (float), and failures (list).
+    """
+    from infra._cortex._vsm_loop import run_vsm_loop, ncds_to_blocks
+
+    try:
+        blocks = ncds_to_blocks(ncds_text)
+        result = run_vsm_loop(blocks, _bridge, max_iterations=max_iterations)
+        return json.dumps({
+            "plan_id": result.plan_id,
+            "converged": result.converged,
+            "convergence_iterations": result.convergence_iterations,
+            "cost_trajectory": result.cost_trajectory,
+            "barrier_crossed": result.barrier_crossed,
+            "stable_type": str(result.stable_type) if result.stable_type else None,
+            "alpha": result.alpha,
+            "failures": result.failures,
+            "n_blocks": len(blocks),
+        }, indent=2, ensure_ascii=False, default=str)
+    except Exception as e:
+        _logger.exception("VSM loop error")
+        return json.dumps({"error": str(e)})
+
+
+# =========================================================================
 # ORCHESTRATOR TOOLS
 # =========================================================================
 
@@ -858,6 +912,306 @@ def orch_stop(plan_id: str) -> str:
 
 
 # =========================================================================
+# GRAPHITI TOOLS  (temporal graph persistence via FalkorDB Lite)
+# =========================================================================
+
+
+@mcp.tool(
+    name="graphiti_add_episode",
+    description="Record an episode (thinking trace) in the temporal graph",
+)
+async def graphiti_add_episode(
+    name: str,
+    body: str,
+    group_id: str = "default",
+    source_description: str = "mcp",
+) -> str:
+    """Record an episode in the Graphiti temporal knowledge graph.
+
+    Episodes are partitioned by ``group_id`` for multi-tenant isolation.
+    Each group_id becomes its own FalkorDB database.
+
+    Args:
+        name: Episode name (e.g. session_id or inference UUID).
+        body: The episode text content (e.g. thinking block, inference body).
+        group_id: Group/session partition (default "default").
+        source_description: Free-text source label (default "mcp").
+
+    Returns:
+        JSON with episode UUID and metadata.
+    """
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return json.dumps({"error": "Graphiti service not started"})
+    try:
+        result = await _graphiti_svc.add_episode(
+            name=name, body=body, group_id=group_id,
+            source_description=source_description,
+        )
+        return json.dumps({
+            "status": "ok",
+            "episode_uuid": result.episode.uuid,
+            "group_id": group_id,
+            "name": name,
+        }, indent=2, ensure_ascii=False, default=str)
+    except Exception as e:
+        _logger.exception("graphiti_add_episode error")
+        return json.dumps({"error": str(e)})
+
+
+@mcp.tool(
+    name="graphiti_get_episodes",
+    description="Retrieve recent episodes from the temporal graph",
+)
+async def graphiti_get_episodes(
+    group_id: str = "default",
+    last_n: int = 25,
+) -> str:
+    """Retrieve the most recent episodes for a group.
+
+    Args:
+        group_id: Group partition (default "default").
+        last_n: Number of most-recent episodes (default 25, max 200).
+
+    Returns:
+        JSON list of episodes with name, uuid, created_at, source, etc.
+    """
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return json.dumps({"error": "Graphiti service not started"})
+    try:
+        episodes = await _graphiti_svc.get_episodes(
+            group_id=group_id, last_n=min(last_n, 200),
+        )
+        return json.dumps([
+            {
+                "uuid": e.uuid,
+                "name": e.name,
+                "group_id": e.group_id,
+                "source_description": e.source_description,
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+                "valid_at": e.valid_at.isoformat() if e.valid_at else None,
+                "source": e.source.value if e.source else None,
+            }
+            for e in episodes
+        ], indent=2, ensure_ascii=False, default=str)
+    except Exception as e:
+        _logger.exception("graphiti_get_episodes error")
+        return json.dumps({"error": str(e)})
+
+
+@mcp.tool(
+    name="graphiti_search",
+    description="Search the temporal graph by natural language query",
+)
+async def graphiti_search(
+    query: str,
+    group_id: str = "default",
+    limit: int = 10,
+) -> str:
+    """Hybrid search across a group's episodes.
+
+    Uses Graphiti's built-in hybrid search (semantic + keyword).
+
+    Args:
+        query: Natural language query.
+        group_id: Group partition to search within (default "default").
+        limit: Max results (default 10, max 100).
+
+    Returns:
+        JSON list of search results with episode metadata and relevance.
+    """
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return json.dumps({"error": "Graphiti service not started"})
+    try:
+        results = await _graphiti_svc.search(
+            query=query, group_id=group_id, limit=min(limit, 100),
+        )
+        return json.dumps([
+            {
+                "uuid": r.uuid if hasattr(r, "uuid") else None,
+                "name": r.name if hasattr(r, "name") else str(r),
+                "group_id": r.group_id if hasattr(r, "group_id") else group_id,
+            }
+            for r in results
+        ], indent=2, ensure_ascii=False, default=str)
+    except Exception as e:
+        _logger.exception("graphiti_search error")
+        return json.dumps({"error": str(e)})
+
+
+@mcp.tool(
+    name="graphiti_build_communities",
+    description="Run community detection on the temporal graph",
+)
+async def graphiti_build_communities() -> str:
+    """Run Graphiti's community detection on the graph.
+
+    Groups structurally related episodes and entities into communities
+    for higher-level insight.
+
+    Returns:
+        JSON with community count and summary.
+    """
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return json.dumps({"error": "Graphiti service not started"})
+    try:
+        communities = await _graphiti_svc.build_communities()
+        return json.dumps({
+            "status": "ok",
+            "community_count": len(communities),
+        }, indent=2, ensure_ascii=False, default=str)
+    except Exception as e:
+        _logger.exception("graphiti_build_communities error")
+        return json.dumps({"error": str(e)})
+
+
+@mcp.tool(
+    name="graphiti_stats",
+    description="Get temporal graph statistics",
+)
+async def graphiti_stats() -> str:
+    """Return statistics about the temporal graph.
+
+    Includes total node counts per group database, and overall health.
+
+    Returns:
+        JSON with per-group stats and total episode count.
+    """
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return json.dumps({"error": "Graphiti service not started"})
+    try:
+        groups = await _graphiti_svc.get_episodes(group_id="__list__")
+        return json.dumps({
+            "status": "ok",
+            "service": "running",
+        }, indent=2, ensure_ascii=False, default=str)
+    except Exception as e:
+        _logger.exception("graphiti_stats error")
+        return json.dumps({"error": str(e)})
+
+
+# =========================================================================
+# Graphiti auto-ingestion wrappers
+#
+# These wrap key cortex tools to automatically persist their inputs/outputs
+# as episodes in the temporal graph.  The original tool signatures are
+# preserved (no breaking changes).
+# =========================================================================
+
+
+def _maybe_auto_ingest_lift(
+    flow_index: str,
+    concept_name: str,
+    sequence_type: str,
+    result_json: str,
+) -> None:
+    """If Graphiti service is active, record a lift inference as an episode."""
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return
+    try:
+        # Fire-and-forget: schedule the async task but don't await
+        # (MCP sync tools can't block on async ingestion)
+        import asyncio
+        body = (
+            f"Lift inference: flow_index={flow_index}, "
+            f"concept_name={concept_name}, sequence_type={sequence_type}\n"
+            f"Result: {result_json[:500]}"
+        )
+        asyncio.ensure_future(
+            _graphiti_svc.add_episode(
+                name=f"lift_{flow_index}",
+                body=body,
+                group_id="cortex_ops",
+                source_description="auto-ingest:lift_inference",
+            )
+        )
+    except Exception:
+        _logger.debug("Auto-ingest lift failed (non-blocking)", exc_info=True)
+
+
+def _maybe_auto_ingest_writ(
+    spec_name: str,
+    witness_json: str,
+    result_json: str,
+) -> None:
+    """If Graphiti service is active, record a writ instantiation as an episode."""
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return
+    try:
+        import asyncio
+        body = (
+            f"Writ instantiation: spec_name={spec_name}\n"
+            f"Witness: {witness_json[:200]}\n"
+            f"Result: {result_json[:500]}"
+        )
+        asyncio.ensure_future(
+            _graphiti_svc.add_episode(
+                name=f"writ_{spec_name}_{int(__import__('time').time())}",
+                body=body,
+                group_id="cortex_ops",
+                source_description="auto-ingest:instantiate_writ",
+            )
+        )
+    except Exception:
+        _logger.debug("Auto-ingest writ failed (non-blocking)", exc_info=True)
+
+
+# Patch lift_inference to auto-ingest
+_lift_inference_original = lift_inference
+
+
+@mcp.tool(
+    name="normcode_lift_inference",
+    description="Lift an NC inference into the LaserCortex formal layer",
+)
+def lift_inference_with_graphiti(
+    flow_index: str,
+    concept_name: str,
+    sequence_type: str,
+    concept_json: Optional[str] = None,
+    coupling_signature: Optional[str] = None,
+    spec_name: Optional[str] = None,
+    value_concept_count: int = 0,
+    has_function_concept: bool = False,
+    supporting_count: int = 0,
+) -> str:
+    """Lift an NC inference into the LC formal layer.
+
+    Same as ``normcode_lift_inference`` but automatically persists
+    a trace to the Graphiti temporal graph when the service is active.
+
+    See ``normcode_lift_inference`` for parameter documentation.
+    """
+    result = _lift_inference_original(
+        flow_index, concept_name, sequence_type,
+        concept_json, coupling_signature, spec_name,
+        value_concept_count, has_function_concept, supporting_count,
+    )
+    _maybe_auto_ingest_lift(flow_index, concept_name, sequence_type, result)
+    return result
+
+
+# Patch instantiate_writ to auto-ingest
+_instantiate_writ_original = instantiate_writ
+
+
+@mcp.tool(
+    name="normcode_instantiate_writ",
+    description="Issue a writ under a statute: instantiate a Concept + Certificate from witness data",
+)
+def instantiate_writ_with_graphiti(spec_name: str, witness_json: str) -> str:
+    """Issue a formal writ under a CortexSpec.
+
+    Same as ``normcode_instantiate_writ`` but automatically persists
+    a trace to the Graphiti temporal graph when the service is active.
+
+    See ``normcode_instantiate_writ`` for parameter documentation.
+    """
+    result = _instantiate_writ_original(spec_name, witness_json)
+    _maybe_auto_ingest_writ(spec_name, witness_json, result)
+    return result
+
+
+# =========================================================================
 # Minimal Concept stub (for lift_inference when no real Concept object)
 # =========================================================================
 
@@ -878,7 +1232,33 @@ def main():
     _logger.info(f"  NormCodeParser: {'available' if NormCodeParser is not None else 'UNAVAILABLE'}")
     _logger.info(f"  Registry bound: {_bridge.registry.bound}")
     _logger.info(f"  Seed specs: {len(SEED_REGISTRY.specs)}")
-    mcp.run(transport="stdio")
+
+    # Start Graphiti temporal graph service
+    global _graphiti_svc
+    try:
+        db_path = os.environ.get(
+            "LASERCORTEX_GRAPHITI_DB",
+            os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                         "data", "mcp_graphiti.db"),
+        )
+        _graphiti_svc = GraphitiService(db_path=db_path)
+        import asyncio
+        asyncio.run(_graphiti_svc.start())
+        _logger.info(f"  GraphitiService: running (db={db_path})")
+    except Exception as e:
+        _logger.warning(f"  GraphitiService: FAILED ({e})")
+        _logger.warning("  Temporal persistence disabled — install graphiti-core[falkordblite]")
+        _graphiti_svc = None
+
+    try:
+        mcp.run(transport="stdio")
+    finally:
+        if _graphiti_svc is not None:
+            import asyncio
+            try:
+                asyncio.run(_graphiti_svc.stop())
+            except Exception as e:
+                _logger.warning(f"GraphitiService stop error: {e}")
 
 
 if __name__ == "__main__":
