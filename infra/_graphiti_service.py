@@ -6,6 +6,7 @@ Provides a singleton-pattern async service that manages:
   - Graphiti instance with mock AI clients (offline mode)
   - Multi-tenant group isolation via FalkorDB databases (group_id = database name)
   - Core operations: add_episode, retrieve_episodes, search, build_communities
+  - Custom entity types: NormNode, CortexNode with OWL key-value pairing
 
 Usage:
     service = GraphitiService(db_path="data/graphiti.db")
@@ -15,6 +16,15 @@ Usage:
         name="session_1",
         body="User asked about X...",
         group_id="my_group",
+    )
+
+    # With custom entity types (OWL key-value pairing):
+    await service.add_episode_with_entities(
+        name="lift_operation",
+        body="Lifting inference to CD structure",
+        group_id="my_group",
+        entity_types={"NormNode": norm_attrs, "CortexNode": cortex_attrs},
+        edge_types={"LIFTS_TO_STRUCTURE": lift_attrs, "OWL_KEY_VALUE_PAIR": owl_attrs},
     )
 
     episodes = await service.get_episodes(group_id="my_group")
@@ -30,6 +40,9 @@ Design:
       operation.  No API keys needed.
     - Persistence: Redis RDB is saved on ``stop()`` via BGSAVE.  The RDB file
       survives restarts — all group databases are restored on next ``start()``.
+    - Blood-Brain Barrier: NormNode (NL values) and CortexNode (OWL keys) are
+      connected via OWL_KEY_VALUE_PAIR edges to maintain separation between
+      formal LaserCortex identifiers and natural language reasoning.
 """
 
 from __future__ import annotations
@@ -383,6 +396,264 @@ class GraphitiService:
             return result[0][0]["count(n)"] if result and result[0] else 0
         finally:
             await driver.close()
+
+    # ── OWL Key-Value Pairing (Blood-Brain Barrier) ─────────────────────
+
+    async def add_episode_with_entities(
+        self,
+        name: str,
+        body: str,
+        group_id: str,
+        entity_types: Optional[Dict[str, Any]] = None,
+        edge_types: Optional[Dict[str, Any]] = None,
+        source_description: str = "mcp",
+        reference_time: Optional[datetime] = None,
+    ) -> Any:
+        """Ingest an episode with custom entity and edge types (OWL key-value pairing).
+
+        This method supports the blood-brain barrier pattern by allowing explicit
+        creation of NormNode and CortexNode entities with OWL key-value fields,
+        connected via OWL_KEY_VALUE_PAIR edges.
+
+        Parameters
+        ----------
+        name : str
+            Episode name.
+        body : str
+            Episode text content.
+        group_id : str
+            Group/session partition.
+        entity_types : dict[str, Any], optional
+            Dict mapping entity type names to their Pydantic model classes.
+            Example: {"NormNode": NormNodeAttrs, "CortexNode": CortexNodeAttrs}
+        edge_types : dict[str, Any], optional
+            Dict mapping edge type names to their Pydantic model classes.
+            Example: {"OWL_KEY_VALUE_PAIR": OwlKeyValuePairAttrs}
+        source_description : str
+            Free-text source label (default: "mcp").
+        reference_time : datetime, optional
+            Defaults to current UTC time.
+
+        Returns
+        -------
+        AddEpisodeResults
+            The result object from Graphiti.add_episode.
+
+        Example
+        -------
+        >>> from infra._graphiti_models import NormNodeAttrs, CortexNodeAttrs, OwlKeyValuePairAttrs
+        >>> norm = NormNodeAttrs(owl_key="ReserveGuard", nl_value="reserve guard")
+        >>> cortex = CortexNodeAttrs(owl_key="ReserveGuard", cd_step=2)
+        >>> owl_edge = OwlKeyValuePairAttrs(key="ReserveGuard", value="reserve guard", cd_step=2)
+        >>> await service.add_episode_with_entities(
+        ...     name="lift_reserve_guard",
+        ...     body="Lifting ReserveGuard inference",
+        ...     group_id="test",
+        ...     entity_types={"NormNode": norm, "CortexNode": cortex},
+        ...     edge_types={"OWL_KEY_VALUE_PAIR": owl_edge},
+        ... )
+        """
+        self._require_started()
+        ref = reference_time or datetime.now(timezone.utc)
+
+        return await self._graphiti.add_episode(
+            name=name,
+            episode_body=body,
+            source_description=source_description,
+            reference_time=ref,
+            source=_EpisodeType.text,  # type: ignore
+            group_id=group_id,
+            entity_types=entity_types,
+            edge_types=edge_types,
+        )
+
+    async def add_owl_key_value_pair(
+        self,
+        norm_node: Any,
+        cortex_node: Any,
+        owl_edge: Any,
+        group_id: str,
+        episode_name: str = "owl_pairing",
+        episode_body: str = "OWL key-value pairing for blood-brain barrier",
+    ) -> Any:
+        """Convenience method to create a NormNode + CortexNode + OWL_KEY_VALUE_PAIR triplet.
+
+        This enforces the blood-brain barrier pattern by creating all three
+        components with matching OWL keys and natural language values.
+
+        Parameters
+        ----------
+        norm_node : NormNodeAttrs
+            The NormNode with owl_key and nl_value.
+        cortex_node : CortexNodeAttrs
+            The CortexNode with matching owl_key.
+        owl_edge : OwlKeyValuePairAttrs
+            The edge connecting them with key, value, coupling_signature, cd_step.
+        group_id : str
+            Group partition.
+        episode_name : str
+            Name for the episode (default: "owl_pairing").
+        episode_body : str
+            Body text for the episode.
+
+        Returns
+        -------
+        AddEpisodeResults
+            The result from Graphiti.add_episode.
+
+        Raises
+        ------
+        ValueError
+            If the OWL key-value invariants are violated.
+        """
+        from infra._graphiti_models import OwlKeyValueInvariants
+
+        # Validate invariants before ingestion
+        if not OwlKeyValueInvariants.check_normnode_cortexnode_pair(norm_node, cortex_node):
+            raise ValueError(
+                f"Invariant violated: NormNode.owl_key ({norm_node.owl_key}) "
+                f"!= CortexNode.owl_key ({cortex_node.owl_key})"
+            )
+        if not OwlKeyValueInvariants.check_normnode_edge_pair(norm_node, owl_edge):
+            raise ValueError(
+                f"Invariant violated: NormNode fields don't match OWL_KEY_VALUE_PAIR edge"
+            )
+        if not OwlKeyValueInvariants.check_cortexnode_edge_pair(cortex_node, owl_edge):
+            raise ValueError(
+                f"Invariant violated: CortexNode fields don't match OWL_KEY_VALUE_PAIR edge"
+            )
+
+        return await self.add_episode_with_entities(
+            name=episode_name,
+            body=episode_body,
+            group_id=group_id,
+            entity_types={"NormNode": norm_node, "CortexNode": cortex_node},
+            edge_types={"OWL_KEY_VALUE_PAIR": owl_edge},
+        )
+
+    async def verify_owl_invariants(self, group_id: str) -> Dict[str, Any]:
+        """Verify all OWL key-value pairing invariants in a group.
+
+        Checks:
+        1. All NormNode.owl_key == CortexNode.owl_key for connected pairs
+        2. All NormNode.nl_value == OWL_KEY_VALUE_PAIR.value
+        3. All CortexNode.cd_step == OWL_KEY_VALUE_PAIR.cd_step
+        4. OWL keys are unique across NormNodes
+        5. Non-trivial CD steps (>= 1) have OWL keys
+
+        Parameters
+        ----------
+        group_id : str
+            Group partition to verify.
+
+        Returns
+        -------
+        dict
+            Verification results with counts and any violations found.
+        """
+        self._require_started()
+        driver = _FalkorDriver(falkor_db=self._falkordb, database=group_id)  # type: ignore
+
+        results = {
+            "group_id": group_id,
+            "norm_nodes_count": 0,
+            "cortex_nodes_count": 0,
+            "owl_edges_count": 0,
+            "violations": [],
+            "all_passed": True,
+        }
+
+        try:
+            # Count nodes
+            result = await driver.execute_query(
+                "MATCH (n:NormNode) RETURN count(n) as count"
+            )
+            if result and result[0]:
+                results["norm_nodes_count"] = result[0][0]["count"]
+
+            result = await driver.execute_query(
+                "MATCH (n:CortexNode) RETURN count(n) as count"
+            )
+            if result and result[0]:
+                results["cortex_nodes_count"] = result[0][0]["count"]
+
+            result = await driver.execute_query(
+                "MATCH ()-[e:OWL_KEY_VALUE_PAIR]->() RETURN count(e) as count"
+            )
+            if result and result[0]:
+                results["owl_edges_count"] = result[0][0]["count"]
+
+            # Check for violations
+            # 1. NormNode with cd_step >= 1 but no owl_key
+            result = await driver.execute_query(
+                "MATCH (c:CortexNode) WHERE c.cd_step >= 1 AND (c.owl_key IS NULL OR c.owl_key = '') "
+                "RETURN c.uuid as uuid, c.cd_step as cd_step"
+            )
+            if result and result[0]:
+                for record in result[0]:
+                    results["violations"].append({
+                        "type": "cortex_missing_owl_key",
+                        "uuid": record.get("uuid"),
+                        "cd_step": record.get("cd_step"),
+                    })
+
+            # 2. OWL_KEY_VALUE_PAIR edges with mismatched keys
+            result = await driver.execute_query(
+                "MATCH (n:NormNode)-[e:OWL_KEY_VALUE_PAIR]->(c:CortexNode) "
+                "WHERE n.owl_key != e.key OR c.owl_key != e.key "
+                "RETURN n.uuid as norm_uuid, c.uuid as cortex_uuid, e.uuid as edge_uuid, "
+                "n.owl_key as norm_key, c.owl_key as cortex_key, e.key as edge_key"
+            )
+            if result and result[0]:
+                for record in result[0]:
+                    results["violations"].append({
+                        "type": "key_mismatch",
+                        "norm_uuid": record.get("norm_uuid"),
+                        "cortex_uuid": record.get("cortex_uuid"),
+                        "edge_uuid": record.get("edge_uuid"),
+                        "norm_key": record.get("norm_key"),
+                        "cortex_key": record.get("cortex_key"),
+                        "edge_key": record.get("edge_key"),
+                    })
+
+            # 3. OWL_KEY_VALUE_PAIR edges with mismatched values
+            result = await driver.execute_query(
+                "MATCH (n:NormNode)-[e:OWL_KEY_VALUE_PAIR]->(c:CortexNode) "
+                "WHERE n.nl_value != e.value "
+                "RETURN n.uuid as norm_uuid, e.uuid as edge_uuid, "
+                "n.nl_value as norm_value, e.value as edge_value"
+            )
+            if result and result[0]:
+                for record in result[0]:
+                    results["violations"].append({
+                        "type": "value_mismatch",
+                        "norm_uuid": record.get("norm_uuid"),
+                        "edge_uuid": record.get("edge_uuid"),
+                        "norm_value": record.get("norm_value"),
+                        "edge_value": record.get("edge_value"),
+                    })
+
+            # 4. Duplicate OWL keys in NormNodes
+            result = await driver.execute_query(
+                "MATCH (n:NormNode) WHERE n.owl_key IS NOT NULL AND n.owl_key != '' "
+                "WITH n.owl_key as key, collect(n.uuid) as uuids "
+                "WHERE size(uuids) > 1 "
+                "RETURN key, uuids"
+            )
+            if result and result[0]:
+                for record in result[0]:
+                    results["violations"].append({
+                        "type": "duplicate_owl_key",
+                        "key": record.get("key"),
+                        "uuids": record.get("uuids"),
+                    })
+
+            results["all_passed"] = len(results["violations"]) == 0
+
+        finally:
+            await driver.close()
+
+        return results
 
     # ── Graphiti access ─────────────────────────────────────────────
 
