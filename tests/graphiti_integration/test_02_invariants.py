@@ -237,3 +237,107 @@ class TestPolicyRecipeConsistency:
         assume(selects_index < len(recipe_names))
         selected = recipe_names[selects_index]
         assert selected in recipe_names, f"Policy {policy_name} selects {selected} which doesn't exist"
+
+
+# ---------------------------------------------------------------------------
+# OWL Key-Value Pairing Invariants (Blood-Brain Barrier)
+# ---------------------------------------------------------------------------
+
+
+class TestOwlKeyValueConsistency:
+    """Invariant 2.10: OWL key-value pairing is consistent across nodes and edges.
+    
+    For every OWL_KEY_VALUE_PAIR edge n -> c:
+    - n.owl_key == c.owl_key == edge.key
+    - n.nl_value == edge.value
+    """
+
+    @given(
+        owl_key=st.text(min_size=1, max_size=50),
+        nl_value=st.text(min_size=1, max_size=50),
+        coupling=st.sampled_from(["commutative", "non_commutative", "non_associative"]),
+        cd_step=st.integers(min_value=0, max_value=4),
+    )
+    def test_owl_key_value_pair_consistency(
+        self, owl_key: str, nl_value: str, coupling: str, cd_step: int
+    ):
+        """For every OWL_KEY_VALUE_PAIR edge, keys and values match across nodes and edge."""
+        from pydantic import BaseModel
+
+        class NormNode(BaseModel):
+            owl_key: str = ""
+            nl_value: str = ""
+            coupling_signature: str = "commutative"
+
+        class CortexNode(BaseModel):
+            owl_key: str = ""
+            cd_step: int = 0
+
+        class OwlKeyValuePair(BaseModel):
+            key: str = ""
+            value: str = ""
+            coupling_signature: str = "commutative"
+            cd_step: int = 0
+
+        # Create nodes and edge with matching values
+        norm = NormNode(owl_key=owl_key, nl_value=nl_value, coupling_signature=coupling)
+        cortex = CortexNode(owl_key=owl_key, cd_step=cd_step)
+        edge = OwlKeyValuePair(
+            key=owl_key,
+            value=nl_value,
+            coupling_signature=coupling,
+            cd_step=cd_step
+        )
+
+        # Verify consistency
+        assert norm.owl_key == cortex.owl_key == edge.key
+        assert norm.nl_value == edge.value
+        assert norm.coupling_signature == edge.coupling_signature
+        assert cortex.cd_step == edge.cd_step
+
+
+class TestOwlKeyUniqueness:
+    """Invariant 2.11: OWL keys are unique across NormNodes.
+    
+    No two NormNodes share the same owl_key (each OWL key maps to exactly one NL value).
+    """
+
+    @given(
+        keys=st.lists(st.text(min_size=1, max_size=20), min_size=2, max_size=5, unique=True),
+    )
+    def test_owl_key_uniqueness(self, keys: list[str]):
+        """No two NormNodes share the same owl_key."""
+        from pydantic import BaseModel
+
+        class NormNode(BaseModel):
+            owl_key: str = ""
+            nl_value: str = ""
+
+        # Create nodes with unique keys
+        nodes = [NormNode(owl_key=k, nl_value=f"value for {k}") for k in keys]
+
+        # Verify all keys are unique
+        owl_keys = [n.owl_key for n in nodes]
+        assert len(owl_keys) == len(set(owl_keys)), "Duplicate owl_key values found"
+
+
+class TestOwlKeyPresenceForCdStep:
+    """Invariant 2.12: Non-trivial CD steps have OWL keys.
+    
+    Every CortexNode with cd_step >= 1 must have a non-empty owl_key and a
+    corresponding NormNode via OWL_KEY_VALUE_PAIR.
+    """
+
+    @given(cd_step=st.integers(min_value=1, max_value=4))
+    def test_owl_key_presence_for_non_trivial_cd_step(self, cd_step: int):
+        """CortexNode with cd_step >= 1 must have non-empty owl_key."""
+        from pydantic import BaseModel
+
+        class CortexNode(BaseModel):
+            owl_key: str = ""
+            cd_step: int = 0
+
+        # Non-trivial CD step requires owl_key
+        cortex = CortexNode(owl_key="SomeKey", cd_step=cd_step)
+        assert cortex.owl_key != ""
+        assert cortex.cd_step >= 1

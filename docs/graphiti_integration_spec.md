@@ -100,6 +100,8 @@ Maps to `EpisodicNode` with `source=EpisodeType.text`,
 | `alpha_features` | `list[Feature]` | Semantic decomposition features |
 | `inference_units` | `list[Inference]` | Inference units extracted from trace |
 | `coupling_signature` | `Literal["commutative","non_commutative","non_associative"]` | Coupling regime |
+| `owl_key` | `str` | **OWL two-word composition key** (e.g., "ReserveGuard"). Formal grammar algebra identifier. |
+| `nl_value` | `str` | **Natural language value** (e.g., "reserve guard"). Correlates OWL key to human-readable phrasing. |
 
 Pydantic model:
 ```python
@@ -107,7 +109,11 @@ class NormNode(BaseModel):
     alpha_features: list[str] = []
     inference_units: list[dict] = []
     coupling_signature: str = "commutative"
+    owl_key: str = ""          # OWL two-word composition (formal key)
+    nl_value: str = ""         # Natural language phrasing (value)
 ```
+
+> **Blood-Brain Barrier Note**: The `owl_key` field holds the **formal identifier** from LaserCortex's grammar algebra (CD/Tamari structures), while `nl_value` holds the **natural language phrasing** from reasoning traces or tool calls. This pairing enables NormCode to maintain the separation between formal keys (in LaserCortex) and natural language values (in reasoning), acting as a "blood-brain barrier" between the two domains.
 
 #### CortexNode (→ EntityNode)
 
@@ -118,6 +124,7 @@ class NormNode(BaseModel):
 | `tamari_path` | `list[Rotation]` | Path through Tamari lattice |
 | `assoc_defect` | `float` | 0 or 4.0 (binary currently) |
 | `pentagonator_distance` | `int` | Steps to rightComb normal form |
+| `owl_key` | `str` | **OWL two-word composition key** (e.g., "ReserveGuard"). **Must match** the `owl_key` of its paired `NormNode` to maintain the blood-brain barrier correlation. |
 
 Pydantic model:
 ```python
@@ -127,6 +134,7 @@ class CortexNode(BaseModel):
     tamari_path: list[dict] = []
     assoc_defect: float = 0.0
     pentagonator_distance: int = 0
+    owl_key: str = ""          # OWL two-word composition (must match NormNode.owl_key)
 ```
 
 #### CertificateNode (→ EntityNode)
@@ -237,7 +245,28 @@ class LiftsToStructure(BaseModel):
 Semantics: "Semantic inference is embedded into CD/Tamari structure."
 This is the formal bridge lift operation — maps to `CortexBridge.lift_inference`.
 
-#### CERTIFIES_TO (Cortex → Certificate)
+#### OWL_KEY_VALUE_PAIR (Norm → Cortex)
+
+```python
+class OwlKeyValuePair(BaseModel):
+    """Blood-Brain Barrier edge: links OWL two-word key (formal) to NL value (natural language)."""
+    key: str = ""               # OWL two-word composition (e.g., "ReserveGuard")
+    value: str = ""             # Natural language phrasing (e.g., "reserve guard")
+    coupling_signature: str = "commutative"  # Must match NormNode.coupling_signature
+    cd_step: int = 0            # Must match CortexNode.cd_step
+```
+
+Semantics: **"This NormNode's natural language value corresponds to this CortexNode's OWL key."**
+This edge **explicitly enforces the blood-brain barrier** by ensuring that:
+- The `key` (formal OWL two-word composition in LaserCortex) is stored in `CortexNode.owl_key`.
+- The `value` (natural language phrasing from traces/tool calls) is stored in `NormNode.nl_value`.
+- The pairing is **unique and consistent**: `NormNode.owl_key == CortexNode.owl_key == OwlKeyValuePair.key`.
+
+> **Usage**: Every `LIFTS_TO_STRUCTURE` edge **should** have a corresponding `OWL_KEY_VALUE_PAIR` edge to maintain the key-value correlation. This enables queries like:
+> - "Find all traces using the OWL key `ReserveGuard`"
+> - "What is the natural language phrasing for the OWL key `MarketClosure`?"
+
+####  CERTIFIES_TO (Cortex → Certificate)
 
 ```python
 class CertifiesTo(BaseModel):
@@ -346,6 +375,8 @@ EDGE_TYPE_MAP: dict[tuple[str, str], list[str]] = {
     ("RecipeNode", "RecipeNode"):             ["REASONING_SIMILARITY"],
 }
 ```
+
+> **Note**: The `OWL_KEY_VALUE_PAIR` edge is **additive** to the existing `LIFTS_TO_STRUCTURE` edge between `NormNode` and `CortexNode`. This allows both the structural lift and the key-value pairing to coexist, enforcing the blood-brain barrier between OWL keys (formal) and natural language values.
 
 ---
 

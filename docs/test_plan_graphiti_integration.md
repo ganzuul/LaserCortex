@@ -49,6 +49,9 @@ no database.
 | 1.8 | `test_reasoningsimilarity_weight_default` | `test_01_models` | `weight` defaults to 0.0 |
 | 1.9 | `test_all_entity_types_have_required_fields` | `test_01_models` | Every Pydantic model has `name` and `uuid` at minimum |
 | 1.10 | `test_liftstostructure_defaults` | `test_01_models` | `LiftsToStructure` defaults match expected values |
+| 1.11 | `test_normnode_owl_key_nl_value_types` | `test_01_models` | `owl_key` and `nl_value` are strings; empty strings are valid defaults |
+| 1.12 | `test_cortexnode_owl_key_type` | `test_01_models` | `owl_key` is a string; empty string is valid default |
+| 1.13 | `test_owlkeyvaluepair_edge_fields` | `test_01_models` | `OwlKeyValuePair` has `key`, `value`, `coupling_signature`, `cd_step` fields with correct types |
 
 ### Edge map completeness
 
@@ -78,6 +81,9 @@ signatures.
 | 2.7 | **Recipe centroid stability** | `test_02_invariants` | All `CompressesTo` edges targeting the same `RecipeNode` have `feature_signature` vectors within cosine distance ε=0.1 |
 | 2.8 | **Policy-recipe consistency** | `test_02_invariants` | If `PolicyNode.selects_recipe_id` points to a `RecipeNode`, that `RecipeNode` exists in the graph |
 | 2.9 | **CompositionEvent links resolve** | `test_02_invariants` | All UUIDs in `CompositionEvent.input_node_uuids ∪ output_node_uuids` resolve to existing nodes |
+| 2.10 | **OWL key-value consistency** | `test_02_invariants` | For every `OWL_KEY_VALUE_PAIR` edge `n → c`: `n.owl_key == c.owl_key == edge.key` and `n.nl_value == edge.value` |
+| 2.11 | **OWL key uniqueness** | `test_02_invariants` | No two `NormNode`s share the same `owl_key` (each OWL key maps to exactly one natural language value) |
+| 2.12 | **OWL key presence for non-trivial CD steps** | `test_02_invariants` | Every `CortexNode` with `cd_step >= 1` must have a non-empty `owl_key` and a corresponding `NormNode` via `OWL_KEY_VALUE_PAIR` |
 
 **Hypothesis strategies needed**:
 
@@ -147,6 +153,8 @@ works correctly on its own.
 | 4.8 | `test_add_episode_bulk_100` | `add_episode_bulk()` with 100 episodes completes in <30s and all are queryable |
 | 4.9 | `test_graph_durability` | Graph data persists across `Graphiti` instance destruction and recreation on same DB path |
 | 4.10 | `test_clear_group` | `clear_graph(group_id)` removes only that group's data; other groups intact |
+| 4.11 | `test_owl_key_value_pair_ingestion` | Ingest a `NormNode` and `CortexNode` with matching `owl_key` and an `OWL_KEY_VALUE_PAIR` edge; verify all fields persist correctly |
+| 4.12 | `test_owl_key_value_pair_query` | Query for nodes/edges by `owl_key` or `nl_value`; verify correct results are returned |
 
 ### Fixture setup
 
@@ -180,6 +188,7 @@ end-to-end. These require both the LaserCortex bridge and Graphiti.
 | 5.4 | **Compression → Graph → similarity** | Compress 5 related traces to `RecipeNode` → persist with `REASONING_SIMILARITY` edges → query "find similar recipes" |
 | 5.5 | **Tamari lattice → Graph → BFS path** | Build `CortexNode`s for n=4 trees (14 nodes) → add `TAMARI_ROTATION` edges → BFS from leftmost to rightComb → verify path cost == pentagonator_distance |
 | 5.6 | **Policy routing → Graph → selection** | Add 5 `RecipeNode`s with varying `success_rate` → add `GENERALIZED_BY` → `PolicyNode` → test that query with `center_node_uuid` returns high-success recipes first |
+| 5.7 | **OWL key-value lift → Graph → correlation** | Lift a NormCode inference with `owl_key="ReserveGuard"` and `nl_value="reserve guard"` → persist as `NormNode` + `CortexNode` + `OWL_KEY_VALUE_PAIR` edge → verify `NormNode.owl_key == CortexNode.owl_key == edge.key` and `NormNode.nl_value == edge.value` |
 
 ---
 
@@ -241,17 +250,17 @@ markers = [
 ```
 tests/graphiti_integration/
 ├── conftest.py              # Fixtures: FalkorDB Lite, Graphiti, sample data
-├── test_01_models.py        # L1: Pydantic type validation (13 tests)
+├── test_01_models.py        # L1: Pydantic type validation (16 tests)
 ├── test_01_edge_map.py      # L1: Edge map completeness (4 tests)
-├── test_02_invariants.py    # L2: Property-based invariants (9 tests)
+├── test_02_invariants.py    # L2: Property-based invariants (12 tests)
 ├── test_03_migration.py     # L3: Migration parity (6 tests)
-├── test_04_graphiti.py      # L4: Graphiti integration (10 tests)
-├── test_05_cross_layer.py   # L5: Cross-layer (6 tests)
+├── test_04_graphiti.py      # L4: Graphiti integration (12 tests)
+├── test_05_cross_layer.py   # L5: Cross-layer (7 tests)
 ├── test_06_e2e.py           # L6: End-to-end (5 tests)
 ├── test_99_resource_safety.py  # R: Resource safety (4 tests)
 ```
 
-Total: **57 tests** across 9 test files.
+Total: **62 tests** across 9 test files.
 
 ---
 

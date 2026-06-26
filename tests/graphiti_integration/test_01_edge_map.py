@@ -16,7 +16,7 @@ import pytest
 
 EDGE_TYPE_MAP: dict[tuple[str, str], list[str]] = {
     ("EpisodicNode", "NormNode"): ["EXTRACTS_SEMANTICS"],
-    ("NormNode", "CortexNode"): ["LIFTS_TO_STRUCTURE"],
+    ("NormNode", "CortexNode"): ["LIFTS_TO_STRUCTURE", "OWL_KEY_VALUE_PAIR"],
     ("CortexNode", "CertificateNode"): ["CERTIFIES_TO"],
     ("CortexNode", "RecipeNode"): ["COMPRESSES_TO"],
     ("NormNode", "RecipeNode"): ["FEATURE_PROJECTS_TO"],
@@ -42,6 +42,7 @@ ALL_NODE_TYPES = {
 ALL_EDGE_TYPES = {
     "EXTRACTS_SEMANTICS",
     "LIFTS_TO_STRUCTURE",
+    "OWL_KEY_VALUE_PAIR",
     "CERTIFIES_TO",
     "COMPRESSES_TO",
     "FEATURE_PROJECTS_TO",

@@ -34,6 +34,8 @@ def _make_model_classes():
         alpha_features: list[str] = []
         inference_units: list[dict] = []
         coupling_signature: Literal["commutative", "non_commutative", "non_associative"] = "commutative"
+        owl_key: str = ""          # OWL two-word composition (formal key)
+        nl_value: str = ""         # Natural language phrasing (value)
 
     class CortexNodeAttrs(BaseModel):
         eml_tree: str = ""
@@ -41,6 +43,7 @@ def _make_model_classes():
         tamari_path: list[dict] = []
         assoc_defect: float = 0.0
         pentagonator_distance: int = Field(default=0, ge=0)
+        owl_key: str = ""          # OWL two-word composition (must match NormNode.owl_key)
 
     class CertificateNodeAttrs(BaseModel):
         source_tree: str = ""
@@ -119,6 +122,13 @@ def _make_model_classes():
         cost_distance: float = 0.0
         weight: float = 0.0
 
+    class OwlKeyValuePairAttrs(BaseModel):
+        """Blood-Brain Barrier edge: links OWL two-word key (formal) to NL value."""
+        key: str = ""               # OWL two-word composition (e.g., "ReserveGuard")
+        value: str = ""             # Natural language phrasing (e.g., "reserve guard")
+        coupling_signature: str = "commutative"  # Must match NormNode.coupling_signature
+        cd_step: int = 0            # Must match CortexNode.cd_step
+
     return {
         "NormNode": NormNodeAttrs,
         "CortexNode": CortexNodeAttrs,
@@ -135,6 +145,7 @@ def _make_model_classes():
         "Instantiates": InstantiatesAttrs,
         "TamariRotation": TamariRotationAttrs,
         "ReasoningSimilarity": ReasoningSimilarityAttrs,
+        "OwlKeyValuePair": OwlKeyValuePairAttrs,
     }
 
 
@@ -380,3 +391,92 @@ class TestGeneralizedBy:
         """success_threshold defaults to 0.7."""
         g = MODELS["GeneralizedBy"]()
         assert g.success_threshold == 0.7
+
+
+# ---------------------------------------------------------------------------
+# Tests: OWL Key-Value Pairing (Blood-Brain Barrier)
+# ---------------------------------------------------------------------------
+
+
+class TestNormNodeOwlKey:
+    """Tests for NormNode owl_key and nl_value fields."""
+
+    def test_owl_key_default_empty(self):
+        """owl_key defaults to empty string."""
+        n = MODELS["NormNode"]()
+        assert n.owl_key == ""
+
+    def test_nl_value_default_empty(self):
+        """nl_value defaults to empty string."""
+        n = MODELS["NormNode"]()
+        assert n.nl_value == ""
+
+    def test_owl_key_accepts_string(self):
+        """owl_key accepts any string."""
+        n = MODELS["NormNode"](owl_key="ReserveGuard")
+        assert n.owl_key == "ReserveGuard"
+
+    def test_nl_value_accepts_string(self):
+        """nl_value accepts any string."""
+        n = MODELS["NormNode"](nl_value="reserve guard")
+        assert n.nl_value == "reserve guard"
+
+    def test_owl_key_and_nl_value_together(self):
+        """owl_key and nl_value can be set together."""
+        n = MODELS["NormNode"](
+            owl_key="MarketClosure",
+            nl_value="market closure"
+        )
+        assert n.owl_key == "MarketClosure"
+        assert n.nl_value == "market closure"
+
+
+class TestCortexNodeOwlKey:
+    """Tests for CortexNode owl_key field."""
+
+    def test_owl_key_default_empty(self):
+        """owl_key defaults to empty string."""
+        c = MODELS["CortexNode"]()
+        assert c.owl_key == ""
+
+    def test_owl_key_accepts_string(self):
+        """owl_key accepts any string."""
+        c = MODELS["CortexNode"](owl_key="ReserveGuard")
+        assert c.owl_key == "ReserveGuard"
+
+
+class TestOwlKeyValuePair:
+    """Tests for OwlKeyValuePair edge type."""
+
+    def test_key_default_empty(self):
+        """key defaults to empty string."""
+        o = MODELS["OwlKeyValuePair"]()
+        assert o.key == ""
+
+    def test_value_default_empty(self):
+        """value defaults to empty string."""
+        o = MODELS["OwlKeyValuePair"]()
+        assert o.value == ""
+
+    def test_coupling_signature_default_commutative(self):
+        """coupling_signature defaults to 'commutative'."""
+        o = MODELS["OwlKeyValuePair"]()
+        assert o.coupling_signature == "commutative"
+
+    def test_cd_step_default_zero(self):
+        """cd_step defaults to 0."""
+        o = MODELS["OwlKeyValuePair"]()
+        assert o.cd_step == 0
+
+    def test_all_fields_together(self):
+        """All OwlKeyValuePair fields can be set together."""
+        o = MODELS["OwlKeyValuePair"](
+            key="ReserveGuard",
+            value="reserve guard",
+            coupling_signature="non_commutative",
+            cd_step=2
+        )
+        assert o.key == "ReserveGuard"
+        assert o.value == "reserve guard"
+        assert o.coupling_signature == "non_commutative"
+        assert o.cd_step == 2
