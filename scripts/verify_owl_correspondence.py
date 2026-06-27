@@ -3,15 +3,21 @@
 Verify OWL Correspondence Table — Row/Column Source Confirmation
 
 Generates a verification report showing, for each matched NL composition,
-the corresponding OWL atoms and their embedding fingerprints (e0..e6).
+the corresponding OWL atoms and their embedding fingerprints (e₀..e₇).
 This allows visual confirmation that the correspondence table pulls from
 the correct ontology sources.
+
+The 8-component embedding axis corresponds to the Hopf 7-skeleton
+(lab_notes/006_the_hopf_7_skeleton_of_logic_space.md):
+  e₀ = bias (universal, always 1)
+  e₁..e₇ = the 7 non-identity NodeCost geometry axes of the split-octonion
+  split-octonion algebra with (4,4) signature
 
 Output columns:
   1. NL Composition  — CamelCase composition of NL words from the trace
   2. OWL Atoms       — Space-separated OWL atom IDs matched to those words
-  3. e0..e6 (atom 1) — First 7 embedding components of the first matched atom
-  4. e0..e6 (atom 2) — First 7 embedding components of the second matched atom
+  3. e₀..e₇ (atom 1) — First 8 embedding components of first matched atom
+  4. e₀..e₇ (atom 2) — First 8 embedding components of second matched atom
 
 Usage:
     python scripts/verify_owl_correspondence.py
@@ -96,7 +102,7 @@ def build_rows(
     Each row represents one trace (one reasoning episode) with:
       - NL composition: CamelCase of unique NL words matched to OWL atoms
       - OWL atoms: space-separated atom IDs with source
-      - e0..e6: first 7 embedding components for up to 2 atoms
+      - e₀..e₇: first 8 embedding components for up to 2 atoms
     """
     rows: List[Dict[str, Any]] = []
 
@@ -132,19 +138,19 @@ def build_rows(
         atom1_id = atom_set[0] if len(atom_set) > 0 else ""
         atom2_id = atom_set[1] if len(atom_set) > 1 else ""
 
-        # Get e0..e6 (first 7 embedding components) for each atom
-        e0e6_1 = ""
-        e0e6_2 = ""
+        # Get e₀..e₇ (first 8 embedding components) for each atom
+        e0e7_1 = ""
+        e0e7_2 = ""
         src1 = ""
         src2 = ""
 
         if atom1_id and atom1_id in atom_index:
             idx1 = atom_index[atom1_id]
-            e0e6_1 = ", ".join(f"{v:.4f}" for v in atom_embeddings[idx1][:7])
+            e0e7_1 = ", ".join(f"{v:.4f}" for v in atom_embeddings[idx1][:8])
             src1 = atom_src.get(atom1_id, "?")
         if atom2_id and atom2_id in atom_index:
             idx2 = atom_index[atom2_id]
-            e0e6_2 = ", ".join(f"{v:.4f}" for v in atom_embeddings[idx2][:7])
+            e0e7_2 = ", ".join(f"{v:.4f}" for v in atom_embeddings[idx2][:8])
             src2 = atom_src.get(atom2_id, "?")
 
         # NL preview
@@ -161,10 +167,10 @@ def build_rows(
             "cd3_count": cd3_count,
             "owl_atom_1": atom1_id,
             "src_1": src1,
-            "e0e6_1": e0e6_1,
+            "e0e7_1": e0e7_1,
             "owl_atom_2": atom2_id,
             "src_2": src2,
-            "e0e6_2": e0e6_2,
+            "e0e7_2": e0e7_2,
         })
 
     return rows
@@ -176,10 +182,10 @@ def build_rows(
 
 def print_report(rows: List[Dict[str, Any]]):
     """Print formatted verification report to terminal."""
-    print("\n" + "=" * 140)
-    print("OWL CORRESPONDENCE VERIFICATION REPORT")
+    print("\n" + "=" * 160)
+    print("OWL CORRESPONDENCE VERIFICATION REPORT  —  Hopf 7-Skeleton (e₀..e₇)")
     print("Confirming data sources and embedding fingerprints")
-    print("=" * 140)
+    print("=" * 160)
 
     # Summary stats
     total = len(rows)
@@ -205,16 +211,16 @@ def print_report(rows: List[Dict[str, Any]]):
     if src_counts:
         print(f"  Source dist:   {', '.join(f'{k}={v}' for k,v in sorted(src_counts.items()))}")
 
-    print(f"\n{'─'*140}")
+    print(f"\n{'─'*160}")
 
     # Header
     hdr = (
         f"{'Row':<5} {'Trace':<14} {'NL Composition (CamelCase)':<48} "
-        f"{'OWL Atoms':<45} {'CD':<5} "
-        f"{'e0..e6 (atom 1)':>32}  {'e0..e6 (atom 2)':>32}"
+        f"{'OWL Atoms':<50} {'CD':<5} "
+        f"{'e₀..e₇ (atom 1)':>40}  {'e₀..e₇ (atom 2)':>40}"
     )
     print(hdr)
-    print(f"{'─'*140}")
+    print(f"{'─'*160}")
 
     for i, r in enumerate(rows):
         # CD label
@@ -235,21 +241,21 @@ def print_report(rows: List[Dict[str, Any]]):
         # NL column (truncated)
         nl_col = r["nl_composition"][:47]
         
-        # e0..e6 columns (truncate display)
-        e0_short_1 = r["e0e6_1"][:60] if r["e0e6_1"] else "-"
-        e0_short_2 = r["e0e6_2"][:60] if r["e0e6_2"] else "-"
+        # e₀..e₇ columns (truncate display)
+        e0_short_1 = r["e0e7_1"][:60] if r["e0e7_1"] else "-"
+        e0_short_2 = r["e0e7_2"][:60] if r["e0e7_2"] else "-"
 
         print(
             f"{i+1:<5} {r['trace_id']:<14} {nl_col:<48} "
-            f"{owl_col:<45} {cd_label:<5} "
-            f"{e0_short_1:<34}  {e0_short_2}"
+            f"{owl_col:<50} {cd_label:<5} "
+            f"{e0_short_1:<40}  {e0_short_2}"
         )
 
         if i >= 49:
             print(f"\n  … ({total - 50} more rows)")
             break
 
-    print(f"{'─'*140}")
+    print(f"{'─'*160}")
     print(f"End of report (showing {min(50, total)} of {total} rows)")
 
 
@@ -262,8 +268,8 @@ def export_csv(rows: List[Dict[str, Any]], path: Path):
     fields = [
         "trace_id", "nl_composition", "n_nl_words", "n_atoms",
         "cd2_count", "cd3_count",
-        "owl_atom_1", "src_1", "e0e6_1",
-        "owl_atom_2", "src_2", "e0e6_2",
+        "owl_atom_1", "src_1", "e0e7_1",
+        "owl_atom_2", "src_2", "e0e7_2",
     ]
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
@@ -281,7 +287,7 @@ def main():
     max_rows = 200
 
     print("=" * 80)
-    print("OWL CORRESPONDENCE VERIFICATION")
+    print("OWL CORRESPONDENCE VERIFICATION  —  Hopf 7-Skeleton (e₀..e₇)")
     print("=" * 80)
 
     # Load
