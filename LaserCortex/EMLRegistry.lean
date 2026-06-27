@@ -140,6 +140,20 @@ def EMLTree.height : EMLTree → Nat
   | .Leaf       => 0
   | .Node l r   => 1 + max l.height r.height
 
+/-- Left-weight measure: sum of sizes of all left subtrees.
+    Strictly decreases under every `contracts_one` step, making it a
+    well-founded measure for the Tamari contraction lattice.
+
+    - leftWeight(Node Leaf r) = leftWeight r
+    - leftWeight(Node (Node a b) r) = 1 + a.size + b.size + leftWeight (Node a (Node b r)) - b.size
+
+    Combined with `t.size`, the measure `leftWeight t + t.size` strictly
+    decreases for ALL recursive calls in `dcStep`, enabling efficient
+    termination checking. -/
+def leftWeight : EMLTree → Nat
+  | .Leaf => 0
+  | .Node l r => l.size + leftWeight l + leftWeight r
+
 /-- Binary preorder encoding: '0' = Leaf, '1' + left + right = Node. -/
 def EMLTree.toBits : EMLTree → String
   | .Leaf      => "0"
@@ -241,21 +255,52 @@ theorem contracts_to_size_eq {s t : EMLTree} (h : contracts_to s t) : s.size = t
       s.size = t.size := h₁
       _ = u.size := h₂
 
+-- `leftWeight` strictly decreases under every `contracts_one` step.
+theorem contracts_one_leftWeight_decreases {s t : EMLTree} (h : contracts_one s t) : leftWeight s > leftWeight t := by
+  induction h with
+  | rotate a b c =>
+    simp [leftWeight, EMLTree.size]
+    omega
+  | left l l' r h_left ih =>
+    have hsz : l.size = l'.size := contracts_one_size_eq h_left
+    simp [leftWeight, hsz, ih]
+  | right l r r' h_right ih =>
+    simp [leftWeight, ih]
+
+-- `contracts_to` is non-increasing in `leftWeight`.
+theorem contracts_to_leftWeight_ge {s t : EMLTree} (h : contracts_to s t) : leftWeight s ≥ leftWeight t := by
+  induction h with
+  | refl t => exact Nat.le_refl (leftWeight t)
+  | step s x t h_one h_to ih =>
+    have h_decr : leftWeight s > leftWeight x := contracts_one_leftWeight_decreases h_one
+    have h_ge : leftWeight x ≥ leftWeight t := ih
+    omega
+
 /--
 Antisymmetry of `contracts_to`: if `s` contracts to `t` and `t` contracts to `s`,
 then `s = t`. This is the final property needed for `contracts_to` to be a
 partial order on `EMLTree`.
 
 The Tamari lattice is known to be a partial order, and `contracts_to` is the
-Tamari order. The proof follows from the fact that each `contracts_one` step
-strictly decreases the "left weight" of the tree (making it more right-deep),
-so no non-trivial cycles exist.
-
-Currently pending — requires defining a well-founded measure that strictly
-decreases with each `contracts_one` step.
+Tamari order. The proof uses `contracts_one_leftWeight_decreases`: each step
+strictly decreases leftWeight, so any cycle would force `leftWeight s > leftWeight s`,
+which is impossible. Hence the only possible `contracts_to` path is `refl`.
 -/
 theorem contracts_to_antisymm {s t : EMLTree} (h₁ : contracts_to s t) (h₂ : contracts_to t s) : s = t := by
-  sorry
+  induction h₁ with
+  | refl t => rfl
+  | step s x t h_one h_to ih =>
+    -- h_one : contracts_one s x   (so leftWeight s > leftWeight x)
+    -- h_to  : contracts_to x t
+    -- h₂    : contracts_to t s
+    -- We need to show s = t.
+    -- From h_to and h₂ we get a path x → t → s, so leftWeight x ≥ leftWeight s.
+    -- But h_one gives leftWeight s > leftWeight x, contradiction.
+    have h_decr : leftWeight s > leftWeight x := contracts_one_leftWeight_decreases h_one
+    -- compose x → t → s to get x → s
+    have h_path : contracts_to x s := contracts_to_trans h_to h₂
+    have h_lw_ge : leftWeight x ≥ leftWeight s := contracts_to_leftWeight_ge h_path
+    omega
 
 -- ================================================================
 -- SECTION 2b: cdStep-Parameterized Contraction
