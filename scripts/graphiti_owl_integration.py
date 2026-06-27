@@ -47,9 +47,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("owl-integration")
 
-# Add project root to path
-PROJECT_ROOT = sys.path.dirname(sys.path.dirname(sys.path.abspath(__file__)))
-sys.path.insert(0, PROJECT_ROOT)
+
 
 from infra._graphiti_service import GraphitiService
 from infra._graphiti_models import (
@@ -63,6 +61,14 @@ from infra._graphiti_models import (
     OwlKeyValueInvariants,
 )
 
+# ── Runtime dependency check ────────────────────────────────────────────
+try:
+    import aiosqlite  # noqa: F401
+except ImportError:
+    import subprocess, sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "aiosqlite", "--quiet"])
+    import aiosqlite  # noqa: F401
+
 
 # =============================================================================
 # Demonstration Data
@@ -70,41 +76,11 @@ from infra._graphiti_models import (
 # Sample OWL key-value pairs that might appear in LaserCortex + NormCode
 
 DEMO_PAIRS = [
-    {
-        "owl_key": "ReserveGuard",
-        "nl_value": "reserve guard",
-        "coupling_signature": "non_commutative",
-        "cd_step": 2,
-        "description": "Market closure reserve guard mechanism",
-    },
-    {
-        "owl_key": "MarketClosure",
-        "nl_value": "market closure",
-        "coupling_signature": "non_associative",
-        "cd_step": 3,
-        "description": "Eigenstate bridge market closure protocol",
-    },
-    {
-        "owl_key": "TamariRotation",
-        "nl_value": "tamari rotation",
-        "coupling_signature": "commutative",
-        "cd_step": 1,
-        "description": "Tamari lattice rotation operation",
-    },
-    {
-        "owl_key": "CertificatePath",
-        "nl_value": "certificate path",
-        "coupling_signature": "commutative",
-        "cd_step": 2,
-        "description": "Verified contraction path certificate",
-    },
-    {
-        "owl_key": "Pentagonator",
-        "nl_value": "pentagonator",
-        "coupling_signature": "non_associative",
-        "cd_step": 4,
-        "description": "Pentagonator distance calculation",
-    },
+    {"owl_key": "ReserveGuard", "nl_value": "reserve guard", "coupling_signature": "non_commutative", "cd_step": 2, "description": "Market closure reserve guard mechanism"},
+    {"owl_key": "MarketClosure", "nl_value": "market closure", "coupling_signature": "non_associative", "cd_step": 3, "description": "Eigenstate bridge market closure protocol"},
+    {"owl_key": "TamariRotation", "nl_value": "tamari rotation", "coupling_signature": "commutative", "cd_step": 1, "description": "Tamari lattice rotation operation"},
+    {"owl_key": "CertificatePath", "nl_value": "certificate path", "coupling_signature": "commutative", "cd_step": 2, "description": "Verified contraction path certificate"},
+    {"owl_key": "Pentagonator", "nl_value": "pentagonator", "coupling_signature": "non_associative", "cd_step": 4, "description": "Pentagonator distance calculation"},
 ]
 
 
@@ -265,7 +241,7 @@ async def demonstrate_blood_brain_barrier():
         # Query 1: Find all NormNodes with their OWL keys and NL values
         print("\n  Query 1: All NormNodes with OWL key-value pairs")
         result = await driver.execute_query(
-            "MATCH (n:NormNode) WHERE n.owl_key != '' "
+            "MATCH (n:NormNode) WHERE n.owl_key <> '' "
             "RETURN n.owl_key as owl_key, n.nl_value as nl_value, n.coupling_signature as coupling "
             "ORDER BY n.owl_key",
             group_id=group_id,
@@ -277,7 +253,7 @@ async def demonstrate_blood_brain_barrier():
         # Query 2: Find all CortexNodes with their OWL keys and CD steps
         print("\n  Query 2: All CortexNodes with OWL keys and CD steps")
         result = await driver.execute_query(
-            "MATCH (c:CortexNode) WHERE c.owl_key != '' "
+            "MATCH (c:CortexNode) WHERE c.owl_key <> '' "
             "RETURN c.owl_key as owl_key, c.cd_step as cd_step, c.pentagonator_distance as pent_dist "
             "ORDER BY c.cd_step",
             group_id=group_id,
