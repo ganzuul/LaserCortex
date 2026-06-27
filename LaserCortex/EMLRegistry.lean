@@ -241,6 +241,22 @@ theorem contracts_to_size_eq {s t : EMLTree} (h : contracts_to s t) : s.size = t
       s.size = t.size := h₁
       _ = u.size := h₂
 
+/--
+Antisymmetry of `contracts_to`: if `s` contracts to `t` and `t` contracts to `s`,
+then `s = t`. This is the final property needed for `contracts_to` to be a
+partial order on `EMLTree`.
+
+The Tamari lattice is known to be a partial order, and `contracts_to` is the
+Tamari order. The proof follows from the fact that each `contracts_one` step
+strictly decreases the "left weight" of the tree (making it more right-deep),
+so no non-trivial cycles exist.
+
+Currently pending — requires defining a well-founded measure that strictly
+decreases with each `contracts_one` step.
+-/
+theorem contracts_to_antisymm {s t : EMLTree} (h₁ : contracts_to s t) (h₂ : contracts_to t s) : s = t := by
+  sorry
+
 -- ================================================================
 -- SECTION 2b: cdStep-Parameterized Contraction
 -- ================================================================
