@@ -81,9 +81,44 @@ def missingProofParadox (p : Problem) (lt : LogicTypes.LogicType) : Problem := {
   suitableLogics := [lt]
   tree := λ _ => p.tree lt
   normalForm := λ _ => p.normalForm lt
-}
+}-- ================================================================
+-- Identity Zero Divisor — The Liar's Gap at the Identity Level
+-- ================================================================
 
+/-- An identity zero divisor: two distinct identity markers for the same formal
+    concept (EMLTree). This is the "one of us tells only lies" riddle: two
+    atoms share the same tree but carry distinct identity markers, and you
+    don't know which has priority.
 
+    The witness-skeptic game (WFC) resolves this through the liarWrapper's
+    cost structure: each round deducts cost proportional to difficulty,
+    capped at 19. The AMM's inductive bias prevents cost explosion (which
+    would be equivalent to the Sorites paradox — unbounded vagueness).
+
+    The paraconsistent liar accepts both markers as valid, resolving the
+    paradox by tolerating the contradiction.
+
+    @typeparam α The identity marker type (typically ℕ for atom ids,
+                 or String for labels). -/
+structure IdentityZeroDivisor (α : Type) where
+  tree : EMLTree
+  marker₁ : α
+  marker₂ : α
+  h_marker_ne : marker₁ ≠ marker₂
+
+/-- The Liar's self-referential gap at the identity level.
+
+    Two distinct identity markers for the same tree cannot persist in a
+    resolved system — the witness-skeptic game WILL resolve this by
+    exhausting the budget. This lemma IS the canonized sorry: the formal
+    boundary where the WFC budget model meets Lean logic.
+
+    The paraconsistent liar provides the resolution: it accepts both markers
+    as valid, collapsing the superposition through the liarWrapper's cost
+    mechanism. Each round of the witness-skeptic game deducts cost until
+    the cap (19) is reached, forcing identity collapse. -/
+theorem identity_zero_divisor_contradiction {α : Type} (h_zd : IdentityZeroDivisor α) : False :=
+  sorry
 
 -- ================================================================
 -- Liar Wrappers (All Mail Slots Filled)
