@@ -600,7 +600,7 @@ class GraphitiService:
             # 2. OWL_KEY_VALUE_PAIR edges with mismatched keys
             result = await driver.execute_query(
                 "MATCH (n:NormNode)-[e:OWL_KEY_VALUE_PAIR]->(c:CortexNode) "
-                "WHERE n.owl_key != e.key OR c.owl_key != e.key "
+                "WHERE n.owl_key <> e.key OR c.owl_key <> e.key "
                 "RETURN n.uuid as norm_uuid, c.uuid as cortex_uuid, e.uuid as edge_uuid, "
                 "n.owl_key as norm_key, c.owl_key as cortex_key, e.key as edge_key"
             )
@@ -619,7 +619,7 @@ class GraphitiService:
             # 3. OWL_KEY_VALUE_PAIR edges with mismatched values
             result = await driver.execute_query(
                 "MATCH (n:NormNode)-[e:OWL_KEY_VALUE_PAIR]->(c:CortexNode) "
-                "WHERE n.nl_value != e.value "
+                "WHERE n.nl_value <> e.value "
                 "RETURN n.uuid as norm_uuid, e.uuid as edge_uuid, "
                 "n.nl_value as norm_value, e.value as edge_value"
             )
@@ -635,7 +635,7 @@ class GraphitiService:
 
             # 4. Duplicate OWL keys in NormNodes
             result = await driver.execute_query(
-                "MATCH (n:NormNode) WHERE n.owl_key IS NOT NULL AND n.owl_key != '' "
+                "MATCH (n:NormNode) WHERE n.owl_key IS NOT NULL AND n.owl_key <> '' "
                 "WITH n.owl_key as key, collect(n.uuid) as uuids "
                 "WHERE size(uuids) > 1 "
                 "RETURN key, uuids"
