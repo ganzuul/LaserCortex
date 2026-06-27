@@ -24,3 +24,4 @@ import LaserCortex.SplitQuaternionClifford
 import LaserCortex.FrictionLagrangian
 import LaserCortex.KernelChoice
 import LaserCortex.MarketClosure
+import LaserCortex.PosetQuotient
