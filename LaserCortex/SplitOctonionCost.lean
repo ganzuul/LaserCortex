@@ -45,6 +45,7 @@ branch_lightening: positive debt reduces weight (≤ initial_weight).
 -/
 
 import Init
+import Mathlib.Tactic
 import LaserCortex.Cost
 import LaserCortex.EMLRegistry
 import Mathlib.LinearAlgebra.QuadraticForm.Basic
@@ -73,6 +74,30 @@ structure SplitOctonion where
 -- The zero and one elements
 def split_zero : SplitOctonion := ⟨0, 0, 0, 0, 0, 0, 0, 0⟩
 def split_one : SplitOctonion := ⟨1, 0, 0, 0, 0, 0, 0, 0⟩
+
+/-- Convert a SplitOctonion to a vector in ℤ⁸ (Fin 8 → ℤ). -/
+def toVec (x : SplitOctonion) : Fin 8 → ℤ := λ
+  | 0 => x.e0 | 1 => x.e1 | 2 => x.e2 | 3 => x.e3
+  | 4 => x.e4 | 5 => x.e5 | 6 => x.e6 | 7 => x.e7
+
+/-- Convert a vector in ℤ⁸ back to a SplitOctonion. -/
+def ofVec (v : Fin 8 → ℤ) : SplitOctonion :=
+  { e0 := v 0, e1 := v 1, e2 := v 2, e3 := v 3,
+    e4 := v 4, e5 := v 5, e6 := v 6, e7 := v 7 }
+
+@[simp] theorem toVec_ofVec (v : Fin 8 → ℤ) : toVec (ofVec v) = v := by
+  ext i; fin_cases i <;> rfl
+
+@[simp] theorem ofVec_toVec (x : SplitOctonion) : ofVec (toVec x) = x := by
+  cases x; rfl
+
+/-- The bijection SplitOctonion ≃ ℤ⁸ (as sets). -/
+def equivVec : SplitOctonion ≃ (Fin 8 → ℤ) :=
+  { toFun := toVec
+    invFun := ofVec
+    left_inv := ofVec_toVec
+    right_inv := toVec_ofVec
+  }
 
 -- ============================================================================
 -- LAYER 2: THE 64-TERM MULTIPLICATION TABLE (Cayley-Dickson construction)
@@ -106,6 +131,12 @@ def split_add (x y : SplitOctonion) : SplitOctonion :=
 -- Subtraction (needed for associator)
 def split_sub (x y : SplitOctonion) : SplitOctonion :=
   ⟨x.e0-y.e0, x.e1-y.e1, x.e2-y.e2, x.e3-y.e3, x.e4-y.e4, x.e5-y.e5, x.e6-y.e6, x.e7-y.e7⟩
+
+@[simp] theorem toVec_split_add (x y : SplitOctonion) : toVec (split_add x y) = toVec x + toVec y := by
+  ext i; fin_cases i <;> rfl
+
+@[simp] theorem toVec_split_zero : toVec (split_zero : SplitOctonion) = 0 := by
+  ext i; fin_cases i <;> rfl
 
 -- ============================================================================
 -- LAYER 3: NORM, ASSOCIATOR, PENTAGON
