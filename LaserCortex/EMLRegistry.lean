@@ -424,10 +424,11 @@ theorem node_of_rightCombs_contracts_to_rightComb (a b : Nat) :
     have h_target : rightComb (1 + (a + 1) + b) = EMLTree.Node .Leaf (rightComb (1 + a + b)) := by
       calc
         rightComb (1 + (a + 1) + b) = rightComb (a + b + 2) := by
-          apply congrArg rightComb; omega
+          apply congrArg rightComb; simp [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
         _ = EMLTree.Node .Leaf (rightComb (a + b + 1)) := by simp [rightComb]
         _ = EMLTree.Node .Leaf (rightComb (1 + a + b)) := by
-          apply congrArg (λ t => EMLTree.Node .Leaf (rightComb t)); omega
+          apply congrArg (λ t => EMLTree.Node .Leaf (rightComb t))
+          simp [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
     
     -- Rewrite the goal target to match combined (the **attractor equality**)
     rw [h_target] at *

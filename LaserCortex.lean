@@ -25,3 +25,5 @@ import LaserCortex.FrictionLagrangian
 import LaserCortex.KernelChoice
 import LaserCortex.MarketClosure
 import LaserCortex.PosetQuotient
+import LaserCortex.Hopf
+import LaserCortex.BornTest

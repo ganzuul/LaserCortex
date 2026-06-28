@@ -35,6 +35,7 @@ import LaserCortex.AMM
 
 open SplitOctonionCost
 open LiarParadox
+open EMLRegistry
 
 namespace Hopf
 
@@ -48,20 +49,34 @@ def split_neg (x : SplitOctonion) : SplitOctonion :=
 
 instance : Neg SplitOctonion := ⟨split_neg⟩
 
+-- These explicit instances are needed before AddCommGroup so that
+-- nsmulRec and zsmulRec can resolve Zero and Add typeclasses.
+instance : Add SplitOctonion := ⟨split_add⟩
+instance : Zero SplitOctonion := ⟨split_zero⟩
+
 instance : AddCommGroup SplitOctonion where
   zero := split_zero
   add := split_add
   neg := split_neg
   add_assoc := by
-    intro a b c; ext <;> simp [split_add, add_assoc]
+    intro a b c; apply SplitOctonion.ext_components <;> dsimp [split_add] <;> omega
   zero_add := by
-    intro a; ext <;> simp [split_add, split_zero]
+    intro a; apply SplitOctonion.ext_components <;> dsimp [split_add, split_zero] <;> omega
   add_zero := by
-    intro a; ext <;> simp [split_add, split_zero]
+    intro a; apply SplitOctonion.ext_components <;> dsimp [split_add, split_zero] <;> omega
   add_comm := by
-    intro a b; ext <;> simp [split_add, add_comm]
-  add_left_neg := by
-    intro a; ext <;> simp [split_add, split_neg, split_zero]
+    intro a b; apply SplitOctonion.ext_components <;> dsimp [split_add] <;> omega
+  neg_add_cancel := by
+    intro a; apply SplitOctonion.ext_components <;> dsimp [split_add, split_neg, split_zero] <;> omega
+  nsmul := nsmulRec
+  nsmul_zero := by intro x; rfl
+  nsmul_succ := by intro n x; rfl
+  zsmul := zsmulRec
+  zsmul_zero' := by intro x; rfl
+  zsmul_succ' := by intro n x; rfl
+  zsmul_neg' := by intro n x; rfl
+  sub_eq_add_neg := by
+    intro a b; rfl
 
 /-- `SplitOctonion` has `DecidableEq` because it is a product of 8 `Int` fields. -/
 instance decidableEqSplitOctonion : DecidableEq SplitOctonion := by
@@ -90,32 +105,34 @@ instance decidableEqSplitOctonion : DecidableEq SplitOctonion := by
     - eᵢ  for i∈{1,2,3,5,6,7} (degree 1, primitive): S(eᵢ) = -eᵢ
 -/
 def antipode (x : SplitOctonion) : SplitOctonion :=
-  { e0 := x.e0
-    e1 := -x.e1; e2 := -x.e2; e3 := -x.e3
-    e4 := x.e4
-    e5 := -x.e5; e6 := -x.e6; e7 := -x.e7
+  { e0 := x.e0,
+    e1 := -x.e1, e2 := -x.e2, e3 := -x.e3,
+    e4 := x.e4,
+    e5 := -x.e5, e6 := -x.e6, e7 := -x.e7
   }
 
-/-- Antipode is ℤ-linear: S(x + y) = S(x) + S(y) -/
+/-- Antipode is ℤ-linear: S(x + y) = S(x) + S(y). -/
 theorem antipode_add (x y : SplitOctonion) : antipode (split_add x y) = split_add (antipode x) (antipode y) := by
-  ext <;> simp [antipode, split_add]
+  apply SplitOctonion.ext_components <;> simp [antipode, split_add] <;> omega
 
-/-- Antipode is ℤ-linear: S(-x) = -S(x) -/
+/-- Antipode is ℤ-linear: S(-x) = -S(x). -/
 theorem antipode_neg (x : SplitOctonion) : antipode (-x) = -antipode x := by
-  ext <;> simp [antipode, split_neg]
+  apply SplitOctonion.ext_components <;> dsimp [antipode, split_neg] <;> omega
 
 /-- The antipode is involutive: S(S(x)) = x. -/
 theorem antipode_involutive (x : SplitOctonion) : antipode (antipode x) = x := by
-  ext <;> simp [antipode]
+  apply SplitOctonion.ext_components <;> simp [antipode] <;> omega
 
 /-- The antipode fixes the unit: S(1) = 1. -/
 theorem antipode_one : antipode split_one = split_one := by
-  ext <;> simp [antipode, split_one]
+  apply SplitOctonion.ext_components <;> simp [antipode, split_one]
 
 /-- The antipode is an anti-automorphism: S(xy) = S(y)S(x).
     Verified on all inputs by `native_decide`. -/
 theorem antipode_mul (x y : SplitOctonion) : antipode (split_oct_mul x y) = split_oct_mul (antipode y) (antipode x) := by
-  ext <;> native_decide
+  rcases x with ⟨xe0, xe1, xe2, xe3, xe4, xe5, xe6, xe7⟩
+  rcases y with ⟨ye0, ye1, ye2, ye3, ye4, ye5, ye6, ye7⟩
+  apply SplitOctonion.ext_components <;> dsimp [antipode, split_oct_mul] <;> ring
 
 -- ============================================================================
 -- SECTION 3: Hopf Axiom — The Antipode Pairing
@@ -143,12 +160,16 @@ def antipodePairing (x y : SplitOctonion) : ℤ :=
     This is the Hopf axiom μ ∘ (S ⊗ id) ∘ Δ = η ∘ ε, expressed without
     tensor products by currying the bilinear form. -/
 theorem antipode_pairing_self (x : SplitOctonion) : antipodePairing (antipode x) x = counit x := by
-  native_decide
+  rcases x with ⟨e0, e1, e2, e3, e4, e5, e6, e7⟩
+  dsimp [antipodePairing, antipode, split_oct_mul, counit]
+  ring
 
 /-- The copairing: ε(x * S(x)) = ε(x).
     This is the other Hopf axiom μ ∘ (id ⊗ S) ∘ Δ = η ∘ ε. -/
 theorem antipode_copairing_self (x : SplitOctonion) : (split_oct_mul x (antipode x)).e0 = counit x := by
-  native_decide
+  rcases x with ⟨e0, e1, e2, e3, e4, e5, e6, e7⟩
+  dsimp [antipode, split_oct_mul, counit]
+  ring
 
 -- ============================================================================
 -- SECTION 4: Antipode Fixed Point — The Zero Divisor Condition
@@ -173,22 +194,28 @@ theorem fixed_point_components (x : SplitOctonion) (h : isFixedPoint x) :
   have h_e5 := congrArg SplitOctonion.e5 h_eq
   have h_e6 := congrArg SplitOctonion.e6 h_eq
   have h_e7 := congrArg SplitOctonion.e7 h_eq
-  simp at h_e1 h_e2 h_e3 h_e5 h_e6 h_e7
-  exact ⟨h_e1, h_e2, h_e3, h_e5, h_e6, h_e7⟩
+  -- From h_eq: antipode x = x with antipode expanded, each component gives -xᵢ = xᵢ
+  -- Over ℤ, -a = a → 2a = 0 → a = 0 (since ℤ has no torsion).
+  have h1 : x.e1 = 0 := by linarith
+  have h2 : x.e2 = 0 := by linarith
+  have h3 : x.e3 = 0 := by linarith
+  have h5 : x.e5 = 0 := by linarith
+  have h6 : x.e6 = 0 := by linarith
+  have h7 : x.e7 = 0 := by linarith
+  exact ⟨h1, h2, h3, h5, h6, h7⟩
 
 /-- The fixed point condition for the remaining components is vacuous:
     e₀ and e₄ are always fixed by the antipode. -/
 theorem fixed_point_e0 (x : SplitOctonion) : (antipode x).e0 = x.e0 := by
   simp [antipode]
 
-theorem fixed_point_e4 (x : SplitOctonion) : (antipode x).e4 = x.e4 := by
-  simp [antipode]
+theorem fixed_point_e4 (x : SplitOctonion) : (antipode x).e4 = x.e4 := rfl
 
 -- ============================================================================
 -- SECTION 5: Connection to IdentityZeroDivisor
 -- ============================================================================
 
-/-- The identity zero divisor, embedded into SplitOctonion via the `toSO` map.
+/- The identity zero divisor, embedded into SplitOctonion via the `toSO` map.
     `IdentityZeroDivisor` provides two distinct markers for the same EMLTree.
     Under the `toSO` embedding (which maps NodeCost → SplitOctonion), the
     identity component e₀ corresponds to `bias = 1`.
@@ -225,24 +252,23 @@ theorem identity_zero_divisor_annihilates_cost {α : Type} (h_zd : IdentityZeroD
   rcases h_components with ⟨h1, h2, h3, h5, h6, h7⟩
   have h_e0_1 : x.e0 = 1 := by simpa [counit] using h_counit
   have h_e4_zero : x.e4 = 0 := by
-    -- From the antipode pairing: ε(x * S(x)) = ε(x) = 1
-    -- With the fixed point form, compute (x*S(x)).e0
     have h_pairing : (split_oct_mul x (antipode x)).e0 = 1 := by
       calc
         (split_oct_mul x (antipode x)).e0 = counit x := antipode_copairing_self x
         _ = 1 := h_counit
-    subst h1 h2 h3 h5 h6 h7
-    -- Now x = ⟨1, 0, 0, 0, e₄, 0, 0, 0⟩, S(x) = same
-    -- Compute x*x and get e₀ component
-    have h_mul : (split_oct_mul (⟨1,0,0,0,x.e4,0,0,0⟩) (⟨1,0,0,0,x.e4,0,0,0⟩)).e0 = 1 + x.e4*x.e4 := by
-      native_decide
-    have h_eq : 1 + x.e4*x.e4 = 1 := by
-      calc
-        1 + x.e4*x.e4 = (split_oct_mul (⟨1,0,0,0,x.e4,0,0,0⟩) (⟨1,0,0,0,x.e4,0,0,0⟩)).e0 := by symm; exact h_mul
-        _ = 1 := h_pairing
-    -- From 1 + e₄² = 1, we get e₄² = 0, so e₄ = 0 over ℤ
+    -- With the fixed-point components known (h1-h7), and S(x) = x (h_fixed),
+    -- the pairing simplifies to x.e0² + x.e4². Since x.e0 = 1 from the counit,
+    -- we get 1 + x.e4² = 1 → x.e4² = 0 → x.e4 = 0 over ℤ.
+    -- Rewrite the zero components into x so native_decide can compute
+    have h_mul_simp : (split_oct_mul x (antipode x)).e0 = x.e0*x.e0 + x.e4*x.e4 := by
+      dsimp [split_oct_mul, antipode]
+      simp [h1, h2, h3, h5, h6, h7]
+      ring
+    rw [h_mul_simp, h_e0_1] at h_pairing
     nlinarith
-  ext <;> simp [h_e0_1, h1, h2, h3, h_e4_zero, h5, h6, h7]
+  exfalso
+  have h_2_ne_0 : (2 : ℤ) ≠ 0 := by norm_num
+  exact h_2_ne_0 h_2_eq_0
 
 -- ============================================================================
 -- SECTION 6: Connection to AMM Reserve Guard
@@ -281,12 +307,15 @@ theorem antipode_fixed_point_reserves_pool
           _ = 1 := h_counit
       -- With h1-h7, (x*S(x)).e0 = x.e0^2 + x.e4^2, and since x.e0 = 1:
       -- 1 + x.e4^2 = 1 → x.e4^2 = 0
-      subst h1 h2 h3 h5 h6 h7
-      native_decide
+      have h_mul_simp : (split_oct_mul x (antipode x)).e0 = x.e0*x.e0 + x.e4*x.e4 := by
+        dsimp [split_oct_mul, antipode]
+        simp [h1, h2, h3, h5, h6, h7]
+        ring
+      rw [h_mul_simp, h_e0_1] at h_pairing
+      nlinarith
     have h_e4_zero : x.e4 = 0 := by
       nlinarith
-    subst h_e4_zero
-    ext <;> simp [h_e0_1]
+    apply SplitOctonion.ext_components <;> simp [split_one, h_e0_1, h_e4_zero, h1, h2, h3, h5, h6, h7]
   -- The reserve guard: Φ L tree ≥ pool.reserveB
   -- With cost = split_one (bias=1, all else 0), the cost Φ L tree = 1
   -- Since pool.reserveB > 0 (from Pool.hBpos), we have 1 ≥ 0, which is true.
@@ -297,5 +326,40 @@ theorem antipode_fixed_point_reserves_pool
   -- trigger the reserve guard.
   -- This theorem is intentionally left as a connection statement.
   sorry
+
+-- ============================================================================
+-- SECTION 7: Antipode Preserves the (4,4) Norm (Born Rule Extension)
+-- ============================================================================
+
+/-- The (4,4) quadratic norm is antipode-invariant: `octonion_norm(S(x)) = octonion_norm(x)`.
+
+    This extends the split-quaternion Born rule (proved in `BornTest.lean`) to
+    split-octonions: the norm — which plays the role of "total probability" or
+    "cost magnitude" — is unchanged by the antipode (the "time reversal" /
+    "institutional reversal" operation).
+
+    **Proof sketch**: The antipode negates the six primitive components
+    (e₁, e₂, e₃, e₅, e₆, e₇) and fixes the two group-like components
+    (e₀, e₄). The norm squares each component, and `(-a)² = a²` over ℤ,
+    so every term is unchanged.
+
+    **Cross-layer contract** (invariant at boundary):
+      - `FORMALIZATION` (this theorem) guarantees the norm is antipode-invariant.
+      - `API_GATEWAY` reads `octonion_norm` as the cost magnitude.
+      - `PRESENTATION` (WebGPU) uses this invariant to avoid recomputing the
+        norm after antipode application — the shader can cache the value.
+    -/
+theorem antipode_preserves_norm (x : SplitOctonion) : octonion_norm (antipode x) = octonion_norm x := by
+  calc
+    octonion_norm (antipode x) = (antipode x).e0 * (antipode x).e0 + (antipode x).e1 * (antipode x).e1 +
+      (antipode x).e2 * (antipode x).e2 + (antipode x).e3 * (antipode x).e3 -
+      (antipode x).e4 * (antipode x).e4 - (antipode x).e5 * (antipode x).e5 -
+      (antipode x).e6 * (antipode x).e6 - (antipode x).e7 * (antipode x).e7 := rfl
+    _ = x.e0 * x.e0 + (-x.e1) * (-x.e1) + (-x.e2) * (-x.e2) + (-x.e3) * (-x.e3) -
+      x.e4 * x.e4 - (-x.e5) * (-x.e5) - (-x.e6) * (-x.e6) - (-x.e7) * (-x.e7) := by
+      simp [antipode]
+    _ = x.e0 * x.e0 + x.e1 * x.e1 + x.e2 * x.e2 + x.e3 * x.e3 -
+      x.e4 * x.e4 - x.e5 * x.e5 - x.e6 * x.e6 - x.e7 * x.e7 := by ring
+    _ = octonion_norm x := rfl
 
 end Hopf
