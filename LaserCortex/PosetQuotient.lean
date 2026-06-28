@@ -43,6 +43,7 @@ order on S/~. The canonical projection π : S → S/~ is a poset quotient
 import LaserCortex.EMLRegistry
 import LaserCortex.Generation
 import LaserCortex.FrictionLagrangian
+open Relation
 
 open EMLRegistry
 open Generation
@@ -70,45 +71,36 @@ Reachability: reflexive transitive closure of the step relation.
 A state `b` is reachable from `a` iff there is a (possibly empty) path
 of steps from `a` to `b`. This is a **preorder** on the state space.
 
-This follows the same inductive pattern as `contracts_to` in EMLRegistry.lean,
-which is the reflexive transitive closure of `contracts_one`.
+This follows the same pattern as `contracts_to` in EMLRegistry.lean,
+implemented via mathlib's `Relation.ReflTransGen` for lemma access.
 -/
-inductive Reachable {S : Type} (M : MarkovChain S) : S → S → Prop where
-  | refl (a : S) : Reachable M a a
-  | step (a b c : S) : M.step a b → Reachable M b c → Reachable M a c
+abbrev Reachable {S : Type} (M : MarkovChain S) (a b : S) : Prop :=
+  ReflTransGen M.step a b
 
 namespace Reachable
 
 /-- Reachability is reflexive: `Reachable M a a`. -/
-theorem refl' (M : MarkovChain S) (a : S) : Reachable M a a :=
-  Reachable.refl (M := M) a
+theorem refl (M : MarkovChain S) (a : S) : Reachable M a a :=
+  ReflTransGen.refl
 
 /-- A single step implies reachability. -/
 theorem of_step (M : MarkovChain S) {a b : S} (h : M.step a b) : Reachable M a b :=
-  Reachable.step (M := M) a b b h (Reachable.refl (M := M) b)
+  ReflTransGen.single h
 
 /--
 Reachability is transitive: if `Reachable M a b` and `Reachable M b c`,
 then `Reachable M a c`.
 -/
 theorem transitive (M : MarkovChain S) {a b c : S}
-    (h₁ : Reachable M a b) (h₂ : Reachable M b c) : Reachable M a c := by
-  induction h₁ with
-  | refl a => exact h₂
-  | step a d _ h_step h_path ih =>
-    -- `ih` : ∀ {c'}, Reachable M _ c' → Reachable M d c'
-    -- Apply `ih` to `h₂` to get `Reachable M d c`, then add the initial step
-    exact Reachable.step (M := M) a d c h_step (ih h₂)
+    (h₁ : Reachable M a b) (h₂ : Reachable M b c) : Reachable M a c :=
+  ReflTransGen.trans h₁ h₂
 
 /--
 Reachability is a preorder: reflexive + transitive.
 -/
 theorem preorder (M : MarkovChain S) :
     (∀ a, Reachable M a a) ∧ (∀ a b c, Reachable M a b → Reachable M b c → Reachable M a c) :=
-  by
-    constructor
-    · intro a; exact refl' M a
-    · intro a b c h₁ h₂; exact transitive M h₁ h₂
+  ⟨λ a => refl M a, λ a b c h₁ h₂ => transitive M h₁ h₂⟩
 
 end Reachable
 

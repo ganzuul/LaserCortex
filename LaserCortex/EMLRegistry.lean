@@ -1,3 +1,6 @@
+import Mathlib.Logic.Relation
+open Relation
+
 -- EMLRegistry.lean - Minimal working version
 -- Binding layer: neural router index <-> EML inductive tree type
 -- 
@@ -173,28 +176,33 @@ inductive contracts_one : EMLTree → EMLTree → Prop where
 -- Tamari contraction: reflexive-transitive closure
 -- Multi-step evolution path = **audit trail** with monotonic provenance
 -- Each step preserves the **path fact** (witness layer)
-inductive contracts_to : EMLTree → EMLTree → Prop where
-  | refl  : ∀ (t : EMLTree), contracts_to t t
-  | step  : ∀ (s t u : EMLTree),
-      contracts_one s t → contracts_to t u → contracts_to s u
+-- Defined via mathlib's Relation.ReflTransGen for lemma access and compatibility.
+abbrev contracts_to : EMLTree → EMLTree → Prop := ReflTransGen contracts_one
+
+-- Backward-compatible constructor aliases so existing call sites compile unchanged.
+-- `contracts_to.refl s` gives a refl step; `contracts_to.step s t u h_one h_to` prepends h_one.
+namespace contracts_to
+  theorem refl (s : EMLTree) : contracts_to s s := ReflTransGen.refl
+  theorem step (s t u : EMLTree) (h_one : contracts_one s t) (h_to : contracts_to t u) : contracts_to s u :=
+    ReflTransGen.head h_one h_to
+end contracts_to
 
 -- Lifting lemma: contracts_to is preserved under Node on the left
 -- **Path validity monotonicity** (Law 2): evolution paths compose covariantly
 -- This is the **witness layer** preservation - the audit trail extends monotonically
 theorem contracts_to_node_left {l l' r : EMLTree} (h : contracts_to l l') :
     contracts_to (.Node l r) (.Node l' r) := by
-  have h_main : contracts_to (.Node l r) (.Node l' r) := by
-    -- Use well-founded recursion on the proof term size
-    have h₁ : ∀ {l l' r : EMLTree} (h : contracts_to l l'), contracts_to (.Node l r) (.Node l' r) := by
-      intro l l' r h
-      induction h using contracts_to.recOn with
-      | refl t => exact contracts_to.refl (.Node t r)
-      | step s t u h_one h_to ih =>
-        have h_to' : contracts_to (.Node t r) (.Node u r) := ih
-        have h_one' : contracts_one (.Node s r) (.Node t r) := contracts_one.left s t r h_one
-        exact contracts_to.step (.Node s r) (.Node t r) (.Node u r) h_one' h_to'
-    exact h₁ h
-  exact h_main
+  refine ReflTransGen.rec
+    (motive := λ x hx => contracts_to (EMLTree.Node l r) (EMLTree.Node x r))
+    ?refl_case ?tail_case h
+  · -- refl_case: contracts_to (Node l r) (Node l r)
+    exact contracts_to.refl (EMLTree.Node l r)
+  · -- tail_case: ∀ {b c}, contracts_to l b → contracts_one b c →
+    --   (ih : contracts_to (Node l r) (Node b r)) → contracts_to (Node l r) (Node c r)
+    intro b c h_to h_one ih
+    have h_one' : contracts_one (EMLTree.Node b r) (EMLTree.Node c r) :=
+      contracts_one.left b c r h_one
+    exact ih.tail h_one'
 
 -- Lifting lemma: contracts_to is preserved under Node on the right
 -- **Path validity monotonicity** (Law 2): evolution paths compose covariantly
@@ -210,28 +218,23 @@ theorem contracts_to_node_left {l l' r : EMLTree} (h : contracts_to l l') :
 --   The non-associativity = choice operation evolves as it is applied.
 theorem contracts_to_node_right {l r r' : EMLTree} (h : contracts_to r r') :
     contracts_to (.Node l r) (.Node l r') := by
-  have h_main : contracts_to (.Node l r) (.Node l r') := by
-    have h₁ : ∀ {l r r' : EMLTree} (h : contracts_to r r'), contracts_to (.Node l r) (.Node l r') := by
-      intro l r r' h
-      induction h using contracts_to.recOn with
-      | refl t => exact contracts_to.refl (.Node l t)
-      | step s t u h_one h_to ih =>
-        have h_to' : contracts_to (.Node l t) (.Node l u) := ih
-        have h_one' : contracts_one (.Node l s) (.Node l t) := contracts_one.right l s t h_one
-        exact contracts_to.step (.Node l s) (.Node l t) (.Node l u) h_one' h_to'
-    exact h₁ h
-  exact h_main
+  refine ReflTransGen.rec
+    (motive := λ x hx => contracts_to (EMLTree.Node l r) (EMLTree.Node l x))
+    ?refl_case ?tail_case h
+  · -- refl_case: contracts_to (Node l r) (Node l r)
+    exact contracts_to.refl (EMLTree.Node l r)
+  · -- tail_case: ∀ {b c}, contracts_to r b → contracts_one b c →
+    --   (ih : contracts_to (Node l r) (Node l b)) → contracts_to (Node l r) (Node l c)
+    intro b c h_to h_one ih
+    have h_one' : contracts_one (EMLTree.Node l b) (EMLTree.Node l c) :=
+      contracts_one.right l b c h_one
+    exact ih.tail h_one'
 
 -- Transitivity of contracts_to: if s → t and t → u, then s → u
 -- This is the **audit trail composition** - paths concatenate monotonically
 theorem contracts_to_trans {s t u : EMLTree} (h₁ : contracts_to s t) (h₂ : contracts_to t u) :
-    contracts_to s u := by
-  induction h₁ with
-  | refl t' =>
-    exact h₂
-  | step s' t' u' h_one h_to ih =>
-    have h_mid : contracts_to t' u := ih h₂
-    exact contracts_to.step s' t' u h_one h_mid
+    contracts_to s u :=
+  ReflTransGen.trans h₁ h₂
 
 -- Size is preserved by contracts_one (rotation doesn't change node count)
 theorem contracts_one_size_eq {s t : EMLTree} (h : contracts_one s t) : s.size = t.size := by
@@ -246,14 +249,15 @@ theorem contracts_one_size_eq {s t : EMLTree} (h : contracts_one s t) : s.size =
 
 -- Size is preserved by contracts_to (multi-step path)
 theorem contracts_to_size_eq {s t : EMLTree} (h : contracts_to s t) : s.size = t.size := by
-  induction h with
-  | refl t => rfl
-  | step s t u h_one h_to ih =>
-    have h₁ : s.size = t.size := contracts_one_size_eq h_one
-    have h₂ : t.size = u.size := ih
+  refine ReflTransGen.rec
+    (motive := λ x hx => s.size = x.size)
+    ?refl_case ?tail_case h
+  · rfl
+  · intro b c h_to h_one ih
+    have h_sz : b.size = c.size := contracts_one_size_eq h_one
     calc
-      s.size = t.size := h₁
-      _ = u.size := h₂
+      s.size = b.size := ih
+      _ = c.size := h_sz
 
 -- `leftWeight` strictly decreases under every `contracts_one` step.
 theorem contracts_one_leftWeight_decreases {s t : EMLTree} (h : contracts_one s t) : leftWeight s > leftWeight t := by
@@ -269,12 +273,17 @@ theorem contracts_one_leftWeight_decreases {s t : EMLTree} (h : contracts_one s 
 
 -- `contracts_to` is non-increasing in `leftWeight`.
 theorem contracts_to_leftWeight_ge {s t : EMLTree} (h : contracts_to s t) : leftWeight s ≥ leftWeight t := by
-  induction h with
-  | refl t => exact Nat.le_refl (leftWeight t)
-  | step s x t h_one h_to ih =>
-    have h_decr : leftWeight s > leftWeight x := contracts_one_leftWeight_decreases h_one
-    have h_ge : leftWeight x ≥ leftWeight t := ih
-    omega
+  refine ReflTransGen.rec
+    (motive := λ x hx => leftWeight s ≥ leftWeight x)
+    ?refl_case ?tail_case h
+  · exact Nat.le_refl _
+  · intro b c h_to h_one ih
+    have h_decr : leftWeight b > leftWeight c := contracts_one_leftWeight_decreases h_one
+    -- h_decr : leftWeight b > leftWeight c  ↔  leftWeight c < leftWeight b
+    -- ih : leftWeight s ≥ leftWeight b    ↔  leftWeight b ≤ leftWeight s
+    -- Need: leftWeight s ≥ leftWeight c
+    -- Chain: leftWeight c < leftWeight b ≤ leftWeight s  ⇒  leftWeight s ≥ leftWeight c
+    exact Nat.le_of_lt (Nat.lt_of_lt_of_le h_decr ih)
 
 /--
 Antisymmetry of `contracts_to`: if `s` contracts to `t` and `t` contracts to `s`,
@@ -287,19 +296,19 @@ strictly decreases leftWeight, so any cycle would force `leftWeight s > leftWeig
 which is impossible. Hence the only possible `contracts_to` path is `refl`.
 -/
 theorem contracts_to_antisymm {s t : EMLTree} (h₁ : contracts_to s t) (h₂ : contracts_to t s) : s = t := by
-  induction h₁ with
-  | refl t => rfl
-  | step s x t h_one h_to ih =>
-    -- h_one : contracts_one s x   (so leftWeight s > leftWeight x)
-    -- h_to  : contracts_to x t
-    -- h₂    : contracts_to t s
-    -- We need to show s = t.
-    -- From h_to and h₂ we get a path x → t → s, so leftWeight x ≥ leftWeight s.
-    -- But h_one gives leftWeight s > leftWeight x, contradiction.
-    have h_decr : leftWeight s > leftWeight x := contracts_one_leftWeight_decreases h_one
-    -- compose x → t → s to get x → s
-    have h_path : contracts_to x s := contracts_to_trans h_to h₂
-    have h_lw_ge : leftWeight x ≥ leftWeight s := contracts_to_leftWeight_ge h_path
+  match h₁ with
+  | ReflTransGen.refl => rfl
+  | @ReflTransGen.tail _ _ _ x _ h_to h_one =>
+    -- h_to : contracts_to s x  (s →* x)
+    -- h_one : contracts_one x t  (x →₁ t)
+    -- We need: s = t
+    have h_lw_s_ge_x : leftWeight s ≥ leftWeight x := contracts_to_leftWeight_ge h_to
+    have h_xs : contracts_to x s := ReflTransGen.head h_one h₂
+    have h_lw_x_ge_s : leftWeight x ≥ leftWeight s := contracts_to_leftWeight_ge h_xs
+    have h_decr : leftWeight x > leftWeight t := contracts_one_leftWeight_decreases h_one
+    have h_lw_t_ge_s : leftWeight t ≥ leftWeight s := contracts_to_leftWeight_ge h₂
+    -- Chain: leftWeight s ≥ leftWeight x ≥ leftWeight s ⇒ leftWeight s = leftWeight x.
+    -- And leftWeight x > leftWeight t ≥ leftWeight s = leftWeight x ⇒ leftWeight x > leftWeight x.
     omega
 
 -- ================================================================
@@ -413,44 +422,12 @@ theorem node_of_rightCombs_contracts_to_rightComb (a b : Nat) :
     -- Combined target: Node Leaf (rightComb (1 + a + b)) = rightComb (1 + a + b + 1) = rightComb (a + 2 + b)
     -- This is the **equilibrium convergence** proof: both paths reach the same attractor
     have h_target : rightComb (1 + (a + 1) + b) = EMLTree.Node .Leaf (rightComb (1 + a + b)) := by
-      have h₁ : 1 + (a + 1) + b = 1 + a + b + 1 := by
-        simp [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
-        <;>
-        (try omega) <;>
-        (try simp_all [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]) <;>
-        (try omega)
-        <;>
-        (try
-          {
-            induction a with
-            | zero => simp_all [Nat.add_assoc]
-            | succ a ih => simp_all [Nat.add_assoc, Nat.succ_eq_add_one]
-            <;> omega
-          })
-      rw [h₁]
-      have h₂ : rightComb (1 + a + b + 1) = EMLTree.Node .Leaf (rightComb (1 + a + b)) := by
-        have h₃ : 1 + a + b + 1 = (1 + a + b) + 1 := by
-          simp [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
-          <;>
-          (try omega) <;>
-          (try simp_all [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]) <;>
-          (try omega)
-          <;>
-          (try
-            {
-              induction a with
-              | zero => simp_all [Nat.add_assoc]
-              | succ a ih => simp_all [Nat.add_assoc, Nat.succ_eq_add_one]
-              <;> omega
-            })
-        rw [h₃]
-        simp [rightComb]
-        <;> simp_all [rightComb]
-        <;>
-        (try omega) <;>
-        (try simp_all [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]) <;>
-        (try omega)
-      rw [h₂]
+      calc
+        rightComb (1 + (a + 1) + b) = rightComb (a + b + 2) := by
+          apply congrArg rightComb; omega
+        _ = EMLTree.Node .Leaf (rightComb (a + b + 1)) := by simp [rightComb]
+        _ = EMLTree.Node .Leaf (rightComb (1 + a + b)) := by
+          apply congrArg (λ t => EMLTree.Node .Leaf (rightComb t)); omega
     
     -- Rewrite the goal target to match combined (the **attractor equality**)
     rw [h_target] at *
