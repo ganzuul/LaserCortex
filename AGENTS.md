@@ -48,3 +48,33 @@ The Open Notebook MCP librarian indexes four architectural layers:
 
 Before modifying any file, verify the librarian index is fresh via
 `pipeline_status` + `check_freshness`. If the index is stale, warn the user.
+
+## Lake Build Safety (Context Budget)
+
+`lake build` and `lake setup-file` can emit tens of thousands of lines of
+output, burning the LLM context budget on both the input and output side.
+**Never pipe `lake build` output directly into the conversation.**
+
+Use `scripts/lake-wrap.sh` instead:
+
+    # Basic usage (head=10, tail=10, auto-generated log in /tmp):
+    ./scripts/lake-wrap.sh lake build
+
+    # Build a specific target with custom truncation:
+    ./scripts/lake-wrap.sh --head 5 --tail 15 -- lake build LaserCortex.Hopf
+
+    # With an explicit log path:
+    ./scripts/lake-wrap.sh --log /tmp/hopf.log -- lake build LaserCortex.Hopf
+
+The wrapper:
+1. Captures the **full output** to a timestamped log file in `/tmp`
+2. Prints only the first N lines, a suppression marker, and the last M lines
+3. Exits with the same exit code as `lake` (so `&&` chains work)
+
+If you need to investigate a specific error, read the log file with
+targeted tools (grep, read offset/limit) rather than re-running the build.
+
+The underlying filter is `scripts/log-truncate.py`, which can also be used
+standalone:
+
+    noisy-command 2>&1 | python3 scripts/log-truncate.py --head 10 --tail 10

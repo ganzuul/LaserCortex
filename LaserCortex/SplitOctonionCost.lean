@@ -469,6 +469,7 @@ def engineToSO (s : EngineState) : SplitOctonion :=
 
 /-- Componentwise equality lemma for SplitOctonion: if all 8 components agree,
     the two split-octonions are equal. -/
+@[ext]
 lemma SplitOctonion.ext_components {a b : SplitOctonion}
     (h0 : a.e0 = b.e0) (h1 : a.e1 = b.e1) (h2 : a.e2 = b.e2)
     (h3 : a.e3 = b.e3) (h4 : a.e4 = b.e4) (h5 : a.e5 = b.e5)

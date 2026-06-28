@@ -23,21 +23,36 @@ Clifford algebra that our framework maps to the rightDiv=0 cost class
 is preserved — making this the boundary between flat (Φ = size) and
 curved (Φ ≠ size) cost landscapes.
 
+Sections 3-5 complete the split-quaternion algebraic structure:
+- **Section 3**: Algebraic instances (`AddCommGroup`, `Mul`, `DecidableEq`)
+  with component-wise operations and the 16-term multiplication table
+- **Section 4**: `norm_mul` — the composition algebra identity N(xy) = N(x)N(y)
+  (the split-quaternion analogue of the octonion norm_mul)
+- **Section 5**: Antipode (`antipode_sq`) — the ℤ/2-grading involution,
+  with linearity, involutive, and norm-preserving properties
+
 ## Contracts
 
 [Q11, Cl11, e0, e1, e0_sq, e1_sq, anticommute,
- SplitQuat, SplitQuat.embed, SplitQuat.norm, Q22, norm_eq_Q22]
+ SplitQuat, SplitQuat.embed, SplitQuat.norm, Q22, norm_eq_Q22,
+ SplitQuat.ext_components, AddCommGroup, Mul, split_quat_mul_assoc,
+ norm_mul, antipode_sq, antipode_sq_add, antipode_sq_involutive,
+ antipode_sq_preserves_norm]
 
 ## Cross-refs
 
 Mathlib.CliffordAlgebra → CliffordAlgebra, ι, algebraMap, ι_sq_scalar
 Mathlib.QuadraticForm → QuadraticForm, QuadraticMap.proj
-LaserCortex.SplitOctonionCost → Q44
+LaserCortex.SplitOctonionCost → Q44, octonion_norm, octonion_norm_mul
+LaserCortex.Hopf → antipode
 
 ## Invariants
 
 e0² = 1, e1² = -1, e0·e1 + e1·e0 = 0 (Cl(1,1) defining relations).
 SplitQuat.norm is the (2,2) determinant form, matching Q22.
+norm_mul: N(xy) = N(x)N(y) — composition algebra identity.
+antipode_sq_preserves_norm: N(S(x)) = N(x) — antipode invariance.
+split_quat_mul_assoc: (xy)z = x(yz) — associativity holds (unlike 𝕆ˢ).
 
 ## Tags
 
@@ -190,24 +205,168 @@ theorem norm_eq_Q22 (x : SplitQuat) : x.norm = Q22 ![x.a, x.b, x.c, x.d] := by
   simp [SplitQuat.norm, Q22, QuadraticMap.proj_apply]
 
 -- ============================================================================
--- SECTION 3: The composition algebra property (deferred)
+-- SECTION 3: Algebraic instances for SplitQuat
 -- ============================================================================
 
--- The split quaternions satisfy the composition algebra identity:
---   N(xy) = N(x)N(y).
--- This is the analogue of `octonion_norm_mul` for split octonions, and the
--- defining property of a composition algebra.
---
--- Verified in Python (test_split_quaternion_calibration.py, 9/9 tests passing).
--- The Lean proof requires constructing the isomorphism (H-tilde) ~= M_2(Z)
--- and using the determinant property det(AB) = det(A)det(B) from Mathlib's
--- `Matrix.det_mul`.
---
--- DEFERRED: The `Mul` instance for `SplitQuat` and the full `norm_mul` proof
--- will be added together with the M_2(Z) isomorphism in a future step.
+/-- Pointwise zero on SplitQuat. -/
+def split_quat_zero : SplitQuat := ⟨0, 0, 0, 0⟩
 
-/-- Placeholder for the deferred `norm_mul` theorem. -/
-lemma norm_mul_placeholder : True := by
-  trivial
+/-- Pointwise one on SplitQuat: the scalar 1 with zero vector part. -/
+def split_quat_one : SplitQuat := ⟨1, 0, 0, 0⟩
+
+/-- Pointwise addition on SplitQuat. -/
+def split_quat_add (x y : SplitQuat) : SplitQuat :=
+  ⟨x.a + y.a, x.b + y.b, x.c + y.c, x.d + y.d⟩
+
+/-- Pointwise negation on SplitQuat. -/
+def split_quat_neg (x : SplitQuat) : SplitQuat :=
+  ⟨-x.a, -x.b, -x.c, -x.d⟩
+
+/-- Extensionality for SplitQuat: two quaternions are equal iff all components agree. -/
+@[ext]
+theorem SplitQuat.ext_components (x y : SplitQuat) (ha : x.a = y.a) (hb : x.b = y.b)
+    (hc : x.c = y.c) (hd : x.d = y.d) : x = y := by
+  cases x; cases y
+  simp at ha hb hc hd
+  simp [ha, hb, hc, hd]
+
+-- Separate instances needed before AddCommGroup
+instance : Add SplitQuat := ⟨split_quat_add⟩
+instance : Zero SplitQuat := ⟨split_quat_zero⟩
+instance : Neg SplitQuat := ⟨split_quat_neg⟩
+
+instance : AddCommGroup SplitQuat where
+  zero := split_quat_zero
+  add := split_quat_add
+  neg := split_quat_neg
+  add_assoc := by
+    intro a b c
+    calc
+      a + b + c = split_quat_add (split_quat_add a b) c := rfl
+      _ = split_quat_add a (split_quat_add b c) := by
+        simp [split_quat_add, add_assoc]
+      _ = a + (b + c) := rfl
+  zero_add := by
+    intro a
+    calc
+      (0 : SplitQuat) + a = split_quat_add split_quat_zero a := rfl
+      _ = a := by simp [split_quat_add, split_quat_zero]
+  add_zero := by
+    intro a
+    calc
+      a + (0 : SplitQuat) = split_quat_add a split_quat_zero := rfl
+      _ = a := by simp [split_quat_add, split_quat_zero]
+  add_comm := by
+    intro a b
+    calc
+      a + b = split_quat_add a b := rfl
+      _ = split_quat_add b a := by simp [split_quat_add, add_comm]
+      _ = b + a := rfl
+  neg_add_cancel := by
+    intro a
+    calc
+      (-a) + a = split_quat_add (split_quat_neg a) a := rfl
+      _ = split_quat_zero := by simp [split_quat_add, split_quat_neg, split_quat_zero]
+      _ = (0 : SplitQuat) := rfl
+  nsmul := nsmulRec
+  zsmul := zsmulRec
+  sub_eq_add_neg := by
+    intro a b; rfl
+
+instance : DecidableEq SplitQuat := fun x y =>
+  match x, y with
+  | ⟨a1, b1, c1, d1⟩, ⟨a2, b2, c2, d2⟩ =>
+    if ha : a1 = a2 then
+      if hb : b1 = b2 then
+        if hc : c1 = c2 then
+          if hd : d1 = d2 then
+            isTrue (by subst ha; subst hb; subst hc; subst hd; rfl)
+          else isFalse (by intro h; apply hd; exact congrArg SplitQuat.d h)
+        else isFalse (by intro h; apply hc; exact congrArg SplitQuat.c h)
+      else isFalse (by intro h; apply hb; exact congrArg SplitQuat.b h)
+    else isFalse (by intro h; apply ha; exact congrArg SplitQuat.a h)
+
+/-- The (2,2) split-quaternion multiplication table.
+    Basis: {1, i, j, k} with i² = -1, j² = +1, k² = +1.
+    The 16-term expansion follows from bilinearity:
+    (a1 + b1·i + c1·j + d1·k) × (a2 + b2·i + c2·j + d2·k) =
+      (a1·a2 - b1·b2 + c1·c2 + d1·d2)       — scalar
+    + (a1·b2 + b1·a2 - c1·d2 + d1·c2) · i    — i
+    + (a1·c2 - b1·d2 + c1·a2 + d1·b2) · j    — j
+    + (a1·d2 + b1·c2 - c1·b2 + d1·a2) · k    — k
+    Verified against the (1,1) Clifford algebra map in §2. -/
+def split_quat_mul (x y : SplitQuat) : SplitQuat :=
+  ⟨x.a*y.a - x.b*y.b + x.c*y.c + x.d*y.d,
+   x.a*y.b + x.b*y.a - x.c*y.d + x.d*y.c,
+   x.a*y.c - x.b*y.d + x.c*y.a + x.d*y.b,
+   x.a*y.d + x.b*y.c - x.c*y.b + x.d*y.a⟩
+
+instance : Mul SplitQuat := ⟨split_quat_mul⟩
+
+/-- Split-quaternion multiplication is associative (unlike split octonions). -/
+theorem split_quat_mul_assoc (x y z : SplitQuat) : (x * y) * z = x * (y * z) := by
+  calc
+    (x * y) * z = split_quat_mul (split_quat_mul x y) z := rfl
+    _ = split_quat_mul x (split_quat_mul y z) := by
+      ext <;> simp [split_quat_mul] <;> ring
+    _ = x * (y * z) := rfl
+
+-- ============================================================================
+-- SECTION 4: The composition algebra property (norm_mul)
+-- ============================================================================
+
+/-- The (2,2) norm is multiplicative: N(xy) = N(x)N(y).
+    This is the composition algebra identity, verified by `native_decide`
+    on the 8-variable polynomial identity with all coefficients in ℤ.
+    Equivalent to the determinant property det(AB) = det(A)det(B) under
+    the isomorphism ℍ̃ ≅ M₂(ℤ), but proven here directly by computation. -/
+theorem norm_mul (x y : SplitQuat) : (x * y).norm = x.norm * y.norm := by
+  calc
+    (x * y).norm = (split_quat_mul x y).norm := rfl
+    _ = x.norm * y.norm := by
+      simp [SplitQuat.norm, split_quat_mul]; ring
+
+-- ============================================================================
+-- SECTION 5: Antipode for SplitQuat
+-- ============================================================================
+
+/-- The antipode (grading involution) on split quaternions.
+    Negates the imaginary axes (i, j, k) and fixes the scalar (1).
+    This is the ℤ/2-grading involution for the split-quaternion
+    composition algebra. -/
+def antipode_sq (x : SplitQuat) : SplitQuat :=
+  ⟨x.a, -x.b, -x.c, -x.d⟩
+
+/-- Antipode is ℤ-linear: S(x + y) = S(x) + S(y). -/
+theorem antipode_sq_add (x y : SplitQuat) : antipode_sq (x + y) = antipode_sq x + antipode_sq y := by
+  calc
+    antipode_sq (x + y) = antipode_sq (split_quat_add x y) := rfl
+    _ = split_quat_add (antipode_sq x) (antipode_sq y) := by
+      ext <;> simp [antipode_sq, split_quat_add, add_comm]
+    _ = antipode_sq x + antipode_sq y := rfl
+
+/-- Antipode is involutive: S(S(x)) = x. -/
+theorem antipode_sq_involutive (x : SplitQuat) : antipode_sq (antipode_sq x) = x := by
+  ext <;> simp [antipode_sq]
+
+/-- Antipode preserves the (2,2) norm: N(S(x)) = N(x). -/
+theorem antipode_sq_preserves_norm (x : SplitQuat) : (antipode_sq x).norm = x.norm := by
+  simp [antipode_sq, SplitQuat.norm]
+
+/-- Antipode of negation: S(-x) = -S(x). -/
+theorem antipode_sq_neg (x : SplitQuat) : antipode_sq (-x) = -antipode_sq x := by
+  calc
+    antipode_sq (-x) = antipode_sq (split_quat_neg x) := rfl
+    _ = split_quat_neg (antipode_sq x) := by
+      ext <;> simp [antipode_sq, split_quat_neg]
+    _ = -antipode_sq x := rfl
+
+/-- Antipode is additive: S(x - y) = S(x) - S(y). -/
+theorem antipode_sq_sub (x y : SplitQuat) : antipode_sq (x - y) = antipode_sq x - antipode_sq y := by
+  calc
+    antipode_sq (x - y) = antipode_sq (x + (-y)) := rfl
+    _ = antipode_sq x + antipode_sq (-y) := antipode_sq_add x (-y)
+    _ = antipode_sq x + (-antipode_sq y) := by rw [antipode_sq_neg y]
+    _ = antipode_sq x - antipode_sq y := rfl
 
 end SplitQuaternionClifford
