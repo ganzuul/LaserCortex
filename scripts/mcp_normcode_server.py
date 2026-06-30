@@ -1065,6 +1065,110 @@ async def graphiti_build_communities() -> str:
 
 
 @mcp.tool(
+    name="graphiti_add_owl_key_value_pair",
+    description="Add a NormNode + CortexNode + OWL_KEY_VALUE_PAIR triplet for blood-brain barrier",
+)
+async def graphiti_add_owl_key_value_pair(
+    norm_owl_key: str,
+    norm_nl_value: str,
+    norm_coupling_signature: str = "commutative",
+    cortex_cd_step: int = 0,
+    group_id: str = "default",
+) -> str:
+    """Add an OWL key-value pair for the blood-brain barrier between LaserCortex and NormCode.
+
+    This creates a NormNode (natural language value), CortexNode (OWL key), and
+    OWL_KEY_VALUE_PAIR edge connecting them, enforcing the blood-brain barrier invariants.
+
+    Args:
+        norm_owl_key: OWL two-word composition key (e.g., 'ReserveGuard').
+        norm_nl_value: Natural language phrasing (e.g., 'reserve guard').
+        norm_coupling_signature: Coupling regime ('commutative', 'non_commutative', 'non_associative').
+        cortex_cd_step: Cayley-Dickson step (0-4).
+        group_id: Group partition (default "default").
+
+    Returns:
+        JSON with episode UUID and metadata.
+    """
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return json.dumps({"error": "Graphiti service not started"})
+    
+    try:
+        from infra._graphiti_models import NormNodeAttrs, CortexNodeAttrs, OwlKeyValuePairAttrs
+        
+        # Create the nodes and edge
+        norm_node = NormNodeAttrs(
+            owl_key=norm_owl_key,
+            nl_value=norm_nl_value,
+            coupling_signature=norm_coupling_signature,
+        )
+        cortex_node = CortexNodeAttrs(
+            owl_key=norm_owl_key,
+            cd_step=cortex_cd_step,
+        )
+        owl_edge = OwlKeyValuePairAttrs(
+            key=norm_owl_key,
+            value=norm_nl_value,
+            coupling_signature=norm_coupling_signature,
+            cd_step=cortex_cd_step,
+        )
+        
+        # Add the triplet
+        result = await _graphiti_svc.add_owl_key_value_pair(
+            norm_node=norm_node,
+            cortex_node=cortex_node,
+            owl_edge=owl_edge,
+            group_id=group_id,
+            episode_name=f"owl_pair_{norm_owl_key}",
+            episode_body=f"OWL key-value pairing: {norm_owl_key} -> {norm_nl_value}",
+        )
+        
+        return json.dumps({
+            "status": "ok",
+            "owl_key": norm_owl_key,
+            "nl_value": norm_nl_value,
+            "coupling_signature": norm_coupling_signature,
+            "cd_step": cortex_cd_step,
+            "group_id": group_id,
+        }, indent=2, ensure_ascii=False, default=str)
+    except Exception as e:
+        _logger.exception("graphiti_add_owl_key_value_pair error")
+        return json.dumps({"error": str(e)})
+
+
+@mcp.tool(
+    name="graphiti_verify_owl_invariants",
+    description="Verify OWL key-value pairing invariants in a group",
+)
+async def graphiti_verify_owl_invariants(
+    group_id: str = "default",
+) -> str:
+    """Verify all OWL key-value pairing invariants in a group.
+
+    Checks:
+    1. All NormNode.owl_key == CortexNode.owl_key for connected pairs
+    2. All NormNode.nl_value == OWL_KEY_VALUE_PAIR.value
+    3. All CortexNode.cd_step == OWL_KEY_VALUE_PAIR.cd_step
+    4. OWL keys are unique across NormNodes
+    5. Non-trivial CD steps (>= 1) have OWL keys
+
+    Args:
+        group_id: Group partition to verify (default "default").
+
+    Returns:
+        JSON with verification results, counts, and any violations found.
+    """
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return json.dumps({"error": "Graphiti service not started"})
+    try:
+        results = await _graphiti_svc.verify_owl_invariants(group_id=group_id)
+        return json.dumps(results, indent=2, ensure_ascii=False, default=str)
+    except Exception as e:
+        _logger.exception("graphiti_verify_owl_invariants error")
+        return json.dumps({"error": str(e)})
+
+
+@mcp.tool(
     name="graphiti_stats",
     description="Get temporal graph statistics",
 )
