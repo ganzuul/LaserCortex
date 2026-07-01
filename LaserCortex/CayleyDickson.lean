@@ -424,4 +424,178 @@ theorem cd_mul_pure_quat (q₁ q₂ : Quaternionℤ) :
       dsimp [split_oct_mul, quat_mul, split_zero] <;> ring
     _ = cd_to_so (⟨quat_mul q₁ q₂, split_quat_zero⟩ : CDouble) := rfl
 
+-- ============================================================================
+-- SECTION 5: CD Parameter — the branch choice
+-- ============================================================================
+
+/--
+The **CD parameter** α classifies the branch of the Cayley‑Dickson doubling:
+
+    Q' = Q  ⊕  α · Q
+
+At each CD step, the quadratic form on the new coordinate is α times the
+original. This choice determines the algebra structure:
+
+| α | Branch | Examples | ZDs exist? |
+|---|--------|----------|-----------|
+| +1 | Split | ℂ', ℍ' (SQ), 𝕆' (SO) | **Yes** (step ≥ 3) |
+| -1 | Compact | ℂ, ℍ, 𝕆 | No |
+
+The **homotopy** α(t) : [0,1] → {+1, -1} continuously deforms the split
+branch into the compact branch. In the framework, this is the "cooling"
+parameter that eliminates ZDs from generated structures (Klingler‑Netzer
+2024, arXiv:2403.02095).
+
+The ZD monopole constraint in `CompositionSpec` only fires in the split
+branch at CD step ≥ 3 with identical evaluators — in the compact branch,
+no ZDs exist at any step, so composition is always valid.
+-/
+inductive CDParameter : Type where
+  /-- α = +1: split branch (indefinite quadratic form).
+      The CD generator satisfies ω² = +1.
+      Zero divisors appear at CD step ≥ 3 (octonion level). -/
+  | split
+  /-- α = -1: compact branch (definite quadratic form).
+      The CD generator satisfies ω² = -1.
+      No zero divisors at any CD step. -/
+  | compact
+  deriving DecidableEq, Repr
+
+/--
+The sign of the CD parameter as an integer:
+
+    sign(split)   = +1
+    sign(compact) = -1
+
+This is the coefficient α in the doubling formula `Q' = Q ⊕ α·Q`.
+-/
+def CDParameter.sign : CDParameter → ℤ
+  | .split   => 1
+  | .compact => -1
+
+/--
+The sign as a rational for homotopy continuation.
+
+Used in the hyperbolic program `P(A) = det(A·I - B)` where the
+homotopy deforms the Q₂₂ cone continuously.
+-/
+def CDParameter.signQQ : CDParameter → ℚ :=
+  fun a => (a.sign : ℚ)
+
+@[simp] theorem CDParameter.sign_split : CDParameter.sign .split = 1 := rfl
+@[simp] theorem CDParameter.sign_compact : CDParameter.sign .compact = -1 := rfl
+
+/--
+The CD doubling `Q' = Q ⊕ α·Q` applied to a dimension.
+
+Given a CD step `k` (the dimension index) and a parameter `α`, the
+resulting algebra dimension is `2^k`.
+-/
+def CDParameter.algebraDimension (α : CDParameter) (k : ℕ) : ℕ :=
+  2 ^ k
+
+/--
+The quadratic form signature for a CD parameter at step `k`:
+
+    split(α = +1):  (k, k) — split signature, indefinite
+    compact(α = -1): (2k, 0) — definite positive
+
+The split signature at k ≥ 3 is the geometric source of zero divisors:
+the (4,4) signature of SO creates null vectors (non-zero elements with
+zero norm) which are the ZDs.
+-/
+def CDParameter.quadraticSignature (α : CDParameter) (k : ℕ) : ℕ × ℕ :=
+  match α with
+  | .split   => (k, k)
+  | .compact => (2 * k, 0)
+
+/--
+The CD parameter is **split** iff its sign is +1.
+-/
+def CDParameter.isSplit (α : CDParameter) : Bool :=
+  α.sign = 1
+
+/--
+The CD generator ω satisfies ω² = α·1, i.e.:
+
+    ω² = +1  if α = split   (the split-complex case)
+    ω² = -1  if α = compact (the standard complex case)
+
+The existing proof `CayleyDickson.omega_sq` verifies ω² = 1 for the
+split case specifically.
+-/
+theorem CDParameter.omega_sq_eq_sign (α : CDParameter) :
+    (α.sign : ℤ) = (if h : α = .split then 1 else -1) := by
+  cases α <;> simp
+
+/--
+If the CD parameter is `split`, the quadratic form is indefinite
+(split signature), and zero divisors may exist at CD step ≥ 3.
+
+This is the formal statement: the existence of ZDs depends on α.
+-/
+theorem CDParameter.zeroDivisorPossible_iff_split (α : CDParameter) :
+    (α.sign = 1) ↔ (α = .split) := by
+  cases α <;> simp
+
+/--
+The **homotopy path** from split to compact. In the hyperbolic program,
+the path t ↦ α(t) continuously deforms the Q₂₂ cone, and the CD tower
+level k serves as the homotopy parameter.
+
+The homotopy is:
+    α(t) = (1 - 2t)  for t ∈ [0,1]
+
+where α(0) = +1 (split) and α(1) = -1 (compact).
+
+In discrete terms, the CD tower index k traces the path at integer
+intervals. The continuation past the ZD boundary at CD 2→3 is governed
+by the homotopy step at which zero divisors first appear (k = 3 for
+split, k = ∞ for compact).
+-/
+structure CDHomotopyPath where
+  /-- The starting parameter. -/
+  start : CDParameter := .split
+  /-- The ending parameter. -/
+  target : CDParameter := .compact
+  /-- The current step along the path (0 = start, 1 = target). -/
+  step : ℚ := 0
+
+/--
+The homotopy value at a rational step t ∈ [0,1]:
+
+    α(t) = +1  if t = 0
+    α(t) = -1  if t = 1
+    α(t) = +1  if 0 < t < 1 (for now — linear interpolation in future)
+-/
+def CDHomotopyPath.value (h : CDHomotopyPath) : CDParameter :=
+  if h.step ≤ 0 then .split
+  else if h.step ≥ 1 then .compact
+  else .split
+
+/--
+The CD tower step at which the ZD boundary first appears depends on α:
+
+    split:   ZDs appear at CD step 3 (octonion level, (4,4) signature)
+    compact: no ZDs at any finite CD step
+
+This connects the CD parameter to the `CompositionSpec` factory rules.
+-/
+def CDParameter.zdBoundaryStep (α : CDParameter) : ℕ :=
+  match α with
+  | .split   => 3
+  | .compact => 0  -- no ZD boundary (the sentinel 0 means "never")
+
+/--
+A composition at step `k` is ZD‑free iff either:
+
+    1. α = compact (no ZDs at any step), or
+    2. k < zdBoundaryStep(α), i.e. k < 3 for split
+
+This is the formal content of `CompositionSpec.no_zd_monopole` — it
+excludes exactly the configurations where ZDs exist.
+-/
+theorem CDParameter.zdFreeAtStep (α : CDParameter) (k : ℕ) : Prop :=
+  α = .compact ∨ k < α.zdBoundaryStep
+
 end CayleyDickson

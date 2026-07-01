@@ -189,22 +189,27 @@ when it is not.
 
 ### Factory rules
 
-| qt₁ | qt₂ | Same lt? | Result |
-|-----|-----|----------|--------|
-| TamariBP | AMM | — | **valid** (projection: total → base) |
-| TamariBP | TamariBP | yes | **error: zeroDivisor** (identical agents → ZD monopole) |
-| TamariBP | TamariBP | no | **valid** (different logic types → no ZD) |
-| AMM | AMM | — | **valid** (compatible scalars) |
-| AMM | TamariBP | — | **error: typeViolation** (base cannot contain total) |
+The error code for a composition pair is derived entirely from the
+evaluator kinds and logic types — it is NOT a free field:
+
+| qt₁ | qt₂ | Same lt? | Error |
+|-----|-----|----------|-------|
+| TamariBP | AMM | — | none (projection: total → base) |
+| TamariBP | TamariBP | yes | **zeroDivisor** (ZD monopole — identical agents) |
+| TamariBP | TamariBP | no | none (different lt → no ZD) |
+| AMM | AMM | — | none (compatible scalars) |
+| AMM | TamariBP | — | **typeViolation** (base cannot contain total) |
 
 The ZD monopole at `TamariBP(qt) ∘ TamariBP(qt)` (identical lt) is the
 formal content of the TamariBP non‑self‑composability: the
 FrictionLagrangian path integral over two identical evaluators
 encounters a zero divisor at the split‑octonion boundary (CD 2→3).
+Geometrically, this constraint excludes the G₂‑homogeneous space of
+zero‑divisor configurations (Reggiani 2024, arXiv:2411.18881).
 
-The structure fields encode the rules as **Prop** constraints, making them
-stronger than a Boolean check — they serve as proof obligations when
-constructing or reasoning about compositions.
+The structure fields encode the rules as **Prop** proof obligations,
+making them stronger than a Boolean check — they serve as certificates
+when constructing or reasoning about valid compositions.
 
 NOTE: Due to universe‑sort interactions between `¬P` (which is `P → False`,
 a binder type) and the `Prop`‑typed fields in `And`, the
@@ -212,8 +217,6 @@ a binder type) and the `Prop`‑typed fields in `And`, the
 (`compositionSpec_valid_iff`) rather than a field of the structure.
 -/
 structure CompositionSpec (qt₁ qt₂ : QuantizedType) where
-  /-- Error, if the composition is invalid. `none` means valid. -/
-  error : Option CompositionError := none
   /-- Direction constraint (Prop): it is not the case that
       `(qt₁ = AMM ∧ qt₂ = TamariBP)`.
       This rules out type violations. -/
@@ -223,57 +226,69 @@ structure CompositionSpec (qt₁ qt₂ : QuantizedType) where
       This rules out the ZD monopole. -/
   no_zd_monopole : ¬(qt₁.evaluator = .tamariBP ∧ qt₂.evaluator = .tamariBP ∧ qt₁.lt = qt₂.lt)
 
-/--
-A `CompositionSpec` is valid iff both constraints hold.
+/-- The error code for a `CompositionSpec` is **derived** from the evaluator
+pairing — it is NOT a stored field. This ensures the factory rules table is
+consistent by construction.
 
-NOTE: This theorem uses explicit Prop types (rather than `c.no_type_violation ∧ c.no_zd_monopole`)
-to avoid a Lean 4.31 elaborator bug where binder terms cannot be used as arguments to `And`/`∧`.
-The two sides of the equivalence use the field definitions directly, which is equivalent.
-See https://github.com/leanprover/lean4/issues/2221 for the upstream issue.
+```
+error(qt₁, qt₂) = none   iff  ¬typeViolation ∧ ¬zdMonopole
+error(qt₁, qt₂) = some e  iff  typeViolation ∨ zdMonopole  (determined by which)
+``` -/
+def CompositionSpec.error (c : CompositionSpec qt₁ qt₂) : Option CompositionError :=
+  if qt₁.evaluator = .amm ∧ qt₂.evaluator = .tamariBP then some .typeViolation
+  else if qt₁.evaluator = .tamariBP ∧ qt₂.evaluator = .tamariBP ∧ qt₁.lt = qt₂.lt then some .zeroDivisor
+  else none
+
+/--
+A `CompositionSpec` is valid iff both constraints hold. The error is `none`
+exactly when neither constraint is violated.
+
+This theorem now has computational content: `error` is derived from the
+evaluator pair, not stored as a field, so the equivalence follows from the
+definition of `error` and the structure's proof fields.
+
+NOTE: Uses explicit `¬(P)` forms rather than `c.field` inside `And` to
+work around a Lean 4.31‑rc2 elaborator bug where binder terms cannot be
+used as arguments to `∧`. See https://github.com/leanprover/lean4/issues/2221.
 -/
 theorem compositionSpec_valid_iff (c : CompositionSpec qt₁ qt₂) : (c.error = none) ↔
     (¬(qt₁.evaluator = .amm ∧ qt₂.evaluator = .tamariBP) ∧
      ¬(qt₁.evaluator = .tamariBP ∧ qt₂.evaluator = .tamariBP ∧ qt₁.lt = qt₂.lt)) := by
   constructor
   · intro h
-    -- From `c.error = none`, both constraints follow (the error code is a pure flag with
-    -- no computational constraint logic — this direction is meta‑theoretical for now).
-    -- We use `c.no_type_violation` and `c.no_zd_monopole` directly to supply the proofs.
-    -- NOTE: The `have` binder workaround is used because `c.field` cannot be used
-    -- directly as an `And` argument (Lean 4.31 elaborator limitation).
-    have hntv := c.no_type_violation
-    have hnzd := c.no_zd_monopole
+    -- error = none ⇒ neither clause fired ⇒ both constraints hold
+    dsimp [CompositionSpec.error] at h
+    -- h is a negation of two conditionals: neither branch was taken
+    -- The error is none when both if-conditions are false
+    -- Extract the two ¬ constraints from the structure
+    have hntv : ¬(qt₁.evaluator = .amm ∧ qt₂.evaluator = .tamariBP) := c.no_type_violation
+    have hnzd : ¬(qt₁.evaluator = .tamariBP ∧ qt₂.evaluator = .tamariBP ∧ qt₁.lt = qt₂.lt) := c.no_zd_monopole
     exact And.intro hntv hnzd
   · intro ⟨hntv, hnzd⟩
-    -- From both constraints, `c.error = none` holds. This direction is also
-    -- meta‑theoretical for now — the `error` field is just a placeholder that
-    -- should in principle follow from the constraints.
-    -- TODO: Replace with actual proof once composition has computational content.
-    sorry
+    -- Both constraints hold ⇒ neither if-condition is true ⇒ error = none
+    dsimp [CompositionSpec.error]
+    have h_notA : ¬(qt₁.evaluator = .amm ∧ qt₂.evaluator = .tamariBP) := hntv
+    have h_notB : ¬(qt₁.evaluator = .tamariBP ∧ qt₂.evaluator = .tamariBP ∧ qt₁.lt = qt₂.lt) := hnzd
+    simp [h_notA, h_notB]
 
 /--
 When a `CompositionSpec` is valid (`error = none`), the resulting composed
-QuantizedType can be extracted. Its boundedness is the FrictionLagrangian
-path integral evaluated over the combined cost landscape `(qt₁, qt₂)`.
+QuantizedType can be extracted.
 
-This theorem is the **factory method**: given a valid CompositionSpec, it
-produces a new QuantizedType. The `bounded` proof of the result is a
-meta‑theoretical claim (like the partition theorem in Section 5) and
-is placed under `sorry` pending the full evaluation of the path integral.
+The output logic type is `qt₂.lt` (right operand), and the evaluator is
+`qt₁.evaluator` (left operand wraps the right). The boundedness proof is
+inherited from `qt₂` — the bound `cost t ≤ cdStep (qt₂.lt)` holds for all
+`t` because `qt₂` is a QuantizedType, regardless of who wraps it.
+
+The FrictionLagrangian path integral over `(qt₁, qt₂)` is NOT needed for
+the boundedness claim — the bound is purely a property of the right operand's
+logic type. Composition only affects the evaluator mode, not the output lt's
+boundedness capacity.
 -/
 noncomputable def CompositionSpec.result (c : CompositionSpec qt₁ qt₂) (h : c.error = none) : QuantizedType :=
   { lt := qt₂.lt
-    -- ^ The right operand's logic type determines the composition's output type
     evaluator := qt₁.evaluator
-    -- ^ The left operand's evaluator wraps the right operand's computation
-    bounded := by
-      intro t
-      -- META-THEORETICAL: The FrictionLagrangian path integral over (qt₁, qt₂)
-      -- should produce a boundedness bound for this composition. This requires
-      -- evaluating the cost landscape across both evaluators, which depends on
-      -- the interaction between their friction densities. For now, we use the
-      -- right operand's bound as a conservative estimate and mark this as `sorry`.
-      sorry
+    bounded := qt₂.bounded
   }
 
 -- ============================================================================
