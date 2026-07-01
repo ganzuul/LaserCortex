@@ -174,10 +174,15 @@ and the tropical polyhedral complex.
 The Develin–Sturmfels correspondence for the Tamari lattice.
 States that regular subdivisions of △k × △m correspond dually to configurations
 of tropical hyperplanes that cut out the ν-associahedron.
+
+Reference: Develin, M., & Sturmfels, B. (2004). "Tropical convexity." 
+Documenta Mathematica, 9, 1-27.
+
+TODO: Formalize using Mathlib's tropical geometry or external literature
+on the Develin-Sturmfels theorem and the ν-associahedron polyhedral complex.
 -/
-theorem develin_sturmfels_tamari_correspondence (k m : ℕ) :
-    True := by
-  trivial
+theorem develin_sturmfels_tamari_correspondence (k m : ℕ) : True := by
+  sorry
 
 -- ============================================================================
 -- SECTION 4: Tube Map Coordinate Projection

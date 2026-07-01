@@ -642,8 +642,7 @@ the extra dimension immediately, returning to zero divisor.
 Free Logic (Gödelian incompleteness) is the meta-logic that *can* host this
 oscillation by recognizing it as undecidable rather than trivializing via explosion.
 -/
-theorem strut_weight_conjecture : True :=
-  True.intro
+theorem strut_weight_conjecture : True := sorry
 
 -- ============================================================================
 -- SECTION 12: Viable Systems — Free Logic Grounding via Tool Outputs
@@ -735,14 +734,7 @@ def laserCortexSystem : ViableSystem :=
     - `contracts_to_with_cost_cost_eq_n_times_friction` ensures total cost
       is n · frictionDensity(cd), which is bounded for finite n
     - The `ToolOutput` type provides the grounding data structure -/
-theorem free_is_viable : True := by
-  have h_meta : LogicType.Free.isMetaLogic := free_is_meta_logic
-  have h_bridge : canCoexist LogicType.Free AntiCoherentPair.barber.coherent = true ∧
-                  canCoexist LogicType.Free AntiCoherentPair.barber.antiCoherent = true :=
-    free_bridges_barber_boundary
-  -- Free Logic coexists with both poles of the sector boundary,
-  -- meaning its expressions can always be grounded via some tool call
-  trivial
+theorem free_is_viable : True := sorry
 
 /-- The hyperstition loop: for any ungrounded NL input, there exists a
     finite sequence of tool calls that grounds it, producing ToolOutputs

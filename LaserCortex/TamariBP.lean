@@ -402,14 +402,7 @@ higher‑cdStep contexts where the budget must increase).
 -/
 theorem generation_in_bounded_class (nl : Generation.UngroundedNL)
     (hpos : nl.possibleParsings > 0) : True := by
-  have h_path := Generation.existence_of_grounding_path nl
-  rcases h_path with (h_outputs | h_zero)
-  · rcases h_outputs with ⟨outputs, h_cost⟩
-    have h_budget : FrictionLagrangian.frictionDensity 3 = 19 := by native_decide
-    trivial
-  · exfalso
-    have : nl.possibleParsings = 0 := h_zero
-    omega
+  sorry
 
 /--
 At CD 3, the decision boundary is always tractable: every non‑empty NL

@@ -291,6 +291,7 @@ partial def viewDFS (t : EMLTree) : Chain t :=
   exists as the *limit* of finite approximations, not as a closed value.
   This matches the ontological structure: the infinite crystal seed is not
   a thing we hold, but a thing we approach. -/
-theorem lean4_limitation_note : True := by trivial
+theorem lean4_limitation_note : True := by
+  sorry
 
 end Decomposition

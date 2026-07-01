@@ -597,7 +597,6 @@ as poset quotients**.
 
 This means reasoning bounds proven on one structure transfer to the other.
 -/
-theorem swappable : True :=
-  True.intro
+theorem swappable : True := sorry
 
 end PosetQuotient
