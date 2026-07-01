@@ -368,6 +368,7 @@ Each term is a question to ask of the system:
 - `lab_notes/003_brute_force_complexity.md` — 3900X bounds (n=15 practical limit)
 - `lab_notes/019_develin_sturmfels_quantized_type.md` — Develin-Sturmfels correspondence via QuantizedType
 - `lab_notes/020_lean_doc_comment_lexer_bug.md` — Lean 4.31 `/-!` doc comment lexer inconsistency
+- `lab_notes/021_develin_sturmfels_forward_proven.md` — Develin-Sturmfels forward direction PROVEN
 - `docs/topological_isomer_hypothesis.md` — atomic model / strong force analogy
 - `docs/approach.md` — geometry-motion overview
 - `docs/Three-js_pentagonator-demo.md` — Radon-pentagonator visualization connection
