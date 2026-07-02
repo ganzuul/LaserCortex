@@ -179,12 +179,18 @@ structure SplitQuat where
     - j² = +1 = e₀² (time-like Clifford generator)
     - k = ij ↦ e₁·e₀ (NOT e₀·e₁ — the sign matters for the product!)
     
-    This embedding is an injective ℤ-algebra homomorphism. The key
-    verification `embed_mul` proves that the 16-term split-quaternion
-    multiplication table is preserved under the Clifford product.
+    This embedding is an injective ℤ-algebra homomorphism. The product
+    preservation `embed (x * y) = embed x * embed y` does not require
+    routing through the M₂(ℤ) matrix isomorphism; it follows directly
+    from the universal property of Cl(1,1) via the defining relations
+    (`e0_sq`, `e1_sq`, `anticommute`) using `noncomm_ring`.
     
     The sign convention: e₁·e₀ = -e₀·e₁ (by anticommute). Mapping
-    k ↦ e₁·e₀ ensures embed(i·j) = embed(i)·embed(j). -/
+    k ↦ e₁·e₀ ensures embed(i·j) = embed(i)·embed(j).
+    
+    See `Chu.chu_embed_mul` for the formal proof, and the docstring
+    of Chu.lean §4 for the interpretation as the KKT stationarity
+    condition of the ZD‑constrained hyperbolic program. -/
 def SplitQuat.embed (x : SplitQuat) : Cl11 :=
   algebraMap ℤ Cl11 x.a
   + x.b • e1
