@@ -49,9 +49,13 @@ LaserCortex.CayleyDickson → CDHomotopyPath, CDParameter, CDParameter.zdFreeAtS
 -/
 
 import LaserCortex.SplitQuaternionClifford
+import LaserCortex.SplitOctonionCost
+import LaserCortex.Hopf
 import LaserCortex.CayleyDickson
 
 open SplitQuaternionClifford
+open SplitOctonionCost
+open Hopf
 
 namespace Chu
 
@@ -210,6 +214,185 @@ theorem splitQuatPairing_nondegenerate (y : SplitQuat) (h : ∀ z, splitQuatPair
     have hneg : -y.d = 0 := by rwa [this] at hz
     linarith
   ext <;> assumption
+
+-- ============================================================================
+-- SECTION 2b: The canonical SplitOctonion pairing
+-- ============================================================================
+
+/--
+The canonical ℤ-bilinear pairing on SplitOctonion:
+
+    β(y, z) = y.e0*z.e0 + y.e1*z.e1 + y.e2*z.e2 + y.e3*z.e3
+            + y.e4*z.e4 - y.e5*z.e5 - y.e6*z.e6 - y.e7*z.e7
+
+This is the polarization of the (4,4) norm `octonion_norm`, and equals
+`(antipode(y) * z).e0` — the e0-component of the antipode product
+(verified in `octonionPairingAux_eq_antipodePairing`).
+
+Signature: (+,+,+,+,+,-,-,-): the first five components are Euclidean
+(associative subspace), the last three are split (non-associative subspace).
+This marks the phase change from the associative regime (CD ≤ 2) to the
+non-associative regime (CD ≥ 3): the split quaternion pairing had
+signature (+,+,-,-), while the octonion pairing gains three additional
+split dimensions.
+-/
+def octonionPairingAux (y z : SplitOctonion) : ℤ :=
+  y.e0*z.e0 + y.e1*z.e1 + y.e2*z.e2 + y.e3*z.e3 + y.e4*z.e4
+  - y.e5*z.e5 - y.e6*z.e6 - y.e7*z.e7
+
+/--
+The auxiliary pairing equals the antipode pairing from the Hopf structure:
+
+    octonionPairingAux y z = (antipode y * z).e0
+
+The proof unfolds `antipode` and `split_oct_mul` and simplifies using the
+e0-component formula of the 64-term multiplication table. Because every
+cross-term in the e0 component involves matching indices, the 64-term
+formula collapses to 8 terms.
+-/
+theorem octonionPairingAux_eq_antipodePairing (y z : SplitOctonion) :
+    octonionPairingAux y z = antipodePairing y z := by
+  dsimp [antipodePairing, octonionPairingAux, split_oct_mul, antipode]
+  ring
+
+/--
+The ℤ-scalar multiplication on SplitOctonion is componentwise:
+(r • z).ei = r * z.ei for each component i.
+-/
+theorem octonion_zsmul_e0 (r : ℤ) (z : SplitOctonion) : (r • z).e0 = r * z.e0 := by
+  simp
+theorem octonion_zsmul_e1 (r : ℤ) (z : SplitOctonion) : (r • z).e1 = r * z.e1 := by
+  simp
+theorem octonion_zsmul_e2 (r : ℤ) (z : SplitOctonion) : (r • z).e2 = r * z.e2 := by
+  simp
+theorem octonion_zsmul_e3 (r : ℤ) (z : SplitOctonion) : (r • z).e3 = r * z.e3 := by
+  simp
+theorem octonion_zsmul_e4 (r : ℤ) (z : SplitOctonion) : (r • z).e4 = r * z.e4 := by
+  simp
+theorem octonion_zsmul_e5 (r : ℤ) (z : SplitOctonion) : (r • z).e5 = r * z.e5 := by
+  simp
+theorem octonion_zsmul_e6 (r : ℤ) (z : SplitOctonion) : (r • z).e6 = r * z.e6 := by
+  simp
+theorem octonion_zsmul_e7 (r : ℤ) (z : SplitOctonion) : (r • z).e7 = r * z.e7 := by
+  simp
+
+/--
+The canonical ℤ-bilinear pairing on SplitOctonion, as a ℤ-bilinear map.
+-/
+def octonionPairing : SplitOctonion →ₗ[ℤ] SplitOctonion →ₗ[ℤ] ℤ :=
+  { toFun := λ y =>
+    { toFun := octonionPairingAux y
+      map_add' := λ z₁ z₂ => by
+        dsimp [octonionPairingAux, split_add]; ring
+      map_smul' := λ r z => by
+        dsimp [octonionPairingAux, split_add]
+        simp [octonion_zsmul_e0, octonion_zsmul_e1, octonion_zsmul_e2, octonion_zsmul_e3,
+              octonion_zsmul_e4, octonion_zsmul_e5, octonion_zsmul_e6, octonion_zsmul_e7]
+        ring }
+    map_add' := λ y₁ y₂ => by
+      ext z; dsimp [octonionPairingAux, split_add]; ring
+    map_smul' := λ r y => by
+      ext z; dsimp [octonionPairingAux, split_add]
+      simp [octonion_zsmul_e0, octonion_zsmul_e1, octonion_zsmul_e2, octonion_zsmul_e3,
+            octonion_zsmul_e4, octonion_zsmul_e5, octonion_zsmul_e6, octonion_zsmul_e7]
+      ring }
+
+@[simp] theorem octonionPairing_apply (y z : SplitOctonion) :
+    octonionPairing y z = octonionPairingAux y z := rfl
+
+/--
+The pairing is symmetric: β(y, z) = β(z, y).
+
+This follows from commutativity of multiplication in ℤ applied to the
+componentwise formula.
+-/
+theorem octonionPairingAux_symm (y z : SplitOctonion) : octonionPairingAux y z = octonionPairingAux z y := by
+  dsimp [octonionPairingAux]; ring
+
+/--
+The pairing is symmetric with respect to the antipode:
+
+    β(S(y), z) = β(y, S(z))
+
+Both sides equal `y.e0*z.e0 + y.e1*z.e1 + y.e2*z.e2 + y.e3*z.e3 + y.e4*z.e4
+- y.e5*z.e5 - y.e6*z.e6 - y.e7*z.e7` because `S` fixes e0/e4 and negates
+the other components, and each remaining component product involves two
+negations or none.
+-/
+theorem octonionPairing_antipode_symm (y z : SplitOctonion) :
+    octonionPairing (antipode y) z = octonionPairing y (antipode z) := by
+  simp [octonionPairing_apply, octonionPairingAux, antipode]
+
+/--
+The pairing is **nondegenerate** over ℤ: the map y ↦ β(y, -) is injective.
+
+Proof: For each component of y, pick the corresponding basis test vector
+z = e_i (the basis vector with 1 at position i and 0 elsewhere):
+
+| z         | β(y, z)      |
+|-----------|--------------|
+| e₀ = (1,0,0,0,0,0,0,0) | y.e0 |
+| e₁ = (0,1,0,0,0,0,0,0) | y.e1 |
+| e₂ = (0,0,1,0,0,0,0,0) | y.e2 |
+| e₃ = (0,0,0,1,0,0,0,0) | y.e3 |
+| e₄ = (0,0,0,0,1,0,0,0) | y.e4 |
+| e₅ = (0,0,0,0,0,1,0,0) | -y.e5 |
+| e₆ = (0,0,0,0,0,0,1,0) | -y.e6 |
+| e₇ = (0,0,0,0,0,0,0,1) | -y.e7 |
+
+Thus ∀ z, β(y, z) = 0 forces y.e0 = ... = y.e7 = 0, so y = 0.
+
+This establishes that the SplitOctonion Chu pairing at CD step 3 is
+**nondegenerate**, following the alternating pattern of the CD tower:
+ℝ(deg) → ℂ(nondeg) → ℍ(deg) → 𝕆ˢ(nondeg).
+-/
+theorem octonionPairing_nondegenerate (y : SplitOctonion)
+    (h : ∀ z, octonionPairing y z = 0) : y = 0 := by
+  have h0 : y.e0 = 0 := by
+    have hz := h e0_vec
+    simpa [octonionPairing_apply, octonionPairingAux, e0_vec] using hz
+  have h1 : y.e1 = 0 := by
+    have hz := h e1_vec
+    simpa [octonionPairing_apply, octonionPairingAux, e1_vec] using hz
+  have h2 : y.e2 = 0 := by
+    have hz := h e2_vec
+    simpa [octonionPairing_apply, octonionPairingAux, e2_vec] using hz
+  have h3 : y.e3 = 0 := by
+    have hz := h e3_vec
+    simpa [octonionPairing_apply, octonionPairingAux, e3_vec] using hz
+  have h4 : y.e4 = 0 := by
+    have hz := h e4_vec
+    simpa [octonionPairing_apply, octonionPairingAux, e4_vec] using hz
+  have h5 : y.e5 = 0 := by
+    have hz := h e5_vec
+    have : octonionPairing y e5_vec = -y.e5 := by
+      simp [octonionPairing_apply, octonionPairingAux, e5_vec]
+    have hneg : -y.e5 = 0 := by rwa [this] at hz
+    linarith
+  have h6 : y.e6 = 0 := by
+    have hz := h e6_vec
+    have : octonionPairing y e6_vec = -y.e6 := by
+      simp [octonionPairing_apply, octonionPairingAux, e6_vec]
+    have hneg : -y.e6 = 0 := by rwa [this] at hz
+    linarith
+  have h7 : y.e7 = 0 := by
+    have hz := h e7_vec
+    have : octonionPairing y e7_vec = -y.e7 := by
+      simp [octonionPairing_apply, octonionPairingAux, e7_vec]
+    have hneg : -y.e7 = 0 := by rwa [this] at hz
+    linarith
+  apply SplitOctonion.ext_components <;> assumption
+
+/--
+Corollary: The antipode pairing from Hopf.lean is also nondegenerate,
+since it equals `octonionPairing` via `octonionPairingAux_eq_antipodePairing`.
+-/
+theorem antipodePairing_nondegenerate (y : SplitOctonion)
+    (h : ∀ z, antipodePairing y z = 0) : y = 0 := by
+  apply octonionPairing_nondegenerate y
+  intro z
+  rw [octonionPairingAux_eq_antipodePairing]
+  exact h z
 
 -- ============================================================================
 -- SECTION 3: The Chu embedding of SplitQuat into Cl11
