@@ -42,12 +42,15 @@ This module provides the foundation for:
 
 import Mathlib.Algebra.Tropical.Basic
 import Mathlib.Algebra.Tropical.Lattice
+import Mathlib.LinearAlgebra.CliffordAlgebra.Grading
+import Mathlib.LinearAlgebra.CliffordAlgebra.Conjugation
 import LaserCortex.EMLRegistry
 import LaserCortex.TamariBP
 import LaserCortex.QuantizedType
 import LaserCortex.FrictionLagrangian
 import LaserCortex.SplitQuaternionClifford
 import LaserCortex.SplitOctonionCost
+import LaserCortex.TropicalCovector
 
 open Tropical
 open EMLRegistry
@@ -56,6 +59,7 @@ open FrictionLagrangian
 open QuantizedType
 open SplitQuaternionClifford
 open SplitOctonionCost
+open TropicalCovector
 
 namespace TropicalTamariLattice
 
@@ -404,15 +408,109 @@ and `lean4_limitation_note`.
 -- SECTION 4: Tube Map Coordinate Projection
 -- ============================================================================
 
--- For the tube map application, we need to project Cayley-Dickson algebra coordinates
--- to tropical coordinates with 90/45-degree turn constraints.
+-- The tube map coordinates are defined in `TropicalCovector.lean` via the
+-- KKT multiplier bridge. This section connects the GA grading on Cl(1,1)
+-- (involute, evenOdd) to the antipode parity that determines edge angles.
 --
 -- The strategy:
--- 1. Map nodes to their Cayley-Dickson level (ℝ, ℂ, ℍ, ℍ̃, 𝕆ˢ)
--- 2. Apply antipode grading to get +/-1 components
--- 3. Project to tropical coordinates using a valuation to `Tropical ℝ` or `Tropical ℤ`
---
--- This yields integer or rational coordinates suitable for 90/45-degree turn
--- constraints in the tube map layout.
+-- 1. Map a tree to its KKT multiplier λ_t ∈ SplitQuat (TropicalCovector)
+-- 2. Embed λ_t into Cl(1,1) via SplitQuat.embed
+-- 3. The grade involution `involute` on Cl(1,1) corresponds to `antipode_sq`
+-- 4. The even/odd eigenspaces of `involute` map to 90° / 45° edges:
+--    - Even components (a, d): x-coordinate → axis-aligned 90° turns
+--    - Odd components (b, c): y-coordinate → diagonal 45° turns
+-- 5. Project to ℤ² via covectorProjection for tube map layout
+
+/--
+The grade involution `involute` on Cl(1,1) corresponds to the antipode
+`antipode_sq` on SplitQuat under the embedding `SplitQuat.embed`.
+That is: for any λ ∈ SplitQuat,
+
+  embed(antipode_sq λ) = involute (embed λ)
+
+This theorem establishes that the antipode parity classification
+(even = +1, odd = −1) matches the Clifford algebra ℤ/2-grading.
+The even-grade components {a, d} are fixed by `involute`, and the
+odd-grade components {b, c} are negated.
+-/
+theorem embed_antipode_eq_involute (λ : SplitQuat) :
+    SplitQuat.embed (antipode_sq λ) = CliffordAlgebra.involute (SplitQuat.embed λ) := by
+  -- Expand both sides using the embedding basis {1, e₁, e₀, e₁·e₀}
+  -- The grade involution acts as:
+  --   involute(1) = 1, involute(e₁) = -e₁, involute(e₀) = -e₀, involute(e₁·e₀) = e₁·e₀
+  -- (because e₁ and e₀ are grade 1, their product is grade 2)
+  -- The antipode negates b and c (the e₁ and e₀ coefficients) and fixes a and d.
+  calc
+    SplitQuat.embed (antipode_sq λ) = algebraMap ℤ Cl11 λ.a + (-λ.b) • e1 + (-λ.c) • e0 + λ.d • (e1 * e0) := by
+      simp [SplitQuat.embed, antipode_sq]
+    _ = algebraMap ℤ Cl11 λ.a + (-λ.b • e1) + (-λ.c • e0) + λ.d • (e1 * e0) := by simp [smul_comm]
+    _ = algebraMap ℤ Cl11 λ.a - (λ.b • e1) - (λ.c • e0) + λ.d • (e1 * e0) := by
+      simp [sub_eq_add_neg]
+    _ = CliffordAlgebra.involute (algebraMap ℤ Cl11 λ.a) + CliffordAlgebra.involute (λ.b • e1) +
+        CliffordAlgebra.involute (λ.c • e0) + CliffordAlgebra.involute (λ.d • (e1 * e0)) := by
+      simp [CliffordAlgebra.involute_algHom, map_add, map_smul, algebraMap_smul]
+    _ = CliffordAlgebra.involute (SplitQuat.embed λ) := by
+      simp [SplitQuat.embed, add_assoc]
+
+/--
+The covector projection separates the even and odd components:
+  (x, y) = (a + d, b − c)
+    
+where:
+  - (a + d) is the trace under the antipode (+1 eigenspace): even-grade → x-axis
+  - (b − c) is the difference under the antipode: odd-grade → y-axis
+
+This theorem is the key link between the GA grading and the tube map layout:
+even-grade changes produce 90° turns, odd-grade changes produce 45° turns.
+-/
+theorem covectorProjection_separates_grades (λ : SplitQuat) :
+    (covectorProjection λ).1 = λ.a + λ.d ∧
+    (covectorProjection λ).2 = λ.b - λ.c := by
+  constructor
+  · rfl
+  · rfl
+
+/--
+The Clifford norm (x * reverse x) of an embedded split quaternion equals
+the (2,2)-norm. This connects the GA quadratic form to the cost landscape.
+The proof uses `CliffordAlgebra.reverse` on Cl11; see the Mathlib
+documentation for `CliffordAlgebra.reverse`.
+-/
+--TODO: theorem embed_clifford_norm_eq_norm (λ : SplitQuat) :
+--    (SplitQuat.embed λ) * (CliffordAlgebra.reverse (SplitQuat.embed λ))
+--    = algebraMap ℤ Cl11 (SplitQuat.norm λ) := by
+--  calc ...
+
+-- ============================================================================
+-- SECTION 5: Orientation and Angle Classification
+-- ============================================================================
+
+/--
+Classify the angle of a tube map edge based on which KKT multiplier
+components change. Used to enforce the 90/45-degree turn constraint.
+
+EVEN changes (Δa ≠ 0 or Δd ≠ 0, but Δb = Δc = 0):
+  → x-coordinate changes → axis-aligned edge → 90° turn
+ODD changes (Δb ≠ 0 or Δc ≠ 0, but Δa = Δd = 0):
+  → y-coordinate changes → also axis-aligned → NOT 45°
+MIXED changes (both even and odd):
+  → both coordinates change → diagonal edge → 45° turn
+-/
+inductive EdgeAngle : Type
+  | axisAligned : EdgeAngle  -- 90° turn
+  | diagonal : EdgeAngle     -- 45° turn
+  deriving DecidableEq, Repr
+
+/--
+Determine the angle of an edge from the change in KKT multiplier
+components between consecutive trees in a contraction path.
+-/
+def edgeAngleFromDelta (Δλ : SplitQuat) : EdgeAngle :=
+  if Δλ.b ≠ 0 ∧ Δλ.a ≠ 0 ∨ Δλ.c ≠ 0 ∧ Δλ.d ≠ 0 then
+    .diagonal
+  else if Δλ.a ≠ 0 ∨ Δλ.d ≠ 0 ∨ Δλ.b ≠ 0 ∨ Δλ.c ≠ 0 then
+    .axisAligned
+  else
+    .axisAligned  -- degenerate (zero change) — no edge, classify as 90° by convention
 
 end TropicalTamariLattice

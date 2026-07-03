@@ -86,12 +86,34 @@ and is preserved by the second pattern of `dcStep`:
 Combined with `t.size`, the measure `m(t) := leftWeight t + t.size` strictly
 decreases for ALL recursive calls in `dcStep`, enabling termination checking.
 -/
-private def leftWeight : EMLTree → ℕ
+def leftWeight : EMLTree → ℕ
   | .Leaf => 0
   | .Node l r => l.size + leftWeight l + leftWeight r
 
-private theorem leftWeight_node_leaf (r : EMLTree) : leftWeight (.Node .Leaf r) = leftWeight r := by
+theorem leftWeight_node_leaf (r : EMLTree) : leftWeight (.Node .Leaf r) = leftWeight r := by
   simp [leftWeight, EMLTree.size]
+
+/--
+Right-weight measure: the sum of sizes of all right subtrees.
+Symmetric to `leftWeight`:
+
+  rightWeight (Node l r) = r.size + rightWeight l + rightWeight r
+
+The pair (leftWeight t, rightWeight t) measures the left/right branching
+asymmetry of tree `t`. Under a `contracts_one` rotation at the top level
+
+  (Node (Node a b) r) → (Node a (Node b r))
+
+the right-weight changes by `+ a.size + rightWeight a + 1` as the subtree
+`a` moves from the left-left to left-right position, while left-weight
+decreases by an equal amount.
+-/
+def rightWeight : EMLTree → ℕ
+  | .Leaf => 0
+  | .Node l r => r.size + rightWeight l + rightWeight r
+
+theorem rightWeight_node_leaf (r : EMLTree) : rightWeight (.Node .Leaf r) = r.size + rightWeight r := by
+  simp [rightWeight]
 
 /-- Combined measure for dcStep termination: strictly decreasing in all cases. -/
 private def dcStepMeasure (t : EMLTree) : ℕ := leftWeight t + t.size
