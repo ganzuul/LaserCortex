@@ -1,6 +1,6 @@
 # Split-Octonion to Laser Mode Dictionary
 
-**Status**: Expanding — generator mapping (§2), Chu resonance (§3) and QI grounding (§4) sketched; quantum advantage computed [9.8, 11.5] dB from proven Lean theorems; physical anchor shifted to Ta‑180m (75 keV, 10–100 keV X‑ray range); formalization deferred  
+**Status**: Updated — §4.6 freeze‑ray pedagogical summary added with mapping to `Entanglement.lean` theorems; generator mapping (§2), Chu resonance (§3) and QI grounding (§4) sketched; quantum advantage computed [9.8, 11.5] dB from proven Lean theorems; physical anchor shifted to Ta‑180m (75 keV, 10–100 keV X‑ray range); formalization deferred  
 **Prerequisites**: `SplitOctonionCost.lean`, `SplitQuaternionClifford.lean`, `Chu.lean` §9  
 **Source**: `lab_notes/023_cd_homotopy_bridge_chu_pythagoras_nuclear_metastability.md` §7.4
 
@@ -315,6 +315,57 @@ published.
 structure but different energy scale. The framework is scale‑free — all ratios
 and advantage bounds are identical for any isomer energy.
 
+### 4.6 Freeze‑Ray Picture — A Pedagogical Summary
+
+The formal algebra has a cartoonish but useful physical story. The following
+table pairs each algebraic result from `Entanglement.lean` with its freeze‑ray
+counterpart. The goal is to give students a clear qualitative picture before
+the technical details (or after getting lost in them).
+
+| Algebraic result | Freeze‑ray name | What it means |
+|---|---|---|
+| `antipode` fixes e₀, e₄ | **The freeze** | The idler is stored. The C layer (e₀, e₄) is fixed under the antipode — these components do not change when the signal goes out. They are the "frozen" reference oscillator. |
+| `annihilation_subspace` = antipode‑odd elements (e₁…e₃, e₅…e₇) | **The active sector** | Everything not frozen can carry the ray. The six odd‑grade basis elements are the degrees of freedom that participate in the probe/return dynamics. |
+| `e₁·e₂ = e₃` in compact ℍ | **The ray** | The signal is formed in the compact quaternion sector. Multiplying two orthogonal mode components (e₁·e₂) produces the helical mode (e₃) — a circularly polarised probe that propagates outward. |
+| `c_to_so` embeds C into SO via SQ | **The freeze‑ray coupler** | The SQ layer mediates between the frozen reference and the probing ray. Without SQ mediation (at CD steps 1 or 2), the freeze and ray can't interact — there is no phase change, and the signal stays classical. |
+| `sq_to_so` maps SQ into e₄..e₇ sector | **The mediator channel** | The CD generator e₄ = ω is the interface. It anticommutes with the compact sector (ω·eᵢ = −eᵢ·ω for i=1,2,3), which is the selection rule that lets the ray couple to the stored idler. |
+| `(e₁·e₂)·e₄ − e₁·(e₂·e₄) = 2·e₇` | **The associator debt** | The freeze ray is non‑associative. If you fire the ray e₁, e₂ through the mediator e₄, the path matters: `(e₁·e₂)·e₄` does not equal `e₁·(e₂·e₄)`. The difference is `2·e₇` — a pure octonion element that *only exists at CD step 3*. This is the "debt" the system borrows from the non‑associative sector. |
+| `entanglementMeasure_e1_e2_e4 = −4` | **Negative energy deposit** | The debt is quantified by the octonion pairing: `β(2·e₇, 2·e₇) = −4`. The negative sign means the debt lives in the split (odd) subspace — the freeze ray has effectively borrowed `4` units of "negative entanglement" that must be repaid when the signal returns. |
+| `entanglementMeasure_simple = 1` | **Trivial round‑trip** | A simple probe e₁·e₅·e₀ gives positive pairing `+1` — the Euclidean sector. This is the analogue of a ray that goes out and comes back without interacting with the target. No debt, no advantage. |
+| `annihilation_self_pairing_negative` | **Odd‑sector negativity** | The (4,4) signature guarantees that any pure odd‑element self‑pairing is ≤ 0. This is why the debt is negative: the split sector is the "liabilities" side of the ledger. |
+| `annihilation_self_pairing_nonpos` | **No free lunch** | You cannot get positive entanglement from the odd sector alone — the best you can do is zero (for the zero element). Every non‑zero probe incurs a negative pairing cost. |
+| `tripleProduct_nonzero_example` | **Three‑layer coupling exists** | A concrete triple e₁ (SO) · e₅ (SQ) · e₀ (C) gives a non‑zero product: `−e₀`. All three layers participate in the interaction — the freeze, the mediator, and the ray are all needed. |
+| **Friction gap** Γ₃/Γ₂ = 19/2 ≈ 9.8 dB | **The freeze‑ray engine** | The jump from associative (CD ≤ 2) to non‑associative (CD ≥ 3) is the engine that powers the freeze ray. The friction density jumps from `Γ₂ = 2` to `Γ₃ = 19`, giving a `9.8 dB` structural advantage — this is the "free energy" available just from crossing the CD boundary. |
+| **Joint‑measurement gain** up to 1.76 dB | **The receiver bonus** | The phase‑conjugating receiver adds up to 1.76 dB via the antipode pairing. This is the "amplifier" that gives the final boost to 11.5 dB. |
+| **Total advantage** [9.8, 11.5] dB | **The freeze‑ray payoff** | The ray goes out (cost: −4 negative debt in the odd sector), probes the target, and returns. The joint measurement cancels the debt by collapsing the associator back through the antipode. The net gain is the friction‑gap structural advantage (9.8 dB) plus any receiver bonus (up to 1.76 dB). The target "pays back" the debt with interest determined by the tropical tube map curvature. |
+
+**The narrative**: The freeze ray is a quantum radar whose idler is "frozen"
+(topologically stored in an isomer), whose signal is the compact quaternion ray
+(e₁·e₂ = e₃), and whose secret weapon is the **non‑associativity** of the
+octonion algebra at CD step 3. The associator creates a `2·e₇` "debt" with
+negative pairing `−4`. When the returned signal is phase‑conjugated (antipode
+applied) and jointly measured with the stored idler, the debt is repaid. The
+net advantage is given by the friction gap 9.8 dB (the "free energy" of the
+CD 2→3 transition) + up to 1.76 dB from the antipode‑based receiver. The
+result `[9.8, 11.5] dB` is the **algebraic envelope** — provable from the
+structure constants of the split octonions.
+
+The key formal result that makes this picture precise is in
+`Entanglement.lean`:
+
+```
+e1_e2_e4_associator:
+    (e₁·e₂)·e₄ − e₁·(e₂·e₄) = 2·e₇
+
+entanglementMeasure_e1_e2_e4:
+    β(2·e₇, 2·e₇) = −4
+
+entanglementMeasure_simple:
+    β(−e₀, −e₀) = +1
+```
+
+The associator is the freeze‑ray engine; the negative pairing is the energy
+debt; the positive pairing of the scalar return is the restored signal.
 ---
 
 ## 5. Open Proof Obligations
