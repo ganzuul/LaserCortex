@@ -1,0 +1,7 @@
+\begin{tikzcd}[column sep=small]
+\substack{ ([a,c']\times_p [b,d']) \seq \\ ([c,a']\times_p [d,b']) } \arrow[r, "\pi_1\seq\pi_1"] \arrow[dd, "\pi_2\seq\pi_2"']  & {[a,c']\seq [b,d']} \arrow[dd] \arrow[r,"\text{ten}_\seq"]     & {[ab,c'd']} \arrow[dddd] \\
+ &  &        \\
+{[c,a']\seq [d,b']} \arrow[r] \arrow[dd,"\text{ten}_\seq"']                                                                           & \substack{[a\otimes c,\bot]\seq \\ [b\otimes d,\bot]} \arrow[d,"\text{ten}_\seq"] &               &           \\
+   &  {[(a\otimes c)(b\otimes d),\bot\bot]} \arrow[rd,"{[\delta,m]}"] &          \\
+{[cd,a'b']} \arrow[rr]     &             & {[ab\otimes cd,\bot]}      
+\end{tikzcd}

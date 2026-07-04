@@ -1,0 +1,354 @@
+{
+  "nodes": [
+    {
+      "id": "N(L,L)",
+      "label": "N(L,L)",
+      "x": 1,
+      "y": 0,
+      "size": 1,
+      "lw": 0,
+      "rw": 0
+    },
+    {
+      "id": "N(L,N(L,L))",
+      "label": "N(L,N(L,L))",
+      "x": 2,
+      "y": -1,
+      "size": 2,
+      "lw": 0,
+      "rw": 1
+    },
+    {
+      "id": "N(N(L,L),L)",
+      "label": "N(N(L,L),L)",
+      "x": 2,
+      "y": 1,
+      "size": 2,
+      "lw": 1,
+      "rw": 0
+    },
+    {
+      "id": "N(L,N(L,N(L,L)))",
+      "label": "N(L,N(L,N(L,L)))",
+      "x": 3,
+      "y": -3,
+      "size": 3,
+      "lw": 0,
+      "rw": 3
+    },
+    {
+      "id": "N(L,N(N(L,L),L))",
+      "label": "N(L,N(N(L,L),L))",
+      "x": 3,
+      "y": -1,
+      "size": 3,
+      "lw": 1,
+      "rw": 2
+    },
+    {
+      "id": "N(N(L,L),N(L,L))",
+      "label": "N(N(L,L),N(L,L))",
+      "x": 3,
+      "y": 0,
+      "size": 3,
+      "lw": 1,
+      "rw": 1
+    },
+    {
+      "id": "N(N(L,N(L,L)),L)",
+      "label": "N(N(L,N(L,L)),L)",
+      "x": 3,
+      "y": 1,
+      "size": 3,
+      "lw": 2,
+      "rw": 1
+    },
+    {
+      "id": "N(N(N(L,L),L),L)",
+      "label": "N(N(N(L,L),L),L)",
+      "x": 3,
+      "y": 3,
+      "size": 3,
+      "lw": 3,
+      "rw": 0
+    },
+    {
+      "id": "N(L,N(L,N(L,N(L,L))))",
+      "label": "N(L,N(L,N(L,N(L,L))))",
+      "x": 4,
+      "y": -6,
+      "size": 4,
+      "lw": 0,
+      "rw": 6
+    },
+    {
+      "id": "N(L,N(L,N(N(L,L),L)))",
+      "label": "N(L,N(L,N(N(L,L),L)))",
+      "x": 4,
+      "y": -4,
+      "size": 4,
+      "lw": 1,
+      "rw": 5
+    },
+    {
+      "id": "N(L,N(N(L,L),N(L,L)))",
+      "label": "N(L,N(N(L,L),N(L,L)))",
+      "x": 4,
+      "y": -3,
+      "size": 4,
+      "lw": 1,
+      "rw": 4
+    },
+    {
+      "id": "N(L,N(N(L,N(L,L)),L))",
+      "label": "N(L,N(N(L,N(L,L)),L))",
+      "x": 4,
+      "y": -2,
+      "size": 4,
+      "lw": 2,
+      "rw": 4
+    },
+    {
+      "id": "N(L,N(N(N(L,L),L),L))",
+      "label": "N(L,N(N(N(L,L),L),L))",
+      "x": 4,
+      "y": 0,
+      "size": 4,
+      "lw": 3,
+      "rw": 3
+    },
+    {
+      "id": "N(N(L,L),N(L,N(L,L)))",
+      "label": "N(N(L,L),N(L,N(L,L)))",
+      "x": 4,
+      "y": -2,
+      "size": 4,
+      "lw": 1,
+      "rw": 3
+    },
+    {
+      "id": "N(N(L,L),N(N(L,L),L))",
+      "label": "N(N(L,L),N(N(L,L),L))",
+      "x": 4,
+      "y": 0,
+      "size": 4,
+      "lw": 2,
+      "rw": 2
+    },
+    {
+      "id": "N(N(L,N(L,L)),N(L,L))",
+      "label": "N(N(L,N(L,L)),N(L,L))",
+      "x": 4,
+      "y": 0,
+      "size": 4,
+      "lw": 2,
+      "rw": 2
+    },
+    {
+      "id": "N(N(N(L,L),L),N(L,L))",
+      "label": "N(N(N(L,L),L),N(L,L))",
+      "x": 4,
+      "y": 2,
+      "size": 4,
+      "lw": 3,
+      "rw": 1
+    },
+    {
+      "id": "N(N(L,N(L,N(L,L))),L)",
+      "label": "N(N(L,N(L,N(L,L))),L)",
+      "x": 4,
+      "y": 0,
+      "size": 4,
+      "lw": 3,
+      "rw": 3
+    },
+    {
+      "id": "N(N(L,N(N(L,L),L)),L)",
+      "label": "N(N(L,N(N(L,L),L)),L)",
+      "x": 4,
+      "y": 2,
+      "size": 4,
+      "lw": 4,
+      "rw": 2
+    },
+    {
+      "id": "N(N(N(L,L),N(L,L)),L)",
+      "label": "N(N(N(L,L),N(L,L)),L)",
+      "x": 4,
+      "y": 3,
+      "size": 4,
+      "lw": 4,
+      "rw": 1
+    },
+    {
+      "id": "N(N(N(L,N(L,L)),L),L)",
+      "label": "N(N(N(L,N(L,L)),L),L)",
+      "x": 4,
+      "y": 4,
+      "size": 4,
+      "lw": 5,
+      "rw": 1
+    },
+    {
+      "id": "N(N(N(N(L,L),L),L),L)",
+      "label": "N(N(N(N(L,L),L),L),L)",
+      "x": 4,
+      "y": 6,
+      "size": 4,
+      "lw": 6,
+      "rw": 0
+    }
+  ],
+  "edges": [
+    {
+      "from": "N(N(L,L),L)",
+      "to": "N(L,N(L,L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(L,N(N(L,L),L))",
+      "to": "N(L,N(L,N(L,L)))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(L,L),N(L,L))",
+      "to": "N(L,N(L,N(L,L)))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(L,N(L,L)),L)",
+      "to": "N(L,N(N(L,L),L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(L,L),L),L)",
+      "to": "N(N(L,L),N(L,L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(L,L),L),L)",
+      "to": "N(N(L,N(L,L)),L)",
+      "angle": "90"
+    },
+    {
+      "from": "N(L,N(L,N(N(L,L),L)))",
+      "to": "N(L,N(L,N(L,N(L,L))))",
+      "angle": "90"
+    },
+    {
+      "from": "N(L,N(N(L,L),N(L,L)))",
+      "to": "N(L,N(L,N(L,N(L,L))))",
+      "angle": "90"
+    },
+    {
+      "from": "N(L,N(N(L,N(L,L)),L))",
+      "to": "N(L,N(L,N(N(L,L),L)))",
+      "angle": "90"
+    },
+    {
+      "from": "N(L,N(N(N(L,L),L),L))",
+      "to": "N(L,N(N(L,L),N(L,L)))",
+      "angle": "90"
+    },
+    {
+      "from": "N(L,N(N(N(L,L),L),L))",
+      "to": "N(L,N(N(L,N(L,L)),L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(L,L),N(L,N(L,L)))",
+      "to": "N(L,N(L,N(L,N(L,L))))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(L,L),N(N(L,L),L))",
+      "to": "N(L,N(L,N(N(L,L),L)))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(L,L),N(N(L,L),L))",
+      "to": "N(N(L,L),N(L,N(L,L)))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(L,N(L,L)),N(L,L))",
+      "to": "N(L,N(N(L,L),N(L,L)))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(L,L),L),N(L,L))",
+      "to": "N(N(L,L),N(L,N(L,L)))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(L,L),L),N(L,L))",
+      "to": "N(N(L,N(L,L)),N(L,L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(L,N(L,N(L,L))),L)",
+      "to": "N(L,N(N(L,N(L,L)),L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(L,N(N(L,L),L)),L)",
+      "to": "N(L,N(N(N(L,L),L),L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(L,N(N(L,L),L)),L)",
+      "to": "N(N(L,N(L,N(L,L))),L)",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(L,L),N(L,L)),L)",
+      "to": "N(N(L,L),N(N(L,L),L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(L,L),N(L,L)),L)",
+      "to": "N(N(L,N(L,N(L,L))),L)",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(L,N(L,L)),L),L)",
+      "to": "N(N(L,N(L,L)),N(L,L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(L,N(L,L)),L),L)",
+      "to": "N(N(L,N(N(L,L),L)),L)",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(N(L,L),L),L),L)",
+      "to": "N(N(N(L,L),L),N(L,L))",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(N(L,L),L),L),L)",
+      "to": "N(N(N(L,L),N(L,L)),L)",
+      "angle": "90"
+    },
+    {
+      "from": "N(N(N(N(L,L),L),L),L)",
+      "to": "N(N(N(L,N(L,L)),L),L)",
+      "angle": "90"
+    }
+  ],
+  "cd": 0,
+  "stats": {
+    "num_nodes": 22,
+    "num_edges": 27,
+    "edges_90": 27,
+    "edges_45": 0,
+    "x_range": [
+      1,
+      4
+    ],
+    "y_range": [
+      -6,
+      6
+    ]
+  }
+}

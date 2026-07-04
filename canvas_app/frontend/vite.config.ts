@@ -13,6 +13,10 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, 'index.html'),
         tamari: path.resolve(__dirname, 'tamari.html'),
+        tamariLattice: path.resolve(__dirname, 'tamari-lattice.html'),
+        transit: path.resolve(__dirname, 'transit.html'),
+        testTubeMap: path.resolve(__dirname, 'test-tube-map.html'),
+        testTamariT4: path.resolve(__dirname, 'test-tamari-t4.html'),
       },
     },
   },

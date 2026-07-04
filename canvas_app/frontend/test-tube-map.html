@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>d3-tube-map Test — Cambridge Pub Map</title>
+    <style>
+      body { margin: 0; padding: 0; background: #1a1a2e; }
+      #tube-map { width: 100vw; height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="tube-map"></div>
+    <script type="module">
+      import * as d3 from 'd3';
+      import { tubeMap } from 'd3-tube-map';
+
+      const container = d3.select('#tube-map');
+      const width = 1600;
+      const height = 1024;
+
+      const map = tubeMap()
+        .width(width)
+        .height(height)
+        .margin({
+          top: height / 50,
+          right: width / 7,
+          bottom: height / 10,
+          left: width / 7,
+        });
+
+      d3.json('/pubs.json').then(function (data) {
+        console.log('Loaded pubs.json:', data);
+        console.log('Stations:', Object.keys(data.stations).length);
+        console.log('Lines:', data.lines.length);
+        container.datum(data).call(map);
+      }).catch(function (err) {
+        console.error('Error loading pubs.json:', err);
+        document.body.innerHTML = '<div style="color:red;padding:40px;">Error: ' + err.message + '</div>';
+      });
+    </script>
+  </body>
+</html>

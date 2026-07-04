@@ -1,0 +1,26 @@
+\begin{tikzpicture}
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=box] (0) at (-2, 0) {$k_a$};
+		\node [style=none] (1) at (-2, 0.75) {};
+		\node [style=none] (2) at (-2, -0.75) {};
+		\node [style=none] (3) at (-1, 0) {$:=$};
+		\node [style=none] (4) at (0.5, 0) {};
+		\node [style=none] (5) at (1.25, 0) {};
+		\node [style=none] (6) at (-0.25, 0) {};
+		\node [style=none] (7) at (1.25, -0.75) {};
+		\node [style=none] (8) at (-0.25, 0.75) {};
+		\node [style=none] (9) at (-2, 1) {$\bar{F}a$};
+		\node [style=none] (10) at (-2, -1) {$Fa$};
+		\node [style=none] (11) at (-0.25, 1) {$\bar{F}a$};
+		\node [style=none] (12) at (1.25, -1) {$Fa$};
+		\node [style=box] (13) at (0.5, 0) {$s^{-1}_a$};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw (2.center) to (0);
+		\draw (0) to (1.center);
+		\draw [bend left=90, looseness=2.00] (4.center) to (6.center);
+		\draw [bend left=90, looseness=2.50] (4.center) to (5.center);
+		\draw (5.center) to (7.center);
+		\draw (6.center) to (8.center);
+	\end{pgfonlayer}
+\end{tikzpicture}

@@ -1,0 +1,80 @@
+\begin{tikzpicture}[scale=0.6, {every node/.style}={scale=0.8}]
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (208) at (-1.25, 0.2) {$P$};
+		\node [style=none] (209) at (1.025, -1.875) {$\opcat{\cat{D}}$};
+		\node [style=none] (210) at (0.95, 1.875) {$\cat{C}$};
+		\node [style=none] (211) at (-2.5, 1.375) {};
+		\node [style=none] (212) at (-2.5, -1.375) {};
+		\node [style=none] (213) at (0, 1.375) {};
+		\node [style=none] (214) at (0, -1.375) {};
+		\node [style=none] (215) at (-2.25, 1.875) {};
+		\node [style=none] (216) at (-2.25, -1.85) {};
+		\node [style=none] (217) at (-2.25, 1.375) {};
+		\node [style=none] (218) at (-2.25, -1.375) {};
+		\node [style=none] (219) at (-0.25, 1.125) {};
+		\node [style=none] (220) at (-1.25, 0.875) {};
+		\node [style=none] (222) at (-2.25, 1.125) {};
+		\node [style=none] (223) at (-2.25, 0.625) {};
+		\node [style=none] (224) at (-0.25, 0.625) {};
+		\node [style=none] (225) at (0.5, -0.625) {};
+		\node [style=none] (226) at (-0.5, -0.625) {};
+		\node [style=none] (227) at (-0.25, 0.875) {};
+		\node [style=none] (228) at (0.5, 0.875) {};
+		\node [style=none] (229) at (-1.25, 0.875) {{\small \texttt{outcome}}};
+		\node [style={black_dot}] (230) at (-1.75, -0.375) {};
+		\node [style={white_dot}] (231) at (-1.25, -0.375) {};
+		\node [style=X] (232) at (-0.75, -0.375) {};
+		\node [style=none] (233) at (-1.25, -0.875) {{\small\texttt{choice}}};
+		\node [style=none] (234) at (1.25, 0.375) {};
+		\node [style=none] (235) at (1.25, -0.35) {};
+		\node [style=none] (236) at (0.9, -0.9) {};
+		\node [style=none] (237) at (1.6, -0.9) {};
+		\node [style=none] (238) at (0.75, -0.1) {};
+		\node [style=none] (239) at (1.75, -0.1) {};
+		\node [style=none] (240) at (1.25, 0.075) {};
+		\node [style=none] (241) at (1.25, 0.9) {};
+		\node [style=none] (242) at (0, 1.375) {};
+		\node [style=none] (243) at (0, -1.375) {};
+		\node [style=none] (244) at (2.5, -1.375) {};
+		\node [style=none] (245) at (2.5, 1.375) {};
+		\node [style=none] (246) at (-2.5, 1.375) {};
+		\node [style=none] (247) at (0, 1.375) {};
+		\node [style=none] (248) at (0, -1.375) {};
+		\node [style=none] (249) at (-2.5, -1.375) {};
+		\node [style=none] (250) at (0.5, 1.875) {};
+		\node [style=none] (251) at (0.5, -1.875) {};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw [style={morphism_shade}] (211.center)
+			 to (213.center)
+			 to (214.center)
+			 to (212.center)
+			 to cycle;
+		\draw (217.center) to (215.center);
+		\draw (218.center) to (216.center);
+		\draw [style={hole_shade}] (224.center)
+			 to (223.center)
+			 to (222.center)
+			 to (219.center)
+			 to cycle;
+		\draw [style=new edge style 4] (226.center) to (225.center);
+		\draw [style=new edge style 0] (228.center) to (227.center);
+		\draw (235.center) to (236.center);
+		\draw (235.center) to (237.center);
+		\draw (235.center) to (234.center);
+		\draw (238.center) to (240.center);
+		\draw (240.center) to (239.center);
+		\draw [bend left=90, looseness=1.75] (234.center) to (241.center);
+		\draw [bend right=90, looseness=1.75] (234.center) to (241.center);
+		\draw [style=dottededge] (242.center) to (245.center);
+		\draw [style=dottededge] (244.center) to (245.center);
+		\draw [style=dottededge] (242.center) to (243.center);
+		\draw [style=dottededge] (243.center) to (244.center);
+		\draw [style=double edge] (246.center) to (247.center);
+		\draw [style=double edge] (247.center) to (248.center);
+		\draw [style=double edge] (248.center) to (249.center);
+		\draw [style=double edge] (249.center) to (246.center);
+		\draw [style=new edge style 4] (250.center) to (228.center);
+		\draw [style=new edge style 0] (251.center) to (225.center);
+	\end{pgfonlayer}
+\end{tikzpicture}

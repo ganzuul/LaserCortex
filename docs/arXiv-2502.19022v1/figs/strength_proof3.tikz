@@ -1,0 +1,78 @@
+\begin{tikzpicture}
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (52) at (-3, 0) {$=$};
+		\node [style=none] (53) at (-1, 0.25) {};
+		\node [style=none] (54) at (-0.75, -0.25) {};
+		\node [style=none] (57) at (-0.75, -0.25) {};
+		\node [style=none] (58) at (-0.75, -1.25) {};
+		\node [style=none] (59) at (-1.25, -0.25) {};
+		\node [style=none] (60) at (-1.5, 0.25) {};
+		\node [style=none] (61) at (-1.5, -0.75) {};
+		\node [style=none] (62) at (-2, -0.75) {};
+		\node [style=none] (63) at (-2, 1) {};
+		\node [style=none] (64) at (-1.75, 1) {};
+		\node [style=none] (65) at (0, 1) {};
+		\node [style=none] (66) at (0, -0.75) {};
+		\node [style=none] (67) at (-1.75, -0.75) {};
+		\node [style=none] (68) at (-1.25, -1.25) {};
+		\node [style={white_dot}] (69) at (-1, 0.25) {$\otimes$};
+		\node [style=none] (70) at (-1.25, -1.5) {$Fa$};
+		\node [style=none] (71) at (-0.75, -1.5) {$Fb$};
+		\node [style=none] (72) at (-2, 1.25) {$\bar{F}(a\otimes b)$};
+		\node [style={white_dot}] (75) at (-0.375, 0.75) {$\parr$};
+		\node [style={black_dot}] (76) at (-0.375, 1.25) {};
+		\node [style=link] (77) at (-0.75, -0.325) {};
+		\node [style=none] (78) at (1, 0) {$=$};
+		\node [style=none] (79) at (3, 0) {};
+		\node [style=none] (80) at (3.25, -0.5) {};
+		\node [style=none] (81) at (3.25, -0.5) {};
+		\node [style=none] (82) at (3.25, -1.25) {};
+		\node [style=none] (83) at (2.75, -0.5) {};
+		\node [style=none] (84) at (2.5, 0) {};
+		\node [style=none] (85) at (2.5, -0.75) {};
+		\node [style=none] (86) at (2, -0.75) {};
+		\node [style=none] (87) at (2, 1) {};
+		\node [style=none] (88) at (2.25, 1) {};
+		\node [style=none] (89) at (4, 1) {};
+		\node [style=none] (90) at (4, -0.75) {};
+		\node [style=none] (91) at (2.25, -0.75) {};
+		\node [style=none] (92) at (2.75, -1.25) {};
+		\node [style={white_dot}] (93) at (3, 0) {$\otimes$};
+		\node [style=none] (94) at (2.75, -1.5) {$Fa$};
+		\node [style=none] (95) at (3.25, -1.5) {$Fb$};
+		\node [style=none] (96) at (2, 1.25) {$\bar{F}(a\otimes b)$};
+		\node [style={white_dot}] (97) at (3.625, 0.75) {$\parr$};
+		\node [style={black_dot}] (98) at (3.625, 1.25) {};
+		\node [style=link] (99) at (2.5, -0.075) {};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw (58.center) to (57.center);
+		\draw [in=300, out=90] (54.center) to (53.center);
+		\draw [in=240, out=90] (59.center) to (53.center);
+		\draw [bend right=90, looseness=2.00] (53.center) to (60.center);
+		\draw (60.center) to (61.center);
+		\draw [bend left=90, looseness=1.75] (61.center) to (62.center);
+		\draw (62.center) to (63.center);
+		\draw [style=functor box] (64.center) to (65.center);
+		\draw [style=functor box] (65.center) to (66.center);
+		\draw [style=functor box] (66.center) to (67.center);
+		\draw [style=functor box] (64.center) to (67.center);
+		\draw (68.center) to (59.center);
+		\draw (75) to (76);
+		\draw [style=dottededge, in=-90, out=45, looseness=0.50] (77) to (75);
+		\draw (82.center) to (81.center);
+		\draw [in=300, out=90] (80.center) to (79.center);
+		\draw [in=240, out=90] (83.center) to (79.center);
+		\draw [bend right=90, looseness=2.00] (79.center) to (84.center);
+		\draw (84.center) to (85.center);
+		\draw [bend left=90, looseness=1.75] (85.center) to (86.center);
+		\draw (86.center) to (87.center);
+		\draw [style=functor box] (88.center) to (89.center);
+		\draw [style=functor box] (89.center) to (90.center);
+		\draw [style=functor box] (90.center) to (91.center);
+		\draw [style=functor box] (88.center) to (91.center);
+		\draw (92.center) to (83.center);
+		\draw (97) to (98);
+		\draw [style=dottededge, in=180, out=105, looseness=1.25] (99) to (97);
+	\end{pgfonlayer}
+\end{tikzpicture}

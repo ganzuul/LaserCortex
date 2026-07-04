@@ -149,25 +149,35 @@ theorem antipode_involutive (x : SplitOctonion) : antipode (antipode x) = x := b
 theorem antipode_one : antipode split_one = split_one := by
   apply SplitOctonion.ext_components <;> simp [antipode, split_one]
 
-/-- The antipode is an anti-automorphism: S(xy) = S(y)S(x).
-    ⚠ THIS THEOREM IS FALSE for the split-octonion over ℤ.
-    Counterexample: x = e₄, y = e₅.
-    - S(e₄·e₅) = S(e₁) = -e₁
-    - S(e₅)·S(e₄) = (-e₅)·e₄ = -(e₅·e₄) = -e₁
-    Wait, these are equal? Let me re-check:
-    - e₄·e₅ = -e₁, so S(e₄·e₅) = S(-e₁) = -S(e₁) = -(-e₁) = e₁
-    - S(e₅)·S(e₄) = (-e₅)·e₄ = -(e₅·e₄) = -e₁ ≠ e₁
+/-- The antipode anti-automorphism S(xy) = S(y)S(x) is FALSE for the split-octonion over ℤ.
+    This serves as a guard: composition of elements from different sectors (associative
+    vs split) produces a zero divisor and the antipode fails to be an anti-automorphism.
 
-    The e₄-e₅ cross-term has a sign mismatch in the e₁ component.
-    This means the antipode is NOT a Hopf algebra antipode for the
-    split-octonion under this grading. The Hopf algebra structure
-    requires a different antipode or a different coproduct.
+    Counterexample: x = e₁ (associative/sector 0, grade 1), y = e₄ (split/sector 1, grade 0).
+    - e₁·e₄ = e₅ (zero divisor: associative × split → non-associative sector)
+    - S(e₁·e₄) = S(e₅) = -e₅
+    - S(e₄)·S(e₁) = e₄·(-e₁) = -(e₄·e₁) = -(-e₅) = e₅
+    - -e₅ ≠ e₅ → S(xy) ≠ S(y)S(x)
 
-    For now, this theorem is `sorry`-ed pending a correct formulation
-    of the Hopf algebra structure on split-octonions (possibly over ℤ₂
-    or with a twisted antipode). -/
-theorem antipode_mul (x y : SplitOctonion) : antipode (split_oct_mul x y) = split_oct_mul (antipode y) (antipode x) := by
-  sorry
+    This is exactly the zero-divisor condition at the CD 2→3 sector boundary:
+    the compact/associative sector (e₀..e₃) cannot compose with the split sector
+    (e₄..e₇) without producing a cross-sector zero divisor. The antipode anti-
+    automorphism is the Hopf algebra certificate of composability — its failure
+    proves that the two sectors cannot be mixed in a valid composition. -/
+theorem antipode_mul_false : ¬ (∀ x y : SplitOctonion, antipode (split_oct_mul x y) = split_oct_mul (antipode y) (antipode x)) := by
+  intro h
+  have hc := h e1_vec e4_vec
+  -- Left side: S(e₁·e₄) = S(e₅) = -e₅
+  have h_left : antipode (split_oct_mul e1_vec e4_vec) = ⟨0, 0, 0, 0, 0, -1, 0, 0⟩ := by
+    ext <;> simp [e1_vec, e4_vec, antipode, split_oct_mul]
+  -- Right side: S(e₄)·S(e₁) = e₄·(-e₁) = -(e₄·e₁) = -(-e₅) = e₅
+  have h_right : split_oct_mul (antipode e4_vec) (antipode e1_vec) = ⟨0, 0, 0, 0, 0, 1, 0, 0⟩ := by
+    ext <;> simp [e1_vec, e4_vec, antipode, split_oct_mul]
+  rw [h_left, h_right] at hc
+  -- hc : ⟨0,0,0,0,0,-1,0,0⟩ = ⟨0,0,0,0,0,1,0,0⟩ → -1 = 1
+  have h_contra : (-1 : ℤ) = (1 : ℤ) := by
+    simpa using congrArg SplitOctonion.e5 hc
+  norm_num at h_contra
 
 -- ============================================================================
 -- SECTION 3: Hopf Axiom — The Antipode Pairing

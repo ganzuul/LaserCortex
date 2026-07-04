@@ -1,0 +1,31 @@
+\begin{picture}(0,0)%
+\includegraphics{tropspan.pstex}%
+\end{picture}%
+\setlength{\unitlength}{3947sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(7749,3399)(289,-2623)
+\put(4801,-211){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{$v_1=(0,0,1,1)$}%
+}}}
+\put(6451,-1711){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{$v_3=(0,1,1,0)$}%
+}}}
+\put(7201,239){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{$v_2=(0,1,0,1)$}%
+}}}
+\put(976,314){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{$v_1=(0,0,2)$}%
+}}}
+\put(2551,-1711){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{$v_3=(0,-2,-2)$}%
+}}}
+\put(3376,-61){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{$v_1=(0,0,1)$}%
+}}}
+\put(1876,-661){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{$v_2=(0,2,0)$}%
+}}}
+\put(4276,-1111){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{$v_2=(0,2,0)$}%
+}}}
+\put(1276,-2311){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{$v_3=(0,1,-2)$}%
+}}}
+\end{picture}

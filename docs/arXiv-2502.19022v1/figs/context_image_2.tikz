@@ -1,0 +1,92 @@
+\begin{tikzpicture}[scale=0.6, {every node/.style}={scale=0.8}]
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (1) at (-2.05, 1.375) {};
+		\node [style=none] (2) at (2, 1.375) {};
+		\node [style=none] (9) at (2.025, -1.375) {};
+		\node [style=none] (10) at (-2.05, -1.375) {};
+		\node [style=none] (12) at (0, 1.875) {};
+		\node [style=none] (13) at (0, 1.375) {};
+		\node [style=none] (37) at (0, -1.375) {};
+		\node [style=none] (38) at (0, -1.875) {};
+		\node [style=none] (49) at (-0.55, 0.875) {};
+		\node [style=none] (52) at (-2.05, 0.875) {};
+		\node [style=none] (53) at (-2.05, -0.875) {};
+		\node [style=none] (54) at (-0.55, -0.875) {};
+		\node [style=none] (106) at (2, 0.875) {};
+		\node [style=none] (109) at (0.5, 0.875) {};
+		\node [style=none] (110) at (0.5, -0.875) {};
+		\node [style=none] (111) at (2, -0.875) {};
+		\node [style=none] (195) at (-2.725, -0.375) {};
+		\node [style=none] (196) at (-1.8, -0.375) {};
+		\node [style=none] (197) at (-1.825, 0.375) {};
+		\node [style=none] (198) at (-2.725, 0.375) {};
+		\node [style=none] (218) at (-1.8, 0.625) {};
+		\node [style=none] (219) at (-1.8, 0.125) {};
+		\node [style=none] (220) at (-0.8, 0.625) {};
+		\node [style=none] (221) at (-0.8, 0.125) {};
+		\node [style=none] (247) at (-1.425, -0.375) {};
+		\node [style=none] (248) at (-1.15, -0.375) {};
+		\node [style=none] (249) at (-1.175, -0.375) {};
+		\node [style=none] (250) at (-0.9, -0.375) {};
+		\node [style=none] (251) at (-1.675, -0.375) {};
+		\node [style=none] (252) at (-1.4, -0.375) {};
+		\node [style=none] (256) at (0.5, -0.875) {};
+		\node [style=none] (259) at (2.675, -0.375) {};
+		\node [style=none] (260) at (1.75, -0.375) {};
+		\node [style=none] (261) at (1.775, 0.375) {};
+		\node [style=none] (262) at (2.675, 0.375) {};
+		\node [style=none] (266) at (1.75, 0.625) {};
+		\node [style=none] (267) at (1.75, 0.125) {};
+		\node [style=none] (268) at (0.75, 0.625) {};
+		\node [style=none] (269) at (0.75, 0.125) {};
+		\node [style=none] (270) at (1.375, -0.375) {};
+		\node [style=none] (271) at (1.1, -0.375) {};
+		\node [style=none] (272) at (1.125, -0.375) {};
+		\node [style=none] (273) at (0.85, -0.375) {};
+		\node [style=none] (274) at (1.625, -0.375) {};
+		\node [style=none] (275) at (1.35, -0.375) {};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw [style={supermap_shade}] (1.center)
+			 to (10.center)
+			 to (9.center)
+			 to (2.center)
+			 to cycle;
+		\draw (13.center) to (12.center);
+		\draw (38.center) to (37.center);
+		\draw [style={hole_shade}] (54.center)
+			 to (53.center)
+			 to (52.center)
+			 to (49.center)
+			 to cycle;
+		\draw [style={hole_shade}] (111.center)
+			 to (110.center)
+			 to (109.center)
+			 to (106.center)
+			 to cycle;
+		\draw [style=new edge style 4, in=0, out=180] (196.center) to (195.center);
+		\draw [style=new edge style 4] (198.center) to (197.center);
+		\draw [style=dottededge] (218.center) to (220.center);
+		\draw [style=dottededge] (220.center) to (221.center);
+		\draw [style=dottededge] (221.center) to (219.center);
+		\draw [style=dottededge] (219.center) to (218.center);
+		\draw [style=dottededge, bend right=90, looseness=1.75] (247.center) to (248.center);
+		\draw [style=dottededge, bend left=90, looseness=1.75] (247.center) to (248.center);
+		\draw [style=dottededge, bend right=90, looseness=1.75] (249.center) to (250.center);
+		\draw [style=dottededge, bend left=90, looseness=1.75] (249.center) to (250.center);
+		\draw [style=dottededge, bend right=90, looseness=1.75] (251.center) to (252.center);
+		\draw [style=dottededge, bend left=90, looseness=1.75] (251.center) to (252.center);
+		\draw [style=new edge style 4, in=180, out=0] (260.center) to (259.center);
+		\draw [style=new edge style 4] (262.center) to (261.center);
+		\draw [style=dottededge] (266.center) to (268.center);
+		\draw [style=dottededge] (268.center) to (269.center);
+		\draw [style=dottededge] (269.center) to (267.center);
+		\draw [style=dottededge] (267.center) to (266.center);
+		\draw [style=dottededge, bend left=90, looseness=1.75] (270.center) to (271.center);
+		\draw [style=dottededge, bend right=90, looseness=1.75] (270.center) to (271.center);
+		\draw [style=dottededge, bend left=90, looseness=1.75] (272.center) to (273.center);
+		\draw [style=dottededge, bend right=90, looseness=1.75] (272.center) to (273.center);
+		\draw [style=dottededge, bend left=90, looseness=1.75] (274.center) to (275.center);
+		\draw [style=dottededge, bend right=90, looseness=1.75] (274.center) to (275.center);
+	\end{pgfonlayer}
+\end{tikzpicture}

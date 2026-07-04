@@ -1,0 +1,38 @@
+\begin{tikzpicture}[scale=0.6, {every node/.style}={scale=0.8}]
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (1) at (0, 1) {};
+		\node [style=none] (2) at (1.5, 1) {};
+		\node [style=none] (9) at (1.5, -1) {};
+		\node [style=none] (10) at (0, -1) {};
+		\node [style=none] (12) at (0.25, 1.5) {};
+		\node [style=none] (13) at (0.25, 1) {};
+		\node [style=none] (37) at (0.25, -1) {};
+		\node [style=none] (38) at (0.25, -1.5) {};
+		\node [style=none] (49) at (1.25, 0.75) {};
+		\node [style=none] (50) at (0.75, 0.75) {};
+		\node [style=none] (51) at (0.75, -0.75) {};
+		\node [style=none] (52) at (0.25, 0.75) {};
+		\node [style=none] (53) at (0.25, -0.75) {};
+		\node [style=none] (54) at (1.25, -0.75) {};
+		\node [style=none] (60) at (0.75, 0.275) {};
+		\node [style=none] (61) at (0.75, -0.275) {};
+		\node [style=none] (117) at (0.95, -0.25) {$a$};
+		\node [style=none] (118) at (1, 0.25) {$a'$};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw [style={supermap_shade}] (1.center)
+			 to (10.center)
+			 to (9.center)
+			 to (2.center)
+			 to cycle;
+		\draw (13.center) to (12.center);
+		\draw (38.center) to (37.center);
+		\draw [style={hole_shade}] (54.center)
+			 to (53.center)
+			 to (52.center)
+			 to (49.center)
+			 to cycle;
+		\draw (50.center) to (60.center);
+		\draw (61.center) to (51.center);
+	\end{pgfonlayer}
+\end{tikzpicture}

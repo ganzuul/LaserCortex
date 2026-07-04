@@ -1,0 +1,32 @@
+\begin{tikzpicture}[scale=0.6, {every node/.style}={scale=0.8}]
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (108) at (-0.675, -0.75) {};
+		\node [style=none] (115) at (-0.725, 0.275) {};
+		\node [style=none] (116) at (-0.675, -0.275) {};
+		\node [style=none] (151) at (0.9, 0.25) {};
+		\node [style=none] (152) at (0.9, -0.25) {};
+		\node [style=none] (153) at (-0.85, 0.25) {};
+		\node [style=none] (154) at (-0.85, -0.25) {};
+		\node [style=none] (155) at (0.65, 0.75) {};
+		\node [style=none] (156) at (0.65, -0.725) {};
+		\node [style=none] (157) at (0.65, 0.25) {};
+		\node [style=none] (158) at (0.65, -0.25) {};
+		\node [style=none] (160) at (0.9, 0.75) {$y$};
+		\node [style=none] (161) at (0.9, -0.725) {$x$};
+		\node [style=none] (163) at (0.0250004, 0) {$\phi$};
+		\node [style=none] (164) at (-0.65, 0.25) {};
+		\node [style=none] (165) at (-0.65, 0.725) {};
+		\node [style=none] (166) at (0, -1.25) {\texttt{Bipartite Process}};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw (116.center) to (108.center);
+		\draw [style={morphism_shade}] (151.center)
+			 to (153.center)
+			 to (154.center)
+			 to (152.center)
+			 to cycle;
+		\draw [style=dottededge] (157.center) to (155.center);
+		\draw [style=dottededge] (158.center) to (156.center);
+		\draw (165.center) to (164.center);
+	\end{pgfonlayer}
+\end{tikzpicture}

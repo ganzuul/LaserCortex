@@ -1,0 +1,162 @@
+\begin{tikzpicture}[scale=0.5, {every node/.style}={scale=0.7}]
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (145) at (-1, -0.25) {};
+		\node [style=none] (220) at (1, -0.25) {};
+		\node [style=none] (245) at (-1, -1.5) {};
+		\node [style=none] (246) at (1, -1.5) {};
+		\node [style=none] (247) at (0, -2.25) {};
+		\node [style=none] (308) at (0, -1.5) {};
+		\node [style=none] (309) at (-1, 0.5) {};
+		\node [style=none] (311) at (1, 0.5) {};
+		\node [style=none] (312) at (-1, 1.75) {};
+		\node [style=none] (313) at (1, 1.75) {};
+		\node [style=none] (314) at (0, 2.5) {};
+		\node [style=none] (325) at (0, 1.75) {};
+		\node [style=none] (326) at (-2.75, 1) {};
+		\node [style=none] (327) at (-2.75, -0.75) {};
+		\node [style=none] (328) at (-1.25, 1) {};
+		\node [style=none] (329) at (-1.25, -0.75) {};
+		\node [style=none] (330) at (-2.5, 1.25) {};
+		\node [style=none] (331) at (-2.5, -0.975) {};
+		\node [style=none] (332) at (-2.5, 1) {};
+		\node [style=none] (333) at (-2.5, -0.75) {};
+		\node [style=none] (334) at (-1.5, 0.75) {};
+		\node [style=none] (335) at (-2.25, 0.75) {};
+		\node [style=none] (336) at (-2.25, 0.25) {};
+		\node [style=none] (337) at (-2.5, 0.75) {};
+		\node [style=none] (338) at (-2.5, 0.25) {};
+		\node [style=none] (339) at (-1.5, 0.25) {};
+		\node [style=none] (340) at (-1, -0.25) {};
+		\node [style=none] (341) at (-1.5, -0.25) {};
+		\node [style=none] (342) at (-1.5, 0.5) {};
+		\node [style=none] (343) at (-1, 0.5) {};
+		\node [style={black_dot}] (344) at (-2.25, -0.25) {};
+		\node [style={white_dot}] (345) at (-2, -0.25) {};
+		\node [style=X] (346) at (-1.75, -0.25) {};
+		\node [style=none] (347) at (-0.75, 0.3) {};
+		\node [style=none] (348) at (-0.75, 0.075) {};
+		\node [style=none] (349) at (-0.85, -0.225) {};
+		\node [style=none] (350) at (-0.65, -0.225) {};
+		\node [style=none] (351) at (-1, 0.075) {};
+		\node [style=none] (352) at (-0.5, 0.075) {};
+		\node [style=none] (353) at (-0.75, 0.25) {};
+		\node [style=none] (354) at (-0.75, 0.575) {};
+		\node [style=none] (355) at (-1.25, 1) {};
+		\node [style=none] (356) at (-1.25, -0.75) {};
+		\node [style=none] (357) at (-0.25, -0.75) {};
+		\node [style=none] (358) at (-0.25, 1) {};
+		\node [style=none] (359) at (-2.75, 1) {};
+		\node [style=none] (360) at (-1.25, 1) {};
+		\node [style=none] (361) at (-1.25, -0.75) {};
+		\node [style=none] (362) at (-2.75, -0.75) {};
+		\node [style=none] (379) at (2.75, 1) {};
+		\node [style=none] (380) at (2.75, -0.75) {};
+		\node [style=none] (381) at (1.25, 1) {};
+		\node [style=none] (382) at (1.25, -0.75) {};
+		\node [style=none] (383) at (2.5, 1.25) {};
+		\node [style=none] (384) at (2.5, -0.975) {};
+		\node [style=none] (385) at (2.5, 1) {};
+		\node [style=none] (386) at (2.5, -0.75) {};
+		\node [style=none] (387) at (1.5, 0.75) {};
+		\node [style=none] (388) at (2.25, 0.75) {};
+		\node [style=none] (389) at (2.25, 0.25) {};
+		\node [style=none] (390) at (2.5, 0.75) {};
+		\node [style=none] (391) at (2.5, 0.25) {};
+		\node [style=none] (392) at (1.5, 0.25) {};
+		\node [style=none] (393) at (1, -0.25) {};
+		\node [style=none] (394) at (1.5, -0.25) {};
+		\node [style=none] (395) at (1.5, 0.5) {};
+		\node [style=none] (396) at (1, 0.5) {};
+		\node [style={black_dot}] (397) at (2.25, -0.25) {};
+		\node [style={white_dot}] (398) at (2, -0.25) {};
+		\node [style=X] (399) at (1.75, -0.25) {};
+		\node [style=none] (400) at (0.75, 0.3) {};
+		\node [style=none] (401) at (0.75, 0.075) {};
+		\node [style=none] (402) at (0.85, -0.225) {};
+		\node [style=none] (403) at (0.65, -0.225) {};
+		\node [style=none] (404) at (1, 0.075) {};
+		\node [style=none] (405) at (0.5, 0.075) {};
+		\node [style=none] (406) at (0.75, 0.25) {};
+		\node [style=none] (407) at (0.75, 0.575) {};
+		\node [style=none] (408) at (1.25, 1) {};
+		\node [style=none] (409) at (1.25, -0.75) {};
+		\node [style=none] (410) at (0.25, -0.75) {};
+		\node [style=none] (411) at (0.25, 1) {};
+		\node [style=none] (412) at (2.75, 1) {};
+		\node [style=none] (413) at (1.25, 1) {};
+		\node [style=none] (414) at (1.25, -0.75) {};
+		\node [style=none] (415) at (2.75, -0.75) {};
+		\node [style=none] (421) at (0.5, 0.075) {};
+		\node [style=none] (428) at (2.25, 1) {};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw [style=new edge style 0, in=90, out=-90] (220.center) to (246.center);
+		\draw [style=new edge style 0, in=90, out=-90] (145.center) to (245.center);
+		\draw [style=new edge style 0] (308.center) to (247.center);
+		\draw [style=new edge style 0] (245.center) to (308.center);
+		\draw [style=new edge style 0] (246.center) to (308.center);
+		\draw [style=new edge style 0, in=90, out=-90] (313.center) to (311.center);
+		\draw [style=new edge style 0, in=90, out=-90] (312.center) to (309.center);
+		\draw [style=new edge style 4] (314.center) to (325.center);
+		\draw [style=new edge style 0] (325.center) to (312.center);
+		\draw [style=new edge style 0] (325.center) to (313.center);
+		\draw [style={morphism_shade}] (326.center)
+			 to (328.center)
+			 to (329.center)
+			 to (327.center)
+			 to cycle;
+		\draw (332.center) to (330.center);
+		\draw (333.center) to (331.center);
+		\draw [style={hole_shade}] (339.center)
+			 to (338.center)
+			 to (337.center)
+			 to (334.center)
+			 to cycle;
+		\draw [style=new edge style 4, in=180, out=0] (341.center) to (340.center);
+		\draw [style=new edge style 0] (343.center) to (342.center);
+		\draw (348.center) to (349.center);
+		\draw (348.center) to (350.center);
+		\draw (348.center) to (347.center);
+		\draw (351.center) to (353.center);
+		\draw (353.center) to (352.center);
+		\draw [bend left=90, looseness=1.75] (347.center) to (354.center);
+		\draw [bend right=90, looseness=1.75] (347.center) to (354.center);
+		\draw [style=dottededge] (355.center) to (358.center);
+		\draw [style=dottededge] (357.center) to (358.center);
+		\draw [style=dottededge] (355.center) to (356.center);
+		\draw [style=dottededge] (356.center) to (357.center);
+		\draw [style=double edge] (359.center) to (360.center);
+		\draw [style=double edge] (360.center) to (361.center);
+		\draw [style=double edge] (361.center) to (362.center);
+		\draw [style=double edge] (362.center) to (359.center);
+		\draw [style={morphism_shade}] (379.center)
+			 to (381.center)
+			 to (382.center)
+			 to (380.center)
+			 to cycle;
+		\draw (385.center) to (383.center);
+		\draw (386.center) to (384.center);
+		\draw [style={hole_shade}] (392.center)
+			 to (391.center)
+			 to (390.center)
+			 to (387.center)
+			 to cycle;
+		\draw [style=new edge style 4, in=0, out=180] (394.center) to (393.center);
+		\draw [style=new edge style 0] (396.center) to (395.center);
+		\draw (401.center) to (402.center);
+		\draw (401.center) to (403.center);
+		\draw (401.center) to (400.center);
+		\draw (404.center) to (406.center);
+		\draw (406.center) to (405.center);
+		\draw [bend right=90, looseness=1.75] (400.center) to (407.center);
+		\draw [bend left=90, looseness=1.75] (400.center) to (407.center);
+		\draw [style=dottededge] (408.center) to (411.center);
+		\draw [style=dottededge] (410.center) to (411.center);
+		\draw [style=dottededge] (408.center) to (409.center);
+		\draw [style=dottededge] (409.center) to (410.center);
+		\draw [style=double edge] (412.center) to (413.center);
+		\draw [style=double edge] (413.center) to (414.center);
+		\draw [style=double edge] (414.center) to (415.center);
+		\draw [style=double edge] (415.center) to (412.center);
+	\end{pgfonlayer}
+\end{tikzpicture}

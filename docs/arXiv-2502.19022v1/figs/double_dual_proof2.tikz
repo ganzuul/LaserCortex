@@ -1,0 +1,52 @@
+\begin{tikzpicture}
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (67) at (-1.125, -0.25) {};
+		\node [style=none] (68) at (-0.375, -0.25) {};
+		\node [style=none] (69) at (-1.125, -0.25) {};
+		\node [style=none] (70) at (-0.375, -0.25) {};
+		\node [style={white_dot}] (71) at (-0.75, 0.5) {$\parr$};
+		\node [style={black_dot}] (72) at (-0.75, 1) {};
+		\node [style=link] (73) at (-1.125, -0.075) {};
+		\node [style=none] (74) at (-1.375, 0.75) {};
+		\node [style=none] (75) at (-0.125, 0.75) {};
+		\node [style=none] (76) at (-1.375, -0.625) {};
+		\node [style=none] (77) at (-0.125, -0.625) {};
+		\node [style=none] (78) at (-1.125, -1) {};
+		\node [style=none] (79) at (-1.125, -0.25) {};
+		\node [style=none] (80) at (-1.125, -0.25) {};
+		\node [style=none] (82) at (-0.375, -1) {};
+		\node [style=none] (83) at (-0.375, -0.25) {};
+		\node [style=none] (84) at (-1.875, 0) {$=$};
+		\node [style=none] (85) at (0.875, 0.25) {};
+		\node [style=none] (86) at (1.625, 0.25) {};
+		\node [style=none] (87) at (0.875, 0.25) {};
+		\node [style=none] (88) at (1.625, 0.25) {};
+		\node [style=none] (96) at (0.875, -0.5) {};
+		\node [style=none] (97) at (0.875, 0.25) {};
+		\node [style=none] (98) at (0.875, 0.25) {};
+		\node [style=none] (99) at (1.625, -0.5) {};
+		\node [style=none] (100) at (1.625, 0.25) {};
+		\node [style=none] (101) at (0.375, 0) {$=$};
+		\node [style=box] (102) at (1.625, 0) {$s^{-1}$};
+		\node [style=none] (103) at (-1.125, -1.25) {$Fa$};
+		\node [style=none] (104) at (-0.375, -1.25) {$Fa^*$};
+		\node [style=none] (105) at (0.875, -0.75) {$Fa$};
+		\node [style=none] (106) at (1.625, -0.75) {$Fa^*$};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw (71) to (72);
+		\draw [bend left=90, looseness=1.50] (69.center) to (70.center);
+		\draw [style=dottededge, in=-150, out=90] (73) to (71);
+		\draw [style=functor box] (74.center) to (75.center);
+		\draw [style=functor box] (75.center) to (77.center);
+		\draw [style=functor box] (77.center) to (76.center);
+		\draw [style=functor box] (76.center) to (74.center);
+		\draw (78.center) to (79.center);
+		\draw (79.center) to (80.center);
+		\draw (83.center) to (82.center);
+		\draw [bend left=90, looseness=1.50] (87.center) to (88.center);
+		\draw (96.center) to (97.center);
+		\draw (97.center) to (98.center);
+		\draw (100.center) to (99.center);
+	\end{pgfonlayer}
+\end{tikzpicture}
