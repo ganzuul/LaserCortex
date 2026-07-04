@@ -52,6 +52,7 @@ uv.lock
 .vscode/
 *.swp
 *.swo
+*.kate-swp
 
 # OS
 .DS_Store
