@@ -292,6 +292,10 @@ partial def viewDFS (t : EMLTree) : Chain t :=
   This matches the ontological structure: the infinite crystal seed is not
   a thing we hold, but a thing we approach. -/
 theorem lean4_limitation_note : True := by
-  sorry
+  -- Lean 4's `coinductive` is restricted to `Prop`-valued predicates.
+  -- Nested inductive types with `Prop` fields through `List`/`Sigma` are
+  -- rejected by the kernel positivity checker. This is a kernel limitation,
+  -- not a framework limitation. Documented as a known restriction.
+  trivial
 
 end Decomposition

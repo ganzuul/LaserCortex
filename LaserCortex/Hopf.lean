@@ -1,31 +1,15 @@
 /-
-# Module: Hopf
+# Module: SplitOctonion antipode and fixed-point structure
 
-## Intent
-
-Formalizes the **antipode of institutional closure** as the antipode of a
-Hopf algebra on `SplitOctonion` over ℤ. The antipode is the algebraic
-counterpart of the Liar paradox resolution: the identity zero divisor (two
-distinct markers for the same tree) is annihilated by the antipode, which
-at the fixed point forces `2e₀ = 0` — the characteristic-2 condition that
-collapses marker distinctness.
-
-Key connections:
-- `antipode` ↔ the "reverse" operation on institutional closure traces
-- `antipode_fixed_point ↔ 2e₀ = 0` ↔ `IdentityZeroDivisor` (LiarParadox.lean)
-- `antipode_coherence` ↔ the Hopf axiom verified on the 8 basis elements
-- `AMM.reserveGuard` as the cost scaling factor for the antipode
+Defines the antipode `S`, counit `ε`, and pairing `⟨S(x), y⟩` on
+`SplitOctonion` over ℤ. Proves `S² = id`, linearity, fixed-point
+classification, and that `S(xy) = S(y)S(x)` is false (zero divisors).
 
 ## Relations to other modules
 
 - SplitOctonionCost.lean → `SplitOctonion`, `split_oct_mul`, `toSO`
 - LiarParadox.lean → `IdentityZeroDivisor`
-- InstitutionalClosure.lean → `closure`
 - AMM.lean → `AMM.reserveGuard`
-
-## Tags
-
-#lean4-theorem #hopf-algebra #antipode #split-octonion #zero-divisor #proof-bound
 -/
 
 import Mathlib.Tactic
@@ -37,10 +21,10 @@ open SplitOctonionCost
 open LiarParadox
 open EMLRegistry
 
-namespace Hopf
+namespace SplitOctonionAntipode
 
 -- ============================================================================
--- SECTION 1: SplitOctonion algebraic instances
+-- SECTION 1: Algebraic instances on SplitOctonion
 -- ============================================================================
 
 /-- Pointwise negation on SplitOctonion. -/
@@ -112,16 +96,8 @@ instance decidableEqSplitOctonion : DecidableEq SplitOctonion :=
 -- SECTION 2: The Antipode
 -- ============================================================================
 
-/-- The antipode on SplitOctonion: negates the associative-sector components
-    (e₁, e₂, e₃) and the split-sector components (e₅, e₆, e₇), while fixing
-    the identity axis (e₀) and the coupling axis (e₄).
-
-    This is the standard antipode for the split-octonion algebra viewed as a
-    graded Hopf algebra with:
-    - e₀  (degree 0, group-like):  S(e₀) = e₀
-    - e₄  (degree 0, group-like):  S(e₄) = e₄  (the coupling is self-dual)
-    - eᵢ  for i∈{1,2,3,5,6,7} (degree 1, primitive): S(eᵢ) = -eᵢ
--/
+/-- The antipode on SplitOctonion: negates components e₁, e₂, e₃, e₅, e₆, e₇
+    while fixing e₀ and e₄. -/
 def antipode (x : SplitOctonion) : SplitOctonion :=
   { e0 := x.e0,
     e1 := -x.e1, e2 := -x.e2, e3 := -x.e3,
@@ -149,21 +125,8 @@ theorem antipode_involutive (x : SplitOctonion) : antipode (antipode x) = x := b
 theorem antipode_one : antipode split_one = split_one := by
   apply SplitOctonion.ext_components <;> simp [antipode, split_one]
 
-/-- The antipode anti-automorphism S(xy) = S(y)S(x) is FALSE for the split-octonion over ℤ.
-    This serves as a guard: composition of elements from different sectors (associative
-    vs split) produces a zero divisor and the antipode fails to be an anti-automorphism.
-
-    Counterexample: x = e₁ (associative/sector 0, grade 1), y = e₄ (split/sector 1, grade 0).
-    - e₁·e₄ = e₅ (zero divisor: associative × split → non-associative sector)
-    - S(e₁·e₄) = S(e₅) = -e₅
-    - S(e₄)·S(e₁) = e₄·(-e₁) = -(e₄·e₁) = -(-e₅) = e₅
-    - -e₅ ≠ e₅ → S(xy) ≠ S(y)S(x)
-
-    This is exactly the zero-divisor condition at the CD 2→3 sector boundary:
-    the compact/associative sector (e₀..e₃) cannot compose with the split sector
-    (e₄..e₇) without producing a cross-sector zero divisor. The antipode anti-
-    automorphism is the Hopf algebra certificate of composability — its failure
-    proves that the two sectors cannot be mixed in a valid composition. -/
+/-- The antipode is not an anti-automorphism: `S(xy) ≠ S(y)S(x)` in general.
+    Counterexample: `x = e₁`, `y = e₄` (zero divisor at the CD 2→3 sector boundary). -/
 theorem antipode_mul_false : ¬ (∀ x y : SplitOctonion, antipode (split_oct_mul x y) = split_oct_mul (antipode y) (antipode x)) := by
   intro h
   have hc := h e1_vec e4_vec
@@ -183,32 +146,21 @@ theorem antipode_mul_false : ¬ (∀ x y : SplitOctonion, antipode (split_oct_mu
 -- SECTION 3: Hopf Axiom — The Antipode Pairing
 -- ============================================================================
 
-/-- The counit: projection onto the e₀ component (the identity axis).
-    ε(e₀) = 1, ε(eᵢ) = 0 for i ≠ 0. -/
+/-- The counit: projection onto the e₀ component. -/
 def counit (x : SplitOctonion) : ℤ := x.e0
 
-/-- The antipode pairing: ⟨S(x), y⟩ = ε(S(x) * y) = (S(x) * y).e0.
-    This is the bilinear form that makes the Hopf axiom verifiable without
-    tensor products. -/
+/-- The antipode pairing: ⟨S(x), y⟩ = (S(x) * y).e0. -/
 def antipodePairing (x y : SplitOctonion) : ℤ :=
   (split_oct_mul (antipode x) y).e0
 
-/-- The antipode pairing (S⁺(x), x) = (x*x).e0:
-    antipodePairing (antipode x) x = (split_oct_mul x x).e0
-    = e₀² - e₁² - e₂² - e₃² + e₄² + e₅² + e₆² + e₇².
-
-    This is NOT the counit in general — the original theorem claiming
-    equality to `counit x` was incorrect. The correct Hopf axiom
-    requires the coproduct Δ, which is not defined here. -/
+/-- The antipode pairing: ⟨S(x), x⟩ = (x*x).e0 expands to the quadratic form. -/
 theorem antipode_pairing_self (x : SplitOctonion) : antipodePairing (antipode x) x =
     x.e0*x.e0 - x.e1*x.e1 - x.e2*x.e2 - x.e3*x.e3 + x.e4*x.e4 + x.e5*x.e5 + x.e6*x.e6 + x.e7*x.e7 := by
   rcases x with ⟨e0, e1, e2, e3, e4, e5, e6, e7⟩
   dsimp [antipodePairing, antipode, split_oct_mul]
   ring
 
-/-- The copairing ε(x·S(x)):
-    (split_oct_mul x (antipode x)).e0 = e₀² + e₁² + e₂² + e₃² + e₄² - e₅² - e₆² - e₇².
-    This is NOT the counit in general. -/
+/-- The copairing: (x·S(x)).e0 expands to a sum-difference form. -/
 theorem antipode_copairing_self (x : SplitOctonion) : (split_oct_mul x (antipode x)).e0 =
     x.e0*x.e0 + x.e1*x.e1 + x.e2*x.e2 + x.e3*x.e3 + x.e4*x.e4 - x.e5*x.e5 - x.e6*x.e6 - x.e7*x.e7 := by
   rcases x with ⟨e0, e1, e2, e3, e4, e5, e6, e7⟩
@@ -219,15 +171,11 @@ theorem antipode_copairing_self (x : SplitOctonion) : (split_oct_mul x (antipode
 -- SECTION 4: Antipode Fixed Point — The Zero Divisor Condition
 -- ============================================================================
 
-/-- The antipode fixed point condition: S(x) = x.
-    For group-like elements (e₀, e₄), this holds identically.
-    For primitive elements (e₁, e₂, e₃, e₅, e₆, e₇), S(x) = x forces x = -x,
-    i.e., 2x = 0. Over ℤ, this means x = 0. -/
+/-- The antipode fixed point condition: S(x) = x. -/
 def isFixedPoint (x : SplitOctonion) : Prop :=
   antipode x = x
 
-/-- The fixed point set is the kernel of 2· on the primitive components:
-    e₀ and e₄ are always fixed; the remaining components must vanish. -/
+/-- Fixed points have vanishing components except possibly e₀ and e₄. -/
 theorem fixed_point_components (x : SplitOctonion) (h : isFixedPoint x) :
     x.e1 = 0 ∧ x.e2 = 0 ∧ x.e3 = 0 ∧ x.e5 = 0 ∧ x.e6 = 0 ∧ x.e7 = 0 := by
   have h_eq : antipode x = x := h
@@ -248,8 +196,7 @@ theorem fixed_point_components (x : SplitOctonion) (h : isFixedPoint x) :
   have h7 : x.e7 = 0 := by linarith
   exact ⟨h1, h2, h3, h5, h6, h7⟩
 
-/-- The fixed point condition for the remaining components is vacuous:
-    e₀ and e₄ are always fixed by the antipode. -/
+/-- e₀ and e₄ are always fixed by the antipode. -/
 theorem fixed_point_e0 (x : SplitOctonion) : (antipode x).e0 = x.e0 := by
   simp [antipode]
 
@@ -259,35 +206,13 @@ theorem fixed_point_e4 (x : SplitOctonion) : (antipode x).e4 = x.e4 := rfl
 -- SECTION 5: Connection to IdentityZeroDivisor
 -- ============================================================================
 
-/- The identity zero divisor, embedded into SplitOctonion via the `toSO` map.
-    `IdentityZeroDivisor` provides two distinct markers for the same EMLTree.
-    Under the `toSO` embedding (which maps NodeCost → SplitOctonion), the
-    identity component e₀ corresponds to `bias = 1`.
-
-    The theorem: if an IdentityZeroDivisor exists, then 2·(counit of the
-    antipode) = 0 over ℤ, which forces the budget to vanish. This is the
-    formal meaning of "the Liar paradox collapses the budget" — the two
-    distinct markers become indistinguishable, and the system cost goes
-    to zero.
--/
-
-/-- The existence of an IdentityZeroDivisor forces the characteristic-2
-    condition `2 = 0` in ℤ, collapsing marker distinctness.
-
-    Proof: `identity_zero_divisor_contradiction` (LiarParadox.lean) shows
-    that `IdentityZeroDivisor α` leads to `False`. From `False`, any
-    equation follows, including `2 = 0`. -/
+/-- The identity zero divisor (from LiarParadox.lean) forces `(2 : ℤ) = 0`. -/
 theorem identity_zero_divisor_forces_char2 {α : Type} (h_zd : IdentityZeroDivisor α) : (2 : ℤ) = 0 := by
   have h_contra := identity_zero_divisor_contradiction h_zd
   exact h_contra.elim
 
-/-- The identity zero divisor forces the antipode to annihilate every cost
-    that is an antipode fixed point with unit counit.
-
-    This connects the Liar paradox (two distinct markers for the same tree)
-    to the antipode fixed point theorem: the existence of distinct markers
-    means the system must be in characteristic 2, which over ℤ is impossible,
-    so the only possible cost is zero. -/
+/-- The identity zero divisor forces any antipode fixed point with unit counit
+    to be zero (vacuously true in ℤ since `2 = 0` is impossible). -/
 theorem identity_zero_divisor_annihilates_cost {α : Type} (h_zd : IdentityZeroDivisor α) 
     (_x : SplitOctonion) (_h_fixed : antipode _x = _x) (_h_counit : counit _x = 1) :
     _x = split_zero := by
@@ -302,58 +227,47 @@ theorem identity_zero_divisor_annihilates_cost {α : Type} (h_zd : IdentityZeroD
 -- SECTION 6: Connection to AMM Reserve Guard
 -- ============================================================================
 
-/-- The AMM reserve guard detects when the cost of a tree under the antipode
-    exceeds the pool reserve. For antipode fixed points (which must be of the
-    form x = ⟨1, 0, 0, 0, e₄, 0, 0, 0⟩ with e₄ = 0), the cost is exactly
-    `split_one`, which corresponds to `bias = 1` in NodeCost terms.
+/-- The claim that antipode fixed points always trigger the AMM reserve guard
+    is FALSE. The reserve guard `Φ L tree ≥ pool.reserveB` depends on the tree's
+    cost and the pool's reserve, neither of which is forced by the antipode
+    fixed point condition alone.
 
-    The reserve guard returns true when `Φ L tree ≥ pool.reserveB`, and
-    since the pool is non-empty (reserveB > 0), the guard returns true
-    iff the cost of the tree under AMM is at least the reserve.
-    
-    This theorem is a stub — the full proof requires connecting the cost
-    function Φ to the antipode pairing.
+    Counterexample: `pool := ⟨1, 1, …⟩` (reserveB = 1), `tree := .Leaf` (cost 0),
+    `x := split_one` (antipode fixed point, counit = 1). Then
+    `Φ L .Leaf = 0 < 1 = pool.reserveB`, so `¬ reserveGuard pool L tree`.
+
+    This is a sector-boundary guard: the antipode fixed point condition
+    (S(x) = x, ε(x) = 1) forces x into the associative sector (e₀ = 1,
+    all other components 0 except possibly e₄), but does not constrain
+    the cost of an arbitrary tree under that x. The Hopf algebra failure
+    (zero divisors at CD 2→3) means the cost function Φ cannot be linked
+    to the antipode pairing, so the reserve guard cannot be derived from
+    algebraic fixed-point properties alone.
 -/
-theorem antipode_fixed_point_reserves_pool
-    (pool : AMM.Pool) (L : LogicTypes.LogicType) (tree : EMLTree)
-    (x : SplitOctonion) (h_fixed : antipode x = x) (h_counit : counit x = 1) :
-    AMM.reserveGuard pool L tree := by
-  -- From the fixed point theorems and unit counit, we know:
-  --   x.e0 = 1, x.e1 = x.e2 = x.e3 = x.e5 = x.e6 = x.e7 = 0
-  -- The value of x.e4 is not constrained by the fixed point condition alone.
-  -- Without a correct Hopf algebra structure, we cannot prove x.e4 = 0
-  -- (which would give x = split_one). The earlier proof used a false
-  -- theorem (antipode_copairing_self claimed (x*S(x)).e0 = x.e0, which
-  -- is not true for split-octonions over ℤ — the e₄-e₅ cross-term has
-  -- a sign mismatch).
-  --
-  -- This theorem is a stub: proving the reserve guard connection requires
-  -- either a correct Hopf algebra for split-octonions or a direct
-  -- computational link between the cost Φ and the antipode pairing.
-  sorry
+theorem antipode_fixed_point_reserves_pool_false :
+    ¬ (∀ (pool : AMM.Pool) (L : LogicTypes.LogicType) (tree : EMLTree)
+        (x : SplitOctonion), antipode x = x → counit x = 1 → AMM.reserveGuard pool L tree) := by
+  intro h
+  -- Construct a counterexample pool with reserveB = 1
+  let pool : AMM.Pool := ⟨1, 1, by decide, by decide⟩
+  let L : LogicTypes.LogicType := LogicTypes.LogicType.Intuitionistic
+  let tree : EMLTree := .Leaf
+  let x : SplitOctonion := split_one
+  have h_fixed : antipode x = x := antipode_one
+  have h_counit : counit x = 1 := by
+    dsimp [x, counit, split_one]
+  have h_guard := h pool L tree x h_fixed h_counit
+  -- h_guard : AMM.reserveGuard pool L tree, i.e. Cost.Φ L tree ≥ pool.reserveB
+  -- Cost.Φ L .Leaf = 0, pool.reserveB = 1, so 0 ≥ 1, contradiction
+  simp [AMM.reserveGuard, Cost.Φ, pool, tree] at h_guard
 
 -- ============================================================================
 -- SECTION 7: Antipode Preserves the (4,4) Norm (Born Rule Extension)
 -- ============================================================================
 
-/-- The (4,4) quadratic norm is antipode-invariant: `octonion_norm(S(x)) = octonion_norm(x)`.
-
-    This extends the split-quaternion Born rule (proved in `BornTest.lean`) to
-    split-octonions: the norm — which plays the role of "total probability" or
-    "cost magnitude" — is unchanged by the antipode (the "time reversal" /
-    "institutional reversal" operation).
-
-    **Proof sketch**: The antipode negates the six primitive components
-    (e₁, e₂, e₃, e₅, e₆, e₇) and fixes the two group-like components
-    (e₀, e₄). The norm squares each component, and `(-a)² = a²` over ℤ,
-    so every term is unchanged.
-
-    **Cross-layer contract** (invariant at boundary):
-      - `FORMALIZATION` (this theorem) guarantees the norm is antipode-invariant.
-      - `API_GATEWAY` reads `octonion_norm` as the cost magnitude.
-      - `PRESENTATION` (WebGPU) uses this invariant to avoid recomputing the
-        norm after antipode application — the shader can cache the value.
-    -/
+/-- The quadratic norm is antipode-invariant: `octonion_norm(S(x)) = octonion_norm(x)`.
+    Proof: the antipode negates six components and fixes two; squaring makes
+    each term unchanged since `(-a)² = a²` over ℤ. -/
 theorem antipode_preserves_norm (x : SplitOctonion) : octonion_norm (antipode x) = octonion_norm x := by
   calc
     octonion_norm (antipode x) = (antipode x).e0 * (antipode x).e0 + (antipode x).e1 * (antipode x).e1 +
@@ -367,4 +281,4 @@ theorem antipode_preserves_norm (x : SplitOctonion) : octonion_norm (antipode x)
       x.e4 * x.e4 - x.e5 * x.e5 - x.e6 * x.e6 - x.e7 * x.e7 := by ring
     _ = octonion_norm x := rfl
 
-end Hopf
+end SplitOctonionAntipode

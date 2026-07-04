@@ -384,7 +384,7 @@ theorem octonionPairing_nondegenerate (y : SplitOctonion)
   apply SplitOctonion.ext_components <;> assumption
 
 /--
-Corollary: The antipode pairing from Hopf.lean is also nondegenerate,
+Corollary: The antipode pairing from SplitOctonionAntipode.lean is also nondegenerate,
 since it equals `octonionPairing` via `octonionPairingAux_eq_antipodePairing`.
 -/
 theorem antipodePairing_nondegenerate (y : SplitOctonion)

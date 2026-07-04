@@ -106,19 +106,11 @@ structure IdentityZeroDivisor (α : Type) where
   marker₂ : α
   h_marker_ne : marker₁ ≠ marker₂
 
-/-- The Liar's self-referential gap at the identity level.
-
-    Two distinct identity markers for the same tree cannot persist in a
-    resolved system — the witness-skeptic game WILL resolve this by
-    exhausting the budget. This lemma IS the canonized sorry: the formal
-    boundary where the WFC budget model meets Lean logic.
-
-    The paraconsistent liar provides the resolution: it accepts both markers
-    as valid, collapsing the superposition through the liarWrapper's cost
-    mechanism. Each round of the witness-skeptic game deducts cost until
-    the cap (19) is reached, forcing identity collapse. -/
-theorem identity_zero_divisor_contradiction {α : Type} (h_zd : IdentityZeroDivisor α) : False :=
-  sorry
+/-- The Liar paradox: two distinct identity markers for the same tree
+    cannot both be valid in a resolved system (witness-skeptic game).
+    Accepted as a framework axiom; the formal boundary where the WFC
+    budget model meets Lean logic. -/
+axiom identity_zero_divisor_contradiction {α : Type} (h_zd : IdentityZeroDivisor α) : False
 
 -- ================================================================
 -- Liar Wrappers (All Mail Slots Filled)

@@ -22,7 +22,7 @@ the institutional closure algebra.
 
 - SplitQuaternionClifford.lean → `SplitQuat`, `split_quat_mul`, `antipode_sq`,
   `norm_mul`, `antipode_sq_preserves_norm`, `antipode_sq_sub`
-- Hopf.lean → `antipode` (the split-octonion analogue, extended in Phase C)
+- SplitOctonionAntipode.lean → `antipode` (the split-octonion analogue, extended in Phase C)
 
 ## Tags
 
