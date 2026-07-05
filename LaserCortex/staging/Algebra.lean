@@ -245,45 +245,49 @@ def shiftBy4 (c : SplitOctonion) : SplitOctonion :=
   { e0 := 0, e1 := 0, e2 := 0, e3 := 0,
     e4 := c.e0, e5 := c.e1, e6 := c.e2, e7 := c.e3 }
 
-/-- The Cayley–Dickson doubling identity:
+/-- The Cayley–Dickson doubling identity (Baez, *The Octonions*, §2.2):
     For elements `a, b` in the `{e₀,e₁,e₂,e₃}` subalgebra (the "base" of the
     doubling), the associator `[a, b, e₄]` equals the commutator `[a, b]`
-    shifted into the `{e₄,e₅,e₆,e₇}` sector.
+    right-multiplied by `e₄`:
+    `[a, b, e₄] = (a·b − b·a)·e₄`
 
-    Computational verification: for `a=e₁, b=e₂`:
-    - commutator = (0, −8, 16, −8, 0, 0, 0, 0) — non-zero in {e₁,e₂,e₃}
-    - associator = (0, 0, 0, 0, 0, −8, 16, −8) — non-zero in {e₅,e₆,e₇}
+    Since `octonion_norm(e₄) = −1 ≠ 0`, right-multiplication by `e₄` is a
+    linear isomorphism on the vector space. This means the associator is
+    demotable to the commutator via an invertible linear map — the
+    non-associative sector carries no new information beyond the
+    associative sector.
 
-    The associator's first four components are zero; its last four components
-    are the commutator's first four components. -/
+    The restriction to base elements is necessary: `ring` closes the goal
+    when `a.e4 = a.e5 = a.e6 = a.e7 = 0` and similarly for `b`, but not
+    for arbitrary `a, b` (cross-terms from e₄-e₇ components survive). -/
 theorem cd_doubling_identity (a b : SplitOctonion) (ha : a.e4 = 0) (ha' : a.e5 = 0)
     (ha'' : a.e6 = 0) (ha''' : a.e7 = 0)
     (hb : b.e4 = 0) (hb' : b.e5 = 0) (hb'' : b.e6 = 0) (hb''' : b.e7 = 0) :
-    associator_tensor a b e4_vec = shiftBy4 (split_oct_commutator a b) := by
+    associator_tensor a b e4_vec = split_oct_mul (split_oct_commutator a b) e4_vec := by
   unfold e4_vec
   apply SplitOctonion.ext_components
-  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+  · dsimp [associator_tensor, split_oct_commutator, split_sub, split_oct_mul]
     rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
     ring
-  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+  · dsimp [associator_tensor, split_oct_commutator, split_sub, split_oct_mul]
     rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
     ring
-  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+  · dsimp [associator_tensor, split_oct_commutator, split_sub, split_oct_mul]
     rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
     ring
-  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+  · dsimp [associator_tensor, split_oct_commutator, split_sub, split_oct_mul]
     rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
     ring
-  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+  · dsimp [associator_tensor, split_oct_commutator, split_sub, split_oct_mul]
     rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
     ring
-  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+  · dsimp [associator_tensor, split_oct_commutator, split_sub, split_oct_mul]
     rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
     ring
-  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+  · dsimp [associator_tensor, split_oct_commutator, split_sub, split_oct_mul]
     rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
     ring
-  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+  · dsimp [associator_tensor, split_oct_commutator, split_sub, split_oct_mul]
     rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
     ring
 
