@@ -33,7 +33,7 @@ staging/
 ### Import hierarchy
 
 ```
-Algebra.lean  (mathlib only)
+Algebra.lean  (mathlib + Algebra internal: SplitQuat, Cl11, Clifford relations)
     │
     ├── Tamari.lean  (mathlib + Algebra)
     │       │
@@ -43,7 +43,7 @@ Algebra.lean  (mathlib only)
     │
     ├── Chu.lean  (mathlib + Algebra)
     │
-    └── Composition.lean  (mathlib + Algebra + Tamari)
+    └── Composition.lean  (mathlib + Algebra + Tamari + Friction)
 ```
 
 Each file depends only on mathlib and previously completed staging files.
@@ -53,12 +53,12 @@ No scaffolding imports.
 
 ## File 1: Algebra.lean
 
-**Source**: `LaserCortex/SplitOctonionCost.lean` (560 lines) + `LaserCortex/Hopf.lean` (284 lines)
-**Lines to port**: ~844 lines
+**Source**: `LaserCortex/SplitOctonionCost.lean` (560 lines) + `LaserCortex/Hopf.lean` (284 lines) + `LaserCortex/SplitQuaternionClifford.lean` (353 lines)
+**Lines to port**: ~1,197 lines (SplitOctonion + SplitQuat + Clifford relations)
 
 ### What it contains
 
-- Split-octonion algebra over ℤ with signature (4,4)
+**SplitOctonion** (signature (4,4)):
 - Q44 quadratic form: positive squares for e₀-e₃, negative squares for e₄-e₇
 - Strut weight: strut_weight = 4
 - ω = e₄ with ω² = +1
@@ -66,22 +66,42 @@ No scaffolding imports.
 - Anticommutation: e₄·e₅ = -e₅·e₄, etc.
 - Antipode non-morphism: S(xy) ≠ S(y)S(x) in general
 
+**SplitQuat** (signature (2,2)):
+- Q11 quadratic form, Cl11 = CliffordAlgebra Q11
+- Clifford relations: e₀² = 1, e₁² = -1, e₀·e₁ + e₁·e₀ = 0
+- SplitQuat type (a, b, c, d)
+- embed: SplitQuat → Cl11 (ℤ-algebra homomorphism)
+- norm: (2,2) norm N(x) = a² + b² - c² - d²
+- antipode_sq: grading involution on SplitQuat
+- split_quat_mul, norm_mul
+
 ### What mathlib already has
 
-- `QuadraticForm` for Q44 (use instead of custom Q44)
-- `CliffordAlgebra` for SplitQuat (use instead of custom SplitQuat)
+- `QuadraticForm` for Q44/Q11 (use instead of custom Q44/Q11)
+- `CliffordAlgebra` for Cl11 (use instead of custom Cl11)
 - `LinearMap` for bilinear forms
+- `QuadraticForm` already provides nondegeneracy
 
 ### What to port
 
-1. SplitOctonion type definition with basis
-2. Q44 as a QuadraticForm
-3. strut_weight = 4
-4. ω definition and ω² = +1 proof
-5. Antipode definition
+**SplitOctonion** (from SplitOctonionCost + Hopf):
+1. SplitOctonion type with 8 basis components
+2. Q44 as QuadraticForm (signature (4,4))
+3. strut_weight = 4 (norm of associator at e₁,e₂,e₄)
+4. ω = e₄, ω² = +1 proof
+5. Antipode S(x)
 6. Anticommutation lemmas
-7. Antipode non-morphism counterexample
-8. Q44 nondegeneracy
+7. Antipode non-morphism: S(xy) ≠ S(y)S(x)
+8. octonion_norm, associator_tensor, pentagon_defect
+
+**SplitQuat** (from SplitQuaternionClifford):
+9. Q11 quadratic form, Cl11 = CliffordAlgebra Q11
+10. e₀, e₁ basis elements + Clifford relations
+11. SplitQuat type (a, b, c, d)
+12. SplitQuat.embed: SplitQuat → Cl11
+13. SplitQuat.norm + norm_mul
+14. split_quat_mul, split_quat_add, split_quat_neg
+15. antipode_sq + 7 theorems
 
 ### What to discard
 
@@ -143,32 +163,36 @@ Shell created. Ready to port.
 ## File 3: Friction.lean
 
 **Source**: `LaserCortex/FrictionLagrangian.lean` (812 lines)
-**Lines to port**: ~812 lines
+**Lines to port**: lines 150-305, 360-400 (core cost definitions)
 
 ### What it contains
 
 - assocDefect: ℕ → ℕ (0 for cdStep ≤ 2, strut_weight for cdStep ≥ 3)
-- frictionDensity: ℕ → ℕ
-- layerCost
-- contracts_to_with_cost
-- Phase change theorem at CD 2→3
-- heightMap_discontinuity_at_cd2_3
+- commDefect: ℕ → ℕ (= k)
+- frictionDensity: ℕ → ℕ (= commDefect + strut_weight * assocDefect)
+- layerCost (simplified: ℕ → ℕ, was LogicType → ℕ)
+- contracts_to_with_cost: cost-annotated Tamari contraction
+- Phase change theorems at CD 2→3
+- heightMap_discontinuity
 
 ### What to port
 
-1. assocDefect definition
-2. assocDefect_phase_change theorem
-3. frictionDensity definition
-4. frictionDensity_monotone theorem
-5. heightMap_discontinuity_at_cd2_3
-6. frictionDensity_jump_at_cd3
-7. contracts_to_with_cost (cost-annotated contraction)
+1. `assocDefect` (line 159) + `assocDefect_zero_up_to_cd2` (line 261)
+2. `commDefect` (line 170)
+3. `frictionDensity` (line 180) + `frictionDensity_at_cl11_boundary` (line 289)
+4. `frictionDensity_jump_at_cd3` (line 296)
+5. `layerCost` (line 195, simplify to `ℕ → ℕ`)
+6. `layerCost_ge_cdStep` (line 202) + `layerCost_eq_cdStep_for_assoc` (line 209)
+7. `contracts_to_with_cost` (line 655) + related theorems (663-714)
 
 ### What to discard
 
 - Metaphorical "Friction Lagrangian" language
 - Continuous Lagrangian stub (unformalized research gap)
 - References to action functionals, Lagrangian density
+- Tower/Problem scaffolding (lines 84-89, 230-258, 360-640)
+- EngineState, LodayCoords (lines 394-527)
+- Flat cost sum, frictionLagrangian_ge_flatSum (lines 230-258)
 
 ### Status
 
@@ -179,7 +203,7 @@ Shell created. Ready to port.
 ## File 4: OctilinearEmbedding.lean
 
 **Source**: `LaserCortex/TropicalCovector.lean` (511 lines) + `LaserCortex/TropicalTamariLattice.lean` (516 lines)
-**Lines to port**: ~1,027 lines
+**Lines to port**: lines 63-300, 300-511 from TropicalCovector; lines 431-503 from TropicalTamariLattice
 
 ### What it contains
 
@@ -189,23 +213,30 @@ Shell created. Ready to port.
 - cd3_nonassociative_signature: algebra signature from tree measures
 - tubeCoord_cd_diff: coordinates depend on components, not CD step
 - tubeCoord_monotone: monotonicity along contraction paths
+- kktMultiplierOct, covectorProjectionOct, tubeCoordOct (octonion versions)
+- pairing_signature_phase_change, cd3_nonassociative_signature
 
 ### What to port
 
-1. kktMultiplier definition
-2. covectorProjection definition
-3. tubeCoord definition
-4. tubeCoord_cd_diff theorem
-5. tubeCoord_x_eq_size_plus_assocDefect
-6. tubeCoord_y_eq_leftWeight_sub_rightWeight
-7. cd3_nonassociative_signature theorem
-8. tubeCoord_monotone theorem
-9. tubeCoord rightComb/leaf/node theorems
+1. `kktMultiplier` (line 92) + `kktMultiplier_antipode` (103)
+2. `covectorProjection` (line 135) + `covectorProjection_antipode` (143)
+3. `tubeCoord` (line 170) + `tubeCoord_expand` (176)
+4. `tubeCoord_leaf` (185), `tubeCoord_node_leaf_leaf` (192)
+5. `tubeCoord_rightComb` (201), `tubeCoord_assoc_step` (220)
+6. `tubeCoord_cd_diff` (247) + `tubeCoord_x_eq_size_plus_assocDefect` (257)
+7. `tubeCoord_y_eq_leftWeight_sub_rightWeight` (266)
+8. `tubeCoord_monotone` (from TropicalTamariLattice)
+9. `kktMultiplierOct` (line 300), `covectorProjectionOct` (347)
+10. `tubeCoordOct` (line 381) + `tubeCoordOct_eq_tubeCoord` (393)
+11. `pairing_signature_phase_change` (line 483)
+12. `cd3_nonassociative_signature` (line 503)
 
 ### What to discard
 
 - "Tube map" metaphor
-- Tropical lattice references (not the same as mathlib Tropical)
+- Tropical lattice instances (lines 88-92, already in mathlib)
+- Develin-Sturmfels scaffolding (lines 176-388)
+- EdgeAngle (line 499)
 - Interpretive comments about geometry
 
 ### Status
@@ -217,30 +248,43 @@ Shell created. Ready to port.
 ## File 5: Chu.lean
 
 **Source**: `LaserCortex/Chu.lean` (727 lines)
-**Lines to port**: ~727 lines
+**Lines to port**: lines 60-104, 122-216, 239-347, 412-621
+**Imports**: `Mathlib + LaserCortex.staging.Algebra`
 
 ### What it contains
 
-- SplitQuat type (split quaternion algebra)
-- split_one, split_zero
-- splitQuatPairing: SplitOctonion → SplitOctonion → ℤ
+- ChuSpace: triple (a, a', β) with ℤ-bilinear pairing
+- splitQuatPairing: SplitQuat → SplitQuat → ℤ (canonical bilinear form)
 - splitQuatPairing_nondegenerate
-- Behavior on associative vs non-associative sectors
+- octonionPairing: SplitOctonion → SplitOctonion → ℤ (polarization of (4,4) norm)
+- octonionPairing_nondegenerate
+- antipodePairing_nondegenerate
+- chuEmbed: SplitQuat → Cl11 (algebra homomorphism)
+- chu_embed_mul, chu_zsmul_eq_mul
+- ChuTensor, ChuSeq (monoidal structure)
+- dualize, star_involutive
+- kkt_stationarity, kkt_complementarity
 
 ### What to port
 
-1. SplitQuat type definition
-2. split_one, split_zero definitions
-3. splitQuatPairing definition
-4. splitQuatPairing_nondegenerate theorem
-5. split_one_pairing, split_zero_pairing
-6. Associative sector behavior
-7. Non-associative sector behavior
+1. `ChuSpace` structure (line 84) + `primal`/`dual`/`dualize` (91-104)
+2. `splitQuatPairingAux` (line 122) + `splitQuatPairing` (line 146)
+3. `splitQuatPairingAux_symm` (line 167) + `splitQuatPairing_antipode_symm` (line 177)
+4. `splitQuatPairing_nondegenerate` (line 196)
+5. `octonionPairingAux` (line 239) + `octonionPairing` (line 282)
+6. `octonionPairingAux_symm` (line 309) + `octonionPairing_antipode_symm` (line 322)
+7. `octonionPairing_nondegenerate` (line 349) + `antipodePairing_nondegenerate` (line 390)
+8. `chuEmbed` (line 412) + `chuSpaceOf` (line 422)
+9. `chu_embed_mul` (line 456) + `chu_zsmul_eq_mul` (line 481)
+10. `ChuTensor` (line 500), `ChuSeq` (line 517)
+11. `dualize_chuSpaceOf` (line 560) + `star_involutive` (line 568)
+12. `kkt_stationarity` (line 599) + `kkt_complementarity` (line 614)
 
 ### What to discard
 
+- CD-homotopy bridge (lines 639-727): `norm_via_pairing`, `zdFreeAtStep2_from_chu_nondegenerate`
 - Metaphorical docstrings
-- Chu space references (category theory wrapper)
+- Chu space category-theoretic wrapper (ChuSeq, ChuTensor are algebraic, not categorical)
 
 ### Status
 
@@ -251,26 +295,34 @@ Shell created. Ready to port.
 ## File 6: Composition.lean
 
 **Source**: `LaserCortex/QuantizedType.lean` (353 lines)
-**Lines to port**: ~353 lines
+**Lines to port**: lines 34-37, 68-71, 104-107, 145-166, 180-198, 247-270, 320-351
+**Imports**: `Mathlib + LaserCortex.staging.Algebra + LaserCortex.staging.Tamari + LaserCortex.staging.Friction`
 
 ### What it contains
 
-- QuantizedType: the composition type at a given cdStep
-- CompositionSpec: specification of a valid composition
-- free_not_quantized: Free Logic cannot be quantized (counterexample)
-- CompositionSpec factory
+- EvaluatorKind: tamariBP | amm
+- QuantizedType: logic type + evaluator + boundedness proof
+- CompositionError: typeViolation | zeroDivisor
+- CompositionSpec: valid composition specification with Prop proof fields
+- free_not_quantized: counterexample proof (leftComb 22)
+- quantized_types_are_exactly_non_meta_logics: partition theorem
 
 ### What to port
 
-1. QuantizedType definition
-2. CompositionSpec definition
-3. free_not_quantized theorem
-4. CompositionSpec_valid
+1. `EvaluatorKind` (line 34)
+2. `QuantizedType` (line 68) + `quantizedFrictionDensity` (line 77)
+3. `CompositionError` (line 104)
+4. `CompositionSpec` (line 145) + `CompositionSpec.error` (line 163)
+5. `compositionSpec_valid_iff` (line 180)
+6. `CompositionSpec.result` (line 214)
+7. `free_not_quantized` (line 247)
+8. `quantized_types_are_exactly_non_meta_logics` (line 324)
 
 ### What to discard
 
-- Metaphorical "QuantizedType factory" language
-- References to "logic of will", Gödelian incompleteness framing
+- LogicTypes dependency (lines 1-33, 84-100, 115-161, 188-246, 272-322): scaffolding
+- "Factory" metaphor
+- Metaphorical docstrings
 
 ### Status
 
@@ -318,7 +370,7 @@ At each step:
 
 Final verification:
 1. `lake build` — full build passes
-2. `lake build LaserCortex.Algebra` — each file builds independently
+2. `lake build LaserCortex.Algebra` — SplitOctonion + SplitQuat + Clifford
 3. `lake build LaserCortex.Tamari`
 4. `lake build LaserCortex.Friction`
 5. `lake build LaserCortex.OctilinearEmbedding`
@@ -350,19 +402,19 @@ These are documented but not yet formalized. They should be stated as
 
 ## ToDo
 
-### Phase 1: Algebra
+### Stage 0: SplitQuat in Algebra.lean
 
-- [ ] SplitOctonion type over ℤ with basis e₀-e₇
-- [ ] Q44 as QuadraticForm (signature (4,4))
-- [ ] strut_weight = 4
-- [ ] ω = e₄, ω² = +1
-- [ ] Antipode S(x) = +x for i<4, -x for i≥4
-- [ ] Anticommutation lemmas
-- [ ] Antipode non-morphism: S(xy) ≠ S(y)S(x)
-- [ ] Q44 nondegeneracy proof
+- [ ] Q11 quadratic form (signature (2,2))
+- [ ] Cl11 = CliffordAlgebra Q11
+- [ ] e₀, e₁ basis elements + Clifford relations (e₀²=1, e₁²=-1, e₀·e₁+e₁·e₀=0)
+- [ ] SplitQuat type (a, b, c, d)
+- [ ] SplitQuat.embed: SplitQuat → Cl11
+- [ ] SplitQuat.norm + norm_mul theorem
+- [ ] split_quat_mul, split_quat_add, split_quat_neg
+- [ ] antipode_sq + 7 theorems
 - [ ] Run `lake build LaserCortex.Algebra`
 
-### Phase 2: Tamari
+### Stage 1: Tamari
 
 - [ ] EMLTree inductive type (size, depth, leftWeight, rightWeight)
 - [ ] contracts_one (right rotation)
@@ -376,57 +428,67 @@ These are documented but not yet formalized. They should be stated as
 - [ ] dcStep termination proof
 - [ ] Run `lake build LaserCortex.Tamari`
 
-### Phase 3: Friction
+### Stage 2: Friction
 
-- [ ] assocDefect definition
-- [ ] assocDefect_phase_change theorem
-- [ ] frictionDensity definition
-- [ ] frictionDensity_monotone theorem
-- [ ] heightMap_discontinuity_at_cd2_3
-- [ ] frictionDensity_jump_at_cd3
-- [ ] contracts_to_with_cost
+- [ ] assocDefect definition (line 159) + phase change (line 261)
+- [ ] commDefect definition (line 170)
+- [ ] frictionDensity definition (line 180) + boundary/jump (lines 289-296)
+- [ ] layerCost (line 195, simplified to ℕ → ℕ)
+- [ ] layerCost_ge_cdStep (line 202) + layerCost_eq_cdStep_for_assoc (line 209)
+- [ ] contracts_to_with_cost (line 655) + related theorems (663-714)
 - [ ] Run `lake build LaserCortex.Friction`
 
-### Phase 4: OctilinearEmbedding
+### Stage 3: OctilinearEmbedding
 
-- [ ] kktMultiplier: EMLTree → SplitQuat
-- [ ] covectorProjection: SplitQuat → ℤ × ℤ
-- [ ] tubeCoord: EMLTree → ℤ × ℤ
-- [ ] tubeCoord_x_eq_size_plus_assocDefect
-- [ ] tubeCoord_y_eq_leftWeight_sub_rightWeight
-- [ ] tubeCoord_cd_diff
-- [ ] cd3_nonassociative_signature
-- [ ] tubeCoord_monotone
+- [ ] kktMultiplier: EMLTree → SplitQuat (line 92)
+- [ ] covectorProjection: SplitQuat → ℤ × ℤ (line 135)
+- [ ] tubeCoord: EMLTree → ℤ × ℤ (line 170)
+- [ ] tubeCoord_leaf, tubeCoord_node_leaf_leaf, tubeCoord_rightComb (lines 185-201)
+- [ ] tubeCoord_assoc_step (line 220)
+- [ ] tubeCoord_cd_diff (line 247) + tubeCoord_x_eq_size_plus_assocDefect (line 257)
+- [ ] tubeCoord_y_eq_leftWeight_sub_rightWeight (line 266)
+- [ ] kktMultiplierOct, covectorProjectionOct, tubeCoordOct (lines 300-393)
+- [ ] pairing_signature_phase_change (line 483)
+- [ ] cd3_nonassociative_signature (line 503)
 - [ ] Run `lake build LaserCortex.OctilinearEmbedding`
 
-### Phase 5: Chu
+### Stage 4: Chu
 
-- [ ] SplitQuat type
-- [ ] split_one, split_zero
-- [ ] splitQuatPairing
-- [ ] splitQuatPairing_nondegenerate
-- [ ] split_one_pairing, split_zero_pairing
-- [ ] Associative sector behavior
-- [ ] Non-associative sector behavior
+- [ ] ChuSpace structure (line 84)
+- [ ] splitQuatPairingAux + splitQuatPairing (lines 122-163)
+- [ ] splitQuatPairing_symm + splitQuatPairing_antipode_symm (lines 167-179)
+- [ ] splitQuatPairing_nondegenerate (line 196)
+- [ ] octonionPairingAux + octonionPairing (lines 239-301)
+- [ ] octonionPairing_symm + octonionPairing_antipode_symm (lines 309-324)
+- [ ] octonionPairing_nondegenerate (line 349) + antipodePairing_nondegenerate (line 390)
+- [ ] chuEmbed + chuSpaceOf (lines 412-425)
+- [ ] chu_embed_mul (line 456) + chu_zsmul_eq_mul (line 481)
+- [ ] ChuTensor, ChuSeq (lines 500-520)
+- [ ] dualize_chuSpaceOf + star_involutive (lines 560-569)
+- [ ] kkt_stationarity + kkt_complementarity (lines 599-615)
 - [ ] Run `lake build LaserCortex.Chu`
 
-### Phase 6: Composition
+### Stage 5: Composition
 
-- [ ] QuantizedType definition
-- [ ] CompositionSpec definition
-- [ ] free_not_quantized theorem
-- [ ] CompositionSpec_valid
+- [ ] EvaluatorKind: tamariBP | amm (line 34)
+- [ ] QuantizedType structure (line 68)
+- [ ] CompositionError: typeViolation | zeroDivisor (line 104)
+- [ ] CompositionSpec with Prop proof fields (line 145)
+- [ ] CompositionSpec.error + compositionSpec_valid_iff (lines 163-198)
+- [ ] CompositionSpec.result (line 214)
+- [ ] free_not_quantized counterexample (line 247)
+- [ ] quantized_types_are_exactly_non_meta_logics (line 324)
 - [ ] Run `lake build LaserCortex.Composition`
 
-### Phase 7: Full build + cleanup
+### Stage 6: Full build + cleanup
 
 - [ ] Full `lake build` passes
 - [ ] Remove umbrella `LaserCortex.lean`
-- [ ] Remove scaffolding files (Phase 1-6)
+- [ ] Remove scaffolding files
 - [ ] Update `.gitignore` if needed
 - [ ] Commit all changes
 
-### Phase 8: Research gaps
+### Stage 7: Research gaps
 
 - [ ] Formalize `continuous_lagrangian_stub` (research gap)
 - [ ] Reverse direction of Develin-Sturmfels correspondence (research gap)
