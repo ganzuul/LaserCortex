@@ -318,6 +318,249 @@ theorem antipode_copairing_self (x : SplitOctonion) : (split_oct_mul x (antipode
   ring
 
 -- ============================================================================
+-- SplitQuat: split quaternion algebra ℍ̃ (signature (2,2))
+-- Ported from SplitQuaternionClifford.lean
+-- ============================================================================
+
+open QuadraticMap
+
+/-- The (1,1) quadratic form over ℤ on Fin 2 → ℤ. Signature: (+1, -1). -/
+def Q11 : QuadraticForm ℤ (Fin 2 → ℤ) :=
+  proj 0 0 - proj 1 1
+
+/-- The Clifford algebra Cl(1,1) over ℤ. -/
+abbrev Cl11 : Type := CliffordAlgebra Q11
+
+/-- Basis vector e₀ ∈ Fin 2 → ℤ: (1,0). -/
+def ε0 : Fin 2 → ℤ := fun i => if i = 0 then (1 : ℤ) else 0
+
+/-- Basis vector e₁ ∈ Fin 2 → ℤ: (0,1). -/
+def ε1 : Fin 2 → ℤ := fun i => if i = 1 then (1 : ℤ) else 0
+
+/-- Generator e₀ ∈ Cl(1,1): squares to 1. -/
+def e0' : Cl11 := CliffordAlgebra.ι Q11 ε0
+
+/-- Generator e₁ ∈ Cl(1,1): squares to -1. -/
+def e1' : Cl11 := CliffordAlgebra.ι Q11 ε1
+
+theorem e0_sq' : e0' * e0' = (1 : Cl11) := by
+  calc
+    e0' * e0' = (CliffordAlgebra.ι Q11 ε0) * (CliffordAlgebra.ι Q11 ε0) := rfl
+    _ = algebraMap ℤ (CliffordAlgebra Q11) (Q11 ε0) :=
+      CliffordAlgebra.ι_sq_scalar Q11 ε0
+    _ = algebraMap ℤ (CliffordAlgebra Q11) (1 : ℤ) := by
+      simp [Q11, ε0, QuadraticMap.proj_apply]
+    _ = (1 : CliffordAlgebra Q11) := by simp
+    _ = (1 : Cl11) := rfl
+
+theorem e1_sq' : e1' * e1' = (-1 : Cl11) := by
+  calc
+    e1' * e1' = (CliffordAlgebra.ι Q11 ε1) * (CliffordAlgebra.ι Q11 ε1) := rfl
+    _ = algebraMap ℤ (CliffordAlgebra Q11) (Q11 ε1) :=
+      CliffordAlgebra.ι_sq_scalar Q11 ε1
+    _ = algebraMap ℤ (CliffordAlgebra Q11) (-1 : ℤ) := by
+      simp [Q11, ε1, QuadraticMap.proj_apply]
+    _ = (-1 : CliffordAlgebra Q11) := by simp
+    _ = (-1 : Cl11) := rfl
+
+theorem anticommute' : e0' * e1' + e1' * e0' = 0 := by
+  have h := CliffordAlgebra.mul_add_swap_eq_polar_of_forall_mul_self_eq
+    (CliffordAlgebra.ι Q11)
+    (fun m : Fin 2 → ℤ => CliffordAlgebra.ι_sq_scalar Q11 m)
+    ε0 ε1
+  calc
+    e0' * e1' + e1' * e0' =
+        (CliffordAlgebra.ι Q11 ε0) * (CliffordAlgebra.ι Q11 ε1) +
+        (CliffordAlgebra.ι Q11 ε1) * (CliffordAlgebra.ι Q11 ε0) := rfl
+    _ = algebraMap ℤ (CliffordAlgebra Q11) (QuadraticMap.polar Q11 ε0 ε1) := h
+    _ = algebraMap ℤ (CliffordAlgebra Q11) (0 : ℤ) := by
+      simp [Q11, ε0, ε1, QuadraticMap.polar, QuadraticMap.proj_apply]
+    _ = (0 : CliffordAlgebra Q11) := by simp
+    _ = (0 : Cl11) := rfl
+
+-- ============================================================================
+-- SplitQuat type and basis
+-- ============================================================================
+
+structure SplitQuat where
+  a : Int  -- scalar component
+  b : Int  -- i coefficient
+  c : Int  -- j coefficient
+  d : Int  -- k = ij coefficient
+  deriving Repr
+
+def split_quat_zero : SplitQuat := ⟨0, 0, 0, 0⟩
+def split_quat_one : SplitQuat := ⟨1, 0, 0, 0⟩
+
+def split_quat_add (x y : SplitQuat) : SplitQuat :=
+  ⟨x.a + y.a, x.b + y.b, x.c + y.c, x.d + y.d⟩
+
+def split_quat_neg (x : SplitQuat) : SplitQuat :=
+  ⟨-x.a, -x.b, -x.c, -x.d⟩
+
+@[ext]
+lemma SplitQuat.ext_components {x y : SplitQuat}
+    (ha : x.a = y.a) (hb : x.b = y.b) (hc : x.c = y.c) (hd : x.d = y.d) : x = y := by
+  cases x; cases y
+  simp at ha hb hc hd
+  simp [ha, hb, hc, hd]
+
+instance : Add SplitQuat := ⟨split_quat_add⟩
+instance : Zero SplitQuat := ⟨split_quat_zero⟩
+instance : Neg SplitQuat := ⟨split_quat_neg⟩
+
+instance : AddCommGroup SplitQuat where
+  zero := split_quat_zero
+  add := split_quat_add
+  neg := split_quat_neg
+  add_assoc := by
+    intro a b c
+    calc
+      (a + b) + c = split_quat_add (split_quat_add a b) c := rfl
+      _ = split_quat_add a (split_quat_add b c) := by
+        apply SplitQuat.ext_components <;> dsimp [split_quat_add] <;> ring
+      _ = a + (b + c) := rfl
+  zero_add := by
+    intro a
+    calc
+      0 + a = split_quat_add split_quat_zero a := rfl
+      _ = a := by
+        apply SplitQuat.ext_components <;> dsimp [split_quat_add, split_quat_zero] <;> ring
+  add_zero := by
+    intro a
+    calc
+      a + 0 = split_quat_add a split_quat_zero := rfl
+      _ = a := by
+        apply SplitQuat.ext_components <;> dsimp [split_quat_add, split_quat_zero] <;> ring
+  add_comm := by
+    intro a b
+    calc
+      a + b = split_quat_add a b := rfl
+      _ = split_quat_add b a := by
+        apply SplitQuat.ext_components <;> dsimp [split_quat_add] <;> ring
+      _ = b + a := rfl
+  neg_add_cancel := by
+    intro a
+    calc
+      (-a) + a = split_quat_add (split_quat_neg a) a := rfl
+      _ = split_quat_zero := by
+        apply SplitQuat.ext_components <;> dsimp [split_quat_add, split_quat_neg, split_quat_zero] <;> ring
+      _ = 0 := rfl
+  nsmul := nsmulRec
+  nsmul_zero := by intro x; rfl
+  nsmul_succ := by intro n x; rfl
+  zsmul := zsmulRec
+  zsmul_zero' := by intro x; rfl
+  zsmul_succ' := by intro n x; rfl
+  zsmul_neg' := by intro n x; rfl
+  sub_eq_add_neg := by intro a b; rfl
+
+instance : DecidableEq SplitQuat :=
+  λ x y =>
+    match x, y with
+    | ⟨a1, b1, c1, d1⟩, ⟨a2, b2, c2, d2⟩ =>
+      if ha : a1 = a2 then
+        if hb : b1 = b2 then
+          if hc : c1 = c2 then
+            if hd : d1 = d2 then isTrue (by subst ha; subst hb; subst hc; subst hd; rfl)
+            else isFalse (λ h => hd (congrArg SplitQuat.d h))
+          else isFalse (λ h => hc (congrArg SplitQuat.c h))
+        else isFalse (λ h => hb (congrArg SplitQuat.b h))
+      else isFalse (λ h => ha (congrArg SplitQuat.a h))
+
+-- ============================================================================
+-- SplitQuat multiplication table
+-- ============================================================================
+
+def split_quat_mul (x y : SplitQuat) : SplitQuat :=
+  ⟨x.a*y.a - x.b*y.b + x.c*y.c + x.d*y.d,
+   x.a*y.b + x.b*y.a - x.c*y.d + x.d*y.c,
+   x.a*y.c - x.b*y.d + x.c*y.a + x.d*y.b,
+   x.a*y.d + x.b*y.c - x.c*y.b + x.d*y.a⟩
+
+instance : Mul SplitQuat := ⟨split_quat_mul⟩
+
+theorem split_quat_mul_assoc (x y z : SplitQuat) : (x * y) * z = x * (y * z) := by
+  apply SplitQuat.ext_components
+  · change (split_quat_mul (split_quat_mul x y) z).a = (split_quat_mul x (split_quat_mul y z)).a; dsimp [split_quat_mul]; ring
+  · change (split_quat_mul (split_quat_mul x y) z).b = (split_quat_mul x (split_quat_mul y z)).b; dsimp [split_quat_mul]; ring
+  · change (split_quat_mul (split_quat_mul x y) z).c = (split_quat_mul x (split_quat_mul y z)).c; dsimp [split_quat_mul]; ring
+  · change (split_quat_mul (split_quat_mul x y) z).d = (split_quat_mul x (split_quat_mul y z)).d; dsimp [split_quat_mul]; ring
+
+-- ============================================================================
+-- SplitQuat norm (composition algebra property)
+-- ============================================================================
+
+def SplitQuat.norm (x : SplitQuat) : ℤ :=
+  x.a * x.a + x.b * x.b - x.c * x.c - x.d * x.d
+
+theorem splitQuat_norm_mul (x y : SplitQuat) : (x * y).norm = x.norm * y.norm := by
+  have hmul : ∀ (a b : SplitQuat), a * b = split_quat_mul a b := λ _ _ => rfl
+  simp [SplitQuat.norm, hmul, split_quat_mul]; ring
+
+-- ============================================================================
+-- SplitQuat embedding into Cl(1,1)
+-- ============================================================================
+
+def SplitQuat.embed (x : SplitQuat) : Cl11 :=
+  algebraMap ℤ Cl11 x.a
+  + x.b • e1'
+  + x.c • e0'
+  + x.d • (e1' * e0')
+
+-- ============================================================================
+-- Q22 quadratic form
+-- ============================================================================
+
+/-- The (2,2) quadratic form as a Mathlib `QuadraticForm ℤ (Fin 4 → ℤ)`. -/
+def Q22 : QuadraticForm ℤ (Fin 4 → ℤ) :=
+  proj 0 0 + proj 1 1 - proj 2 2 - proj 3 3
+
+theorem norm_eq_Q22 (x : SplitQuat) : x.norm = Q22 ![x.a, x.b, x.c, x.d] := by
+  simp [Q22, SplitQuat.norm, QuadraticMap.proj_apply]
+
+-- ============================================================================
+-- Antipode for SplitQuat (grading involution)
+-- ============================================================================
+
+def antipode_sq (x : SplitQuat) : SplitQuat :=
+  ⟨x.a, -x.b, -x.c, -x.d⟩
+
+theorem antipode_sq_add (x y : SplitQuat) : antipode_sq (x + y) = antipode_sq x + antipode_sq y := by
+  apply SplitQuat.ext_components
+  · rfl
+  · change (antipode_sq (split_quat_add x y)).b = (split_quat_add (antipode_sq x) (antipode_sq y)).b; dsimp [antipode_sq, split_quat_add]; ring
+  · change (antipode_sq (split_quat_add x y)).c = (split_quat_add (antipode_sq x) (antipode_sq y)).c; dsimp [antipode_sq, split_quat_add]; ring
+  · change (antipode_sq (split_quat_add x y)).d = (split_quat_add (antipode_sq x) (antipode_sq y)).d; dsimp [antipode_sq, split_quat_add]; ring
+
+theorem antipode_sq_involutive (x : SplitQuat) : antipode_sq (antipode_sq x) = x := by
+  ext <;> simp [antipode_sq]
+
+theorem antipode_sq_preserves_norm (x : SplitQuat) : (antipode_sq x).norm = x.norm := by
+  simp [antipode_sq, SplitQuat.norm]
+
+theorem antipode_sq_neg (x : SplitQuat) : antipode_sq (-x) = -antipode_sq x := by
+  apply SplitQuat.ext_components
+  · rfl
+  · rfl
+  · rfl
+  · rfl
+
+theorem antipode_sq_sub (x y : SplitQuat) : antipode_sq (x - y) = antipode_sq x - antipode_sq y := by
+  calc
+    antipode_sq (x - y) = antipode_sq (x + (-y)) := rfl
+    _ = antipode_sq x + antipode_sq (-y) := antipode_sq_add x (-y)
+    _ = antipode_sq x + (-antipode_sq y) := by rw [antipode_sq_neg y]
+    _ = antipode_sq x - antipode_sq y := rfl
+
+theorem antipode_sq_mul (x y : SplitQuat) : antipode_sq (x * y) = antipode_sq y * antipode_sq x := by
+  apply SplitQuat.ext_components
+  · change (antipode_sq (split_quat_mul x y)).a = (split_quat_mul (antipode_sq y) (antipode_sq x)).a; dsimp [antipode_sq, split_quat_mul]; ring
+  · change (antipode_sq (split_quat_mul x y)).b = (split_quat_mul (antipode_sq y) (antipode_sq x)).b; dsimp [antipode_sq, split_quat_mul]; ring
+  · change (antipode_sq (split_quat_mul x y)).c = (split_quat_mul (antipode_sq y) (antipode_sq x)).c; dsimp [antipode_sq, split_quat_mul]; ring
+  · change (antipode_sq (split_quat_mul x y)).d = (split_quat_mul (antipode_sq y) (antipode_sq x)).d; dsimp [antipode_sq, split_quat_mul]; ring
+
+-- ============================================================================
 -- Antipode fixed points
 -- ============================================================================
 
