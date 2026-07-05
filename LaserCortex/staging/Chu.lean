@@ -275,6 +275,14 @@ theorem dualize_chuSpaceOf (x : SplitQuat) : dualize SplitQuat (chuSpaceOf x) = 
 theorem star_involutive (x : SplitQuat) : dualize SplitQuat (dualize SplitQuat (chuSpaceOf x)) = chuSpaceOf x := by
   simp [dualize_dualize]
 
+theorem ChuTensor_assoc (X Y Z : ChuSpace SplitQuat) :
+    ChuTensor (ChuTensor X Y) Z = ChuTensor X (ChuTensor Y Z) := by
+  ext <;> dsimp [ChuTensor] <;> ring
+
+theorem ChuSeq_assoc (X Y Z : ChuSpace SplitQuat) :
+    ChuSeq (ChuSeq X Y) Z = ChuSeq X (ChuSeq Y Z) := by
+  ext <;> dsimp [ChuSeq] <;> ring
+
 theorem kkt_stationarity (x y : SplitQuat) : SplitQuat.embed (x * y) = SplitQuat.embed x * SplitQuat.embed y :=
   chu_embed_mul x y
 
