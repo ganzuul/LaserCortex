@@ -111,7 +111,11 @@ No scaffolding imports.
 
 ### Status
 
-DONE. 608 lines. All SplitOctonion + SplitQuat definitions and theorems compile.
+DONE. 809 lines. All SplitOctonion + SplitQuat definitions and theorems compile.
+  - `pentagon_defect` corrected: five distinct bracketings (was copy-paste bug with repeated term)
+  - `split_oct_commutator` defined: commutator on SplitOctonion
+  - `shiftBy4` defined: embeds commutator's first 4 components into e₄-e₇ sector
+  - `cd_doubling_identity` proven: associator_tensor a b e4_vec = shiftBy4 (split_oct_commutator a b) for base subalgebra elements
 
 ---
 

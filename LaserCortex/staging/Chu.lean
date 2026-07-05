@@ -15,6 +15,15 @@ We construct the canonical ℤ-bilinear pairings on `SplitQuat` and
 namespace Chu
 
 -- ============================================================================
+-- Local lemma: scalars commute with all elements in the Clifford algebra
+-- Note: we avoid @[simp] because it causes infinite loops with mul_assoc.
+-- Use `rw [mul_intCast_eq_intCast_mul]` explicitly.
+-- ============================================================================
+
+theorem mul_intCast_eq_intCast_mul (r : ℤ) (x : Cl11) : x * (r : Cl11) = (r : Cl11) * x := by
+  simpa using (Algebra.commutes r x).symm
+
+-- ============================================================================
 -- Local @[simp] lemmas for component access
 -- These are definitionally true (rfl) and safe to add anywhere.
 -- They let `simp` expand `(x+y).a` to `x.a+y.a` etc. before `ring`.
@@ -25,10 +34,10 @@ namespace Chu
 @[simp] theorem split_quat_add_c (x y : SplitQuat) : (x + y).c = x.c + y.c := rfl
 @[simp] theorem split_quat_add_d (x y : SplitQuat) : (x + y).d = x.d + y.d := rfl
 
-@[simp] theorem split_quat_mul_a (x y : SplitQuat) : (x * y).a = x.a * y.a - x.b * y.b + x.c * y.c + x.d * y.d := rfl
-@[simp] theorem split_quat_mul_b (x y : SplitQuat) : (x * y).b = x.a * y.b + x.b * y.a - x.c * y.d + x.d * y.c := rfl
-@[simp] theorem split_quat_mul_c (x y : SplitQuat) : (x * y).c = x.a * y.c - x.b * y.d + x.c * y.a + x.d * y.b := rfl
-@[simp] theorem split_quat_mul_d (x y : SplitQuat) : (x * y).d = x.a * y.d + x.b * y.c - x.c * y.b + x.d * y.a := rfl
+theorem split_quat_mul_a (x y : SplitQuat) : (x * y).a = x.a * y.a - x.b * y.b + x.c * y.c + x.d * y.d := rfl
+theorem split_quat_mul_b (x y : SplitQuat) : (x * y).b = x.a * y.b + x.b * y.a - x.c * y.d + x.d * y.c := rfl
+theorem split_quat_mul_c (x y : SplitQuat) : (x * y).c = x.a * y.c - x.b * y.d + x.c * y.a + x.d * y.b := rfl
+theorem split_quat_mul_d (x y : SplitQuat) : (x * y).d = x.a * y.d + x.b * y.c - x.c * y.b + x.d * y.a := rfl
 
 @[simp] theorem split_add_e0 (x y : SplitOctonion) : (x + y).e0 = x.e0 + y.e0 := rfl
 @[simp] theorem split_add_e1 (x y : SplitOctonion) : (x + y).e1 = x.e1 + y.e1 := rfl
@@ -70,8 +79,7 @@ def splitQuatPairingAux (y z : SplitQuat) : ℤ :=
 theorem splitQuatPairingAux_eq_product (y z : SplitQuat) :
     splitQuatPairingAux y z = (antipode_sq y * z).a := by
   dsimp [splitQuatPairingAux, antipode_sq]
-  simp
-  ring
+  simp [split_quat_mul_a, neg_mul, mul_neg, sub_eq_add_neg]
 
 def splitQuatPairing : SplitQuat →ₗ[ℤ] SplitQuat →ₗ[ℤ] ℤ :=
   { toFun := λ y =>
@@ -225,23 +233,10 @@ def chuSpaceOf (x : SplitQuat) : ChuSpace SplitQuat :=
     pair := splitQuatPairing }
 
 theorem chu_embed_mul (x y : SplitQuat) : SplitQuat.embed (x * y) = SplitQuat.embed x * SplitQuat.embed y := by
-  dsimp [SplitQuat.embed, split_quat_mul]
-  -- Convert all • to * using Algebra.smul_def
-  -- Use `simp` (not `erw`) since Algebra.smul_def is already in the default simp set
-  -- But we need to apply it to all subterms; use `conv` with `simp`
-  conv =>
-    lhs
-    simp [Algebra.smul_def]
-  conv =>
-    rhs
-    simp [Algebra.smul_def]
-  -- Now both sides are expressed with * and algebraMap
-  -- Expand the RHS product
+  unfold SplitQuat.embed
+  simp [Algebra.smul_def]
   noncomm_ring
-  -- Apply Clifford relations: e0'^2 = 1, e1'^2 = -1, e0'*e1' = -(e1'*e0')
-  -- Use `simp` with `mul_assoc` to rewrite powers
-  simp [e0_sq', e1_sq', anticommute', mul_assoc]
-  -- Now both sides are linear combinations of {1, e0', e1', e0'*e1'} with scalar coefficients
+  simp [e0_sq', e1_sq', anticommute', mul_assoc, Algebra.commutes]
   ring
 
 theorem chu_zsmul_eq_mul (r : ℤ) (x : Cl11) : r • x = (algebraMap ℤ Cl11 r) * x := by
@@ -277,11 +272,18 @@ theorem star_involutive (x : SplitQuat) : dualize SplitQuat (dualize SplitQuat (
 
 theorem ChuTensor_assoc (X Y Z : ChuSpace SplitQuat) :
     ChuTensor (ChuTensor X Y) Z = ChuTensor X (ChuTensor Y Z) := by
-  ext <;> dsimp [ChuTensor] <;> ring
+  ext <;> simp [ChuTensor, split_quat_mul_a, split_quat_mul_b, split_quat_mul_c, split_quat_mul_d] <;> ring
 
 theorem ChuSeq_assoc (X Y Z : ChuSpace SplitQuat) :
     ChuSeq (ChuSeq X Y) Z = ChuSeq X (ChuSeq Y Z) := by
-  ext <;> dsimp [ChuSeq] <;> ring
+  ext <;> simp [ChuSeq, split_quat_mul_a, split_quat_mul_b, split_quat_mul_c, split_quat_mul_d] <;> ring
+
+theorem Chu_distributor (X Y Z W : ChuSpace SplitQuat) (P : SplitQuat) :
+    splitQuatPairingAux ((X.a * Y.a) * (Z.a * W.a)) P =
+    splitQuatPairingAux (X.a * Z.a) ((Y.a' * W.a') * P) := by
+  dsimp [splitQuatPairingAux]
+  simp only [split_quat_mul_a, split_quat_mul_b, split_quat_mul_c, split_quat_mul_d]
+  ring
 
 theorem kkt_stationarity (x y : SplitQuat) : SplitQuat.embed (x * y) = SplitQuat.embed x * SplitQuat.embed y :=
   chu_embed_mul x y

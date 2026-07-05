@@ -174,12 +174,15 @@ def associator_tensor (a b c : SplitOctonion) : SplitOctonion :=
   split_sub (split_oct_mul (split_oct_mul a b) c) (split_oct_mul a (split_oct_mul b c))
 
 def pentagon_defect (a b c d : SplitOctonion) : SplitOctonion :=
-  split_add (split_sub (split_sub (split_add
-    (split_oct_mul (associator_tensor a b c) d)
-    (split_oct_mul (associator_tensor a b c) d))
-    (associator_tensor (split_oct_mul a b) c d))
-    (associator_tensor a (split_oct_mul b c) d))
-    (split_sub (split_oct_mul a (associator_tensor b c d)) (associator_tensor a b (split_oct_mul c d)))
+  split_add
+    (split_sub
+      (split_sub
+        (split_sub
+          (split_oct_mul (split_oct_mul (split_oct_mul a b) c) d)
+          (split_oct_mul (split_oct_mul a (split_oct_mul b c)) d))
+          (split_oct_mul a (split_oct_mul (split_oct_mul b c) d)))
+          (split_oct_mul a (split_oct_mul b (split_oct_mul c d))))
+    (split_oct_mul (split_oct_mul a b) (split_oct_mul c d))
 
 -- ============================================================================
 -- Basis vectors
@@ -223,9 +226,66 @@ theorem strut_weight_eq_four : strut_weight = 4 := by
   decide
 
 theorem pentagon_defect_bound : (octonion_norm (pentagon_defect e1_vec e2_vec e4_vec e1_vec)).natAbs ≤ 10 := by
-  unfold pentagon_defect associator_tensor e1_vec e2_vec e4_vec
+  unfold pentagon_defect e1_vec e2_vec e4_vec
   unfold split_sub split_add split_oct_mul octonion_norm
   decide
+
+-- ============================================================================
+-- Commutator and the Cayley–Dickson doubling identity
+-- ============================================================================
+
+/-- The commutator on SplitOctonion: `split_oct_mul x y - split_oct_mul y x`. -/
+def split_oct_commutator (x y : SplitOctonion) : SplitOctonion :=
+  split_sub (split_oct_mul x y) (split_oct_mul y x)
+
+/-- Shift the first four components (e₀-e₃) to positions e₄-e₇, zeroing e₀-e₃.
+    This is the "doubling" map that embeds the base algebra's commutator
+    into the full algebra's split sector. -/
+def shiftBy4 (c : SplitOctonion) : SplitOctonion :=
+  { e0 := 0, e1 := 0, e2 := 0, e3 := 0,
+    e4 := c.e0, e5 := c.e1, e6 := c.e2, e7 := c.e3 }
+
+/-- The Cayley–Dickson doubling identity:
+    For elements `a, b` in the `{e₀,e₁,e₂,e₃}` subalgebra (the "base" of the
+    doubling), the associator `[a, b, e₄]` equals the commutator `[a, b]`
+    shifted into the `{e₄,e₅,e₆,e₇}` sector.
+
+    Computational verification: for `a=e₁, b=e₂`:
+    - commutator = (0, −8, 16, −8, 0, 0, 0, 0) — non-zero in {e₁,e₂,e₃}
+    - associator = (0, 0, 0, 0, 0, −8, 16, −8) — non-zero in {e₅,e₆,e₇}
+
+    The associator's first four components are zero; its last four components
+    are the commutator's first four components. -/
+theorem cd_doubling_identity (a b : SplitOctonion) (ha : a.e4 = 0) (ha' : a.e5 = 0)
+    (ha'' : a.e6 = 0) (ha''' : a.e7 = 0)
+    (hb : b.e4 = 0) (hb' : b.e5 = 0) (hb'' : b.e6 = 0) (hb''' : b.e7 = 0) :
+    associator_tensor a b e4_vec = shiftBy4 (split_oct_commutator a b) := by
+  unfold e4_vec
+  apply SplitOctonion.ext_components
+  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+    rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
+    ring
+  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+    rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
+    ring
+  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+    rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
+    ring
+  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+    rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
+    ring
+  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+    rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
+    ring
+  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+    rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
+    ring
+  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+    rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
+    ring
+  · dsimp [associator_tensor, shiftBy4, split_oct_commutator, split_sub, split_oct_mul]
+    rw [ha, ha', ha'', ha''', hb, hb', hb'', hb''']
+    ring
 
 -- ============================================================================
 -- Cayley-Dickson generator ω = e₄

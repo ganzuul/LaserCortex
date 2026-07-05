@@ -28,14 +28,12 @@ The following skills are available and should be used when appropriate:
 - Never change statements or add axioms without explicit permission
 
 ### `ooda-loop` Skill
+read: .agents/skills/lean4/skills/ooda-loop/SKILL.md
 **Use when**: Complex decisions, problem-solving, unclear situations, or when jumping to solutions without analysis. Use for Lean4 development, research, and tool integration.
 
 **Framework**: Observe, Orient, Decide, Act (OODA loop) with project-specific tooling references for Lean4 development.
 
-### `normcode` Skill
-**Use when**: Working with NormCode (.ncd) plan files, the NormCode parser, cortex bridge lift/ground operations, or plan orchestration. Also trigger when the user asks to parse, lift, verify, or run NormCode plans, or when working with EMLTrees, certificates, or the inference pipeline. Do NOT trigger for generic Python debugging, Lean4 proving, or WebGPU work.
-
-## Lean MCP Server Usage Pattern (Primary Workflow)
+### Lean MCP Server Usage Pattern (Primary Workflow)
 
 The core guideline is to use the `lean-lsp` MCP server to get compiler messages for 
 lightweight and high-frequency guidance and to iterate in small steps on .lean 
@@ -65,19 +63,6 @@ files. **Always use the MCP server tools first** for Lean development:
 - If you see "unterminated comment" errors at line numbers that don't exist in the file, this is likely a false error from `lake-wrap.sh` or raw `lake build`. Use `lean-lsp_lean_diagnostic_messages` or `lean-lsp_lean_build` instead.
 - Never use `lake-wrap.sh` or raw `lake build` commands for per-file error checking - use the MCP tools instead. 
 
-## LaserCortex architecture: Generation / Collapse Duality
-
-- **Generation is primitive** — the WFC (Wave Function Collapse) engine is
-  fundamentally generative. It produces candidate structures from a
-  superposition of LogicTypes.
-- **Collapse is failed re-generation** — what we call a "zero divisor" or
-  "contradiction" is what happens when a generated structure is critiqued and
-  the reasoning budget is exceeded. Collapse is critique, not the primary mode.
-- **Hyperstition** — "A sophisticated enough lie is indistinguishable from
-  truth." The generation mode can produce propositions that don't yet hold but
-  *should* hold (fiction that makes itself real). This is how the framework
-  avoids reductionism.
-
 ## Resource Safety (also see SAFETY.md)
 
 The system operates on limited hardware (24 GB RAM, 8 GB VRAM). All processes
@@ -106,28 +91,5 @@ and restart LSP. This is faster and more accurate than `lake-wrap.sh` or raw
 `lake build` commands, and it provides per-file error checking via
 `lean-lsp_lean_diagnostic_messages`.
 
-**Legacy approach** (if you must use `lake build` directly):
-
-Use `scripts/lake-wrap.sh` instead:
-
-    # Basic usage (head=10, tail=10, auto-generated log in /tmp):
-    ./scripts/lake-wrap.sh lake build
-
-    # Build a specific target with custom truncation:
-    ./scripts/lake-wrap.sh --head 5 --tail 15 -- lake build LaserCortex.Hopf
-
-    # With an explicit log path:
-    ./scripts/lake-wrap.sh --log /tmp/hopf.log -- lake build LaserCortex.Hopf
-
-The wrapper:
-1. Captures the **full output** to a timestamped log file in `/tmp`
-2. Prints only the first N lines, a suppression marker, and the last M lines
-3. Exits with the same exit code as `lake` (so `&&` chains work)
-
-If you need to investigate a specific error, read the log file with
-targeted tools (grep, read offset/limit) rather than re-running the build.
-
-The underlying filter is `scripts/log-truncate.py`, which can also be used
-standalone:
-
-    noisy-command 2>&1 | python3 scripts/log-truncate.py --head 10 --tail 10
+## User guidance
+I would like you to think through in plain English what it is that the Lean code actually means. It is not just abstract nonsense but has grounding in the real world and therefore it has solutions grounded in the real world. You can get a lot of help from working through the problem in English and then reducing the natural language to mathematical insight.

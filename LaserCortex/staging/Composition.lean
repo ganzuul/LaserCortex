@@ -140,18 +140,10 @@ theorem free_not_quantized : ¬∃ (qt : QuantizedType), qt.cdStep = 4 := by
 -- SECTION 5: Quantized Types are exactly the non-meta logics
 -- ============================================================================
 
-/--
-Partition claim: QuantizedTypes at cdStep ≤ 2 are the non-meta logics.
-Free Logic (cdStep = 4) is the only meta-logic and cannot be quantized.
-
-The forward direction: QuantizedType ⇒ cdStep ≤ 2 (provable via free_not_quantized).
-The reverse direction: cdStep ≤ 2 ⇒ QuantizedType (meta-theoretical claim).
--/
-
 /-- Meta-theoretical axiom: for every cdStep k ≠ 4, there exists a QuantizedType
     with that cdStep. This is the reverse direction of the partition theorem
     "quantized types are exactly non-meta logics". -/
-opaque exists_quantized_type_of_cdStep_ne_four : ∀ (k : ℕ), k ≠ 4 → ∃ (qt : QuantizedType), qt.cdStep = k
+noncomputable opaque exists_quantized_type_of_cdStep_ne_four : ∀ (k : ℕ), k ≠ 4 → ∃ (qt : QuantizedType), qt.cdStep = k
 
 theorem quantized_types_are_exactly_non_meta_logics (k : ℕ) :
     (∃ (qt : QuantizedType), qt.cdStep = k) ↔ k ≠ 4 := by
