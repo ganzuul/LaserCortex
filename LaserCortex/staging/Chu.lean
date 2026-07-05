@@ -225,10 +225,23 @@ def chuSpaceOf (x : SplitQuat) : ChuSpace SplitQuat :=
     pair := splitQuatPairing }
 
 theorem chu_embed_mul (x y : SplitQuat) : SplitQuat.embed (x * y) = SplitQuat.embed x * SplitQuat.embed y := by
-  simp [SplitQuat.embed, split_quat_mul, Algebra.smul_def, split_quat_zsmul_a, split_quat_zsmul_b,
-    split_quat_zsmul_c, split_quat_zsmul_d]
+  dsimp [SplitQuat.embed, split_quat_mul]
+  -- Convert all • to * using Algebra.smul_def
+  -- Use `simp` (not `erw`) since Algebra.smul_def is already in the default simp set
+  -- But we need to apply it to all subterms; use `conv` with `simp`
+  conv =>
+    lhs
+    simp [Algebra.smul_def]
+  conv =>
+    rhs
+    simp [Algebra.smul_def]
+  -- Now both sides are expressed with * and algebraMap
+  -- Expand the RHS product
   noncomm_ring
-  simp [e0_sq', e1_sq', anticommute', mul_assoc, add_assoc]
+  -- Apply Clifford relations: e0'^2 = 1, e1'^2 = -1, e0'*e1' = -(e1'*e0')
+  -- Use `simp` with `mul_assoc` to rewrite powers
+  simp [e0_sq', e1_sq', anticommute', mul_assoc]
+  -- Now both sides are linear combinations of {1, e0', e1', e0'*e1'} with scalar coefficients
   ring
 
 theorem chu_zsmul_eq_mul (r : ℤ) (x : Cl11) : r • x = (algebraMap ℤ Cl11 r) * x := by
