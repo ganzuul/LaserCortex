@@ -111,14 +111,14 @@ No scaffolding imports.
 
 ### Status
 
-Shell created. Ready to port.
+DONE. 608 lines. All SplitOctonion + SplitQuat definitions and theorems compile.
 
 ---
 
 ## File 2: Tamari.lean
 
 **Source**: `LaserCortex/EMLRegistry.lean` (586 lines) + `LaserCortex/TamariBP.lean` (444 lines)
-**Lines to port**: ~1,030 lines
+**Lines to port**: ~1,030 lines (now ~392 lines after stripping scaffolding)
 
 ### What it contains
 
@@ -153,6 +153,176 @@ Shell created. Ready to port.
 - Metaphorical docstrings about "cost landscape", "generation/collapse duality"
 - Interpretive comments about paradox resolution
 - Scaffolding structures (Superposition, AntiCoherentPair, inflate, etc.)
+
+### Status
+
+DONE. 392 lines. Full EMLTree theory with normal forms and termination proof.
+
+---
+
+## File 3: Friction.lean
+
+**Source**: `LaserCortex/FrictionLagrangian.lean` (812 lines)
+**Lines to port**: lines 150-305, 360-400 (core cost definitions)
+
+### What it contains
+
+- assocDefect: ℕ → ℕ (0 for cdStep ≤ 2, strut_weight for cdStep ≥ 3)
+- commDefect: ℕ → ℕ (= k)
+- frictionDensity: ℕ → ℕ (= commDefect + strut_weight * assocDefect)
+- layerCost (simplified: ℕ → ℕ, was LogicType → ℕ)
+- contracts_to_with_cost: cost-annotated Tamari contraction
+- Phase change theorems at CD 2→3
+- heightMap_discontinuity
+
+### What to port
+
+1. `assocDefect` (line 159) + `assocDefect_zero_up_to_cd2` (line 261)
+2. `commDefect` (line 170)
+3. `frictionDensity` (line 180) + `frictionDensity_at_cl11_boundary` (line 289)
+4. `frictionDensity_jump_at_cd3` (line 296)
+5. `layerCost` (line 195, simplify to `ℕ → ℕ`)
+6. `layerCost_ge_cdStep` (line 202) + `layerCost_eq_cdStep_for_assoc` (line 209)
+7. `contracts_to_with_cost` (line 655) + related theorems (663-714)
+
+### What to discard
+
+- Metaphorical "Friction Lagrangian" language
+- Continuous Lagrangian stub (unformalized research gap)
+- References to action functionals, Lagrangian density
+- Tower/Problem scaffolding (lines 84-89, 230-258, 360-640)
+- EngineState, LodayCoords (lines 394-527)
+- Flat cost sum, frictionLagrangian_ge_flatSum (lines 230-258)
+
+### Status
+
+Shell created. Ready to port.
+
+---
+
+## File 4: OctilinearEmbedding.lean
+
+**Source**: `LaserCortex/TropicalCovector.lean` (511 lines) + `LaserCortex/TropicalTamariLattice.lean` (516 lines)
+**Lines to port**: lines 63-300, 300-511 from TropicalCovector; lines 431-503 from TropicalTamariLattice
+
+### What it contains
+
+- kktMultiplier: EMLTree → SplitQuat (CD covector)
+- covectorProjection: SplitQuat → ℤ × ℤ
+- tubeCoord: EMLTree → ℤ × ℤ (coordinates: x = size + assocDefect, y = leftWeight - rightWeight)
+- cd3_nonassociative_signature: algebra signature from tree measures
+- tubeCoord_cd_diff: coordinates depend on components, not CD step
+- tubeCoord_monotone: monotonicity along contraction paths
+- kktMultiplierOct, covectorProjectionOct, tubeCoordOct (octonion versions)
+- pairing_signature_phase_change, cd3_nonassociative_signature
+
+### What to port
+
+1. `kktMultiplier` (line 92) + `kktMultiplier_antipode` (103)
+2. `covectorProjection` (line 135) + `covectorProjection_antipode` (143)
+3. `tubeCoord` (line 170) + `tubeCoord_expand` (176)
+4. `tubeCoord_leaf` (185), `tubeCoord_node_leaf_leaf` (192)
+5. `tubeCoord_rightComb` (201), `tubeCoord_assoc_step` (220)
+6. `tubeCoord_cd_diff` (247) + `tubeCoord_x_eq_size_plus_assocDefect` (257)
+7. `tubeCoord_y_eq_leftWeight_sub_rightWeight` (266)
+8. `tubeCoord_monotone` (from TropicalTamariLattice)
+9. `kktMultiplierOct` (line 300), `covectorProjectionOct` (347)
+10. `tubeCoordOct` (line 381) + `tubeCoordOct_eq_tubeCoord` (393)
+11. `pairing_signature_phase_change` (line 483)
+12. `cd3_nonassociative_signature` (line 503)
+
+### What to discard
+
+- "Tube map" metaphor
+- Tropical lattice instances (lines 88-92, already in mathlib)
+- Develin-Sturmfels scaffolding (lines 176-388)
+- EdgeAngle (line 499)
+- Interpretive comments about geometry
+
+### Status
+
+Shell created. Ready to port.
+
+---
+
+## File 5: Chu.lean
+
+**Source**: `LaserCortex/Chu.lean` (727 lines)
+**Lines to port**: lines 60-104, 122-216, 239-347, 412-621
+**Imports**: `Mathlib + LaserCortex.staging.Algebra`
+
+### What it contains
+
+- ChuSpace: triple (a, a', β) with ℤ-bilinear pairing
+- splitQuatPairing: SplitQuat → SplitQuat → ℤ (canonical bilinear form)
+- splitQuatPairing_nondegenerate
+- octonionPairing: SplitOctonion → SplitOctonion → ℤ (polarization of (4,4) norm)
+- octonionPairing_nondegenerate
+- antipodePairing_nondegenerate
+- chuEmbed: SplitQuat → Cl11 (algebra homomorphism)
+- chu_embed_mul, chu_zsmul_eq_mul
+- ChuTensor, ChuSeq (monoidal structure)
+- dualize, star_involutive
+- kkt_stationarity, kkt_complementarity
+
+### What to port
+
+1. `ChuSpace` structure (line 84) + `primal`/`dual`/`dualize` (91-104)
+2. `splitQuatPairingAux` (line 122) + `splitQuatPairing` (line 146)
+3. `splitQuatPairingAux_symm` (line 167) + `splitQuatPairing_antipode_symm` (line 177)
+4. `splitQuatPairing_nondegenerate` (line 196)
+5. `octonionPairingAux` (line 239) + `octonionPairing` (line 282)
+6. `octonionPairingAux_symm` (line 309) + `octonionPairing_antipode_symm` (line 322)
+7. `octonionPairing_nondegenerate` (line 349) + `antipodePairing_nondegenerate` (line 390)
+8. `chuEmbed` (line 412) + `chuSpaceOf` (line 422)
+9. `chu_embed_mul` (line 456) + `chu_zsmul_eq_mul` (line 481)
+10. `ChuTensor`, `ChuSeq` (lines 500-520)
+11. `dualize_chuSpaceOf` (line 560) + `star_involutive` (line 568)
+12. `kkt_stationarity` (line 599) + `kkt_complementarity` (line 614)
+
+### What to discard
+
+- CD-homotopy bridge (lines 639-727): `norm_via_pairing`, `zdFreeAtStep2_from_chu_nondegenerate`
+- Metaphorical docstrings
+- Chu space category-theoretic wrapper (ChuSeq, ChuTensor are algebraic, not categorical)
+
+### Status
+
+Shell created. Ready to port.
+
+---
+
+## File 6: Composition.lean
+
+**Source**: `LaserCortex/QuantizedType.lean` (353 lines)
+**Lines to port**: lines 34-37, 68-71, 104-107, 145-166, 180-198, 247-270, 320-351
+**Imports**: `Mathlib + LaserCortex.staging.Algebra + LaserCortex.staging.Tamari + LaserCortex.staging.Friction`
+
+### What it contains
+
+- EvaluatorKind: tamariBP | amm
+- QuantizedType: logic type + evaluator + boundedness proof
+- CompositionError: typeViolation | zeroDivisor
+- CompositionSpec: valid composition specification with Prop proof fields
+- free_not_quantized: counterexample proof (leftComb 22)
+- quantized_types_are_exactly_non_meta_logics: partition theorem
+
+### What to port
+
+1. `EvaluatorKind` (line 34)
+2. `QuantizedType` (line 68) + `quantizedFrictionDensity` (line 77)
+3. `CompositionError` (line 104)
+4. `CompositionSpec` (line 145) + `CompositionSpec.error` (line 163)
+5. `compositionSpec_valid_iff` (line 180)
+6. `CompositionSpec.result` (line 214)
+7. `free_not_quantized` (line 247)
+8. `quantized_types_are_exactly_non_meta_logics` (line 324)
+
+### What to discard
+
+- LogicTypes dependency (lines 1-33, 84-100, 115-161, 188-246, 272-322): scaffolding
+- "Factory" metaphor
+- Metaphorical docstrings
 
 ### Status
 
@@ -402,33 +572,41 @@ These are documented but not yet formalized. They should be stated as
 
 ## ToDo
 
-### Stage 0: SplitQuat in Algebra.lean
+### Stage 0: Algebra.lean — COMPLETE
 
-- [ ] Q11 quadratic form (signature (2,2))
-- [ ] Cl11 = CliffordAlgebra Q11
-- [ ] e₀, e₁ basis elements + Clifford relations (e₀²=1, e₁²=-1, e₀·e₁+e₁·e₀=0)
-- [ ] SplitQuat type (a, b, c, d)
-- [ ] SplitQuat.embed: SplitQuat → Cl11
-- [ ] SplitQuat.norm + norm_mul theorem
-- [ ] split_quat_mul, split_quat_add, split_quat_neg
-- [ ] antipode_sq + 7 theorems
-- [ ] Run `lake build LaserCortex.Algebra`
+DONE. 608 lines. All SplitOctonion + SplitQuat definitions and theorems compile.
+`lake build LaserCortex.Algebra` passes.
 
-### Stage 1: Tamari
+- [x] Q11 quadratic form (signature (2,2))
+- [x] Cl11 = CliffordAlgebra Q11
+- [x] e₀, e₁ basis elements + Clifford relations (e₀²=1, e₁²=-1, e₀·e₁+e₁·e₀=0)
+- [x] SplitQuat type (a, b, c, d)
+- [x] SplitQuat.embed: SplitQuat → Cl11
+- [x] SplitQuat.norm + norm_mul theorem
+- [x] split_quat_mul, split_quat_add, split_quat_neg
+- [x] antipode_sq + 7 theorems
+- [x] `lake build LaserCortex.Algebra`
 
-- [ ] EMLTree inductive type (size, depth, leftWeight, rightWeight)
-- [ ] contracts_one (right rotation)
-- [ ] contracts_to (ReflTransGen)
-- [ ] rightComb (normal form)
-- [ ] dcStep (distance measure)
-- [ ] contracts_to_antisymm
-- [ ] contracts_to_refl, contracts_to_trans
-- [ ] contracts_to_size_eq
-- [ ] contracts_to_leftWeight_ge
-- [ ] dcStep termination proof
-- [ ] Run `lake build LaserCortex.Tamari`
+### Stage 1: Tamari.lean — COMPLETE
 
-### Stage 2: Friction
+DONE. 392 lines. Full EMLTree theory with normal forms and termination proof.
+`lake build LaserCortex.Tamari` passes.
+
+- [x] EMLTree inductive type
+- [x] contracts_one (right rotation)
+- [x] contracts_to (ReflTransGen)
+- [x] rightComb (normal form)
+- [x] dcStep (distance measure)
+- [x] contracts_to_antisymm
+- [x] contracts_to_refl, contracts_to_trans
+- [x] contracts_to_size_eq
+- [x] contracts_to_leftWeight_ge
+- [x] dcStep termination proof
+- [x] `lake build LaserCortex.Tamari`
+
+### Stage 2: Friction.lean — SHELL
+
+Shell created. Ready to port.
 
 - [ ] assocDefect definition (line 159) + phase change (line 261)
 - [ ] commDefect definition (line 170)
@@ -436,9 +614,11 @@ These are documented but not yet formalized. They should be stated as
 - [ ] layerCost (line 195, simplified to ℕ → ℕ)
 - [ ] layerCost_ge_cdStep (line 202) + layerCost_eq_cdStep_for_assoc (line 209)
 - [ ] contracts_to_with_cost (line 655) + related theorems (663-714)
-- [ ] Run `lake build LaserCortex.Friction`
+- [ ] `lake build LaserCortex.Friction`
 
-### Stage 3: OctilinearEmbedding
+### Stage 3: OctilinearEmbedding.lean — SHELL
+
+Shell created. Ready to port.
 
 - [ ] kktMultiplier: EMLTree → SplitQuat (line 92)
 - [ ] covectorProjection: SplitQuat → ℤ × ℤ (line 135)
@@ -450,9 +630,11 @@ These are documented but not yet formalized. They should be stated as
 - [ ] kktMultiplierOct, covectorProjectionOct, tubeCoordOct (lines 300-393)
 - [ ] pairing_signature_phase_change (line 483)
 - [ ] cd3_nonassociative_signature (line 503)
-- [ ] Run `lake build LaserCortex.OctilinearEmbedding`
+- [ ] `lake build LaserCortex.OctilinearEmbedding`
 
-### Stage 4: Chu
+### Stage 4: Chu.lean — SHELL
+
+Shell created. Ready to port.
 
 - [ ] ChuSpace structure (line 84)
 - [ ] splitQuatPairingAux + splitQuatPairing (lines 122-163)
@@ -466,9 +648,11 @@ These are documented but not yet formalized. They should be stated as
 - [ ] ChuTensor, ChuSeq (lines 500-520)
 - [ ] dualize_chuSpaceOf + star_involutive (lines 560-569)
 - [ ] kkt_stationarity + kkt_complementarity (lines 599-615)
-- [ ] Run `lake build LaserCortex.Chu`
+- [ ] `lake build LaserCortex.Chu`
 
-### Stage 5: Composition
+### Stage 5: Composition.lean — SHELL
+
+Shell created. Ready to port.
 
 - [ ] EvaluatorKind: tamariBP | amm (line 34)
 - [ ] QuantizedType structure (line 68)
@@ -478,7 +662,7 @@ These are documented but not yet formalized. They should be stated as
 - [ ] CompositionSpec.result (line 214)
 - [ ] free_not_quantized counterexample (line 247)
 - [ ] quantized_types_are_exactly_non_meta_logics (line 324)
-- [ ] Run `lake build LaserCortex.Composition`
+- [ ] `lake build LaserCortex.Composition`
 
 ### Stage 6: Full build + cleanup
 
