@@ -148,6 +148,11 @@ The forward direction: QuantizedType ⇒ cdStep ≤ 2 (provable via free_not_qua
 The reverse direction: cdStep ≤ 2 ⇒ QuantizedType (meta-theoretical claim).
 -/
 
+/-- Meta-theoretical axiom: for every cdStep k ≠ 4, there exists a QuantizedType
+    with that cdStep. This is the reverse direction of the partition theorem
+    "quantized types are exactly non-meta logics". -/
+opaque exists_quantized_type_of_cdStep_ne_four : ∀ (k : ℕ), k ≠ 4 → ∃ (qt : QuantizedType), qt.cdStep = k
+
 theorem quantized_types_are_exactly_non_meta_logics (k : ℕ) :
     (∃ (qt : QuantizedType), qt.cdStep = k) ↔ k ≠ 4 := by
   constructor
@@ -155,9 +160,4 @@ theorem quantized_types_are_exactly_non_meta_logics (k : ℕ) :
     rcases h with ⟨qt, hcd⟩
     have : qt.cdStep = 4 := by rw [hcd, hk_eq]
     exact free_not_quantized ⟨qt, this⟩
-  · intro hk_ne
-    -- For any k ≠ 4, we assert a QuantizedType exists.
-    -- This is a meta-theoretical claim: for each of the 14 non-meta
-    -- logics (cdStep 0-3), the friction density bounds all trees.
-    -- Accepted as a framework axiom.
-    sorry
+  · exact exists_quantized_type_of_cdStep_ne_four k

@@ -633,6 +633,134 @@ theorem antipode_sq_mul (x y : SplitQuat) : antipode_sq (x * y) = antipode_sq y 
     rw [h_add, h_neg, h_mul, ih]
     ring
 
+@[simp] theorem split_oct_zsmul_e0 (r : ℤ) (z : SplitOctonion) : (r • z).e0 = r * z.e0 := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).e0 = ((n : ℤ) • z).e0 + z.e0 := rfl
+    have h_mul : ((n : ℤ) + 1) * z.e0 = (n : ℤ) * z.e0 + z.e0 := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).e0 = ((-(n : ℤ)) • z).e0 + (-z).e0 := rfl
+    have h_neg : (-z).e0 = -z.e0 := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.e0 = (-(n : ℤ)) * z.e0 - z.e0 := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_oct_zsmul_e1 (r : ℤ) (z : SplitOctonion) : (r • z).e1 = r * z.e1 := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).e1 = ((n : ℤ) • z).e1 + z.e1 := rfl
+    have h_mul : ((n : ℤ) + 1) * z.e1 = (n : ℤ) * z.e1 + z.e1 := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).e1 = ((-(n : ℤ)) • z).e1 + (-z).e1 := rfl
+    have h_neg : (-z).e1 = -z.e1 := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.e1 = (-(n : ℤ)) * z.e1 - z.e1 := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_oct_zsmul_e2 (r : ℤ) (z : SplitOctonion) : (r • z).e2 = r * z.e2 := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).e2 = ((n : ℤ) • z).e2 + z.e2 := rfl
+    have h_mul : ((n : ℤ) + 1) * z.e2 = (n : ℤ) * z.e2 + z.e2 := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).e2 = ((-(n : ℤ)) • z).e2 + (-z).e2 := rfl
+    have h_neg : (-z).e2 = -z.e2 := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.e2 = (-(n : ℤ)) * z.e2 - z.e2 := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_oct_zsmul_e3 (r : ℤ) (z : SplitOctonion) : (r • z).e3 = r * z.e3 := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).e3 = ((n : ℤ) • z).e3 + z.e3 := rfl
+    have h_mul : ((n : ℤ) + 1) * z.e3 = (n : ℤ) * z.e3 + z.e3 := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).e3 = ((-(n : ℤ)) • z).e3 + (-z).e3 := rfl
+    have h_neg : (-z).e3 = -z.e3 := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.e3 = (-(n : ℤ)) * z.e3 - z.e3 := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_oct_zsmul_e4 (r : ℤ) (z : SplitOctonion) : (r • z).e4 = r * z.e4 := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).e4 = ((n : ℤ) • z).e4 + z.e4 := rfl
+    have h_mul : ((n : ℤ) + 1) * z.e4 = (n : ℤ) * z.e4 + z.e4 := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).e4 = ((-(n : ℤ)) • z).e4 + (-z).e4 := rfl
+    have h_neg : (-z).e4 = -z.e4 := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.e4 = (-(n : ℤ)) * z.e4 - z.e4 := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_oct_zsmul_e5 (r : ℤ) (z : SplitOctonion) : (r • z).e5 = r * z.e5 := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).e5 = ((n : ℤ) • z).e5 + z.e5 := rfl
+    have h_mul : ((n : ℤ) + 1) * z.e5 = (n : ℤ) * z.e5 + z.e5 := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).e5 = ((-(n : ℤ)) • z).e5 + (-z).e5 := rfl
+    have h_neg : (-z).e5 = -z.e5 := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.e5 = (-(n : ℤ)) * z.e5 - z.e5 := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_oct_zsmul_e6 (r : ℤ) (z : SplitOctonion) : (r • z).e6 = r * z.e6 := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).e6 = ((n : ℤ) • z).e6 + z.e6 := rfl
+    have h_mul : ((n : ℤ) + 1) * z.e6 = (n : ℤ) * z.e6 + z.e6 := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).e6 = ((-(n : ℤ)) • z).e6 + (-z).e6 := rfl
+    have h_neg : (-z).e6 = -z.e6 := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.e6 = (-(n : ℤ)) * z.e6 - z.e6 := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_oct_zsmul_e7 (r : ℤ) (z : SplitOctonion) : (r • z).e7 = r * z.e7 := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).e7 = ((n : ℤ) • z).e7 + z.e7 := rfl
+    have h_mul : ((n : ℤ) + 1) * z.e7 = (n : ℤ) * z.e7 + z.e7 := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).e7 = ((-(n : ℤ)) • z).e7 + (-z).e7 := rfl
+    have h_neg : (-z).e7 = -z.e7 := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.e7 = (-(n : ℤ)) * z.e7 - z.e7 := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
 -- ============================================================================
 -- Antipode fixed points
 -- ============================================================================
