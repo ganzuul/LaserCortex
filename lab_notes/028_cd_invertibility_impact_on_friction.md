@@ -87,10 +87,11 @@ non-associativity is a **fixed linear overhead** (`split_oct_mul ... e₄`)
 plus a **norm scaling** (`strut_weight = 4`).
 
 Critically: the identity `associator_tensor a b e₄ = split_oct_mul (commutator a b) e₄`
-holds for **all** `a, b` (unrestricted), not just base elements. `ring` closes
-the goal with no hypotheses. This means the associator-against-the-generator
-is **identically** the commutator right-multiplied by the generator — no
-scope restriction needed. The proof is one line.
+requires both arguments in the `{e₀,e₁,e₂,e₃}` subalgebra (base of the
+CD doubling). The restriction is load-bearing — cross-terms survive in
+`.e0` when one argument has non-zero `e₄-e₇` components (verified:
+`a=e₁_vec, b=e₅_vec` differ by `2` in `.e0`). The mixed case `(a, x, e₄)`
+with `x ∈ Aℓ` also does not work.
 
 **Implication 2 — The "non-associative phase change" at CD 2→3 is actually
 associative structure in disguise.**
@@ -177,21 +178,34 @@ is the **structural reduction**: the associator cost is not independent,
 it's `(fixed linear map)² · (commutator cost)`. This could simplify proofs
 about phase changes and height map discontinuities.
 
-**Correction to the initial hypothesis** — the identity actually holds
-for **all** `a, b` (unrestricted), not just base elements. `ring` closes the
-unrestricted goal with no hypotheses. The earlier failure was a false
-positive from a stale diagnostic; the proof is one line.
+**The restriction is load-bearing.** The identity does not hold for
+arbitrary `a, b` (counterexample: `a=e₁_vec, b=e₅_vec` differ by `2`
+in `.e0`). The base-subalgebra hypothesis is not an artifact of a
+first attempt — it's required.
 
 **"Faithfully encoded" / "not lossy" is narrower than it reads.**
-What's proven: for any split-octonions `a, b`, and for the doubling
-generator `e₄`, the associator `[a, b, e₄]` equals the commutator
-`[a, b]` right-multiplied by `e₄`. And `*e₄` is invertible (norm = −1).
-So you have a faithful round-trip **for this specific three-argument
-shape** — associator against the generator. The general associator
-`[a, b, c]` for arbitrary `c` (not just `e₄`) still involves genuine
-non-associativity of the doubled algebra; this result doesn't extend
-that far. But the cleanest associator — pairing against the
-doubling generator — is fully accounted for.
+What's proven: for `a, b` both in the `{e₀,e₁,e₂,e₃}` subalgebra, and
+for the doubling generator `e₄`, the associator `[a, b, e₄]` equals the
+commutator `[a, b]` right-multiplied by `e₄`. And `*e₄` is invertible
+(norm = −1). So you have a faithful round-trip **for this specific
+three-argument shape with base arguments** — associator against the
+generator, where both operands live in the base of the doubling.
+
+The general associator `[a, b, c]` for arbitrary `c` (not just `e₄`)
+or `a, b` outside the base still involves genuine non-associativity of
+the doubled algebra. This result does not extend to the mixed case
+`(a, x, e₄)` with `x ∈ Aℓ` (counterexample above).
+
+**The mixed case `(a, x, e₄)` where `a` is base and `x` has non-zero
+`e₄-e₇`** was proposed as the "cheaper intermediate check" but turns
+out to also fail: cross-terms survive in `.e0` (verified:
+`a=e₁_vec, b=e₅_vec`). So the maximal true statement is the
+base-restricted one: `[x, y, ℓ] = (xy − yx)·ℓ` for `x, y ∈ A`,
+the classical scope from Baez §2.2. The question of what happens
+when you stop restricting to the tidiest slot — `(a, x, e₄)` for
+`x ∈ Aℓ`, or `(a, b, c)` for arbitrary `c` — remains open. Both
+are natural next steps, but the mixed case is the smaller one (no
+new code architecture needed) and should be tested first.
 
 **"Linear isomorphism between sectors" does more work than the proof supports.**
 What's shown: a bijection between `commutator(SplitOctonion, SplitOctonion)`
@@ -271,15 +285,12 @@ representation.
    and that this norm is the **same** whether computed in dim 4 or dim 8
    (since the commutator lives entirely in `e₀-e₃`)
 
-3. **Test the mixed case at dim 8** — evaluate
-   `associator_tensor a x e₄` for `a ∈ A` and `x ∈ Aℓ` (non-zero e₄-e₇
-   components). This was proposed as the "cheaper intermediate check"
-   but turns out to be already proven — `ring` closes it for arbitrary
-   base `a` paired with arbitrary `x` against `e₄`. The natural
-   remaining question is whether the identity holds when pairing against
-   a general element `c` (not just `e₄`), i.e. `associator_tensor a b c`
-   for arbitrary `c`. This would require the full Schafer formula and
-   is the true next step toward dim 16.
+3. **Test the general associator at dim 8** — evaluate
+   `associator_tensor a b c` for arbitrary `c` (not just `e₄`). This is
+   the true open question: whether the clean "commutator × e₄"
+   picture generalizes beyond pairing against the doubling generator.
+   This requires the full Schafer formula with conjugation terms and
+   is the natural bridge to the dim-16 question (doubling sedenions).
 
 ---
 
@@ -287,19 +298,23 @@ representation.
 
 | Claim | Status | Evidence |
 |-------|--------|----------|
-| CD doubling: `[x,y,e₄] = (xy−yx)·e₄` | **Proven for all `a,b`** | `ring` closes unrestricted goal; proof is one line |
+| CD doubling: `[x,y,e₄] = (xy−yx)·e₄` | **Proven for base subalgebra** `x,y ∈ {e₀,e₁,e₂,e₃}` | `ring` closes with `a.e4=...=0` hypotheses |
 | Invertibility of `e₄` | **Verified** | `octonion_norm(e₄) = −1 ≠ 0` |
-| Identity holds for arbitrary `a,b,c` | **Unknown** | Only tested against `e₄`; general associator untested |
-| Associator cost is reducible to commutator | **Yes, fully** | For pairing against `e₄`; all `a,b` work |
+| Identity holds for arbitrary `a,b` | **False** | Counterexample: `a=e₁, b=e₅` differ by `2` in `.e0` |
+| Mixed case `(a, x, e₄)` `x ∈ Aℓ` | **False** | Same counterexample; cross-terms survive |
+| General associator `[a,b,c]` arbitrary `c` | **Unknown** | Not tested; open question |
 | Non-associative complexity snowballs | **Unknown** | Needs dim-16 or general-associator formula |
 
 **Key structural insight**: The CD doubling gives a **linear isomorphism**
-between the commutator (full `SplitOctonion`) and the associator-against-
-`e₄` via right-multiplication by the invertible element `e₄`. This means
-the pairing-against-the-generator associator carries no new information
+between the commutator (base subalgebra) and its image under
+right-multiplication by `e₄` (associator sector). This means the
+pairing-against-the-generator associator carries no new information
 beyond the commutator — it's a change of coordinates via an invertible
 linear map. Whether the same holds for pairing against arbitrary `c`
-(rather than just `e₄`) is the open question.
+(rather than just `e₄`) or for mixed-case arguments is the open question.
+The identity does **not** extend to arbitrary `a,b` or to the mixed
+case `(a, x, e₄)` with `x ∈ Aℓ` — the restriction to the base
+subalgebra is load-bearing, not an artifact of an early attempt.
 
 **Magnitude**: Medium. The isomorphism is a concrete algebraic fact (Baez
 §2.2, one line), but it corrects a significant misconception in the codebase:
