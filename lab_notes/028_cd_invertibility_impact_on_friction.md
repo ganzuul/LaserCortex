@@ -170,6 +170,28 @@ is the **structural reduction**: the associator cost is not independent,
 it's `(fixed linear map)² · (commutator cost)`. This could simplify proofs
 about phase changes and height map discontinuities.
 
+**"Faithfully encoded" / "not lossy" is narrower than it reads.**
+What's proven: for `a, b ∈ A` (the `{e₀,e₁,e₂,e₃}` subalgebra), and for
+the doubling generator `e₄`, the associator `[a, b, e₄]` equals the
+commutator `[a, b]` right-multiplied by `e₄`. And `*e₄` is invertible
+(norm = −1). So you have a faithful round-trip **for this specific
+three-argument shape** — associator against the generator, with base
+arguments. The general associator `[a, b, c]` for arbitrary `c` (not just
+`e₄`) or `a, b` with non-zero `e₄-e₇` components involves genuine
+non-associativity of the doubled algebra and is a messier object.
+`ring` failing on the unrestricted case is exactly the signal that the
+cross-terms are the general-associator correction terms, not artifacts of
+a bad formula.
+
+**"Linear isomorphism between sectors" does more work than the proof supports.**
+What's shown: a bijection between `commutator(A, A)` (a subspace of the
+base `A`) and its image under right-multiplication by `e₄` (a subspace of
+`Aℓ`). Invertibility of `e₄` gives injectivity of `·e₄` on all of `A`, but
+does not by itself show the commutator bracket spans all of `Aℓ`. The
+e₄-e₇ sector might be larger than the image of `commutator(A,A)` — the
+invertibility says you won't lose information going `commutator → associator`,
+but you haven't shown the map is onto the whole split sector.
+
 ---
 
 ## 6. Implications for Optimization
@@ -183,18 +205,38 @@ at each CD step by the same mechanism), then:
 - The cost of switching between tree shapes at CD 3 can be computed entirely
   from commutator arithmetic in the base algebra
 
-### 6.2 The "Snowballing" Question
+### 6.2 The Mixed Case at Dim 8 (Cheaper Than Dim 16)
 
-The flat-vs-snowballing question from `lab_notes/027` can now be refined:
+Before jumping to dim 16 to test snowballing, there's a **cheaper
+intermediate check** at dim 8 — still in the existing `SplitOctonion`
+representation, no new code architecture needed.
 
-> Does the same CD doubling formula `[x, y, ℓ] = (xy − yx)·ℓ` generalize to
-the next doubling step (dim 8 → dim 16, sedenions)? If yes, the
-non-associative complexity is **flat** — each level adds only a fixed
-isomorphism overhead. If no, complexity **snowballs** at the first
-non-alternative level.
+The theorem proved so far: for `a, b ∈ A` (base subalgebra) and the
+doubling generator `e₄`,
+```
+[a, b, e₄] = (ab − ba)·e₄
+```
 
-The algebraic structure at CD 4 (doubling sedenions) would reveal whether
-the mechanism recurs identically or compounds.
+The next rung: mixed case, still at dim 8 — `(a, x, e₄)` where `a ∈ A`
+but `x ∈ Aℓ` (i.e., `x` has non-zero `e₄-e₇` components). This is
+exactly the shape that `ring` choked on when the hypotheses were removed:
+`a.e₄ ≠ 0` or `b.e₄ ≠ 0`.
+
+Schafer's general CD associator formula handles these mixed cases via
+conjugation terms. For `a ∈ A` and `x ∈ Aℓ`:
+```
+[a, x, e₄] = (ax − xa)·e₄ + (correction involving x̄)
+```
+
+Testing this mixed case tells you whether the clean
+"commutator × e₄" picture survives once you stop restricting to the
+tidiest slot — or whether it's specifically a feature of pairing against
+the *generator itself* rather than a general property of the doubled
+algebra. This is the natural step between what you have now (base ×
+base × generator) and the dim-16 question (doubling the doubled algebra),
+and it's far cheaper to implement since it only requires evaluating
+`associator_tensor` at mixed arguments in the existing 8-dimensional
+representation.
 
 ---
 
@@ -210,10 +252,14 @@ the mechanism recurs identically or compounds.
    and that this norm is the **same** whether computed in dim 4 or dim 8
    (since the commutator lives entirely in `e₀-e₃`)
 
-3. **Generalize to higher CD levels** — if dim 16 code is added, test
-   whether the same doubling formula applies. If it does, the cost
-   landscape's non-associative part is **isomorphic** across all levels,
-   and optimization can be done uniformly in the base algebra.
+3. **Test the mixed case at dim 8** — evaluate
+   `associator_tensor a x e₄` for `a ∈ A` and `x ∈ Aℓ` (non-zero e₄-e₇
+   components). This is the natural intermediate step: if the clean
+   "commutator × e₄" picture survives here, the mechanism is general
+   for pairing against the generator; if it doesn't, the identity is
+   specifically a feature of the tidiest slot. This check is cheap —
+   just add test cases with `a = e₁_vec` and `x = e₅_vec` (or similar
+   mixed pairs) and see if `ring` closes the goal. No new code architecture needed.
 
 ---
 
