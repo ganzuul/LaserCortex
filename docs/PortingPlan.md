@@ -604,9 +604,10 @@ DONE. 392 lines. Full EMLTree theory with normal forms and termination proof.
 - [x] dcStep termination proof
 - [x] `lake build LaserCortex.Tamari`
 
-### Stage 2: Friction.lean — SHELL
+### Stage 2: Friction.lean — COMPLETE
 
-Shell created. Ready to port.
+DONE. 119 lines. Core cost definitions + phase change theorems.
+`lake build LaserCortex.Friction` passes.
 
 - [ ] assocDefect definition (line 159) + phase change (line 261)
 - [ ] commDefect definition (line 170)

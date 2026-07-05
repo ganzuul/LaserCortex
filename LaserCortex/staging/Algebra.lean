@@ -529,6 +529,7 @@ def antipode_sq (x : SplitQuat) : SplitQuat :=
 theorem antipode_sq_add (x y : SplitQuat) : antipode_sq (x + y) = antipode_sq x + antipode_sq y := by
   apply SplitQuat.ext_components
   · rfl
+-- NOTE: .a component is definitionally true (rfl). The .b/.c/.d components below require ring.
   · change (antipode_sq (split_quat_add x y)).b = (split_quat_add (antipode_sq x) (antipode_sq y)).b; dsimp [antipode_sq, split_quat_add]; ring
   · change (antipode_sq (split_quat_add x y)).c = (split_quat_add (antipode_sq x) (antipode_sq y)).c; dsimp [antipode_sq, split_quat_add]; ring
   · change (antipode_sq (split_quat_add x y)).d = (split_quat_add (antipode_sq x) (antipode_sq y)).d; dsimp [antipode_sq, split_quat_add]; ring
@@ -545,6 +546,10 @@ theorem antipode_sq_neg (x : SplitQuat) : antipode_sq (-x) = -antipode_sq x := b
   · rfl
   · rfl
   · rfl
+-- NOTE: All four components are definitionally true (rfl). This flags a design question:
+-- the operations were defined in the "easy" direction. Should we instead define them so
+-- that the non-trivial structural properties (e.g. antipode_sq_mul) become definitional
+-- and these trivial ones require proof? Priority direction TBD.
 
 theorem antipode_sq_sub (x y : SplitQuat) : antipode_sq (x - y) = antipode_sq x - antipode_sq y := by
   calc
@@ -559,6 +564,74 @@ theorem antipode_sq_mul (x y : SplitQuat) : antipode_sq (x * y) = antipode_sq y 
   · change (antipode_sq (split_quat_mul x y)).b = (split_quat_mul (antipode_sq y) (antipode_sq x)).b; dsimp [antipode_sq, split_quat_mul]; ring
   · change (antipode_sq (split_quat_mul x y)).c = (split_quat_mul (antipode_sq y) (antipode_sq x)).c; dsimp [antipode_sq, split_quat_mul]; ring
   · change (antipode_sq (split_quat_mul x y)).d = (split_quat_mul (antipode_sq y) (antipode_sq x)).d; dsimp [antipode_sq, split_quat_mul]; ring
+
+-- ============================================================================
+-- ℤ-scalar multiplication lemmas (componentwise)
+-- ============================================================================
+
+@[simp] theorem split_quat_zsmul_a (r : ℤ) (z : SplitQuat) : (r • z).a = r * z.a := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).a = ((n : ℤ) • z).a + z.a := rfl
+    have h_mul : ((n : ℤ) + 1) * z.a = (n : ℤ) * z.a + z.a := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).a = ((-(n : ℤ)) • z).a + (-z).a := rfl
+    have h_neg : (-z).a = -z.a := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.a = (-(n : ℤ)) * z.a - z.a := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_quat_zsmul_b (r : ℤ) (z : SplitQuat) : (r • z).b = r * z.b := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).b = ((n : ℤ) • z).b + z.b := rfl
+    have h_mul : ((n : ℤ) + 1) * z.b = (n : ℤ) * z.b + z.b := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).b = ((-(n : ℤ)) • z).b + (-z).b := rfl
+    have h_neg : (-z).b = -z.b := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.b = (-(n : ℤ)) * z.b - z.b := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_quat_zsmul_c (r : ℤ) (z : SplitQuat) : (r • z).c = r * z.c := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).c = ((n : ℤ) • z).c + z.c := rfl
+    have h_mul : ((n : ℤ) + 1) * z.c = (n : ℤ) * z.c + z.c := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).c = ((-(n : ℤ)) • z).c + (-z).c := rfl
+    have h_neg : (-z).c = -z.c := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.c = (-(n : ℤ)) * z.c - z.c := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
+
+@[simp] theorem split_quat_zsmul_d (r : ℤ) (z : SplitQuat) : (r • z).d = r * z.d := by
+  induction r using Int.induction_on with
+  | zero => rw [zero_smul, zero_mul]; rfl
+  | succ n ih =>
+    rw [add_smul, one_smul]
+    have h_add : ((n : ℤ) • z + z).d = ((n : ℤ) • z).d + z.d := rfl
+    have h_mul : ((n : ℤ) + 1) * z.d = (n : ℤ) * z.d + z.d := by ring
+    rw [h_add, h_mul, ih]
+  | pred n ih =>
+    rw [sub_smul, one_smul]
+    have h_add : ((-(n : ℤ)) • z - z).d = ((-(n : ℤ)) • z).d + (-z).d := rfl
+    have h_neg : (-z).d = -z.d := rfl
+    have h_mul : ((-(n : ℤ)) - 1) * z.d = (-(n : ℤ)) * z.d - z.d := by ring
+    rw [h_add, h_neg, h_mul, ih]
+    ring
 
 -- ============================================================================
 -- Antipode fixed points

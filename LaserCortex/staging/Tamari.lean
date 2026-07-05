@@ -167,6 +167,10 @@ theorem contracts_to_antisymm {s t : EMLTree} (h₁ : contracts_to s t) (h₂ : 
   | ReflTransGen.refl =>
     match h₂ with
     | ReflTransGen.refl => rfl
+    | @ReflTransGen.tail _ _ _ x _ h₂' h_one' =>
+      have h_decr : leftWeight x > leftWeight s := contracts_one_leftWeight_decreases h_one'
+      have h_lw_s_ge_x : leftWeight s ≥ leftWeight x := contracts_to_leftWeight_ge h₂'
+      omega
   | @ReflTransGen.tail _ _ _ x _ h_to h_one =>
     have h_lw_s_ge_x : leftWeight s ≥ leftWeight x := contracts_to_leftWeight_ge h_to
     have h_xs : contracts_to x s := ReflTransGen.head h_one h₂

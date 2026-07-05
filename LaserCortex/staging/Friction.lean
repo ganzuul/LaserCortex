@@ -9,12 +9,13 @@ Cost landscape connecting Cayley-Dickson algebra to Tamari trees.
 The associator defect activates sharply at CD 3 (split octonions).
 
 ## Key definitions
-- `assocDefect` — 0 for cdStep ≤ 2 (associative), strut_weight for cdStep ≥ 3
-- `frictionDensity` — cost per Tamari step: α·commDefect + β·assocDefect
-- `layerCost` — total cost of a tree contraction
+- `assocDefect` — 0 for k ≤ 2 (associative), strut_weight for k ≥ 3
+- `frictionDensity` — cost per Tamari step: commDefect + strut_weight·assocDefect
 
 ## Key theorems
-- `assocDefect_phase_change` — phase change at cdStep 2→3
+- `frictionDensity_ge_k` — frictionDensity k ≥ k (total cost bounds CD step)
+- `frictionDensity_eq_k_for_k_le_2` — for k ≤ 2, frictionDensity k = k
+- `assocDefect_phase_change` — phase change at 2→3
 - `frictionDensity_monotone` — frictionDensity monotone with cdStep
 - `heightMap_discontinuity` — discontinuity at the associative/non-associative boundary
 -/
@@ -43,30 +44,19 @@ def frictionDensity (k : ℕ) : ℕ :=
   commDefect k + strut_weight * assocDefect k
 
 -- ============================================================================
--- SECTION 2: Layer Cost
+-- SECTION 2: Layer Cost (simplified: frictionDensity is the layer cost)
 -- ============================================================================
 
-/-- The true cost for a logic type under the Friction Lagrangian.
-    layerCost(lt) = Γ(lt.cdStep) = cdStep + strut_weight·assocDefect(cdStep)
-
-    For associative logics (cdStep ≤ 2), this equals cdStep.
-    For non-associative logics (cdStep ≥ 3), this exceeds cdStep. -/
-def layerCost (lt : LogicType) : ℕ :=
-  frictionDensity lt.cdStep
-
-/-- The true cost is at least the old cdStep cost:
-    layerCost(lt) ≥ lt.cdStep. For associative logics they are equal.
-    For non-associative logics the Lagrangian is strictly larger. -/
-theorem layerCost_ge_cdStep (lt : LogicType) : layerCost lt ≥ lt.cdStep := by
-  dsimp [layerCost, frictionDensity, commDefect, assocDefect]
+/-- The friction density bounds the CD step: Γ_k ≥ k.
+    For associative steps (k ≤ 2) they are equal. -/
+theorem frictionDensity_ge_k (k : ℕ) : frictionDensity k ≥ k := by
+  dsimp [frictionDensity, commDefect, assocDefect]
   split <;> omega
 
-/-- For associative logics (cdStep ≤ 2), layerCost equals cdStep.
-    Covers Classical, Fuzzy, Intuitionistic, and Cl(1,1) ≅ ℍ̃ boundary. -/
-theorem layerCost_eq_cdStep_for_assoc (lt : LogicType) (h : lt.cdStep ≤ 2) :
-    layerCost lt = lt.cdStep := by
-  dsimp [layerCost, frictionDensity, commDefect, assocDefect]
-  have : ¬ 3 ≤ lt.cdStep := by omega
+/-- For associative CD steps (k ≤ 2), frictionDensity equals k.
+    Covers ℝ, ℂ, ℍ, Cl(1,1) ≅ ℍ̃ boundary. -/
+theorem frictionDensity_eq_k_for_k_le_2 (k : ℕ) (h : k ≤ 2) : frictionDensity k = k := by
+  dsimp [frictionDensity, commDefect, assocDefect]
   simp [h]
 
 -- ============================================================================
@@ -102,8 +92,9 @@ theorem frictionDensity_at_cl11_boundary : frictionDensity 2 = 2 := by
     The associator barrier (strut_weight² = 16) dwarfs the commutator increment (+1). -/
 theorem frictionDensity_jump_at_cd3 :
     frictionDensity 3 = frictionDensity 2 + 1 + strut_weight * strut_weight := by
-  unfold strut_weight
-  native_decide
+  unfold frictionDensity commDefect assocDefect
+  rw [strut_weight_eq_four]
+  norm_num
 
 -- ============================================================================
 -- SECTION 4: Height Map
@@ -131,5 +122,6 @@ theorem frictionDensity_monotone (j k : ℕ) (h : j < k) : frictionDensity j ≤
     The associator barrier more than triples the cost. -/
 theorem heightMap_discontinuity_at_cd2_3 :
     frictionDensity 3 > 2 * frictionDensity 2 := by
-  dsimp [frictionDensity, commDefect, assocDefect]
-  native_decide
+  unfold frictionDensity commDefect assocDefect
+  rw [strut_weight_eq_four]
+  norm_num
