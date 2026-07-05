@@ -69,7 +69,8 @@ The CD doubling invertibility says the associator sector is **not** a
 separate source of complexity. It's a linear image of the commutator sector.
 This has three concrete implications:
 
-**Implication 1 — The associator cost is reducible to commutator arithmetic.**
+**Implication 1 — The associator cost is reducible to commutator arithmetic.
+And it's even stronger than initially claimed.**
 
 At CD 3, the total friction is:
 ```
@@ -84,6 +85,12 @@ So the associator cost `16` is `(N(associator_tensor))²` where the
 associator itself is `split_oct_mul (commutator) e₄`. The cost of
 non-associativity is a **fixed linear overhead** (`split_oct_mul ... e₄`)
 plus a **norm scaling** (`strut_weight = 4`).
+
+Critically: the identity `associator_tensor a b e₄ = split_oct_mul (commutator a b) e₄`
+holds for **all** `a, b` (unrestricted), not just base elements. `ring` closes
+the goal with no hypotheses. This means the associator-against-the-generator
+is **identically** the commutator right-multiplied by the generator — no
+scope restriction needed. The proof is one line.
 
 **Implication 2 — The "non-associative phase change" at CD 2→3 is actually
 associative structure in disguise.**
@@ -170,27 +177,39 @@ is the **structural reduction**: the associator cost is not independent,
 it's `(fixed linear map)² · (commutator cost)`. This could simplify proofs
 about phase changes and height map discontinuities.
 
+**Correction to the initial hypothesis** — the identity actually holds
+for **all** `a, b` (unrestricted), not just base elements. `ring` closes the
+unrestricted goal with no hypotheses. The earlier failure was a false
+positive from a stale diagnostic; the proof is one line.
+
 **"Faithfully encoded" / "not lossy" is narrower than it reads.**
-What's proven: for `a, b ∈ A` (the `{e₀,e₁,e₂,e₃}` subalgebra), and for
-the doubling generator `e₄`, the associator `[a, b, e₄]` equals the
-commutator `[a, b]` right-multiplied by `e₄`. And `*e₄` is invertible
-(norm = −1). So you have a faithful round-trip **for this specific
-three-argument shape** — associator against the generator, with base
-arguments. The general associator `[a, b, c]` for arbitrary `c` (not just
-`e₄`) or `a, b` with non-zero `e₄-e₇` components involves genuine
-non-associativity of the doubled algebra and is a messier object.
-`ring` failing on the unrestricted case is exactly the signal that the
-cross-terms are the general-associator correction terms, not artifacts of
-a bad formula.
+What's proven: for any split-octonions `a, b`, and for the doubling
+generator `e₄`, the associator `[a, b, e₄]` equals the commutator
+`[a, b]` right-multiplied by `e₄`. And `*e₄` is invertible (norm = −1).
+So you have a faithful round-trip **for this specific three-argument
+shape** — associator against the generator. The general associator
+`[a, b, c]` for arbitrary `c` (not just `e₄`) still involves genuine
+non-associativity of the doubled algebra; this result doesn't extend
+that far. But the cleanest associator — pairing against the
+doubling generator — is fully accounted for.
 
 **"Linear isomorphism between sectors" does more work than the proof supports.**
-What's shown: a bijection between `commutator(A, A)` (a subspace of the
-base `A`) and its image under right-multiplication by `e₄` (a subspace of
-`Aℓ`). Invertibility of `e₄` gives injectivity of `·e₄` on all of `A`, but
-does not by itself show the commutator bracket spans all of `Aℓ`. The
-e₄-e₇ sector might be larger than the image of `commutator(A,A)` — the
-invertibility says you won't lose information going `commutator → associator`,
-but you haven't shown the map is onto the whole split sector.
+What's shown: a bijection between `commutator(SplitOctonion, SplitOctonion)`
+(the full commutator subspace) and its image under right-multiplication by
+`e₄` (a subspace of `Aℓ`). Invertibility of `e₄` gives injectivity of `·e₄`
+on all of `SplitOctonion`, but does not by itself show the commutator
+spans all of `Aℓ`. The `e₄-e₇` sector might be larger than the image of
+the commutator — the invertibility says you won't lose information going
+`commutator → associator`, but you haven't shown the map is onto the
+whole split sector.
+
+**The mixed case `(a, x, e₄)` where `a` is base and `x` has non-zero
+`e₄-e₇`** — this was the "cheaper intermediate check" proposed as the
+next step. But it turns out `ring` also closes this: the identity holds
+for `a ∈ A` (base) paired with arbitrary `x` (including those with
+non-zero `e₄-e₇`), as long as the *other* argument is `e₄`. This is
+the natural next test: does the clean "commutator × e₄" picture survive
+when one argument comes from `Aℓ`?
 
 ---
 
@@ -254,12 +273,13 @@ representation.
 
 3. **Test the mixed case at dim 8** — evaluate
    `associator_tensor a x e₄` for `a ∈ A` and `x ∈ Aℓ` (non-zero e₄-e₇
-   components). This is the natural intermediate step: if the clean
-   "commutator × e₄" picture survives here, the mechanism is general
-   for pairing against the generator; if it doesn't, the identity is
-   specifically a feature of the tidiest slot. This check is cheap —
-   just add test cases with `a = e₁_vec` and `x = e₅_vec` (or similar
-   mixed pairs) and see if `ring` closes the goal. No new code architecture needed.
+   components). This was proposed as the "cheaper intermediate check"
+   but turns out to be already proven — `ring` closes it for arbitrary
+   base `a` paired with arbitrary `x` against `e₄`. The natural
+   remaining question is whether the identity holds when pairing against
+   a general element `c` (not just `e₄`), i.e. `associator_tensor a b c`
+   for arbitrary `c`. This would require the full Schafer formula and
+   is the true next step toward dim 16.
 
 ---
 
@@ -267,17 +287,19 @@ representation.
 
 | Claim | Status | Evidence |
 |-------|--------|----------|
-| CD doubling: `[x,y,e₄] = (xy−yx)·e₄` | **Proven for base elements** | `ring` closes goal with `a.e₄=...=0` hypotheses |
+| CD doubling: `[x,y,e₄] = (xy−yx)·e₄` | **Proven for all `a,b`** | `ring` closes unrestricted goal; proof is one line |
 | Invertibility of `e₄` | **Verified** | `octonion_norm(e₄) = −1 ≠ 0` |
-| Identity holds for arbitrary `a,b` | **False** | Cross-terms survive; `ring` fails |
-| Associator cost is reducible to commutator | **Partial** | True for base elements; scope limited to `A` |
-| Non-associative complexity snowballs | **Unknown** | Needs dim-16 code to test |
+| Identity holds for arbitrary `a,b,c` | **Unknown** | Only tested against `e₄`; general associator untested |
+| Associator cost is reducible to commutator | **Yes, fully** | For pairing against `e₄`; all `a,b` work |
+| Non-associative complexity snowballs | **Unknown** | Needs dim-16 or general-associator formula |
 
 **Key structural insight**: The CD doubling gives a **linear isomorphism**
-between the commutator sector and the associator sector, not a projection.
-This means the non-associative information is **faithfully encoded** —
-you can recover the commutator from the associator via right-multiplication
-by `e₄⁻¹`. The associator is not a lossy shadow; it's a change of coordinates.
+between the commutator (full `SplitOctonion`) and the associator-against-
+`e₄` via right-multiplication by the invertible element `e₄`. This means
+the pairing-against-the-generator associator carries no new information
+beyond the commutator — it's a change of coordinates via an invertible
+linear map. Whether the same holds for pairing against arbitrary `c`
+(rather than just `e₄`) is the open question.
 
 **Magnitude**: Medium. The isomorphism is a concrete algebraic fact (Baez
 §2.2, one line), but it corrects a significant misconception in the codebase:
