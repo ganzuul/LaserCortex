@@ -96,6 +96,15 @@ theorem frictionDensity_jump_at_cd3 :
   rw [strut_weight_eq_four]
   norm_num
 
+/-- Closed form for k ≥ 3: frictionDensity k = k + strut_weight².
+    The associator barrier contributes a constant strut_weight² = 16,
+    making the cost jump from 2 at CD 2 to 19 at CD 3. -/
+theorem frictionDensity_eq_k_plus_16_for_k_ge_3 (k : ℕ) (h : 3 ≤ k) :
+    frictionDensity k = k + strut_weight * strut_weight := by
+  unfold frictionDensity commDefect
+  have h_assoc : assocDefect k = strut_weight := assocDefect_positive_for_cd3plus k h
+  rw [h_assoc, strut_weight_eq_four]
+
 -- ============================================================================
 -- SECTION 4: Height Map
 -- ============================================================================
