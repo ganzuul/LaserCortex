@@ -27,14 +27,14 @@ The associator (e₁·e₂)·e₄ − e₁·(e₂·e₄) = 2·e₇ ≠ 0 shows t
 entanglement requires all three CD layers: SO (e₁,e₂), SQ (e₄), and C (e₇
 is in the pure SO sector that only becomes accessible through the associator).
 -/
-import LaserCortex.SplitOctonionCost
+import LaserCortex.staging.Algebra
 import LaserCortex.SplitQuaternionClifford
 import LaserCortex.CayleyDickson
 import LaserCortex.Hopf
-import LaserCortex.Chu
+import LaserCortex.staging.Chu
 import LaserCortex.QuantizedType
 
-open SplitOctonionCost
+open Algebra
 open SplitQuaternionClifford
 open CayleyDickson
 open Hopf
@@ -47,7 +47,7 @@ set_option linter.unusedVariables false
 -- ============================================================================
 -- We define the canonical embeddings:
 --   C → SQ : map SplitComplex (a, b) to SplitQuat (a, b, 0, 0)
---   SQ → SO : map SplitQuat into the e₄..e₇ sector via the CDouble factoring
+--   SQ → SO : map SplitQuat into the e₄..e₇ sector via direct construction
 
 /-- Embed a SplitComplex into SplitQuat: (a, b) ↦ (a, b, 0, 0).
 
@@ -60,11 +60,11 @@ def c_to_sq (x : SplitComplex) : SplitQuat :=
 
 /-- Embed a SplitQuat into SplitOctonion via the e₄..e₇ sector.
 
-    Under CDouble factoring, this is (0, x) ∈ ℚ × SQ, i.e. the pure
-    split-sector component of the octonion. The embedded element has
-    support only on {e₄, e₅, e₆, e₇}. -/
+    Previously this was `cd_to_so { q := quat_zero, s := x }`. After the
+    migration to `staging/Algebra`, we construct the octonion directly. -/
 def sq_to_so (x : SplitQuat) : SplitOctonion :=
-  cd_to_so { q := quat_zero, s := x }
+  { e0 := 0, e1 := 0, e2 := 0, e3 := 0,
+    e4 := x.a, e5 := x.b, e6 := x.c, e7 := x.d }
 
 /-- Composite embedding: SplitComplex → SplitOctonion via SQ.
 
@@ -84,10 +84,15 @@ theorem c_to_sq_injective {x y : SplitComplex} (h : c_to_sq x = c_to_sq y) : x =
 
 /-- The embedding SQ → SO is injective. -/
 theorem sq_to_so_injective {x y : SplitQuat} (h : sq_to_so x = sq_to_so y) : x = y := by
-  have h_cd : cd_to_so { q := quat_zero, s := x } = cd_to_so { q := quat_zero, s := y } := h
-  have h_inj : { q := quat_zero, s := x } = { q := quat_zero, s := y } :=
-    cd_to_so_injective h_cd
-  simpa using h_inj
+  apply SplitQuat.ext_components
+  · have h4 : (sq_to_so x).e4 = (sq_to_so y).e4 := by rw [h]
+    dsimp [sq_to_so] at h4; exact h4
+  · have h5 : (sq_to_so x).e5 = (sq_to_so y).e5 := by rw [h]
+    dsimp [sq_to_so] at h5; exact h5
+  · have h6 : (sq_to_so x).e6 = (sq_to_so y).e6 := by rw [h]
+    dsimp [sq_to_so] at h6; exact h6
+  · have h7 : (sq_to_so x).e7 = (sq_to_so y).e7 := by rw [h]
+    dsimp [sq_to_so] at h7; exact h7
 
 /-- The composite embedding C → SO is injective. -/
 theorem c_to_so_injective {x y : SplitComplex} (h : c_to_so x = c_to_so y) : x = y :=
@@ -100,15 +105,13 @@ theorem c_to_sq_components (x : SplitComplex) :
 /-- The image of `sq_to_so` has zero e₀..e₃ components. -/
 theorem sq_to_so_compact_zero (x : SplitQuat) :
     (sq_to_so x).e0 = 0 ∧ (sq_to_so x).e1 = 0 ∧ (sq_to_so x).e2 = 0 ∧ (sq_to_so x).e3 = 0 := by
-  dsimp [sq_to_so, cd_to_so, quat_zero]
-  simp
+  dsimp [sq_to_so]; simp
 
 /-- `sq_to_so` maps the split components directly:
     sq_to_so(x).e4 = x.a, sq_to_so(x).e5 = x.b, sq_to_so(x).e6 = x.c, sq_to_so(x).e7 = x.d. -/
 theorem sq_to_so_split_components (x : SplitQuat) :
     (sq_to_so x).e4 = x.a ∧ (sq_to_so x).e5 = x.b ∧ (sq_to_so x).e6 = x.c ∧ (sq_to_so x).e7 = x.d := by
-  dsimp [sq_to_so, cd_to_so, quat_zero]
-  simp
+  dsimp [sq_to_so]; simp
 
 /-- Relation between `c_to_so` and `SplitComplex.emb`:
     c_to_so(x) has e0 = SplitComplex.emb(x).e0 = x.a and e4 = SplitComplex.emb(x).e4 = x.b,
@@ -124,7 +127,7 @@ theorem sq_to_so_split_components (x : SplitQuat) :
     moves the entire element into the split sector. -/
 theorem c_to_so_vs_emb (x : SplitComplex) :
     (c_to_so x).e0 = 0 ∧ (c_to_so x).e4 = x.a ∧ (c_to_so x).e5 = x.b := by
-  dsimp [c_to_so, sq_to_so, c_to_sq, cd_to_so, quat_zero]; simp
+  dsimp [c_to_so, c_to_sq, sq_to_so]; simp
 
 -- ============================================================================
 -- SECTION 2: Annihilation Subspace
@@ -270,7 +273,6 @@ def associatorTriple (x : SplitOctonion) (y : SplitQuat) (z : SplitComplex) : Sp
     Since e₄·e₄ = e₄² = e₀, we get -e₀ ≠ 0. -/
 theorem tripleProduct_nonzero_example : tripleProduct e1_vec (⟨0, 1, 0, 0⟩ : SplitQuat) (⟨1, 0⟩ : SplitComplex) ≠ 0 := by
   unfold tripleProduct sq_to_so c_to_so c_to_sq
-  dsimp [cd_to_so, quat_zero, SplitComplex.emb]
   -- Compute split_oct_mul (split_oct_mul e1_vec {e4=0,e5=1,...}) {e0=0,e4=1}
   ext <;> unfold split_oct_mul <;> ring
 
@@ -292,21 +294,18 @@ theorem e1_e2_e4_associator :
     do not change the SO element (as expected, since they embed as subalgebras). -/
 theorem tripleProduct_identity : tripleProduct e1_vec (⟨1, 0, 0, 0⟩ : SplitQuat) (⟨1, 0⟩ : SplitComplex) = e1_vec := by
   unfold tripleProduct sq_to_so c_to_so c_to_sq
-  dsimp [cd_to_so, quat_zero, SplitComplex.emb]
   ext <;> unfold split_oct_mul <;> ring
 
 /-- The associator triple of the identity in all three layers is zero.
     This shows that the identity element does not create entanglement. -/
 theorem associatorTriple_identity_zero : associatorTriple e1_vec (⟨1, 0, 0, 0⟩ : SplitQuat) (⟨1, 0⟩ : SplitComplex) = 0 := by
   unfold associatorTriple tripleProduct sq_to_so c_to_so c_to_sq
-  dsimp [cd_to_so, quat_zero, SplitComplex.emb]
   ext <;> unfold split_oct_mul <;> ring
 
 /-- The associator triple of the associator (e₁, e₂, e₄) is non-zero,
     equal to 2·e₇ (the maximal entanglement). -/
 theorem associatorTriple_e1_e2_e4 : associatorTriple e1_vec (⟨0, 0, 0, 1⟩ : SplitQuat) (⟨1, 0⟩ : SplitComplex) = (2 : ℤ) • e7_vec := by
   unfold associatorTriple tripleProduct sq_to_so c_to_so c_to_sq
-  dsimp [cd_to_so, quat_zero, SplitComplex.emb]
   ext <;> unfold split_oct_mul <;> ring
 
 -- ============================================================================
@@ -346,9 +345,9 @@ theorem entanglementMeasure_e1_e2_e4 :
     octonionPairing ((2 : ℤ) • e7_vec) ((2 : ℤ) • e7_vec) =
       octonionPairingAux ((2 : ℤ) • e7_vec) ((2 : ℤ) • e7_vec) := by simp
     _ = 4 * octonionPairingAux e7_vec e7_vec := by
-      simp [octonionPairingAux, octonion_zsmul_e0, octonion_zsmul_e1, octonion_zsmul_e2,
-        octonion_zsmul_e3, octonion_zsmul_e4, octonion_zsmul_e5, octonion_zsmul_e6,
-        octonion_zsmul_e7]
+      simp [octonionPairingAux, split_oct_zsmul_e0, split_oct_zsmul_e1, split_oct_zsmul_e2,
+        split_oct_zsmul_e3, split_oct_zsmul_e4, split_oct_zsmul_e5, split_oct_zsmul_e6,
+        split_oct_zsmul_e7]
       ring
     _ = 4 * (-1) := by
       simp [octonionPairingAux, e7_vec]
@@ -363,7 +362,6 @@ theorem entanglementMeasure_e1_e2_e4 :
 theorem entanglementMeasure_simple :
     entanglementMeasure e1_vec (⟨0, 1, 0, 0⟩ : SplitQuat) (⟨1, 0⟩ : SplitComplex) = 1 := by
   unfold entanglementMeasure tripleProduct sq_to_so c_to_so c_to_sq
-  dsimp [cd_to_so, quat_zero, SplitComplex.emb]
   -- Step 1: compute the triple product equals -e₀_vec
   have h_prod : split_oct_mul (split_oct_mul e1_vec
     { e0 := 0, e1 := 0, e2 := 0, e3 := 0, e4 := 0, e5 := 1, e6 := 0, e7 := 0 })
