@@ -89,102 +89,102 @@ theorem covectorProjection_add (λ₁ λ₂ : SplitQuat) :
 The transit map coordinate of a tree `t` at CD step `cd`.
 Convenience function combining `kktMultiplier` and `covectorProjection`.
 
-  tubeCoord cd t = (t.size + assocDefect cd, leftWeight t - rightWeight t)
+  transitCoord cd t = (t.size + assocDefect cd, leftWeight t - rightWeight t)
 
 The x-coordinate is the structural size of the tree plus the associator
 defect at this CD step. The y-coordinate is the left/right branching
 asymmetry: positive for left-biased trees, negative for right-biased.
 -/
-def tubeCoord (cd : ℕ) (t : EMLTree) : ℤ × ℤ :=
+def transitCoord (cd : ℕ) (t : EMLTree) : ℤ × ℤ :=
   covectorProjection (kktMultiplier cd t)
 
 /--
-Explicit expansion of `tubeCoord` in terms of tree primitives.
+Explicit expansion of `transitCoord` in terms of tree primitives.
 -/
-theorem tubeCoord_expand (cd : ℕ) (t : EMLTree) :
-    tubeCoord cd t = ((t.size : ℤ) + (assocDefect cd : ℤ), (leftWeight t : ℤ) - (rightWeight t : ℤ)) := by
-  simp [tubeCoord, covectorProjection, kktMultiplier]
+theorem transitCoord_expand (cd : ℕ) (t : EMLTree) :
+    transitCoord cd t = ((t.size : ℤ) + (assocDefect cd : ℤ), (leftWeight t : ℤ) - (rightWeight t : ℤ)) := by
+  simp [transitCoord, covectorProjection, kktMultiplier]
 
 /--
-The tube coordinate of the leaf tree at any CD step.
+The transit coordinate of the leaf tree at any CD step.
 The leaf has size 0, leftWeight 0, rightWeight 0, so:
-  tubeCoord cd Leaf = (assocDefect cd, 0)
+  transitCoord cd Leaf = (assocDefect cd, 0)
 -/
-theorem tubeCoord_leaf (cd : ℕ) : tubeCoord cd (.Leaf : EMLTree) = ((assocDefect cd : ℤ), 0) := by
-  simp [tubeCoord, covectorProjection, kktMultiplier, leftWeight, rightWeight, EMLTree.size]
+theorem transitCoord_leaf (cd : ℕ) : transitCoord cd (.Leaf : EMLTree) = ((assocDefect cd : ℤ), 0) := by
+  simp [transitCoord, covectorProjection, kktMultiplier, leftWeight, rightWeight, EMLTree.size]
 
 /--
-The tube coordinate of a singleton node (Node Leaf Leaf) at any CD step.
-  tubeCoord cd (Node Leaf Leaf) = (1 + assocDefect cd, 0)
+The transit coordinate of a singleton node (Node Leaf Leaf) at any CD step.
+  transitCoord cd (Node Leaf Leaf) = (1 + assocDefect cd, 0)
 -/
-theorem tubeCoord_node_leaf_leaf (cd : ℕ) : tubeCoord cd (EMLTree.Node .Leaf .Leaf) = ((1 : ℤ) + (assocDefect cd : ℤ), 0) := by
-  simp [tubeCoord, covectorProjection, kktMultiplier, leftWeight, rightWeight, EMLTree.size]
+theorem transitCoord_node_leaf_leaf (cd : ℕ) : transitCoord cd (EMLTree.Node .Leaf .Leaf) = ((1 : ℤ) + (assocDefect cd : ℤ), 0) := by
+  simp [transitCoord, covectorProjection, kktMultiplier, leftWeight, rightWeight, EMLTree.size]
 
 /--
-The tube coordinate of a right-comb tree of size n at CD step cd.
+The transit coordinate of a right-comb tree of size n at CD step cd.
 Right-comb trees have no left branching, so leftWeight = 0 and
 rightWeight grows as the triangular number n(n-1)/2.
 -/
-theorem tubeCoord_rightComb (cd n : ℕ) : tubeCoord cd (rightComb n) =
+theorem transitCoord_rightComb (cd n : ℕ) : transitCoord cd (rightComb n) =
     ((n : ℤ) + (assocDefect cd : ℤ), -(rightWeight (rightComb n) : ℤ)) := by
   induction n with
   | zero =>
-    simp [tubeCoord, covectorProjection, kktMultiplier, rightComb, rightWeight, leftWeight, EMLTree.size]
+    simp [transitCoord, covectorProjection, kktMultiplier, rightComb, rightWeight, leftWeight, EMLTree.size]
   | succ n ih =>
-    simp [tubeCoord, covectorProjection, kktMultiplier, rightComb, rightWeight, leftWeight, EMLTree.size, ih]
+    simp [transitCoord, covectorProjection, kktMultiplier, rightComb, rightWeight, leftWeight, EMLTree.size, ih]
 
 -- ============================================================================
 -- Basic Properties
 -- ============================================================================
 
 /--
-The tube coordinate of a tree depends on the CD step only through
+The transit coordinate of a tree depends on the CD step only through
 the `assocDefect` term. For associative CD steps (cd ≤ 2), the coordinate
 reduces to (t.size, leftWeight t - rightWeight t).
 -/
-theorem tubeCoord_assoc_step (cd : ℕ) (hcd : cd ≤ 2) (t : EMLTree) :
-    tubeCoord cd t = ((t.size : ℤ), (leftWeight t : ℤ) - (rightWeight t : ℤ)) := by
-  rw [tubeCoord_expand, assocDefect_zero_up_to_cd2 cd hcd]
+theorem transitCoord_assoc_step (cd : ℕ) (hcd : cd ≤ 2) (t : EMLTree) :
+    transitCoord cd t = ((t.size : ℤ), (leftWeight t : ℤ) - (rightWeight t : ℤ)) := by
+  rw [transitCoord_expand, assocDefect_zero_up_to_cd2 cd hcd]
   simp
 
 /--
-The tube coordinate at CD step 3 (non-associative regime) has an
+The transit coordinate at CD step 3 (non-associative regime) has an
 extra `strut_weight` contribution to the x-coordinate, producing a
 horizontal offset of +4 in the transit map relative to CD step 2.
 -/
-theorem tubeCoord_cd3_vs_cd2 (t : EMLTree) :
-    (tubeCoord 3 t).1 = (tubeCoord 2 t).1 + (strut_weight : ℤ) := by
-  rw [tubeCoord_expand, tubeCoord_expand]
+theorem transitCoord_cd3_vs_cd2 (t : EMLTree) :
+    (transitCoord 3 t).1 = (transitCoord 2 t).1 + (strut_weight : ℤ) := by
+  rw [transitCoord_expand, transitCoord_expand]
   have h_sw : assocDefect 3 = strut_weight := assocDefect_positive_for_cd3plus 3 (by omega)
   have h_0 : assocDefect 2 = 0 := assocDefect_zero_up_to_cd2 2 (by omega)
   simp [h_sw, h_0]
   omega
 
 /--
-The difference in tube coordinates between two CD steps equals the
+The difference in transit coordinates between two CD steps equals the
 difference in their `assocDefect` values on the x-coordinate.
 The y-coordinate is unchanged because it depends only on the tree
 structure (leftWeight and rightWeight), not on the CD step.
 -/
-theorem tubeCoord_cd_diff (cd₁ cd₂ : ℕ) (t : EMLTree) :
-    (tubeCoord cd₁ t).1 - (tubeCoord cd₂ t).1 = (assocDefect cd₁ : ℤ) - (assocDefect cd₂ : ℤ) := by
-  rw [tubeCoord_expand, tubeCoord_expand]
+theorem transitCoord_cd_diff (cd₁ cd₂ : ℕ) (t : EMLTree) :
+    (transitCoord cd₁ t).1 - (transitCoord cd₂ t).1 = (assocDefect cd₁ : ℤ) - (assocDefect cd₂ : ℤ) := by
+  rw [transitCoord_expand, transitCoord_expand]
   omega
 
 /--
-The tube coordinate x-component equals the tree's size plus the current
+The transit coordinate x-component equals the tree's size plus the current
 CD step's associator defect.
 -/
-theorem tubeCoord_x_eq_size_plus_assocDefect (cd : ℕ) (t : EMLTree) :
-    (tubeCoord cd t).1 = (t.size : ℤ) + (assocDefect cd : ℤ) := by
-  rw [tubeCoord_expand]; rfl
+theorem transitCoord_x_eq_size_plus_assocDefect (cd : ℕ) (t : EMLTree) :
+    (transitCoord cd t).1 = (t.size : ℤ) + (assocDefect cd : ℤ) := by
+  rw [transitCoord_expand]; rfl
 
 /--
-The tube coordinate y-component equals the left/right branching asymmetry.
+The transit coordinate y-component equals the left/right branching asymmetry.
 -/
-theorem tubeCoord_y_eq_leftWeight_sub_rightWeight (cd : ℕ) (t : EMLTree) :
-    (tubeCoord cd t).2 = (leftWeight t : ℤ) - (rightWeight t : ℤ) := by
-  rw [tubeCoord_expand]; rfl
+theorem transitCoord_y_eq_leftWeight_sub_rightWeight (cd : ℕ) (t : EMLTree) :
+    (transitCoord cd t).2 = (leftWeight t : ℤ) - (rightWeight t : ℤ) := by
+  rw [transitCoord_expand]; rfl
 
 -- ============================================================================
 -- Octonion KKT Multiplier (CD 3 extension)
@@ -196,7 +196,7 @@ quaternion multiplier at CD step 3 (the split octonion layer).
 
 Component placement in the octonion basis:
 
-| Component | Octonion basis | Antipode parity | Tube map role |
+| Component | Octonion basis | Antipode parity | Transit map role |
 |-----------|----------------|-----------------|---------------|
 | t.size    | e0 (scalar)    | EVEN (fixed)    | → x-coordinate |
 | leftWeight t | e1 (vector) | ODD (negated) | → y-coordinate (+) |
@@ -266,34 +266,34 @@ theorem covectorProjectionOct_add (λ₁ λ₂ : SplitOctonion) :
 The **octonion transit map coordinate**: composes the octonion KKT multiplier
 with the octonion covector projection.
 
-    tubeCoordOct cd t = (t.size + assocDefect cd, leftWeight t - rightWeight t)
+    transitCoordOct cd t = (t.size + assocDefect cd, leftWeight t - rightWeight t)
 
-This is the SAME formula as `tubeCoord cd t` — the octonion extension does
+This is the SAME formula as `transitCoord cd t` — the octonion extension does
 not change the 2D layout of the transit map.
 -/
-def tubeCoordOct (cd : ℕ) (t : EMLTree) : ℤ × ℤ :=
+def transitCoordOct (cd : ℕ) (t : EMLTree) : ℤ × ℤ :=
   covectorProjectionOct (kktMultiplierOct cd t)
 
 /--
-The octonion tube coordinate equals the quaternion tube coordinate for
+The octonion transit coordinate equals the quaternion transit coordinate for
 all CD steps:
 
-    tubeCoordOct cd t = tubeCoord cd t
+    transitCoordOct cd t = transitCoord cd t
 
 This proves the octonion extension is backward-compatible with the
 existing transit map layout.
 -/
-theorem tubeCoordOct_eq_tubeCoord (cd : ℕ) (t : EMLTree) : tubeCoordOct cd t = tubeCoord cd t := by
-  simp [tubeCoordOct, kktMultiplierOct, covectorProjectionOct,
-    tubeCoord, covectorProjection, kktMultiplier]
+theorem transitCoordOct_eq_transitCoord (cd : ℕ) (t : EMLTree) : transitCoordOct cd t = transitCoord cd t := by
+  simp [transitCoordOct, kktMultiplierOct, covectorProjectionOct,
+    transitCoord, covectorProjection, kktMultiplier]
 
 /--
-Explicit expansion of the octonion tube coordinate in terms of tree
+Explicit expansion of the octonion transit coordinate in terms of tree
 primitives.
 -/
-theorem tubeCoordOct_expand (cd : ℕ) (t : EMLTree) :
-    tubeCoordOct cd t = ((t.size : ℤ) + (assocDefect cd : ℤ), (leftWeight t : ℤ) - (rightWeight t : ℤ)) := by
-  simp [tubeCoordOct, kktMultiplierOct, covectorProjectionOct]
+theorem transitCoordOct_expand (cd : ℕ) (t : EMLTree) :
+    transitCoordOct cd t = ((t.size : ℤ) + (assocDefect cd : ℤ), (leftWeight t : ℤ) - (rightWeight t : ℤ)) := by
+  simp [transitCoordOct, kktMultiplierOct, covectorProjectionOct]
 
 /--
 The **octonion pairing self-evaluation** of the KKT multiplier:

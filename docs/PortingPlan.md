@@ -487,21 +487,43 @@ DONE. 126 lines. Core cost definitions + phase change theorems.
 - [x] `heightMap_discontinuity_at_cd2_3`
 - [x] `lake build LaserCortex.Friction`
 
-### Stage 3: OctilinearEmbedding.lean — SHELL
+### Stage 3: OctilinearEmbedding.lean — COMPLETE
 
-**SHELL.** 20 lines. Ready to port.
+DONE. 369 lines. All KKT multiplier + covector projection + tube coordinate
+theorems compile. `lake build LaserCortex.OctilinearEmbedding` passes (full
+build covers it). Octonion extensions (`kktMultiplierOct`, `covectorProjectionOct`,
+`tubeCoordOct`) backward-compatible with quaternion versions proven.
 
-- [ ] kktMultiplier: EMLTree → SplitQuat (line 92)
-- [ ] covectorProjection: SplitQuat → ℤ × ℤ (line 135)
-- [ ] tubeCoord: EMLTree → ℤ × ℤ (line 170)
-- [ ] tubeCoord_leaf, tubeCoord_node_leaf_leaf, tubeCoord_rightComb (lines 185-201)
-- [ ] tubeCoord_assoc_step (line 220)
-- [ ] tubeCoord_cd_diff (line 247) + tubeCoord_x_eq_size_plus_assocDefect (line 257)
-- [ ] tubeCoord_y_eq_leftWeight_sub_rightWeight (line 266)
-- [ ] kktMultiplierOct, covectorProjectionOct, tubeCoordOct (lines 300-393)
-- [ ] pairing_signature_phase_change (line 483)
-- [ ] cd3_nonassociative_signature (line 503)
-- [ ] `lake build LaserCortex.OctilinearEmbedding`
+- [x] kktMultiplier: EMLTree → SplitQuat (line 92)
+- [x] kktMultiplier_antipode (line 103)
+- [x] kktMultiplier_norm (line 112)
+- [x] covectorProjection: SplitQuat → ℤ × ℤ (line 135)
+- [x] covectorProjection_antipode (line 143)
+- [x] covectorProjection_add (line 150)
+- [x] tubeCoord: EMLTree → ℤ × ℤ (line 170)
+- [x] tubeCoord_expand (line 176)
+- [x] tubeCoord_leaf (line 185)
+- [x] tubeCoord_node_leaf_leaf (line 192)
+- [x] tubeCoord_rightComb (line 201)
+- [x] tubeCoord_assoc_step (line 220)
+- [x] tubeCoord_cd3_vs_cd2 (line 233)
+- [x] tubeCoord_cd_diff (line 247)
+- [x] tubeCoord_x_eq_size_plus_assocDefect (line 257)
+- [x] tubeCoord_y_eq_leftWeight_sub_rightWeight (line 266)
+- [x] kktMultiplierOct (line 300)
+- [x] kktMultiplierOct_expand (line 319)
+- [x] kktMultiplierOct_antipode (line 329)
+- [x] covectorProjectionOct (line 347)
+- [x] covectorProjectionOct_antipode (line 357)
+- [x] covectorProjectionOct_add (line 366)
+- [x] tubeCoordOct (line 381)
+- [x] tubeCoordOct_eq_tubeCoord (line 393)
+- [x] tubeCoordOct_expand (line 401)
+- [x] kktMultiplierOct_pairing_self (line 418)
+- [x] kktMultiplierOct_antipode_pairing_self (line 455)
+- [x] pairing_signature_phase_change (line 483)
+- [x] cd3_nonassociative_signature (line 503)
+- [x] `lake build LaserCortex.OctilinearEmbedding`
 
 ### Stage 4: Chu.lean — COMPLETE
 
