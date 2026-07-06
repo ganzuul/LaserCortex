@@ -236,8 +236,6 @@ theorem chu_embed_mul (x y : SplitQuat) : SplitQuat.embed (x * y) = SplitQuat.em
   unfold SplitQuat.embed
   simp [Algebra.smul_def]
   noncomm_ring
-  simp [e0_sq', e1_sq', anticommute', mul_assoc, Algebra.commutes]
-  ring
 
 theorem chu_zsmul_eq_mul (r : ℤ) (x : Cl11) : r • x = (algebraMap ℤ Cl11 r) * x := by
   simp
@@ -283,6 +281,7 @@ theorem Chu_distributor (X Y Z W : ChuSpace SplitQuat) (P : SplitQuat) :
     splitQuatPairingAux (X.a * Z.a) ((Y.a' * W.a') * P) := by
   dsimp [splitQuatPairingAux]
   simp only [split_quat_mul_a, split_quat_mul_b, split_quat_mul_c, split_quat_mul_d]
+  set_option maxRecDepth 2000000 in
   ring
 
 theorem kkt_stationarity (x y : SplitQuat) : SplitQuat.embed (x * y) = SplitQuat.embed x * SplitQuat.embed y :=

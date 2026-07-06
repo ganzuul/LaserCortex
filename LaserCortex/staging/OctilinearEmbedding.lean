@@ -29,12 +29,12 @@ def kktMultiplier (cd : ℕ) (t : EMLTree) : SplitQuat :=
   , (assocDefect cd : ℤ) ⟩
 
 /--
-The antipode (grading involution) of the KKT multiplier.
+The Clifford conjugate (antipode) of the KKT multiplier.
 This is `antipode_sq` applied componentwise: negates the odd-grade
-components (b, c) and fixes the even-grade ones (a, d).
+components (b, c) AND the pseudoscalar component d.
 -/
 theorem kktMultiplier_antipode (cd : ℕ) (t : EMLTree) :
-    antipode_sq (kktMultiplier cd t) = ⟨(t.size : ℤ), -(leftWeight t : ℤ), -(rightWeight t : ℤ), (assocDefect cd : ℤ)⟩ := by
+    antipode_sq (kktMultiplier cd t) = ⟨(t.size : ℤ), -(leftWeight t : ℤ), -(rightWeight t : ℤ), -(assocDefect cd : ℤ)⟩ := by
   ext <;> simp [kktMultiplier, antipode_sq]
 
 /--
@@ -44,7 +44,7 @@ The norm of the KKT multiplier equals the (2,2) determinant form:
 -/
 theorem kktMultiplier_norm (cd : ℕ) (t : EMLTree) : (kktMultiplier cd t).norm =
     (t.size : ℤ)^2 + (leftWeight t : ℤ)^2 - (rightWeight t : ℤ)^2 - (assocDefect cd : ℤ)^2 := by
-  simp [kktMultiplier, SplitQuat.norm]
+  simp [kktMultiplier, SplitQuat.norm, sq]
 
 -- ============================================================================
 -- Covector Projection
@@ -61,25 +61,31 @@ Formula:
   x = a + d   (even + even)
   y = b − c   (odd − odd)
 -/
-def covectorProjection (λ : SplitQuat) : ℤ × ℤ :=
-  (λ.a + λ.d, λ.b - λ.c)
+def covectorProjection (x : SplitQuat) : ℤ × ℤ :=
+  (x.a + x.d, x.b - x.c)
 
 /--
-The antipode (negating components b, c) flips the sign of the y-coordinate
-while preserving the x-coordinate:
-  P(S(λ)) = (x, -y) where (x, y) = P(λ)
+The grade involution (negating odd-grade components b, c; fixing even-grade a, d)
+flips the sign of the y-coordinate while preserving the x-coordinate:
+  P(grade(λ)) = (x, -y) where (x, y) = P(λ)
+
+NOTE: Uses `SplitQuat.grade` (proper grade involution) not `antipode_sq`
+(Clifford conjugate). The Clifford conjugate also negates d, which would
+change the x-coordinate — use `SplitQuat.grade` for the geometric claim.
 -/
-theorem covectorProjection_antipode (λ : SplitQuat) :
-    covectorProjection (antipode_sq λ) = ((covectorProjection λ).1, -(covectorProjection λ).2) := by
-  simp [covectorProjection, antipode_sq]
+theorem covectorProjection_antipode (x : SplitQuat) :
+    covectorProjection (x.grade) = ((covectorProjection x).1, -(covectorProjection x).2) := by
+  simp [covectorProjection, SplitQuat.grade]
 
 /--
 The covector projection is ℤ-linear: P(λ₁ + λ₂) = P(λ₁) + P(λ₂).
 -/
-theorem covectorProjection_add (λ₁ λ₂ : SplitQuat) :
-    covectorProjection (λ₁ + λ₂) = ((covectorProjection λ₁).1 + (covectorProjection λ₂).1,
-                                    (covectorProjection λ₁).2 + (covectorProjection λ₂).2) := by
-  simp [covectorProjection]
+theorem covectorProjection_add (x y : SplitQuat) :
+    covectorProjection (x + y) = ((covectorProjection x).1 + (covectorProjection y).1,
+                                  (covectorProjection x).2 + (covectorProjection y).2) := by
+  have h : x + y = split_quat_add x y := rfl
+  rw [h, covectorProjection, split_quat_add]
+  simp
 
 -- ============================================================================
 -- Transit Map Coordinate
@@ -131,7 +137,14 @@ theorem transitCoord_rightComb (cd n : ℕ) : transitCoord cd (rightComb n) =
   | zero =>
     simp [transitCoord, covectorProjection, kktMultiplier, rightComb, rightWeight, leftWeight, EMLTree.size]
   | succ n ih =>
-    simp [transitCoord, covectorProjection, kktMultiplier, rightComb, rightWeight, leftWeight, EMLTree.size, ih]
+    have h_sz : (rightComb (n+1)).size = n+1 := by
+      simp [rightComb, EMLTree.size]
+    have h_lw : leftWeight (rightComb (n+1)) = 0 := by
+      simp [rightComb, leftWeight, EMLTree.size]
+    have h_rw : rightWeight (rightComb (n+1)) = (n : ℕ) + rightWeight (rightComb n) := by
+      simp [rightComb, rightWeight, EMLTree.size]
+    simp [transitCoord, covectorProjection, kktMultiplier, h_sz, h_lw, h_rw, ih]
+    ring
 
 -- ============================================================================
 -- Basic Properties
@@ -145,7 +158,6 @@ reduces to (t.size, leftWeight t - rightWeight t).
 theorem transitCoord_assoc_step (cd : ℕ) (hcd : cd ≤ 2) (t : EMLTree) :
     transitCoord cd t = ((t.size : ℤ), (leftWeight t : ℤ) - (rightWeight t : ℤ)) := by
   rw [transitCoord_expand, assocDefect_zero_up_to_cd2 cd hcd]
-  simp
 
 /--
 The transit coordinate at CD step 3 (non-associative regime) has an
@@ -177,14 +189,14 @@ CD step's associator defect.
 -/
 theorem transitCoord_x_eq_size_plus_assocDefect (cd : ℕ) (t : EMLTree) :
     (transitCoord cd t).1 = (t.size : ℤ) + (assocDefect cd : ℤ) := by
-  rw [transitCoord_expand]; rfl
+  rw [transitCoord_expand]
 
 /--
 The transit coordinate y-component equals the left/right branching asymmetry.
 -/
 theorem transitCoord_y_eq_leftWeight_sub_rightWeight (cd : ℕ) (t : EMLTree) :
     (transitCoord cd t).2 = (leftWeight t : ℤ) - (rightWeight t : ℤ) := by
-  rw [transitCoord_expand]; rfl
+  rw [transitCoord_expand]
 
 -- ============================================================================
 -- Octonion KKT Multiplier (CD 3 extension)
@@ -241,26 +253,26 @@ coordinates by separating even and odd antipode components.
 Formula:
     P_oct(λ) = (λ.e0 + λ.e4, λ.e1 - λ.e2)
 -/
-def covectorProjectionOct (λ : SplitOctonion) : ℤ × ℤ :=
-  (λ.e0 + λ.e4, λ.e1 - λ.e2)
+def covectorProjectionOct (x : SplitOctonion) : ℤ × ℤ :=
+  (x.e0 + x.e4, x.e1 - x.e2)
 
 /--
 The antipode flips the sign of the y-coordinate while preserving x:
 
     P_oct(S(λ)) = (x, -y) where (x, y) = P_oct(λ)
 -/
-theorem covectorProjectionOct_antipode (λ : SplitOctonion) :
-    covectorProjectionOct (antipode λ) = ((covectorProjectionOct λ).1, -(covectorProjectionOct λ).2) := by
-  simp [covectorProjectionOct, antipode]
+theorem covectorProjectionOct_antipode (x : SplitOctonion) :
+    covectorProjectionOct (antipode x) = ((covectorProjectionOct x).1, -(covectorProjectionOct x).2) := by
+  simp [covectorProjectionOct, antipode]; ring
 
 /--
 The octonion covector projection is ℤ-linear:
     P_oct(λ₁ + λ₂) = P_oct(λ₁) + P_oct(λ₂)
 -/
-theorem covectorProjectionOct_add (λ₁ λ₂ : SplitOctonion) :
-    covectorProjectionOct (λ₁ + λ₂) = ((covectorProjectionOct λ₁).1 + (covectorProjectionOct λ₂).1,
-                                        (covectorProjectionOct λ₁).2 + (covectorProjectionOct λ₂).2) := by
-  simp [covectorProjectionOct]
+theorem covectorProjectionOct_add (x y : SplitOctonion) :
+    covectorProjectionOct (x + y) = ((covectorProjectionOct x).1 + (covectorProjectionOct y).1,
+                                     (covectorProjectionOct x).2 + (covectorProjectionOct y).2) := by
+  simp [covectorProjectionOct, split_add]
 
 /--
 The **octonion transit map coordinate**: composes the octonion KKT multiplier
@@ -314,7 +326,7 @@ theorem kktMultiplierOct_pairing_self (cd : ℕ) (t : EMLTree) :
     - (kktMultiplierOct cd t).e6 * (kktMultiplierOct cd t).e6
     - (kktMultiplierOct cd t).e7 * (kktMultiplierOct cd t).e7
     = (t.size : ℤ)^2 + (leftWeight t : ℤ)^2 + (rightWeight t : ℤ)^2 + (assocDefect cd : ℤ)^2 := by
-  simp [kktMultiplierOct]
+  simp [kktMultiplierOct, pow_two]
 
 /--
 The **antipode self-pairing** of the KKT multiplier:
@@ -331,7 +343,7 @@ theorem kktMultiplierOct_antipode_pairing_self (cd : ℕ) (t : EMLTree) :
     - (antipode (kktMultiplierOct cd t)).e6 * (kktMultiplierOct cd t).e6
     - (antipode (kktMultiplierOct cd t)).e7 * (kktMultiplierOct cd t).e7
     = (t.size : ℤ)^2 - (leftWeight t : ℤ)^2 - (rightWeight t : ℤ)^2 + (assocDefect cd : ℤ)^2 := by
-  simp [kktMultiplierOct, antipode]
+  simp [kktMultiplierOct, antipode, pow_two]
 
 /--
 **Phase change signature**: The octonion antipode self-pairing at CD 3
@@ -352,7 +364,7 @@ theorem pairing_signature_phase_change (cd : ℕ) (hcd : 3 ≤ cd) (t : EMLTree)
     - ((t.size : ℤ)^2 + (leftWeight t : ℤ)^2 - (rightWeight t : ℤ)^2 - (assocDefect cd : ℤ)^2)
     = -2*(leftWeight t : ℤ)^2 + 2*(assocDefect cd : ℤ)^2 := by
   have ha : assocDefect cd = strut_weight := assocDefect_positive_for_cd3plus cd hcd
-  simp [kktMultiplierOct, antipode, ha, strut_weight_eq_four]
+  simp [kktMultiplierOct, antipode, ha, strut_weight_eq_four, pow_two]; ring
 
 /--
 **Unpacking the KKT multiplier at CD 3**: The octonion KKT multiplier

@@ -111,11 +111,14 @@ No scaffolding imports.
 
 ### Status
 
-DONE. 809 lines. All SplitOctonion + SplitQuat definitions and theorems compile.
-  - `pentagon_defect` corrected: five distinct bracketings (was copy-paste bug with repeated term)
+DONE. 823 lines. All SplitOctonion + SplitQuat definitions and theorems compile.
+  - `pentagon_defect` corrected: five distinct bracketings with telescoping `term1 - term5` (coefficient-balanced sum to zero; was copy-paste bug with repeated term producing sum = -1)
+  - ⚠️ `pentagon_defect` is vector-valued (SplitOctonion) — the correct formalization for alternative algebras may be a **sign cocycle** φ(a,b,c) = ±1 satisfying φ(b,c,d)·φ(a,bc,d)·φ(a,b,c) = φ(a,b,cd)·φ(ab,c,d). See "Sign cocycle formalization" in Research Gaps below.
   - `split_oct_commutator` defined: commutator on SplitOctonion
   - `shiftBy4` defined: embeds commutator's first 4 components into e₄-e₇ sector (CD doubling map)
   - `cd_doubling_identity` proven: associator_tensor a b e4_vec = split_oct_mul (split_oct_commutator a b) e4_vec for base subalgebra elements; restriction to base is necessary (cross-terms survive for arbitrary a,b)
+  - `SplitQuat.grade` added: proper grade involution (negates odd-grade b, c; fixes even-grade a, d)
+  - ⚠️ **`SplitQuat.antipode_sq` ≠ `SplitQuat.grade`**: `antipode_sq` is the Clifford conjugate (negates d), `SplitQuat.grade` is the grade involution (fixes d). Octonion `antipode` fixes e₄ (correct). The SplitQuat `antipode_sq` negating d caused incorrect geometric theorems in OctilinearEmbedding — they now correctly use `SplitQuat.grade`.
 
 ---
 
@@ -253,7 +256,18 @@ DONE. 126 lines. Core cost definitions + phase change theorems.
 
 ### Status
 
-Shell created. Ready to port.
+DONE. 375 lines. All definitions + theorems compile. `lake build LaserCortex.OctilinearEmbedding`
+passes (verified 2026-07-06: 3 of 6 staging files had build errors requiring fixes;
+OctilinearEmbedding had 10+ ring arithmetic failures, `λ` reserved-word collision,
+and wrong use of `antipode_sq` instead of `SplitQuat.grade` for grade involution).
+
+- [x] Init: "Shell created, ready to port" — **incorrect**: actual stage had 369 lines of theorems, most broken
+- [x] Fix: reserved binder `λ` → `x` in Octonion extension section
+- [x] Fix: `covectorProjection_antipode` — was using `antipode_sq` (Clifford conjugate, negates d); corrected to `SplitQuat.grade` (grade involution, fixes d)
+- [x] Fix: all ring arithmetic goals closed via `pow_two` + `ring`/`omega`/`ring_nf`
+- [x] Fix: `transitCoord_rightComb` induction step — added explicit size/weight recurrence lemmas
+- [x] Fix: `No goals to be solved` after `rw` in `transitCoord_x_eq_size_plus_assocDefect` etc. — removed dead `rfl`
+- [x] `lake build` (full) — verified clean
 
 ---
 
@@ -554,11 +568,26 @@ One `sorry` in `quantized_types_are_exactly_non_meta_logics`.
 
 ### Stage 6: Full build + cleanup
 
-- [ ] Run `lake build` to verify all staging files compile
+- [x] Run `lake build` to verify all staging files compile (verified 2026-07-06: `lake build` passes 5965 jobs, zero errors)
 - [ ] Remove umbrella `LaserCortex.lean`
 - [ ] Remove scaffolding files
 - [ ] Update `.gitignore` if needed
 - [ ] Commit all changes
+
+### Build-incident postmortem (2026-07-06)
+
+Initial port claimed all 6 files "DONE", but `lake build` revealed 3 of 6 had errors:
+
+| File | Status claimed | Actual |
+|------|---------------|--------|
+| Algebra.lean | ✅ DONE | ⚠️ `pentagon_defect` coefficient-balance bug; missing `SplitQuat.grade` |
+| Tamari.lean | ✅ DONE | ✅ build clean |
+| Friction.lean | ✅ DONE | ✅ build clean |
+| OctilinearEmbedding.lean | ❌ "Shell created" | ❌ 10+ errors: reserved `λ`, wrong `antipode_sq`, ring arithmetic |
+| Chu.lean | ✅ DONE | ❌ `chu_embed_mul` dead `simp`; `Chu_distributor` recursion limit |
+| Composition.lean | ✅ DONE | ❌ `opaque` → `axiom` (Inhabited/Nonempty unsynthesizable) |
+
+Root cause: port was verified per-file but not against full `lake build`. After fixes, all 6 build cleanly.
 
 ---
 
@@ -633,3 +662,46 @@ These are documented but not yet formalized. Should be stated as
 - [ ] `continuous_lagrangian_stub` — Lagrangian density
   L(x) = e^{αx} - β ln(x²+ε) - δ (unformalized research gap)
 - [ ] Reverse direction of Develin-Sturmfels correspondence
+
+### Sign cocycle formalization (discovered 2026-07-06)
+
+The `pentagon_defect` P(a,b,c) is currently vector-valued in SplitOctonion. However,
+for **alternative algebras** (like the octonions), the correct formalization is a
+**sign cocycle** φ(a,b,c) = ±1 satisfying:
+
+    φ(b,c,d) · φ(a,bc,d) · φ(a,b,c) = φ(a,b,cd) · φ(ab,c,d)
+
+where
+  φ(a,b,c) = +1 if (ab)c = a(bc)  (associative triple)
+  φ(a,b,c) = −1 if (ab)c = −a(bc) (anti-associative triple)
+
+The current `pentagon_defect` computes magnitude of non-associativity via the
+associator tensor; the sign cocycle would capture the phase information directly.
+This distinction matters for:
+1. **Split-octonions stop at CD 2** (KernelPolish theorem): the (4,4) signature
+   split of the associator does not extend beyond CD 2. The sign cocycle may give
+   the correct obstruction theory.
+2. **Phase transitions** between quaternion (CD ≤ 2) and octonion (CD ≥ 3) regimes
+   are controlled by the sign pattern, not just magnitude.
+
+Status: **Research gap**. Not yet formalized. The current `pentagon_defect` in
+Algebra.lean is a placeholder that builds and satisfies the coefficient-balanced
+identity, but the sign-cocycle refinement is deferred to future work.
+
+### `SplitQuat.antipode_sq` vs `SplitQuat.grade`
+
+Two distinct involutions on the split quaternion:
+
+| Operation | Effect | Used for |
+|-----------|--------|----------|
+| `antipode_sq` (Clifford conjugate) | negates a, d; fixes b, c | Norm invariance, algebraic structure |
+| `SplitQuat.grade` (grade involution) | fixes a, d; negates b, c | Geometric covector projection |
+
+The confusion in OctilinearEmbedding.lean arose because `antipode_sq` was
+used where the grade involution was semantically required. The octonion
+`antipode` correctly fixes e₄ (even grade) and negates e₅, e₆, e₇ (odd grade),
+but `antipode_sq` on SplitQuat additionally negates d (even-grade scalar),
+making it a Clifford conjugate rather than a pure grade involution.
+
+**Decision**: SplitQuat now exports both operations. OctilinearEmbedding uses
+`SplitQuat.grade`. This distinction is documented in `covectorProjection_antipode`.

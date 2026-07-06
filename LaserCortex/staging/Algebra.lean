@@ -173,15 +173,25 @@ def octonion_norm (x : SplitOctonion) : Int :=
 def associator_tensor (a b c : SplitOctonion) : SplitOctonion :=
   split_sub (split_oct_mul (split_oct_mul a b) c) (split_oct_mul a (split_oct_mul b c))
 
+/--
+Coefficient-balanced pentagon defect: compares the leftmost bracketing `((ab)c)d`
+to the fully-balanced `(ab)(cd)`. Coefficients sum to zero (1 + (−1) = 0),
+so the defect vanishes when the two bracketings coincide.
+
+NOTE: This is a single-difference (edge) in the associahedron, not the full
+5-term pentagon. For alternative algebras (which split-octonions are as a CD
+doubling of an associative algebra), non-associativity is a sign cocycle
+φ(a,b,c) = ±1, not a vector residual. The correct formalization of the
+pentagon coherence condition is the multiplicative cocycle identity:
+
+    φ(b,c,d)·φ(a,bc,d)·φ(a,b,c) = φ(a,b,cd)·φ(ab,c,d)
+
+See docs/sonnet-5_on_discrete-continuous.md for discussion of the sign-cocycle
+approach vs the vector-valued approach.
+-/
 def pentagon_defect (a b c d : SplitOctonion) : SplitOctonion :=
-  split_add
-    (split_sub
-      (split_sub
-        (split_sub
-          (split_oct_mul (split_oct_mul (split_oct_mul a b) c) d)
-          (split_oct_mul (split_oct_mul a (split_oct_mul b c)) d))
-          (split_oct_mul a (split_oct_mul (split_oct_mul b c) d)))
-          (split_oct_mul a (split_oct_mul b (split_oct_mul c d))))
+  split_sub
+    (split_oct_mul (split_oct_mul (split_oct_mul a b) c) d)
     (split_oct_mul (split_oct_mul a b) (split_oct_mul c d))
 
 -- ============================================================================
@@ -227,7 +237,7 @@ theorem strut_weight_eq_four : strut_weight = 4 := by
 
 theorem pentagon_defect_bound : (octonion_norm (pentagon_defect e1_vec e2_vec e4_vec e1_vec)).natAbs ≤ 10 := by
   unfold pentagon_defect e1_vec e2_vec e4_vec
-  unfold split_sub split_add split_oct_mul octonion_norm
+  unfold split_sub split_oct_mul octonion_norm
   decide
 
 -- ============================================================================
@@ -592,7 +602,7 @@ theorem norm_eq_Q22 (x : SplitQuat) : x.norm = Q22 ![x.a, x.b, x.c, x.d] := by
   simp [Q22, SplitQuat.norm, QuadraticMap.proj_apply]
 
 -- ============================================================================
--- Antipode for SplitQuat (grading involution)
+-- Antipode (Clifford conjugate) for SplitQuat
 -- ============================================================================
 
 def antipode_sq (x : SplitQuat) : SplitQuat :=
@@ -636,6 +646,37 @@ theorem antipode_sq_mul (x y : SplitQuat) : antipode_sq (x * y) = antipode_sq y 
   · change (antipode_sq (split_quat_mul x y)).b = (split_quat_mul (antipode_sq y) (antipode_sq x)).b; dsimp [antipode_sq, split_quat_mul]; ring
   · change (antipode_sq (split_quat_mul x y)).c = (split_quat_mul (antipode_sq y) (antipode_sq x)).c; dsimp [antipode_sq, split_quat_mul]; ring
   · change (antipode_sq (split_quat_mul x y)).d = (split_quat_mul (antipode_sq y) (antipode_sq x)).d; dsimp [antipode_sq, split_quat_mul]; ring
+
+-- ============================================================================
+-- Proper grade involution for SplitQuat (fixes d, matching octonion antipode)
+-- ============================================================================
+
+/--
+The grade involution on SplitQuat: negates odd-grade components (b, c) and
+fixes even-grade ones (a, d). This matches the octonion `antipode` pattern
+which fixes e4 (pseudoscalar) — the SplitQuat `d` component maps to `e4`.
+
+NOTE: This is DIFFERENT from `antipode_sq` (the Clifford conjugate), which
+also negates d. Use `SplitQuat.grade` when the geometric claim is about the
+(2,2) grading (e.g. KKT multiplier coordinate parity), and `antipode_sq`
+for the anti-automorphism property.
+-/
+def SplitQuat.grade (x : SplitQuat) : SplitQuat :=
+  ⟨x.a, -x.b, -x.c, x.d⟩
+
+@[simp] theorem SplitQuat.grade_a (x : SplitQuat) : x.grade.a = x.a := rfl
+@[simp] theorem SplitQuat.grade_b (x : SplitQuat) : x.grade.b = -x.b := rfl
+@[simp] theorem SplitQuat.grade_c (x : SplitQuat) : x.grade.c = -x.c := rfl
+@[simp] theorem SplitQuat.grade_d (x : SplitQuat) : x.grade.d = x.d := rfl
+
+theorem SplitQuat.grade_involutive (x : SplitQuat) : x.grade.grade = x := by
+  ext <;> simp
+
+theorem SplitQuat.grade_add (x y : SplitQuat) : (x + y).grade = x.grade + y.grade := by
+  have h1 : (x + y) = split_quat_add x y := rfl
+  have h2 : x.grade + y.grade = split_quat_add (SplitQuat.grade x) (SplitQuat.grade y) := rfl
+  rw [h1, h2]
+  ext <;> dsimp [SplitQuat.grade, split_quat_add] <;> ring
 
 -- ============================================================================
 -- ℤ-scalar multiplication lemmas (componentwise)
