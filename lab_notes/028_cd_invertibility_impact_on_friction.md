@@ -197,15 +197,16 @@ the doubled algebra. This result does not extend to the mixed case
 `(a, x, e₄)` with `x ∈ Aℓ` (counterexample above).
 
 **The mixed case `(a, x, e₄)` where `a` is base and `x` has non-zero
-`e₄-e₇`** was proposed as the "cheaper intermediate check" but turns
-out to also fail: cross-terms survive in `.e0` (verified:
-`a=e₁_vec, b=e₅_vec`). So the maximal true statement is the
-base-restricted one: `[x, y, ℓ] = (xy − yx)·ℓ` for `x, y ∈ A`,
-the classical scope from Baez §2.2. The question of what happens
-when you stop restricting to the tidiest slot — `(a, x, e₄)` for
-`x ∈ Aℓ`, or `(a, b, c)` for arbitrary `c` — remains open. Both
-are natural next steps, but the mixed case is the smaller one (no
-new code architecture needed) and should be tested first.
+`e₄-e₇`** was proposed as the "cheaper intermediate check" — testing
+whether the commutator × generator formula survives when one argument
+is from the base and the other from the split sector.
+
+**Result: FALSE.** The identity does NOT extend to the mixed case.
+Cross-terms like `a.e1*b.e5`, `a.e2*b.e6`, `a.e3*b.e7` survive in
+the associator (each with coefficient 2). The proof attempt uses
+`ring` with zero hypotheses on the cross-terms — it fails on all 8
+components. Both arguments must be in the base subalgebra; the
+restriction is load-bearing at the mixed level too.
 
 **"Linear isomorphism between sectors" does more work than the proof supports.**
 What's shown: a bijection between `commutator(SplitOctonion, SplitOctonion)`

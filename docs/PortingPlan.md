@@ -200,7 +200,15 @@ DONE. 392 lines. Full EMLTree theory with normal forms and termination proof.
 
 ### Status
 
-Shell created. Ready to port.
+DONE. 126 lines. Core cost definitions + phase change theorems.
+`lake build LaserCortex.Friction` passes.
+
+- [x] `assocDefect` definition + `assocDefect_zero_up_to_cd2`
+- [x] `commDefect` definition
+- [x] `frictionDensity` definition + `frictionDensity_at_cl11_boundary` + `frictionDensity_jump_at_cd3`
+- [x] `frictionDensity_ge_k` + `frictionDensity_eq_k_for_k_le_2` + `frictionDensity_monotone`
+- [x] `heightMap_discontinuity_at_cd2_3`
+- [x] `lake build LaserCortex.Friction`
 
 ---
 
@@ -292,8 +300,8 @@ Shell created. Ready to port.
 
 ### Status
 
-**PARTIAL.** 289 lines (staging/Chu.lean). `chu_embed_mul` and `Chu_distributor` proven.
-Full duoidal structure on `ChuSpace SplitQuat` complete.
+DONE. 294 lines (staging/Chu.lean). All ChuSpace + pairings + algebra homomorphism
++ duoidal structure theorems compile. `lake build LaserCortex.Chu` passes.
 
 - [x] ChuSpace structure (line 84) + `primal`/`dual`/`dualize` (91-104)
 - [x] `splitQuatPairingAux` (line 122) + `splitQuatPairing` (line 146)
@@ -347,8 +355,21 @@ Full duoidal structure on `ChuSpace SplitQuat` complete.
 
 ### Status
 
-Shell created. Ready to port.
+DONE. 155 lines (staging/Composition.lean). All definitions + `free_not_quantized`
+compile. One `sorry` in `quantized_types_are_exactly_non_meta_logics`.
+`lake build LaserCortex.Composition` passes.
 
+- [x] `EvaluatorKind` definition
+- [x] `QuantizedType` structure + `quantizedFrictionDensity`
+- [x] `CompositionError` inductive
+- [x] `CompositionSpec` structure + `CompositionSpec.error`
+- [x] `compositionSpec_valid_iff` theorem
+- [x] `CompositionSpec.result` definition
+- [x] `free_not_quantized` theorem (counterexample: leftComb 22 at CD 4)
+- [x] `quantized_types_are_exactly_non_meta_logics` (reverse direction, `opaque`)
+- [x] `lake build LaserCortex.Composition`
+
+---
 
 ## Scaffolding files to discard
 
@@ -482,15 +503,18 @@ DONE. 126 lines. Core cost definitions + phase change theorems.
 - [ ] cd3_nonassociative_signature (line 503)
 - [ ] `lake build LaserCortex.OctilinearEmbedding`
 
-### Stage 4: Chu.lean — PARTIAL
+### Stage 4: Chu.lean — COMPLETE
 
-**PARTIAL.** 289 lines. Core Chu structure + algebra homomorphism + distributor coherence proven.
-Remaining: octonion pairing theorems (items 5-7 in file section above).
+DONE. 294 lines. All ChuSpace + pairings + algebra homomorphism + duoidal structure
+compile. `lake build LaserCortex.Chu` passes.
 
 - [x] ChuSpace structure (line 84) + `primal`/`dual`/`dualize` (91-104)
 - [x] `splitQuatPairingAux` (line 122) + `splitQuatPairing` (line 146)
 - [x] `splitQuatPairingAux_symm` (line 167) + `splitQuatPairing_antipode_symm` (line 177)
 - [x] `splitQuatPairing_nondegenerate` (line 196)
+- [x] `octonionPairingAux` (line 239) + `octonionPairing` (line 282)
+- [x] `octonionPairingAux_symm` (line 309) + `octonionPairing_antipode_symm` (line 322)
+- [x] `octonionPairing_nondegenerate` (line 349) + `antipodePairing_nondegenerate` (line 390)
 - [x] `chuEmbed` (line 412) + `chuSpaceOf` (line 422)
 - [x] `chu_embed_mul` (line 456) + `chu_zsmul_eq_mul` (line 481)
 - [x] `ChuTensor` (line 500), `ChuSeq` (line 517)
@@ -499,13 +523,10 @@ Remaining: octonion pairing theorems (items 5-7 in file section above).
 - [x] `kkt_stationarity` (line 599) + `kkt_complementarity` (line 614)
 - [x] `Chu_distributor` (line 281) — distributor coherence
 - [x] `lake build LaserCortex.Chu`
-- [ ] `octonionPairingAux` + `octonionPairing` (lines 239-282)
-- [ ] `octonionPairingAux_symm` + `octonionPairing_antipode_symm` (lines 309-324)
-- [ ] `octonionPairing_nondegenerate` (line 349) + `antipodePairing_nondegenerate` (line 390)
 
 ### Stage 5: Composition.lean — COMPLETE
 
-DONE. 163 lines. All definitions + `free_not_quantized` compile.
+DONE. 155 lines. All definitions + `free_not_quantized` compile.
 One `sorry` in `quantized_types_are_exactly_non_meta_logics`.
 `lake build LaserCortex.Composition` passes.
 

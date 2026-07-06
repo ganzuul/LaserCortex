@@ -295,6 +295,14 @@ theorem cd_doubling_identity (a b : SplitOctonion) (ha : a.e4 = 0) (ha' : a.e5 =
 -- Cayley-Dickson generator ω = e₄
 -- ============================================================================
 
+/-- NEGATIVE RESULT: Mixed-case CD doubling identity.
+    Testing `associator_tensor a b e4_vec = split_oct_mul (split_oct_commutator a b) e4_vec`
+    with `a` in base (e₄-e₇ = 0) and `b` in split sector (e₀-e₃ = 0) —
+    `ring` fails on all 8 components. Cross-terms like `a.e1*b.e5`, `a.e2*b.e6`,
+    `a.e3*b.e7` survive (each appears with coefficient 2 in the residual).
+    The identity does NOT extend to the mixed case; both arguments must be
+    in the base subalgebra. See lab_notes/028 for full analysis. -/
+
 def omega : SplitOctonion := e4_vec
 
 theorem omega_sq : split_oct_mul omega omega = split_one := by
