@@ -2,12 +2,12 @@
 
 import Mathlib.LinearAlgebra.CliffordAlgebra.Basic
 import Mathlib.LinearAlgebra.QuadraticForm.Basic
-import LaserCortex.SplitOctonionCost
+import LaserCortex.staging.Algebra
 
 namespace SplitQuaternionClifford
 
 open QuadraticMap
-open SplitOctonionCost (Q44)
+open Algebra
 
 -- ============================================================================
 -- SECTION 1: Cl(1,1) — the Clifford algebra of the split plane
