@@ -560,6 +560,71 @@ One `sorry` in `quantized_types_are_exactly_non_meta_logics`.
 - [ ] Update `.gitignore` if needed
 - [ ] Commit all changes
 
+---
+
+## Phase 2: mathlib-contrib → LaserCortex (import migration)
+
+Direction: original LaserCortex files import from `LaserCortex.staging.*`
+instead of their original module paths.
+
+### Problem discovered (2026-07-06)
+
+Simple import replacement fails because staging files have different APIs:
+
+| Staging provides | Original files need | Gap |
+|---|---|---|
+| `assocDefect : ℕ → ℕ` | `layerCost : LogicType → ℕ` | **missing** — simplifies to `ℕ → ℕ` |
+| `commDefect : ℕ → ℕ` | (same) | present |
+| `frictionDensity : ℕ → ℕ` | (same) | present |
+| `frictionDensity_ge_k` | `layerCost_ge_cdStep` | **missing** — different theorem |
+| `frictionDensity_monotone` | `heightMap_monotone` | renamed (see below) |
+| -- | `frictionLagrangian : Tower p → ℕ` | **missing** — central cost function |
+| -- | `flatCostSum` | **missing** |
+| -- | `frictionLagrangian_ge_flatSum` | **missing** |
+| -- | `frictionLagrangian_gt_flatSum` | **missing** |
+| -- | `engine_*` (10 theorems) | **missing** — engine state theory |
+| -- | `size_eq_numLeaves_sub_one` | **missing** |
+| -- | `Φ_classical_eq_lodayCoord_length` | **missing** |
+| -- | `Φ_of_nc_factor_through_lodayCoord_open` | **missing** |
+
+Files affected by import migration:
+
+| Original import | Files using it | Action needed |
+|---|---|---|
+| `LaserCortex.FrictionLagrangian` | RussellsParadox, LiarParadox, SoritesParadox, TemporalParadox, SplitOctonionLogic, PosetQuotient, TamariBP, Generation, QuantizedType | Port `layerCost`, `frictionLagrangian`, `layerCost_ge_cdStep` to staging/Friction.lean; update imports |
+| `LaserCortex.TamariBP` | RussellsParadox, LiarParadox, Generation, RECOVERED_STATE, TropicalCovector, TropicalTamariLattice | Already clean — staging/Tamari.lean provides same API |
+| `LaserCortex.Chu` | Entanglement, RECOVERED_STATE | Already clean — staging/Chu.lean provides same API |
+| `LaserCortex.TropicalCovector` | TropicalTamariLattice | Source file → keep as-is (circular dependency) |
+| `LaserCortex.TropicalTamariLattice` | TropicalCovector | Source file → keep as-is (circular dependency) |
+| `LaserCortex.QuantizedType` | RECOVERED_STATE, TropicalTamariLattice | Source file → keep as-is |
+
+### Resolution strategy
+
+**Option A — Port missing definitions to staging (recommended):**
+
+Extend `staging/Friction.lean` with:
+1. `layerCost` — simplified from `LogicType → ℕ` to `ℕ → ℕ` (just the CD-component, dropping LogicType parameter since staging doesn't have LogicType)
+2. `frictionLagrangian` — simplified from `Tower p → ℕ` to `ℕ → ℕ` (just `frictionDensity` with extra strut contribution)
+3. `layerCost_ge_cdStep` — proven from `frictionDensity_ge_k`
+4. `heightMap_monotone` — proven from `frictionDensity_monotone`
+
+Then update the 9 scaffolding files to import from staging.
+
+**Option B — Rewrite original files to use simplified API:**
+
+Rewrite paradox files etc. to use `frictionDensity` instead of `layerCost`,
+`frictionDensity` instead of `frictionLagrangian`. This is more invasive
+and the original files are scaffolding anyway.
+
+### Decision
+
+[ ] Choose Option A or B
+[ ] Port missing definitions to staging/Friction.lean
+[ ] Update scaffolding imports
+[ ] Verify full build with migrated imports
+[ ] Remove original files
+[ ] Final commit + push
+
 ### Stage 7: Research gaps (not code gaps)
 
 These are documented but not yet formalized. Should be stated as
