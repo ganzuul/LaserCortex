@@ -191,6 +191,20 @@ def leftComb : Nat → EMLTree
   | 0     => .Leaf
   | n + 1 => .Node (leftComb n) .Leaf
 
+/-- The size of a right-comb of size n equals n. -/
+theorem rightComb_size (n : ℕ) : (rightComb n).size = n := by
+  induction' n with k ih
+  · rfl
+  · simp [rightComb, EMLTree.size, ih]
+    omega
+
+/-- The size of a left-comb of size n equals n. -/
+theorem leftComb_size (n : ℕ) : (leftComb n).size = n := by
+  induction' n with k ih
+  · rfl
+  · simp [leftComb, EMLTree.size, ih]
+    omega
+
 -- ============================================================================
 -- dcStep: distance to rightComb
 -- ============================================================================

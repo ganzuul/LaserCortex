@@ -702,3 +702,9 @@ def wordBearing (w : TypeWord) (_ss : StationSet) : Option Bearing :=
   leafPolarity (EMLTree.Node .Leaf (EMLTree.Node .Leaf .Leaf)) ++
   "\nStation PN (N(L,L),Leaf):       leftWeight=1  rightWeight=0  polarity=" ++
   leafPolarity (EMLTree.Node (EMLTree.Node .Leaf .Leaf) .Leaf)
+
+-- ============================================================================
+-- The label propagation oscillation experiment has been extracted to:
+--   LaserCortex/experiments/LabelPropagationOscillation.lean
+-- See lab_note 035 for the A/B test design.
+-- ============================================================================
