@@ -2,7 +2,7 @@
 
 import Mathlib.LinearAlgebra.CliffordAlgebra.Basic
 import Mathlib.LinearAlgebra.QuadraticForm.Basic
-import LaserCortex.staging.Algebra
+import LaserCortex.foundations.Algebra
 
 namespace SplitQuaternionClifford
 

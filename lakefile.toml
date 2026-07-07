@@ -5,9 +5,6 @@ defaultTargets = ["lasercortex"]
 [[lean_lib]]
 name = "LaserCortex"
 
-[[lean_lib]]
-name = "LaserCortex.staging"
-
 [[lean_exe]]
 name = "lasercortex"
 root = "Main"

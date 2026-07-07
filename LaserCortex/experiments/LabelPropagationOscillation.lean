@@ -1,11 +1,11 @@
 import Mathlib
-import LaserCortex.staging.Algebra
-import LaserCortex.staging.Tamari
-import LaserCortex.staging.Friction
-import LaserCortex.staging.Problem
-import LaserCortex.staging.Generation
-import LaserCortex.staging.TemporalParadox
-import LaserCortex.staging.Boundlessness
+import LaserCortex.foundations.Algebra
+import LaserCortex.foundations.Tamari
+import LaserCortex.Friction
+import LaserCortex.Problem
+import LaserCortex.Generation
+import LaserCortex.TemporalParadox
+import LaserCortex.Boundlessness
 
 open Finset
 

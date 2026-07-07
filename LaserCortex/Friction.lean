@@ -1,6 +1,6 @@
 import Mathlib
-import LaserCortex.staging.Algebra
-import LaserCortex.staging.Tamari
+import LaserCortex.foundations.Algebra
+import LaserCortex.foundations.Tamari
 
 /-!
 # Friction Lagrangian — Cost Landscape

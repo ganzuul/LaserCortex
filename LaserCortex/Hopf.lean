@@ -14,19 +14,19 @@ that link the algebra to the paradox and the market.
 
 ## Relations to other modules
 
-- staging/Algebra.lean → `SplitOctonion`, `antipode`, `counit`, `isFixedPoint`
-- LiarParadox.lean → `IdentityZeroDivisor`
+- foundations/Algebra.lean → `SplitOctonion`, `antipode`, `counit`, `isFixedPoint`
+- ParadoxAxioms.lean → `IdentityZeroDivisor`
 - AMM.lean → `AMM.Pool`, `AMM.reserveGuard`
 - SubdivisionClosure.lean → `weightedCost`
-- staging/Tamari.lean → `EMLTree`, `dcStep`
+- foundations/Tamari.lean → `EMLTree`, `dcStep`
 -/
 
-import LaserCortex.staging.Algebra
-import LaserCortex.LiarParadox
+import LaserCortex.foundations.Algebra
+import LaserCortex.ParadoxAxioms
 import LaserCortex.AMM
 
 open Algebra
-open LiarParadox
+open ParadoxAxioms
 open EMLTree
 
 namespace SplitOctonionAntipode

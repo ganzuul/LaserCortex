@@ -1,7 +1,7 @@
 import Mathlib
-import LaserCortex.staging.Algebra
-import LaserCortex.staging.Tamari
-import LaserCortex.staging.Friction
+import LaserCortex.foundations.Algebra
+import LaserCortex.foundations.Tamari
+import LaserCortex.Friction
 
 /-!
 # Octilinear Embedding — Geometry of Trees in Cost Space

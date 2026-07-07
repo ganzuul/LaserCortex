@@ -3,11 +3,11 @@
 import LaserCortex.Basic
 import LaserCortex.EMLRegistry
 import LaserCortex.Generation
-import LaserCortex.LiarParadox
 import LaserCortex.LogicTypes
 import LaserCortex.Problem
-import LaserCortex.SoritesParadox
 import LaserCortex.TemporalParadox
-import LaserCortex.RussellsParadox
 import LaserCortex.LogicMonad
 import LaserCortex.SubdivisionClosure
+import LaserCortex.Entanglement
+import LaserCortex.Hopf
+import LaserCortex.AMM

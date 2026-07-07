@@ -13,7 +13,7 @@ e₅, e₆, e₇) are in `staging/Algebra.lean` — the canonical source.
 - SplitQuaternionClifford.lean → `SplitQuat`, `quat_mul_assoc`, `norm_mul`
 -/
 
-import LaserCortex.staging.Algebra
+import LaserCortex.foundations.Algebra
 
 open Algebra
 

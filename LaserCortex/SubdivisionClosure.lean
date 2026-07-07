@@ -47,8 +47,8 @@ is the Tamari poset itself — no separate ordering needed.
 #lean4-theorem #subdivision #associahedron #tamari #weighted-cost
 -/
 
-import LaserCortex.staging.Tamari
-import LaserCortex.staging.Friction
+import LaserCortex.foundations.Tamari
+import LaserCortex.Friction
 
 open EMLTree
 

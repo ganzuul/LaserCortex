@@ -1,5 +1,5 @@
 import Mathlib
-import LaserCortex.staging.Algebra
+import LaserCortex.foundations.Algebra
 
 /-!
 # Chu Pairing — Duality on Split Algebras

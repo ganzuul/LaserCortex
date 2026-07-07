@@ -34,7 +34,7 @@ Problem → Tower, WrappedProblem
 #lean4-theorem #friction-lagrangian #integration-point #phase-change #height-map
 -/
 
-import LaserCortex.staging.Friction
+import LaserCortex.Friction
 import LaserCortex.Problem
 import LaserCortex.LogicTypes
 import LaserCortex.LodayCoords

@@ -19,7 +19,7 @@ Each layer is a subalgebra of the next. We formalise:
 * **§3** — the *triple product* qt(SO)·qt(SQ)'·qt(C)'' ≠ 0: a non-zero three-layer
   interaction that proves all three CD layers contribute to entanglement
 * **§4** — the *entanglement measure* via the octonion pairing (Chu.lean)
-* **§5** — connection to QuantizedType and the discrete ℤ-valued structure
+* **§5** — discrete ℤ-valued structure of the entanglement measure
 
 ## Key result
 
@@ -27,12 +27,11 @@ The associator (e₁·e₂)·e₄ − e₁·(e₂·e₄) = 2·e₇ ≠ 0 shows t
 entanglement requires all three CD layers: SO (e₁,e₂), SQ (e₄), and C (e₇
 is in the pure SO sector that only becomes accessible through the associator).
 -/
-import LaserCortex.staging.Algebra
+import LaserCortex.foundations.Algebra
 import LaserCortex.SplitQuaternionClifford
 import LaserCortex.CayleyDickson
 import LaserCortex.Hopf
-import LaserCortex.staging.Chu
-import LaserCortex.QuantizedType
+import LaserCortex.foundations.Chu
 
 open Algebra
 open SplitQuaternionClifford
@@ -372,16 +371,15 @@ theorem entanglementMeasure_simple :
   simp [octonionPairing_apply, octonionPairingAux, split_one]
 
 -- ============================================================================
--- SECTION 5: Discrete ℤ Structure and QuantizedType Connection
+ -- SECTION 5: Discrete ℤ Structure
 -- ============================================================================
 -- The entanglement measure is ℤ-valued because all components of the
 -- octonion are ℤ-valued. This discrete structure allows interpretation
 -- as a category-theoretic membership predicate: x ∈ category A means
 -- the component along A is non-zero.
 --
--- The QuantizedType at CD step k has dimension 2^{k+1} and friction
--- density Γ(k) = k + 4·max(0, k-2). The entanglement measure E measures
--- the "distance" between the separable and entangled states.
+-- The entanglement measure E measures the "distance" between the
+-- separable and entangled states.
 
 /-- The dimension of the CD algebra at step k (0-indexed in our scheme:
     step 0 = C (2D), step 1 = SQ (4D), step 2 = SO (8D)). -/
@@ -394,8 +392,7 @@ theorem cd_dimensions :
   unfold cdDimension; native_decide
 
 /-- A "quantized" element at CD step k is an element of the free ℤ-module
-    of rank 2^{k+1}. The QuantizedType structure provides the friction density
-    bound. -/
+    of rank 2^{k+1}. -/
 def quantizedAtStep (k : ℕ) : Type :=
   match k with
   | 0 => SplitComplex

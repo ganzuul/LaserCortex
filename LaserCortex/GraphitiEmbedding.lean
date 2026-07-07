@@ -1,8 +1,8 @@
 import Mathlib
-import LaserCortex.staging.Algebra
-import LaserCortex.staging.Tamari
-import LaserCortex.staging.Friction
-import LaserCortex.staging.OctilinearEmbedding
+import LaserCortex.foundations.Algebra
+import LaserCortex.foundations.Tamari
+import LaserCortex.Friction
+import LaserCortex.OctilinearEmbedding
 
 /-!
 # Graphiti Embedding — Formal Mapping from Community Structure to Transit Coordinates
