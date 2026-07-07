@@ -1,5 +1,8 @@
 # Lean
 /.lake
+
+# Session files
+session-*.md
 /.agents/
 *.olean
 *.ilean
