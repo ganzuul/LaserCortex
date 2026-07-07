@@ -391,7 +391,7 @@ def tpDetectedAssignment (ca : CommunityAssignment) : Bool :=
 /--
 Detect the grandfather paradox in a GenerationState (Test B).
 Uses `tpDetectedGenerationState` from staging/TemporalParadox.lean,
-which checks both the AntiCoherentPair and the tree.
+which checks both the DescentInterval and the tree.
 -/
 def tpDetectedGenState (s : GenerationState) : Bool :=
   tpDetectedGenerationState s
@@ -420,7 +420,7 @@ def detectOscillationWithTP (α : Type) [DecidableEq α]
 -- Test B uses the FAITHFULLY PORTED Generation constructs.
 -- Two variants:
 --   B1: generationStep on GenerationState (full 4-phase cycle, period 4)
---   B2: swapPoles on AntiCoherentPair (2-phase abstraction, period 2)
+--   B2: swapPoles on DescentInterval (2-phase abstraction, period 2)
 -- Both are used in the comparison.
 
 /--
@@ -439,18 +439,18 @@ def detectTestB1WithTP : OscillationReport GenerationState × Bool × List ℕ :
     tpDetectedGenState
 
 /--
-Test B2 (no TP): detect oscillation of pole-swapping on AntiCoherentPair.
-State type: AntiCoherentPair. Step: swapPoles (period 2).
-Initial state: AntiCoherentPair.grandfather.
+Test B2 (no TP): detect oscillation of pole-swapping on DescentInterval.
+State type: DescentInterval. Step: swapPoles (period 2).
+Initial state: DescentInterval.grandfather.
 -/
-def detectTestB2 : OscillationReport AntiCoherentPair :=
-  detectOscillation AntiCoherentPair swapPoles AntiCoherentPair.grandfather 20
+def detectTestB2 : OscillationReport DescentInterval :=
+  detectOscillation DescentInterval swapPoles DescentInterval.grandfather 20
 
 /--
 Test B2 (with TP): pole-swapping + grandfather pair detection.
 -/
-def detectTestB2WithTP : OscillationReport AntiCoherentPair × Bool × List ℕ :=
-  detectOscillationWithTP AntiCoherentPair swapPoles AntiCoherentPair.grandfather 20
+def detectTestB2WithTP : OscillationReport DescentInterval × Bool × List ℕ :=
+  detectOscillationWithTP DescentInterval swapPoles DescentInterval.grandfather 20
     tpDetectedPair
 
 -- ============================================================================
@@ -571,7 +571,7 @@ def detectTestAWithTP : OscillationReport CommunityAssignment × Bool × List �
   "  grandfatherDetected: " ++ toString detected ++ "\n" ++
   "  at iterations: " ++ toString iterations
 #eval! ""
-#eval! "--- Test B2 (simplified: pole-swap on AntiCoherentPair, 20 steps) ---"
+#eval! "--- Test B2 (simplified: pole-swap on DescentInterval, 20 steps) ---"
 #eval! let report := detectTestB2;
   "  converged: " ++ toString report.converged ++ "\n" ++
   "  period: " ++ (match report.period with
@@ -629,8 +629,8 @@ def detectTestAWithTP : OscillationReport CommunityAssignment × Bool × List �
   "  A-TP    |  " ++ pA1 ++ "     |  " ++ iA1 ++ "    |  " ++ dA1 ++ "         | CommunityAssignment\n" ++
   "  B1-noTP |  " ++ pB1 ++ "     |  " ++ iB1 ++ "    |  --         | GenerationState (4-phase)\n" ++
   "  B1-TP   |  " ++ pB1tp ++ "     |  " ++ iB1tp ++ "    |  " ++ dB1tp ++ "         | GenerationState (4-phase)\n" ++
-  "  B2-noTP |  " ++ pB2 ++ "     |  " ++ iB2 ++ "    |  --         | AntiCoherentPair (swap)\n" ++
-  "  B2-TP   |  " ++ pB2tp ++ "     |  " ++ iB2tp ++ "    |  " ++ dB2tp ++ "         | AntiCoherentPair (swap)\n")
+  "  B2-noTP |  " ++ pB2 ++ "     |  " ++ iB2 ++ "    |  --         | DescentInterval (swap)\n" ++
+  "  B2-TP   |  " ++ pB2tp ++ "     |  " ++ iB2tp ++ "    |  " ++ dB2tp ++ "         | DescentInterval (swap)\n")
 #eval! "--- Interpretation ---"
 #eval! "The oscillation tree `temporalConflate grandfather` = Node(rightComb 0, rightComb 1)"
 #eval! "has dcStep = 0 (already in rightComb normal form) — the two poles coexist."

@@ -181,11 +181,11 @@ theorem grandfatherOscillation_dcStep : dcStep grandfatherOscillationTree = 0 :=
 -- ============================================================================
 
 /--
-Detect the grandfather paradox in an AntiCoherentPair (Test B state):
-returns true if the pair equals the grandfather pair (CLASSICAL, TEMPORAL).
+Detect the grandfather paradox in a DescentInterval (Test B state):
+returns true if the interval equals the grandfather interval (target=0, source=1).
 -/
-def tpDetectedPair (pair : AntiCoherentPair) : Bool :=
-  pair.coherent = 0 && pair.antiCoherent = 1
+def tpDetectedPair (pair : DescentInterval) : Bool :=
+  pair.target = 0 && pair.source = 1
 
 /--
 Detect the grandfather paradox in a GenerationState:

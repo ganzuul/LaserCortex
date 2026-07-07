@@ -43,48 +43,49 @@ the **middle layer**: `Generation.lean` and `Problem.lean` still import
 
 ### 2.1 `Generation.lean` — remove `LogicTypes` import
 
-**Current** (lines 50-53):
+**Current** (was lines 50-53):
 ```lean
 structure AntiCoherentPair where
   coherent : LogicType
   antiCoherent : LogicType
 ```
 
-**New**:
+**New** (renamed to `DescentInterval` with descriptive field names):
 ```lean
-structure AntiCoherentPair where
-  coherent : ℕ        -- cdStep of the coherent logic
-  antiCoherent : ℕ    -- cdStep of the anti-coherent logic
+/-- Interval [target, source] in cdStep space: descend from source toward target.
+    Geodesic when source ≤ 2; path integral (via frictionDensity) when source ≥ 3. -/
+structure DescentInterval where
+  target : ℕ        -- cdStep of the coherent attractor (always 0 for Classical)
+  source : ℕ        -- cdStep of the anti-coherent pole (the unresolved logic)
 ```
 
-The concrete pairs (`barber`, `liar`, `grandfather`) become concrete ℕ pairs:
+The concrete intervals (`barber`, `liar`, `grandfather`) become ℕ pairs:
 
-| Name | Old (LogicType) | New (ℕ × ℕ) | Meaning |
-|------|----------------|-------------|---------|
-| `barber` | `⟨.Classical, .Paraconsistent⟩` | `⟨0, 4⟩` | Associative vs Free |
-| `liar` | `⟨.Classical, .ManyValued⟩` | `⟨0, 1⟩` | Two associative logics |
-| `grandfather` | `⟨.Classical, .Temporal⟩` | `⟨0, 1⟩` | Temporal at cdStep 1 |
+| Name | Old (LogicType) | New (target, source) | Meaning |
+|------|----------------|----------------------|---------|
+| `barber` | `⟨.Classical, .Paraconsistent⟩` | `⟨0, 4⟩` | Associative → Free logic (maximal descent) |
+| `liar` | `⟨.Classical, .ManyValued⟩` | `⟨0, 1⟩` | Both associative, minimal descent |
+| `grandfather` | `⟨.Classical, .Temporal⟩` | `⟨0, 1⟩` | Temporal at cdStep 1, minimal descent |
 
-`temporalConflate` (line 93) builds the tree from the cdSteps directly:
+`temporalConflate` builds the tree from the cdSteps directly:
 ```lean
-def temporalConflate (pair : AntiCoherentPair) : EMLTree :=
+def temporalConflate (pair : DescentInterval) : EMLTree :=
   EMLTree.Node
-    (rightComb pair.coherent)
-    (rightComb pair.antiCoherent)
+    (rightComb pair.target)
+    (rightComb pair.source)
 ```
 
-`inflate` (line 69) maps `ProblemClass → (ℕ × ℕ)` — a pure data table
+`inflate` maps `ProblemClass → (target × source)` — a pure data table
 without `LogicType`:
 ```lean
-def inflate (pc : ProblemClass) : AntiCoherentPair :=
+def inflate (pc : ProblemClass) : DescentInterval :=
   match pc with
-  | .selfReference       => ⟨0, 1⟩     -- classical, many-valued
-  | .vagueness           => ⟨0, 1⟩     -- classical, fuzzy
-  | .inconsistentDef     => ⟨0, 4⟩     -- classical, paraconsistent
-  | .temporalDecision    => ⟨0, 1⟩     -- classical, temporal
+  | .selfReference       => DescentInterval.liar       -- (0, 1)
+  | .vagueness           => ⟨0, 1⟩                      -- Fuzzy
+  | .inconsistentDef     => DescentInterval.barber      -- (0, 4)
+  | .temporalDecision    => DescentInterval.grandfather -- (0, 1)
   ...
 ```
-
 `isVacuousType (lt : LogicType)` (line 102) becomes `isVacuousCd (cd : ℕ)`:
 ```lean
 def isVacuousCd (cd : ℕ) : Bool := cd = 0
@@ -128,7 +129,7 @@ the formal justification for treating `ℕ` as the cost parameter.
 
 | File | Change | Risk |
 |------|--------|------|
-| `LaserCortex/Generation.lean` | `LogicType` → `ℕ` in `AntiCoherentPair` and dependents | Medium — renames and data table changes, no logic change |
+| `LaserCortex/Generation.lean` | `AntiCoherentPair` → `DescentInterval` with `target`/`source` (ℕ), remove `LogicTypes` import | Medium — renames and data table changes, no logic change |
 | `LaserCortex/Problem.lean` | Remove `LogicTypes` import, review type refs | Low — may already be ℕ-only in practice |
 | `LaserCortex/Friction.lean` | `native_decide` → `decide` at line 87 | None |
 

@@ -53,50 +53,71 @@ def canCoexist (c1 c2 : ℕ) : Bool :=
   (c1 ≤ 1) == (c2 ≤ 1) || c1 = 4 || c2 = 4
 
 -- ============================================================================
--- SECTION 3: AntiCoherentPair (ℕ × ℕ, replacing LogicType × LogicType)
+-- SECTION 3: DescentInterval — geodesic source→target in cdStep space
 -- ============================================================================
 
 /--
-An anti-coherent pair stores the cdSteps of the coherent (Classical, cdStep 0)
-and anti-coherent logic. The concrete pairs are defined as ℕ × ℕ literals
-derived from the cdStep mapping.
+A descent interval `[target, source]` in cdStep space, encoding a directed
+rewriting path from the anti-coherent pole (`source`, higher cdStep, complex,
+non-associative) toward the coherent attractor (`target`, cdStep 0, fully
+classical, associative).
+
+In general, target is always 0 (Classical) — the unique fixed point of the
+generation cycle.  But the structure is kept general: an interval `target ≤ t`
+in cdStep space where the generation cycle descends from `source` toward
+`target`.  
+
+The **geodesic** through this interval is the unique contraction when both
+poles are in the associative sector (cdStep ≤ 2): the Tamari lattice provides
+a unique shortest normal-form path.  When the source is in the non-associative
+sector (cdStep ≥ 3), zero divisors obstruct the geodesic and the cost function
+computes a **path-integral** over all viable contraction routes — this is
+where `frictionDensity` acts as the non-associative action.
+
+Concrete intervals:
+  | Name        | (target, source) | Meaning |
+  |-------------|------------------|---------|
+  | `barber`    | (0, 4)           | Associative → Free logic (maximal descent) |
+  | `liar`      | (0, 1)           | Both associative, minimal descent |
+  | `grandfather`| (0, 1)          | Temporal at cdStep 1, minimal descent |
 -/
-structure AntiCoherentPair where
-  coherent : ℕ
-  antiCoherent : ℕ
+structure DescentInterval where
+  target : ℕ
+  source : ℕ
   deriving DecidableEq, Repr
 
-namespace AntiCoherentPair
+namespace DescentInterval
 
-/-- Classical (0) vs Paraconsistent (4): sector boundary crossing. -/
-def barber : AntiCoherentPair :=
+/-- Classical (0) → Paraconsistent (4): sector boundary crossing. -/
+def barber : DescentInterval :=
   ⟨0, 4⟩
 
-/-- Classical (0) vs ManyValued (1): both associative, coexisting. -/
-def liar : AntiCoherentPair :=
+/-- Classical (0) → ManyValued (1): both associative. -/
+def liar : DescentInterval :=
   ⟨0, 1⟩
 
-/-- Classical (0) vs Temporal (1): both associative, coexisting. -/
-def grandfather : AntiCoherentPair :=
+/-- Classical (0) → Temporal (1): both associative. -/
+def grandfather : DescentInterval :=
   ⟨0, 1⟩
 
-end AntiCoherentPair
+end DescentInterval
 
 -- ============================================================================
 -- SECTION 4: Inflate
 -- ============================================================================
 
 /--
-Map each problem class to its anti-coherent pair (coherent cdStep, anti-coherent cdStep).
-The coherent pole is always Classical at cdStep 0. The anti-coherent pole is the
-cdStep of the logic best suited to resolve paradoxes of that class.
+Map each problem class to its descent interval (target, source) in cdStep space.
+The target (attractor) is always Classical at cdStep 0. The source is the
+cdStep of the logic best suited to resolve paradoxes of that class — the
+generation cycle descends from source toward target.
 -/
-def inflate (pc : ProblemClass) : AntiCoherentPair :=
+def inflate (pc : ProblemClass) : DescentInterval :=
   match pc with
-  | .selfReference       => AntiCoherentPair.liar        -- 0, 1
+  | .selfReference       => DescentInterval.liar        -- 0, 1
   | .vagueness           => ⟨0, 1⟩                        -- Fuzzy
-  | .inconsistentDef     => AntiCoherentPair.barber       -- 0, 4
-  | .temporalDecision    => AntiCoherentPair.grandfather  -- 0, 1
+  | .inconsistentDef     => DescentInterval.barber       -- 0, 4
+  | .temporalDecision    => DescentInterval.grandfather  -- 0, 1
   | .deontic             => ⟨0, 1⟩                        -- Deontic
   | .epistemic           => ⟨0, 1⟩                        -- Epistemic
   | .quantumSuperposition => ⟨0, 3⟩                       -- Quantum
@@ -111,10 +132,10 @@ def inflate (pc : ProblemClass) : AntiCoherentPair :=
 -- SECTION 5: Temporal Conflate
 -- ============================================================================
 
-def temporalConflate (pair : AntiCoherentPair) : EMLTree :=
+def temporalConflate (pair : DescentInterval) : EMLTree :=
   EMLTree.Node
-    (rightComb pair.coherent)
-    (rightComb pair.antiCoherent)
+    (rightComb pair.target)
+    (rightComb pair.source)
 
 -- ============================================================================
 -- SECTION 6: Revise (cdStep-based vacuity check)
@@ -131,10 +152,10 @@ Revise a superposition by filtering out vacuous cdSteps from the pair.
 The surviving cdStep(s) are the non-classical pole(s) that can sustain
 anti-coherence.
 -/
-def revise (pair : AntiCoherentPair) : Superposition :=
+def revise (pair : DescentInterval) : Superposition :=
   let candidates :=
-    (if isVacuousCd pair.coherent then [] else [pair.coherent]) ++
-    (if isVacuousCd pair.antiCoherent then [] else [pair.antiCoherent])
+    (if isVacuousCd pair.target then [] else [pair.target]) ++
+    (if isVacuousCd pair.source then [] else [pair.source])
   ⟨candidates⟩
 
 -- ============================================================================
@@ -150,7 +171,7 @@ inductive CyclePhase : Type where
 
 structure GenerationState where
   problemClass : ProblemClass
-  pair : AntiCoherentPair
+  pair : DescentInterval
   tree : EMLTree
   superposition : Superposition
   phase : CyclePhase
@@ -158,7 +179,7 @@ structure GenerationState where
 
 def initialGenerationState : GenerationState :=
   { problemClass := .temporalDecision
-  , pair := AntiCoherentPair.grandfather
+  , pair := DescentInterval.grandfather
   , tree := .Leaf
   , superposition := Superposition.full
   , phase := .inflated
@@ -177,9 +198,9 @@ def generationStep (s : GenerationState) : GenerationState :=
       phase := .revised
     }
   | .revised =>
-    -- The generation cycle operates at a fixed problem class: the anti-coherent
-    -- pole's cdStep is defined by inflate(pc) and the superposition never
-    -- introduces a different pc. No findProblemClass lookup needed.
+    -- The generation cycle operates at a fixed problem class: the source
+    -- cdStep is defined by inflate(pc) and the superposition never introduces
+    -- a different pc. No findProblemClass lookup needed.
     { s with
       phase := .nextPC
     }
@@ -196,8 +217,8 @@ def generationStep (s : GenerationState) : GenerationState :=
 -- SECTION 8: Simplified Step Functions
 -- ============================================================================
 
-def swapPoles (pair : AntiCoherentPair) : AntiCoherentPair :=
-  ⟨pair.antiCoherent, pair.coherent⟩
+def swapPoles (pair : DescentInterval) : DescentInterval :=
+  ⟨pair.source, pair.target⟩
 
 def treeSwapStep (t : EMLTree) : EMLTree :=
   match t with
@@ -208,31 +229,31 @@ def treeSwapStep (t : EMLTree) : EMLTree :=
 -- SECTION 9: Theorems
 -- ============================================================================
 
-theorem inflate_barber : inflate ProblemClass.inconsistentDef = AntiCoherentPair.barber :=
+theorem inflate_barber : inflate ProblemClass.inconsistentDef = DescentInterval.barber :=
   rfl
 
-theorem inflate_liar : inflate ProblemClass.selfReference = AntiCoherentPair.liar :=
+theorem inflate_liar : inflate ProblemClass.selfReference = DescentInterval.liar :=
   rfl
 
-theorem inflate_grandfather : inflate ProblemClass.temporalDecision = AntiCoherentPair.grandfather :=
+theorem inflate_grandfather : inflate ProblemClass.temporalDecision = DescentInterval.grandfather :=
   rfl
 
 theorem temporalConflate_grandfather_is_oscillation :
-    temporalConflate AntiCoherentPair.grandfather =
+    temporalConflate DescentInterval.grandfather =
       EMLTree.Node (rightComb 0) (rightComb 1) := by
   native_decide
 
 theorem temporalConflate_barber_is_oscillation :
-    temporalConflate AntiCoherentPair.barber =
+    temporalConflate DescentInterval.barber =
       EMLTree.Node (rightComb 0) (rightComb 4) := by
   native_decide
 
 theorem revise_grandfather :
-    (revise AntiCoherentPair.grandfather).candidates = [1] := by
+    (revise DescentInterval.grandfather).candidates = [1] := by
   native_decide
 
 theorem revise_barber :
-    (revise AntiCoherentPair.barber).candidates = [4] := by
+    (revise DescentInterval.barber).candidates = [4] := by
   native_decide
 
 theorem emptiness_roundtrip_grandfather :
@@ -242,17 +263,17 @@ theorem emptiness_roundtrip_grandfather :
     revised.candidates = [1] ∧
     revised.isCollapsed ∧
     ¬revised.isContradicted ∧
-    pair.coherent = 0 ∧ pair.coherent ≤ 1 ∧
-    pair.antiCoherent = 1 ∧ pair.antiCoherent ≤ 1 ∧
-    canCoexist pair.antiCoherent pair.coherent = true := by
+    pair.target = 0 ∧ pair.target ≤ 1 ∧
+    pair.source = 1 ∧ pair.source ≤ 1 ∧
+    canCoexist pair.source pair.target = true := by
   native_decide
 
 theorem grandfather_pair_coexist :
-    canCoexist AntiCoherentPair.grandfather.coherent
-              AntiCoherentPair.grandfather.antiCoherent = true := by
+    canCoexist DescentInterval.grandfather.target
+              DescentInterval.grandfather.source = true := by
   native_decide
 
 theorem barber_pair_not_coexist :
-    canCoexist AntiCoherentPair.barber.coherent
-              AntiCoherentPair.barber.antiCoherent = false := by
+    canCoexist DescentInterval.barber.target
+              DescentInterval.barber.source = false := by
   native_decide
