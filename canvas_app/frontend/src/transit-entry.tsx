@@ -36,9 +36,19 @@ interface TransitLine {
   nodes: TransitNode[];
 }
 
+interface TransitRiverSegment {
+  source: string;
+  source_coords: [number, number];
+  target: string;
+  target_coords: [number, number];
+  color: string;
+  label: string;
+}
+
 interface TransitData {
   stations: Record<string, StationData>;
   lines: TransitLine[];
+  rivers?: TransitRiverSegment[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -49,6 +59,13 @@ const CD_LINES = [
   { color: '#e6194b', label: 'SplitComplex  (cd=0)' },
   { color: '#3b75af', label: 'SplitQuat     (cd=1)' },
   { color: '#44aa44', label: 'SplitOctonion (cd=3)' },
+];
+
+const RIVER_LINES = [
+  { color: '#ffa500', label: 'cd≤1 45° edges (leaf expansion)', dash: '3,2' },
+  { color: '#ff69b4', label: 'cd=3 45° edges (leaf expansion)', dash: '3,2' },
+  { color: '#88ccff', label: 'cd0→1 CD projection (same tree)', dash: '4,4' },
+  { color: '#cc88ff', label: 'cd1→3 CD projection (same tree)', dash: '4,4' },
 ];
 
 const Legend: React.FC = () => (
@@ -79,6 +96,16 @@ const Legend: React.FC = () => (
         <span>{l.label}</span>
       </div>
     ))}
+    {RIVER_LINES.map((l, i) => (
+      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <div style={{
+          width: 24,
+          height: 0,
+          borderTop: `2.5px dashed ${l.color}`,
+        }} />
+        <span>{l.label}</span>
+      </div>
+    ))}
     <div style={{
       marginTop: 10,
       paddingTop: 8,
@@ -86,9 +113,15 @@ const Legend: React.FC = () => (
       fontSize: 11,
       color: '#888',
     }}>
-      Station labels: EMLTree repr
+      Arcs = true 45° edges: leaf expansion at odd depth
       <br />
-      Interchange = same tree at multiple CD levels
+      (|Δx| = |Δy| = 1 in tubeCoord space). Within same CD.
+      <br />
+      Vertical dashes = CD projection (same tree, next CD).
+      <br />
+      Interchange = same tree at multiple CD levels.
+      <br />
+      Total: {RIVER_LINES.length} edge families
     </div>
   </div>
 );
@@ -146,8 +179,94 @@ const TransitMap: React.FC = () => {
 
     container.datum(data).call(map);
 
-    // After the map is rendered, add connectome edge annotations
-    // We'll do this in a future iteration
+    // ── River overlay: two edge types ──
+    //
+    // (A) True 45° tropical edges (leaf expansion at balanced odd-depth).
+    //     Within a single CD level (same y_base). Rendered as shallow arcs
+    //     above/below the transit line to avoid visual overlap.
+    //
+    // (B) Cross-CD projection edges (same tree, different CD level).
+    //     Vertical in this coordinate system. Rendered as dashed lines.
+    //
+    // d3-tube-map's built-in river only supports octolinear paths
+    // (N/NE/E/SE/S/SW/W/NW), so we render rivers as a separate SVG overlay.
+    if (data.rivers && data.rivers.length > 0) {
+      const svg = container.select<SVGSVGElement>('svg');
+      const gMap = svg.select<SVGGElement>(':first-child');
+
+      // Replicate d3-tube-map's scale computation from data bounds
+      const allX = data.lines.flatMap(l => l.nodes.map(n => n.coords[0]));
+      const allY = data.lines.flatMap(l => l.nodes.map(n => n.coords[1]));
+      const minX = Math.min(...allX) - 1;
+      const maxX = Math.max(...allX) + 1;
+      const minY = Math.min(...allY) - 1;
+      const maxY = Math.max(...allY) + 1;
+
+      const desiredAspectRatio = (maxX - minX) / (maxY - minY);
+      const actualAspectRatio =
+        (width - margin.left - margin.right) /
+        (height - margin.top - margin.bottom);
+      const ratioRatio = actualAspectRatio / desiredAspectRatio;
+
+      let maxXRange: number, maxYRange: number;
+      if (desiredAspectRatio > actualAspectRatio) {
+        maxXRange = width - margin.left - margin.right;
+        maxYRange = (height - margin.top - margin.bottom) * ratioRatio;
+      } else {
+        maxXRange = (width - margin.left - margin.right) / ratioRatio;
+        maxYRange = height - margin.top - margin.bottom;
+      }
+
+      const xScale = d3.scaleLinear()
+        .domain([minX, maxX])
+        .range([margin.left, margin.left + maxXRange]);
+      const yScale = d3.scaleLinear()
+        .domain([minY, maxY])
+        .range([margin.top + maxYRange, margin.top]);
+
+      // Insert rivers group at start of gMap so it renders behind lines
+      const riversGroup = gMap.insert('g', ':first-child')
+        .attr('class', 'rivers');
+
+      data.rivers.forEach(r => {
+        const [sx, sy] = r.source_coords;
+        const [tx, ty] = r.target_coords;
+        const px1 = xScale(sx);
+        const py1 = yScale(sy);
+        const px2 = xScale(tx);
+        const py2 = yScale(ty);
+
+        if (sy === ty) {
+          // (A) True 45° edge: within same CD level.
+          // Render as a shallow quadratic Bezier arc above/below the line.
+          const midX = (px1 + px2) / 2;
+          const span = Math.abs(px2 - px1);
+          // Arc height proportional to span, max 8px
+          const arcH = Math.min(span * 0.04, 8);
+          // Alternate above/below based on label NE/SE
+          const arcDir = r.label.includes('NE') ? -1 : 1;
+          const midY = (py1 + py2) / 2 + arcDir * arcH;
+          riversGroup.append('path')
+            .attr('d', `M${px1},${py1} Q${midX},${midY} ${px2},${py2}`)
+            .attr('stroke', r.color)
+            .attr('stroke-width', 1.8)
+            .attr('stroke-opacity', 0.6)
+            .attr('fill', 'none');
+        } else {
+          // (B) Cross-CD projection edge: vertical between CD levels.
+          riversGroup.append('line')
+            .attr('x1', px1)
+            .attr('y1', py1)
+            .attr('x2', px2)
+            .attr('y2', py2)
+            .attr('stroke', r.color)
+            .attr('stroke-width', 1.5)
+            .attr('stroke-opacity', 0.35)
+            .attr('stroke-dasharray', '4,4')
+            .attr('fill', 'none');
+        }
+      });
+    }
 
   }, [data, dimensions]);
 

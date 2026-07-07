@@ -376,3 +376,4 @@ Each term is a question to ask of the system:
 - `LaserCortex/Candidates.lean` — brute force engine
 - `LaserCortex/AMM.lean` — crossImpact, associatorCost
 - `LaserCortex/Cost.lean` — Φ definition and theorems
+- `lab_notes/032_tropical_type_theory_hypothesis.md` — types as coordinates; octolinear transit algebra via Develin–Sturmfels type lattice

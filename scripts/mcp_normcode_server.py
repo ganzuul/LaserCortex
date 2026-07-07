@@ -1193,6 +1193,50 @@ async def graphiti_stats() -> str:
         return json.dumps({"error": str(e)})
 
 
+@mcp.tool(
+    name="graphiti_to_transit_map",
+    description="Embed Graphiti communities in the CD tower transit map (octolinear embedding)",
+)
+async def graphiti_to_transit_map(
+    group_id: str = "default",
+) -> str:
+    """Build the transit map from Graphiti community data.
+    
+    Queries Graphiti for communities in the given group, computes KKT
+    multiplier components (size, leftWeight, rightWeight, assocDefect)
+    from the entity graph of each community, applies the covector
+    projection to produce (x, y) coordinates, and emits TransitData JSON
+    consumable by the transit-entry.tsx renderer.
+    
+    The mapping is formalized in OctilinearEmbedding.lean and
+    GraphitiEmbedding.lean:
+    
+        λ_comm = (size, leftWeight, rightWeight, assocDefect) ∈ SplitQuat
+        
+        x = size + assocDefect(cd)
+        y = leftWeight − rightWeight
+    
+    Args:
+        group_id: Group partition to process (default "default").
+    
+    Returns:
+        TransitData JSON with stations and three CD tower lines.
+    """
+    if _graphiti_svc is None or not _graphiti_svc._started:
+        return json.dumps({"error": "Graphiti service not started"})
+    try:
+        from scripts.graphiti_to_transit_map import graphiti_to_transit_map as _pipeline
+        
+        transit_data = await _pipeline(
+            graphiti_svc=_graphiti_svc,
+            group_id=group_id,
+        )
+        return json.dumps(transit_data, indent=2, ensure_ascii=False, default=str)
+    except Exception as e:
+        _logger.exception("graphiti_to_transit_map error")
+        return json.dumps({"error": str(e)})
+
+
 # =========================================================================
 # Graphiti auto-ingestion wrappers
 #

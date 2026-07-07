@@ -183,18 +183,139 @@ def build_lines(tree_infos: list[TreeInfo], stations: dict) -> list:
 # 6. Connectome river layer
 # ═══════════════════════════════════════════════════════════════════════
 
-def build_river(tree_infos: list[TreeInfo], cd: int = 0) -> dict | None:
-    """Build a river layer showing contracts_one edges at a given CD level.
+def _leaf_paths(t: EMLTree, prefix: str = "") -> list[str]:
+    """Return all L/R paths to leaves in t."""
+    if t.is_leaf:
+        return [prefix]
+    return _leaf_paths(t.left, prefix + "L") + _leaf_paths(t.right, prefix + "R")
 
-    Each edge in the connectome is a segment from source to target node,
-    colored by Δy = 2·size(b) (the cost).
 
-    Since d3-tube-map only supports a single river with a single color,
-    we use different rivers for different cost levels.
-    Instead, for the first version, we skip the river and show
-    the connectome in a separate overlay.
+def _expand_leaf(t: EMLTree, path: str) -> EMLTree:
+    """Replace the leaf at the given L/R path with N(L,L)."""
+    if not path:
+        return NODE(LEAF, LEAF)
+    head, rest = path[0], path[1:]
+    if head == "L":
+        return NODE(_expand_leaf(t.left, rest), t.right)
+    else:
+        return NODE(t.left, _expand_leaf(t.right, rest))
+
+
+def build_river(tree_infos: list[TreeInfo],
+                sorted_infos: list[TreeInfo]) -> list[dict]:
+    """Build river segments: true 45° tropical edges via leaf expansion.
+
+    A 45° edge in the tubeCoord coordinate system has |Δx| = |Δy|.
+    The correct operation is LEAF EXPANSION at an odd-depth leaf where
+    the path has exactly one more L than R (NE, Δy=+1) or one more R
+    than L (SE, Δy=-1).
+
+    Replacing such a leaf with N(L,L):
+      • Δx = 1  (size increases by 1)
+      • Δy = ±1 (y = lw-rw changes by exactly 1)
+
+    This is PROVEN by the recursive formula:
+      y(N(a,b)) = size(a) − size(b) + y(a) + y(b)
+      → Δy = 2·(left_turns) − leaf_depth
+      → |Δy| = 1 exactly when depth is odd and left_turns = (depth±1)/2
+
+    NOT the extension operation t → N(t, Leaf) which gives Δy = size(t)
+    (only 45° when size(t)=1).
+
+    Args:
+        tree_infos: all trees (for expansion lookups)
+        sorted_infos: trees sorted by (size, y) — determines x positions
     """
-    return None
+    X_STEP = 4
+    X_START = 1
+
+    # Build indexed position lookup: id → x position
+    x_by_id: dict[str, int] = {
+        ti["id"]: X_START + idx * X_STEP
+        for idx, ti in enumerate(sorted_infos)
+    }
+
+    # Quick lookup: does resulting tree exist?
+    info_by_id: dict[str, TreeInfo] = {ti["id"]: ti for ti in tree_infos}
+
+    segments: list[dict] = []
+
+    # ═══════════════════════════════════════════════════════════════════
+    # (A) True 45° tropical edges — within each CD level
+    #     Leaf expansion at balanced odd-depth leaves.
+    #     These have |Δx| = |Δy| = 1 in tubeCoord space.
+    # ═══════════════════════════════════════════════════════════════════
+    for cd_line in CD_LINES:
+        y_base = cd_line["y_base"]
+        cd = cd_line["cd"]
+        color = "#ffa500" if cd < 3 else "#ff69b4"
+
+        for ti in tree_infos:
+            t = ti["tree"]
+            sid = ti["id"]
+            sx = x_by_id.get(sid)
+            if sx is None:
+                continue
+
+            for path in _leaf_paths(t):
+                depth = len(path)
+                if depth % 2 == 0:
+                    continue  # even depth → Δy=0, not 45°
+
+                left_turns = path.count("L")
+                dy = 2 * left_turns - depth  # Δy from the expansion
+                if abs(dy) != 1:
+                    continue  # |Δy|≠1 → not 45° (e.g. pure-left paths at depth 3)
+
+                t2 = _expand_leaf(t, path)
+                t2_id = compact_tree_label(t2)
+                if t2_id not in info_by_id:
+                    continue
+                tx = x_by_id.get(t2_id)
+                if tx is None:
+                    continue
+
+                dir_label = "NE" if dy > 0 else "SE"
+                segments.append({
+                    "source": sid,
+                    "source_coords": [sx, y_base],
+                    "target": t2_id,
+                    "target_coords": [tx, y_base],
+                    "color": color,
+                    "label": f"cd={cd} {dir_label} leaf={path}",
+                })
+
+    # ═══════════════════════════════════════════════════════════════════
+    # (B) Cross-CD extension edges — connect the SAME tree at adjacent
+    #     CD levels. These are VERTICAL in tubeCoord space (Δy=0) but
+    #     provide the visual diagonal appearance in the transit map.
+    #     They are NOT 45° edges — they're "CD projections".
+    # ═══════════════════════════════════════════════════════════════════
+    CD_EXT_PAIRS = [
+        {"src": CD_LINES[0], "tgt": CD_LINES[1], "color": "#88ccff", "label_base": "cd0→1 proj"},
+        {"src": CD_LINES[1], "tgt": CD_LINES[2], "color": "#cc88ff", "label_base": "cd1→3 proj"},
+    ]
+
+    for pair in CD_EXT_PAIRS:
+        src_y = pair["src"]["y_base"]
+        tgt_y = pair["tgt"]["y_base"]
+        color = pair["color"]
+
+        for ti in tree_infos:
+            sid = ti["id"]
+            sx = x_by_id.get(sid)
+            if sx is None:
+                continue
+            segments.append({
+                "source": sid,
+                "source_coords": [sx, src_y],
+                "target": sid,
+                "target_coords": [sx, tgt_y],
+                "color": color,
+                "label": pair["label_base"],
+            })
+
+    return segments
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -210,11 +331,19 @@ def main():
 
     stations = build_stations(tree_infos)
     lines = build_lines(tree_infos, stations)
+    sorted_infos = sorted(tree_infos, key=lambda ti: (ti["size"], ti["y"]))
+
+    rivers = build_river(tree_infos, sorted_infos)
 
     transit_data = {
         "stations": stations,
         "lines": lines,
+        "rivers": rivers,
     }
+
+    print(f"  River segments: {len(rivers)}")
+    for r in rivers:
+        print(f"    {r['source']:<25s} → {r['target']:<25s}  {r['label']}")
 
     outpath = os.path.join(PLOT_DIR, "transit_map.json")
     with open(outpath, "w") as f:

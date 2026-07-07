@@ -22,9 +22,19 @@ declare module 'd3-tube-map' {
     }>;
   }
 
+  interface TubeMapRiverSegment {
+    source: string;
+    source_coords: [number, number];
+    target: string;
+    target_coords: [number, number];
+    color: string;
+    label: string;
+  }
+
   interface TubeMapData {
     stations: Record<string, { label: string }>;
     lines: TubeMapLine[];
+    rivers?: TubeMapRiverSegment[];
   }
 
   interface TubeMapGenerator {
