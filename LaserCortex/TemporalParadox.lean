@@ -3,8 +3,6 @@ import LaserCortex.foundations.Tamari
 import LaserCortex.Friction
 import LaserCortex.Generation
 
-open LogicTypes
-
 /-!
 # TemporalParadox — Grandfather Paradox Detection (Staging Port)
 
@@ -187,7 +185,7 @@ Detect the grandfather paradox in an AntiCoherentPair (Test B state):
 returns true if the pair equals the grandfather pair (CLASSICAL, TEMPORAL).
 -/
 def tpDetectedPair (pair : AntiCoherentPair) : Bool :=
-  pair.coherent = .Classical && pair.antiCoherent = .Temporal
+  pair.coherent = 0 && pair.antiCoherent = 1
 
 /--
 Detect the grandfather paradox in a GenerationState:

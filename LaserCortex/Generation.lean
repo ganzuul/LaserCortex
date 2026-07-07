@@ -1,30 +1,33 @@
-import LaserCortex.LogicTypes
 import LaserCortex.foundations.Tamari
 import LaserCortex.Problem
 
-open LogicTypes
-
 -- ============================================================================
--- SECTION 1: Superposition -- the container for anti-coherence
+-- SECTION 1: Superposition -- the container for anti-coherence (cdStep-based)
 -- ============================================================================
 
+/--
+A superposition stores a list of cdStep candidates (ℕ values).
+This replaces the old LogicType-based superposition: the type algebra
+reduces each logic type to its pentagonator depth (cdStep), so the
+generation cycle operates on ℕ rather than the 15-type enumeration.
+-/
 structure Superposition where
-  candidates : List LogicType
+  candidates : List ℕ
   deriving DecidableEq, Repr
 
 namespace Superposition
 
 def full : Superposition :=
-  ⟨LogicTypes.allLogics⟩
+  ⟨[]⟩
 
 def empty : Superposition :=
   ⟨[]⟩
 
-def ban (s : Superposition) (lt : LogicType) : Superposition :=
-  ⟨s.candidates.erase lt⟩
+def ban (s : Superposition) (cd : ℕ) : Superposition :=
+  ⟨s.candidates.erase cd⟩
 
-def forceCollapse (s : Superposition) (lt : LogicType) : Superposition :=
-  ⟨[lt]⟩
+def forceCollapse (s : Superposition) (cd : ℕ) : Superposition :=
+  ⟨[cd]⟩
 
 def isCollapsed (s : Superposition) : Bool :=
   s.candidates.length = 1
@@ -32,37 +35,50 @@ def isCollapsed (s : Superposition) : Bool :=
 def isContradicted (s : Superposition) : Bool :=
   s.candidates.isEmpty
 
-def collapsed (s : Superposition) : Option LogicType :=
+def collapsed (s : Superposition) : Option ℕ :=
   s.candidates.head?
 
 end Superposition
 
 -- ============================================================================
--- SECTION 2: Can Coexist
+-- SECTION 2: Can Coexist (cdStep-based)
 -- ============================================================================
 
-def canCoexist (l1 l2 : LogicType) : Bool :=
-  l1.isAssociativeSector == l2.isAssociativeSector || l1.isMetaLogic || l2.isMetaLogic
+/--
+Two cdSteps can coexist if they are in the same associative sector (≤1)
+or if either is the meta-logic cdStep (4, Free logic). This mirrors the
+original LogicType.canCoexist but uses the pentagonator depth directly.
+-/
+def canCoexist (c1 c2 : ℕ) : Bool :=
+  (c1 ≤ 1) == (c2 ≤ 1) || c1 = 4 || c2 = 4
 
 -- ============================================================================
--- SECTION 3: AntiCoherentPair
+-- SECTION 3: AntiCoherentPair (ℕ × ℕ, replacing LogicType × LogicType)
 -- ============================================================================
 
+/--
+An anti-coherent pair stores the cdSteps of the coherent (Classical, cdStep 0)
+and anti-coherent logic. The concrete pairs are defined as ℕ × ℕ literals
+derived from the cdStep mapping.
+-/
 structure AntiCoherentPair where
-  coherent : LogicType
-  antiCoherent : LogicType
+  coherent : ℕ
+  antiCoherent : ℕ
   deriving DecidableEq, Repr
 
 namespace AntiCoherentPair
 
+/-- Classical (0) vs Paraconsistent (4): sector boundary crossing. -/
 def barber : AntiCoherentPair :=
-  ⟨.Classical, .Paraconsistent⟩
+  ⟨0, 4⟩
 
+/-- Classical (0) vs ManyValued (1): both associative, coexisting. -/
 def liar : AntiCoherentPair :=
-  ⟨.Classical, .ManyValued⟩
+  ⟨0, 1⟩
 
+/-- Classical (0) vs Temporal (1): both associative, coexisting. -/
 def grandfather : AntiCoherentPair :=
-  ⟨.Classical, .Temporal⟩
+  ⟨0, 1⟩
 
 end AntiCoherentPair
 
@@ -70,21 +86,26 @@ end AntiCoherentPair
 -- SECTION 4: Inflate
 -- ============================================================================
 
+/--
+Map each problem class to its anti-coherent pair (coherent cdStep, anti-coherent cdStep).
+The coherent pole is always Classical at cdStep 0. The anti-coherent pole is the
+cdStep of the logic best suited to resolve paradoxes of that class.
+-/
 def inflate (pc : ProblemClass) : AntiCoherentPair :=
   match pc with
-  | .selfReference       => AntiCoherentPair.liar
-  | .vagueness           => ⟨.Classical, .Fuzzy⟩
-  | .inconsistentDef     => AntiCoherentPair.barber
-  | .temporalDecision    => AntiCoherentPair.grandfather
-  | .deontic             => ⟨.Classical, .Deontic⟩
-  | .epistemic           => ⟨.Classical, .Epistemic⟩
-  | .quantumSuperposition => ⟨.Classical, .Quantum⟩
-  | .constructive        => ⟨.Classical, .Intuitionistic⟩
-  | .relevance           => ⟨.Classical, .Relevance⟩
-  | .emptyReference      => ⟨.Classical, .Free⟩
-  | .infinity            => ⟨.Classical, .Infinitary⟩
-  | .modality            => ⟨.Classical, .Modal⟩
-  | .metaParadox         => ⟨.Classical, .Classical⟩
+  | .selfReference       => AntiCoherentPair.liar        -- 0, 1
+  | .vagueness           => ⟨0, 1⟩                        -- Fuzzy
+  | .inconsistentDef     => AntiCoherentPair.barber       -- 0, 4
+  | .temporalDecision    => AntiCoherentPair.grandfather  -- 0, 1
+  | .deontic             => ⟨0, 1⟩                        -- Deontic
+  | .epistemic           => ⟨0, 1⟩                        -- Epistemic
+  | .quantumSuperposition => ⟨0, 3⟩                       -- Quantum
+  | .constructive        => ⟨0, 2⟩                        -- Intuitionistic
+  | .relevance           => ⟨0, 3⟩                        -- Relevance
+  | .emptyReference      => ⟨0, 4⟩                        -- Free
+  | .infinity            => ⟨0, 3⟩                        -- Infinitary
+  | .modality            => ⟨0, 3⟩                        -- Modal
+  | .metaParadox         => ⟨0, 0⟩                        -- Classical × Classical
 
 -- ============================================================================
 -- SECTION 5: Temporal Conflate
@@ -92,20 +113,28 @@ def inflate (pc : ProblemClass) : AntiCoherentPair :=
 
 def temporalConflate (pair : AntiCoherentPair) : EMLTree :=
   EMLTree.Node
-    (rightComb pair.coherent.cdStep)
-    (rightComb pair.antiCoherent.cdStep)
+    (rightComb pair.coherent)
+    (rightComb pair.antiCoherent)
 
 -- ============================================================================
--- SECTION 6: Revise
+-- SECTION 6: Revise (cdStep-based vacuity check)
 -- ============================================================================
 
-def isVacuousType (lt : LogicType) : Bool :=
-  lt.cdStep = 0 && lt.isAssociativeSector
+/--
+A cdStep is vacuous if it is 0 (Classical level). At cdStep 0 the logic is
+fully associative with no zero divisors, so it cannot sustain anti-coherence.
+-/
+def isVacuousCd (cd : ℕ) : Bool := cd = 0
 
+/--
+Revise a superposition by filtering out vacuous cdSteps from the pair.
+The surviving cdStep(s) are the non-classical pole(s) that can sustain
+anti-coherence.
+-/
 def revise (pair : AntiCoherentPair) : Superposition :=
   let candidates :=
-    (if isVacuousType pair.coherent then [] else [pair.coherent]) ++
-    (if isVacuousType pair.antiCoherent then [] else [pair.antiCoherent])
+    (if isVacuousCd pair.coherent then [] else [pair.coherent]) ++
+    (if isVacuousCd pair.antiCoherent then [] else [pair.antiCoherent])
   ⟨candidates⟩
 
 -- ============================================================================
@@ -148,16 +177,10 @@ def generationStep (s : GenerationState) : GenerationState :=
       phase := .revised
     }
   | .revised =>
-    let survivor := s.superposition.collapsed
-    let nextPC : ProblemClass :=
-      match survivor with
-      | some lt =>
-        match findProblemClass lt with
-        | some pc => pc
-        | none => s.problemClass
-      | none => s.problemClass
+    -- The generation cycle operates at a fixed problem class: the anti-coherent
+    -- pole's cdStep is defined by inflate(pc) and the superposition never
+    -- introduces a different pc. No findProblemClass lookup needed.
     { s with
-      problemClass := nextPC
       phase := .nextPC
     }
   | .nextPC =>
@@ -205,22 +228,22 @@ theorem temporalConflate_barber_is_oscillation :
   native_decide
 
 theorem revise_grandfather :
-    (revise AntiCoherentPair.grandfather).candidates = [.Temporal] := by
+    (revise AntiCoherentPair.grandfather).candidates = [1] := by
   native_decide
 
 theorem revise_barber :
-    (revise AntiCoherentPair.barber).candidates = [.Paraconsistent] := by
+    (revise AntiCoherentPair.barber).candidates = [4] := by
   native_decide
 
 theorem emptiness_roundtrip_grandfather :
     let pair := inflate ProblemClass.temporalDecision
     let tree := temporalConflate pair
     let revised := revise pair
-    revised.candidates = [.Temporal] ∧
+    revised.candidates = [1] ∧
     revised.isCollapsed ∧
     ¬revised.isContradicted ∧
-    (pair.coherent.cdStep = 0 ∧ pair.coherent.isAssociativeSector) ∧
-    (pair.antiCoherent.cdStep = 1 ∧ pair.antiCoherent.isAssociativeSector) ∧
+    pair.coherent = 0 ∧ pair.coherent ≤ 1 ∧
+    pair.antiCoherent = 1 ∧ pair.antiCoherent ≤ 1 ∧
     canCoexist pair.antiCoherent pair.coherent = true := by
   native_decide
 
