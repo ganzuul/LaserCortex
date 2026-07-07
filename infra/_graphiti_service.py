@@ -113,10 +113,39 @@ def _resolve_imports() -> None:
 
         # Build mock client classes with proper inheritance now that bases exist
         class __MockLLMClient(LLMClient):
-            """Schema-aware mock that returns empty entity/edge lists."""
+            """Schema-aware mock that returns plausible default values."""
 
             def __init__(self):
                 super().__init__(config=LLMConfig(api_key="graphiti_service"))
+
+            @staticmethod
+            def _default_for_type(v: dict) -> object:
+                """Return a plausible default for a JSON Schema property dict.
+
+                Handles ``{"type": "string"}`` as well as
+                ``{"anyOf": [{"type": "string"}, {"type": "null"}]}``.
+                """
+                typ = v.get("type")
+                if typ is not None:
+                    if typ == "array":
+                        return []
+                    if typ == "string":
+                        return ""
+                    if typ in ("integer", "number"):
+                        return 0
+                    if typ == "boolean":
+                        return False
+                    return {}
+                # anyOf / oneOf — pick the first non-null type
+                for variant in v.get("anyOf", v.get("oneOf", [])):
+                    vt = variant.get("type")
+                    if vt != "null" and vt is not None:
+                        # Recurse via the class; __MockLLMClient triggers name
+                        # mangling, so we use _resolve_imports' module-level
+                        # alias instead. At runtime, MockLLMClient points to
+                        # the inner class.
+                        return MockLLMClient._default_for_type(variant)  # noqa: F821
+                return {}
 
             async def _generate_response(
                 self, messages, response_model=None, max_tokens=None, model_size=None
@@ -124,7 +153,7 @@ def _resolve_imports() -> None:
                 if response_model is not None:
                     schema = response_model.model_json_schema()
                     return {
-                        k: [] if v.get("type") == "array" else {}
+                        k: self._default_for_type(v)
                         for k, v in schema.get("properties", {}).items()
                     }
                 return {}
@@ -141,6 +170,9 @@ def _resolve_imports() -> None:
             async def create(self, input_data):
                 return [0.25, 0.25, 0.25, 0.25]
 
+            async def create_batch(self, texts):
+                return [[0.25, 0.25, 0.25, 0.25] for _ in texts]
+
         class __StubCrossEncoder(CrossEncoderClient):
             """Returns uniform relevance scores."""
 
@@ -150,6 +182,74 @@ def _resolve_imports() -> None:
         MockLLMClient = __MockLLMClient
         StubEmbedder = __StubEmbedder
         StubCrossEncoder = __StubCrossEncoder
+
+        # ── Monkey-patch label_propagation ──────────────────────────────
+        # The upstream version has an infinite-loop bug: when the max vote
+        # count ties between two communities, it picks the higher-numbered
+        # community index, but neighbors flip to the other community next
+        # iteration, causing oscillation.  Our fix: prefer the current
+        # community on ties, and never leave a community when all neighbors
+        # are unique (max_votes == 1).
+        import graphiti_core.utils.maintenance.community_operations as _co
+
+        _orig_label_prop = _co.label_propagation
+
+        def _stable_label_propagation(
+            projection: dict[str, list[Any]],
+        ) -> list[list[str]]:
+            from collections import defaultdict
+
+            community_map = {u: i for i, u in enumerate(projection.keys())}
+
+            # Safety cap: should converge in << 50 iterations.
+            # The upstream algorithm never converges for symmetric graphs
+            # (oscillation between two communities of equal weight).  Our
+            # tie-breaking fix breaks the symmetry: when the current
+            # community is among the top candidates, stay.
+            for _ in range(50):
+                no_change = True
+                new_community_map: dict[str, int] = {}
+
+                for uuid, neighbors in projection.items():
+                    curr = community_map[uuid]
+
+                    # Count votes for each neighboring community
+                    votes: dict[int, int] = defaultdict(int)
+                    for neighbor in neighbors:
+                        votes[community_map[neighbor.node_uuid]] += neighbor.edge_count
+
+                    if not votes:
+                        new_community_map[uuid] = curr
+                        continue
+
+                    max_votes = max(votes.values())
+                    top_communities = [c for c, v in votes.items() if v == max_votes]
+
+                    if curr in top_communities and max_votes > 1:
+                        # Current community is competitive and has >1 vote.
+                        # Staying here breaks the oscillation cycle.
+                        new_community = curr
+                    else:
+                        # All neighbours unique OR the current community is
+                        # not among the top candidates: pick the top vote-getter.
+                        # Among ties, prefer the highest index (same as the
+                        # upstream sort order: (count, community) reversed).
+                        new_community = max(top_communities)
+
+                    new_community_map[uuid] = new_community
+                    if new_community != curr:
+                        no_change = False
+
+                if no_change:
+                    break
+                community_map = new_community_map
+
+            result: dict[int, list[str]] = defaultdict(list)
+            for u, c in community_map.items():
+                result[c].append(u)
+            return list(result.values())
+
+        _co.label_propagation = _stable_label_propagation
 
     except ImportError as e:
         _import_error = (

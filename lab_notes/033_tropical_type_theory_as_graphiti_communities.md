@@ -1,7 +1,7 @@
 # 033: Tropical Type Theory as Graphiti Communities
 
 **Date**: 2026-07-07
-**Status**: COMPLETE — 25 episodes encoded, 5 OWL KV pairs, 2 communities discovered, community detection validated the split magma decomposition as the primary partition
+**Status**: COMPLETE — 25+ episodes encoded, 2 communities discovered, `scripts/run_type_experiment.sh` created for automated re-runs with configurable density
 **Prerequisites**: 032 (Tropical type theory hypothesis); `LaserCortex/staging/TropicalTypeAlgebra.lean` (compiled experiment with 11 types, 5 adjacencies, split magma)
 **Sources**: Develin & Sturmfels "Tropical Convexity" (2004), §2–3; Graphiti temporal graph (via normcode MCP); `docs/type_theory_map.md` (conceptual map of communities)
 
@@ -159,6 +159,35 @@ The MCP server passes `limit=10` as a default to Graphiti's `.search()` method, 
 - 5 OWL key-value pair episodes for blood-brain barrier
 - 2 communities found by `graphiti_build_communities`
 - Graph has been running since session start (model-35b available on :8080)
+
+## Changelog
+
+### 2026-07-07: Community detection hang fixed
+
+The `build_communities` call hung indefinitely (never returned) for our graph because
+the upstream `label_propagation` algorithm in Graphiti has an infinite-loop bug:
+
+**Root cause**: When the max vote count ties between two communities (e.g., both
+community 7 and community 9 have 3 votes each), the algorithm picks the
+higher-numbered community (9). But neighbours flip to the other community (7)
+next iteration, creating an infinite oscillation.
+
+**Fix**: Monkey-patched `graphiti_core.utils.maintenance.community_operations.label_propagation`
+with a stable version in `infra/_graphiti_service.py` (`_stable_label_propagation`):
+
+1. When the current community is among the top candidates AND has >1 votes, stay.
+   This breaks the symmetry when two communities are tied.
+2. When all neighbours are unique (max_votes == 1), pick the top vote-getter
+   (same behaviour as upstream — seeds the community).
+3. Safety cap at 50 iterations (should converge in << 50 for any graph).
+
+Also fixed `MockLLMClient._default_for_type` to handle `anyOf` schemas (the
+`EdgeTimestamps` model uses `anyOf: [str, null]`), which generated 14 pydantic
+validation warnings during `add_triplet`. The mock now correctly returns `""`
+for `anyOf` string types instead of `{}`.
+
+**Result**: `scripts/run_type_experiment.py --triplets` completes in ~0.0s,
+returns 2 community nodes vs. hanging forever.
 
 ## References
 
