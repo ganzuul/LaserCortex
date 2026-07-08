@@ -261,15 +261,11 @@ def shiftBy4 (c : SplitOctonion) : SplitOctonion :=
     right-multiplied by `e₄`:
     `[a, b, e₄] = (a·b − b·a)·e₄`
 
-    Since `octonion_norm(e₄) = −1 ≠ 0`, right-multiplication by `e₄` is a
-    linear isomorphism on the vector space. This means the associator is
-    demotable to the commutator via an invertible linear map — the
-    non-associative sector carries no new information beyond the
-    associative sector.
-
-    The restriction to base elements is necessary: `ring` closes the goal
-    when `a.e4 = a.e5 = a.e6 = a.e7 = 0` and similarly for `b`, but not
-    for arbitrary `a, b` (cross-terms from e₄-e₇ components survive). -/
+    RESTRICTED SCOPE: The hypotheses `a.e4 = a.e5 = a.e6 = a.e7 = 0` (and
+    similarly for `b`) are essential. For mixed-case arguments where one
+    element has non-zero split-sector components, the identity FAILS —
+    see the NEGATIVE RESULT below. The mixed base/split cross-terms are
+    precisely where the non-associative sector's new information enters. -/
 theorem cd_doubling_identity (a b : SplitOctonion) (ha : a.e4 = 0) (ha' : a.e5 = 0)
     (ha'' : a.e6 = 0) (ha''' : a.e7 = 0)
     (hb : b.e4 = 0) (hb' : b.e5 = 0) (hb'' : b.e6 = 0) (hb''' : b.e7 = 0) :
@@ -305,13 +301,21 @@ theorem cd_doubling_identity (a b : SplitOctonion) (ha : a.e4 = 0) (ha' : a.e5 =
 -- Cayley-Dickson generator ω = e₄
 -- ============================================================================
 
-/-- NEGATIVE RESULT: Mixed-case CD doubling identity.
-    Testing `associator_tensor a b e4_vec = split_oct_mul (split_oct_commutator a b) e4_vec`
-    with `a` in base (e₄-e₇ = 0) and `b` in split sector (e₀-e₃ = 0) —
-    `ring` fails on all 8 components. Cross-terms like `a.e1*b.e5`, `a.e2*b.e6`,
-    `a.e3*b.e7` survive (each appears with coefficient 2 in the residual).
-    The identity does NOT extend to the mixed case; both arguments must be
-    in the base subalgebra. See lab_notes/028 for full analysis. -/
+/--
+NEGATIVE RESULT (CONCRETE COUNTEREXAMPLE):
+The CD doubling identity FAILS when one argument is in the split sector.
+Take `a = e₁` (base, e₁ = 1) and `b = e₅` (split sector, e₅ = 1).
+Then `[e₁, e₅, e₄] ≠ (e₁·e₅ − e₅·e₁)·e₄` — component e₀ differs by 2.
+-/
+theorem cd_doubling_identity_mixed_fails :
+    let a := e1_vec; let b := e5_vec;
+    associator_tensor a b e4_vec ≠ split_oct_mul (split_oct_commutator a b) e4_vec := by
+  intro a b h
+  have h0 := congrArg SplitOctonion.e0 h
+  unfold a b at h0
+  unfold associator_tensor split_oct_commutator split_sub split_oct_mul
+    e1_vec e4_vec e5_vec at h0
+  norm_num at h0
 
 def omega : SplitOctonion := e4_vec
 
