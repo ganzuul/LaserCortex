@@ -4,9 +4,12 @@ import Mathlib.LinearAlgebra.QuadraticForm.Basic
 /-!
 # Split-Octonion Algebra over ℤ
 
-The split-octonion algebra with signature (4,4) over ℤ:
-- Positive squares: e₀², ..., e₃² = +1
-- Negative squares: e₄², ..., e₇² = -1
+The split-octonion algebra with quadratic form Q44 of signature (4,4) over ℤ:
+- Q(e₀), Q(e₁), Q(e₂), Q(e₃) = +1  (norm-positive sector)
+- Q(e₄), Q(e₅), Q(e₆), Q(e₇) = -1  (norm-negative sector)
+- Note: the algebra product eᵢ·eᵢ is NOT the same as Q(eᵢ). For example,
+  e₄·e₄ = 1 (see `omega_sq`), while Q(e₄) = -1. The multiplication is
+  the Z₂-graded product of the CD construction.
 - Strut weight: strut_weight = 4
 - ω = e₄ with ω² = +1
 
@@ -15,7 +18,8 @@ The split-octonion algebra with signature (4,4) over ℤ:
 - `Q44` — the quadratic form of signature (4,4)
 - `strut_weight` — the norm of the associator at (e₁, e₂, e₄)
 - `ω` — the Cayley-Dickson element (e₄), with ω² = +1
-- `antipode` — S(x) = +x for first 4 basis elements, -x for last 4
+- `antipode` — S(x) fixes e₀ and e₄, negates the other six basis elements.
+  In the Z₂-grading where e₁,e₂,e₃,e₅,e₆,e₇ are odd, this is the grade involution.
 
 ## Key theorems
 - `ω_sq` : ω² = +1
