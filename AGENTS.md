@@ -69,16 +69,89 @@ The system operates on limited hardware (24 GB RAM, 8 GB VRAM). All processes
 must be contained (memory caps, watchdogs). The SAFETY.md file at repo root
 documents specific containment protocols.
 
-## Pipeline Index
+## Graphiti Memory (Persistent Knowledge Graph)
 
-The Open Notebook MCP librarian indexes four architectural layers:
-- `FORMALIZATION` — Lean4 proofs, theorems, axioms
-- `API_GATEWAY` — Python/Django models, endpoints, middleware
-- `PRESENTATION` — TypeScript/WebGPU shaders, pipelines, buffers
-- `DOCUMENTATION` — Markdown specs, guides, decisions
+**⚠ Open Notebook Librarian is deprecated.** Use Graphiti Memory instead for all
+persistent agent knowledge (decisions, architecture, preferences, patterns).
 
-Before modifying any file, verify the librarian index is fresh via
-`pipeline_status` + `check_freshness`. If the index is stale, warn the user.
+The `opencode-graphiti` plugin gives agents persistent memory backed by the
+Graphiti temporal knowledge graph. It uses a local MCP server and the local
+35B for embeddings + LLM (no external API keys needed).
+
+### Plugin Setup
+
+The plugin is symlinked at `~/.config/opencode/plugins/opencode-graphiti.ts`
+and auto-discovered by opencode — no `"plugin"` entry in `opencode.jsonc`
+required.  Config lives at `~/.config/opencode/graphiti.jsonc`.
+
+### Graphiti MCP Server
+
+The server runs on this machine at `http://localhost:8001/mcp` via Docker
+(FalkorDB backend, llama.cpp profile — uses the local 35B for embeddings).
+Managed by `~/labware/opencode-graphiti/scripts/graphiti-server.sh`.
+
+**Caveat:** The endpoint is `http://localhost:8001/mcp` (no trailing slash).
+A trailing slash triggers a 307 redirect.  The `Accept` header must include
+both `application/json` and `text/event-stream` (SSE format).  Session
+initialisation requires a two-step handshake (`initialize` → get
+`mcp-session-id` from HTTP headers → `notifications/initialized`).
+
+### Available Tool
+
+The plugin registers a single `graphiti` tool with these modes:
+
+| Mode | Purpose | Key args |
+|------|---------|----------|
+| `add` | Store a memory (project-config, architecture, preference, etc.) | `content`, `type`, `scope` (user/project), `source` (text/json/message) |
+| `search` | Semantic + graph search across memories | `query`, `scope`, `limit`, `centerNodeId` |
+| `list` | Recent episodes | `scope`, `limit` |
+| `profile` | User preferences (cross-project) | `query` |
+| `forget` | Remove a memory | `memoryId` |
+| `graph` | Explore entity relationships | `centerNodeId`, `query`, `scope` |
+| `status` | Server health | — |
+
+### Memory Scopes
+
+| Scope | group_id | Persistence | Use for |
+|-------|----------|-------------|---------|
+| `user` | `opencode-user-<uuid>` | Cross-project | Personal preferences, coding style |
+| `project` | `opencode-project-<repo-path>` | This repo | Build commands, architecture decisions, conventions |
+
+### Memory Types
+
+- `project-config` — build flags, test commands, tool preferences
+- `architecture` — design decisions, module structure, cross-ref patterns
+- `error-solution` — known errors and how to fix them
+- `preference` — user's stated preferences (scope: user)
+- `learned-pattern` — reusable patterns discovered during development
+- `conversation` — session summaries (auto-saved by compaction hook)
+
+### Automatic Behaviour
+
+1. **First message in a session**: Plugin fetches user profile + relevant
+   project memories and prepends them as context (synthetic text part).
+2. **"Remember" keywords**: When the user says "remember", "save this",
+   "keep in mind", etc., the agent is nudged to call `graphiti(mode: "add")`.
+3. **Session compaction**: Before context window limits, the plugin saves a
+   summary of the session as a `conversation` memory.
+
+### Manual Usage Examples
+
+```
+graphiti(mode: "add", content: "lake build runs 194 jobs", type: "project-config", scope: "project")
+graphiti(mode: "search", query: "decisions about DescentInterval")
+graphiti(mode: "list", scope: "project", limit: 20)
+graphiti(mode: "forget", memoryId: "uuid-here")
+```
+
+### Migration from Open Notebook Librarian
+
+If you previously used `pipeline_status`, `check_freshness`, `query_librarian`,
+or related ON tools, migrate to Graphiti Memory:
+- File-level freshness checks → Not needed; code search via codegraph or grep
+- Cross-layer dependency queries → `graphiti(mode: "search", query: "...")`
+- Semantic code index → CodeGraph (`.codegraph/`) covers source; Graphiti
+  covers conversation/decision knowledge
 
 ## Lake Build Safety (Context Budget)
 
