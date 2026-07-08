@@ -1,5 +1,8 @@
 # Lean
 /.lake
+
+# Session files
+session-*.md
 /.agents/
 *.olean
 *.ilean
@@ -52,6 +55,7 @@ uv.lock
 .vscode/
 *.swp
 *.swo
+*.kate-swp
 
 # OS
 .DS_Store
@@ -90,6 +94,9 @@ external_dependency/*.whl
 # Results and output directories
 results/run_*/
 results/*.json
+
+# Generated plots and visualizations
+plots/
 
 # Node modules and build files
 node_modules/

@@ -1,4 +1,4 @@
-import LaserCortex
+import LaserCortex.EMLRegistry
 
 open EMLRegistry
 

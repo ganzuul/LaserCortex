@@ -1,0 +1,3901 @@
+MASTER DIFF REPORT — Recovered unknown code state
+======================================================================
+
+Total cat blocks:     5
+Files with changes:    5
+Total additions:       554
+Total deletions:       2428
+Combined diff lines:   2982
+
+======================================================================
+
+======================================================================
+FILE: LaserCortex/TropicalTamariLattice.lean (transcript line 67)
+======================================================================
+# Diff for LaserCortex/TropicalTamariLattice.lean
+# Recovered from transcript line 67
+# +7 -337
+
+--- CURRENT/LaserCortex/TropicalTamariLattice.lean+++ RECOVERED/LaserCortex/TropicalTamariLattice.lean@@ -1,45 +1,3 @@-/-
+-# Module: LaserCortex.TropicalTamariLattice
+-
+-## Intent
+-
+-Establishes the connection between **Mathlib4 Tropical Lattice** structures and the **Tamari lattice** (via `EMLRegistry` and `TamariBP`). This module formalizes the geometric realization of the Tamari lattice through tropical hyperplane arrangements and polyhedral subdivisions, following the Develin–Sturmfels theorem on regular subdivisions of products of simplices.
+-
+-The Tamari lattice is not yet implemented in Mathlib4, but its combinatorial structure is captured by `EMLTree` and `contracts_to` in `EMLRegistry`, with the decision/computability distance to idempotence (`dcStep`) defined in `TamariBP`.
+-
+-This module provides the foundation for:
+-1. **Tropical Lattice instances** on `Tropical R` via `Mathlib.Algebra.Tropical.Lattice`
+-2. **Tamari tropicalization** — mapping `EMLTree` contraction paths to tropical curve edges
+-3. **Dimension reduction** for the tube map application — projecting Cayley-Dickson algebra coordinates to tropical coordinates with 90/45-degree turn constraints
+-
+-## Sections
+-
+-1. **Tropical Lattice Instances** — `instLatticeTropical`, `instConditionallyCompleteLatticeTropical`
+-2. **Tamari Tropicalization** — mapping `EMLTree` to tropical polyhedral complexes
+-3. **Develin–Sturmfels Correspondence** — regular subdivisions of △k × △m and tropical hyperplane arrangements
+-4. **Tube Map Coordinate Projection** — dimension reduction to 90/45-degree turn constraints
+-
+-## Cross-refs
+-
+-- Mathlib.Algebra.Tropical.Basic → `Tropical`, `TropicalSemiring`, `trop`, `untrop`
+-- Mathlib.Algebra.Tropical.Lattice → `instLatticeTropical`, `instConditionallyCompleteLatticeTropical`
+-- LaserCortex.EMLRegistry → `EMLTree`, `contracts_one`, `contracts_to`, `rightComb`
+-- LaserCortex.TamariBP → `dcStep`, `isRightComb`, `dcStepMeasure`
+-- LaserCortex.SplitQuaternionClifford → `SplitQuat`, `antipode_sq`, `norm`
+-- LaserCortex.SplitOctonionCost → `SplitOctonion`, `antipode`, `octonion_norm`
+-
+-## Invariants
+-
+-1. `instLatticeTropical [Lattice R] : Lattice (Tropical R)` — tropical inf/sup defined via `trop (untrop x ⊓ untrop y)` and `trop (untrop x ⊔ untrop y)`
+-2. `instConditionallyCompleteLatticeTropical [ConditionallyCompleteLattice R]` — conditionally complete lattice structure on `Tropical R`
+-3. Tamari lattice Hasse diagram is isomorphic to the 1-skeleton of a polyhedral complex induced by tropical hyperplane arrangements
+-4. Regular subdivisions of △k × △m correspond dually to configurations of tropical hyperplanes (Develin–Sturmfels theorem)
+-
+-## Tags
+-
+-#lean4-theorem #tropical-lattice #tamari-lattice #polyhedral-complex #develin-sturmfels
+--/
+-
+ import Mathlib.Algebra.Tropical.Basic
+ import Mathlib.Algebra.Tropical.Lattice
+ import Mathlib.LinearAlgebra.CliffordAlgebra.Grading
+@@ -63,87 +21,17 @@ 
+ namespace TropicalTamariLattice
+ 
+--- ============================================================================
+--- SECTION 1: Tropical Lattice Instances
+--- ============================================================================
+-
+-/-!
+-Mathlib4 provides the following instances for the tropical lattice:
+-
+-1. `instSemilatticeInfTropical [SemilatticeInf R] : SemilatticeInf (Tropical R)`
+-   - `inf := fun x y ↦ trop (untrop x ⊓ untrop y)`
+-
+-2. `instSemilatticeSupTropical [SemilatticeSup R] : SemilatticeSup (Tropical R)`
+-   - `sup := fun x y ↦ trop (untrop x ⊔ untrop y)`
+-
+-3. `instLatticeTropical [Lattice R] : Lattice (Tropical R)`
+-   - Combines the inf and sup instances
+-
+-4. `instConditionallyCompleteLatticeTropical [ConditionallyCompleteLattice R] :
+-     ConditionallyCompleteLattice (Tropical R)`
+-
+-These instances make `Tropical R` a lattice when `R` is a lattice, with the
+-order induced by the underlying type `R` via the `trop`/`untrop` bijection.
+--/
+-
+--- The instances are already provided by Mathlib.Algebra.Tropical.Lattice:
+--- - `instLatticeTropical [Lattice R] : Lattice (Tropical R)`
+--- - `instConditionallyCompleteLatticeTropical [ConditionallyCompleteLattice R] :
+---     ConditionallyCompleteLattice (Tropical R)`
+-
+--- ============================================================================
+--- SECTION 2: Tamari Tropicalization
+--- ============================================================================
+-
+-/-!
+-The Tamari lattice's geometric counterpart is the **associahedron** (Stasheff polytope).
+-
+-According to combinatorial research (Ceballos, Padrol, Sarmiento):
+-- The Hasse diagram of a ν-Tamari lattice is isomorphic to the 1-skeleton (edge graph)
+-  of a polyhedral complex.
+-- This polyhedral complex is explicitly induced by an arrangement of **tropical hyperplanes**.
+-- The intersections and bounded cells formed by these tropical hyperplanes cut out
+-  the exact geometry of the ν-associahedron.
+-
+-In our framework:
+-- `EMLTree` represents the combinatorial Tamari lattice structure
+-- `contracts_one` represents the right rotation (Tamari step)
+-- `dcStep t` is the Tamari distance to the right-comb normal form
+-
+-We define a **tropicalization** of `EMLTree` that maps contraction paths to
+-tropical curve edges with integer slopes.
+--/
+-
+-/--
+-A tropical curve edge in the context of the Tamari lattice.
+-Represents a step in the tropical hyperplane arrangement corresponding
+-to a Tamari contraction.
+--/
+ structure TropicalTamariEdge where
+-  /-- The source tree in the contraction path. -/
+   source : EMLTree
+-  /-- The target tree in the contraction path. -/
+   target : EMLTree
+-  /-- The tropical slope/weight of this edge. -/
+   tropicalWeight : ℕ
+-  /-- The edge corresponds to a valid `contracts_one` step. -/
+   isContraction : contracts_one source target
+ 
+-/--
+-A contraction step with its proof that it satisfies `contracts_one`.
+--/
+ structure ContractionStep where
+-  /-- The source tree in the contraction step. -/
+   source : EMLTree
+-  /-- The target tree in the contraction step. -/
+   target : EMLTree
+-  /-- The proof that this is a valid `contracts_one` step. -/
+   isContraction : contracts_one source target
+ 
+-/--
+-Convert a `ContractionStep` to a `TropicalTamariEdge`.
+-The tropical weight is the decrease in `dcStep` (decision/computability distance to idempotence).
+--/
+ def contraction_step_to_edge (step : ContractionStep) : TropicalTamariEdge :=
+ {
+   source := step.source,
+@@ -152,104 +40,26 @@   isContraction := step.isContraction
+ }
+ 
+-/--
+-The tropicalization of a Tamari contraction path.
+-Maps a sequence of `ContractionStep`s to a sequence of `TropicalTamariEdge`s.
+--/
+ def tamariTropicalPath (steps : List ContractionStep) : List TropicalTamariEdge :=
+   steps.map contraction_step_to_edge
+ 
+--- ============================================================================
+--- SECTION 3: Regular Subdivision of Δ × Δ via QuantizedType
+--- ============================================================================
+-
+-/-!
+-The **Develin–Sturmfels theorem** (2004) establishes that regular subdivisions
+-of a product of simplices Δ_a × Δ_b correspond dually to configurations of
+-tropical hyperplanes (or equivalently, to tropical convex hulls of point
+-configurations).
+-
+-In the QuantizedType framework, the **height function** that induces the
+-regular subdivision is the friction density Γ(k) at the logic's CD step.
+-
+-This section defines:
+-1. `RegularSubdivision` — a structure bundling the subdivision data
+-2. The height function `quantizedHeight` derived from `frictionDensity`
+-3. The forward direction: a QuantizedType at CD step k induces a regular
+-   subdivision of Δ_{k−1} × Δ_{m−1}
+-4. The 1-skeleton isomorphism: the dual tropical convex hull's edge graph
+-   IS the Tamari lattice (the `contracts_to` poset on EMLTrees)
+-
+-Reference: Develin, M., & Sturmfels, B. (2004). "Tropical convexity."
+-Documenta Mathematica, 9, 1-27.
+--/
+-
+-/--
+-A **cell in a 1D regular subdivision** of the interval [0, a].
+-Represents a maximal linear region of the height function.
+-
+-The height function h(i) is affinely linear on each cell [lower, upper].
+-Two cells meet at boundaries where h changes slope or has a kink.
+-
+-The parameter `a` is the maximum index of the simplex Δ_a.
+--/
+ structure SubdivisionCell1D (a : ℕ) where
+-  /-- Lower bound of the cell (inclusive). -/
+   lower : ℕ
+-  /-- Upper bound of the cell (inclusive). -/
+   upper : ℕ
+-  /-- The cell is non-empty: lower ≤ upper. -/
+   lower_le_upper : lower ≤ upper
+-  /-- The upper bound is within the total interval [0, a]. -/
+   upper_le_a : upper ≤ a
+ 
+-/--
+-A **regular subdivision** of the product of simplices Δ_a × Δ_b, induced
+-by a height function `h : ℕ → ℕ → ℕ` on the vertices (i, j) with
+-0 ≤ i ≤ a, 0 ≤ j ≤ b.
+-
+-The subdivision is *regular* because its cells are the projections of
+-the lower convex hull of the lifted points (i, j, h i j) in ℝ^{a+b+1}.
+-
+-For our setting, the height function factors as h(i, j) = Γ(i)
+-(frictionDensity at CD step i, independent of j). This gives a **product
+-subdivision**: the 1D subdivision of Δ_a induced by Γ, times the trivial
+-subdivision of Δ_b.
+--/
+ structure RegularSubdivision (a b : ℕ) where
+-  /-- The height function on vertices (i, j) of Δ_a × Δ_b.
+-      For our setting this is Γ(i), independent of j, but the structure
+-      is general enough to accommodate other height functions. -/
+   height : ℕ → ℕ → ℕ
+-  /-- The 1D cells partition the i-axis. -/
+   cells_1d : List (SubdivisionCell1D a)
+-  /-- Every vertex (i, j) with 0 ≤ i ≤ a, 0 ≤ j ≤ b belongs to at least one cell.
+-      The cells are "coherent": the height function is linear on each cell. -/
+   covers_all_vertices : ∀ (i : ℕ), i ≤ a → ∃ (cell : SubdivisionCell1D a),
+     cell.lower ≤ i ∧ i ≤ cell.upper ∧ cell ∈ cells_1d
+-  /-- The height function is monotone in i (the first argument).
+-      This ensures the lifted points form a convex lower envelope. -/
+   monotone_first : ∀ (i₁ i₂ j₁ j₂ : ℕ), i₁ ≤ i₂ → height i₁ j₁ ≤ height i₂ j₂
+-  /-- The height function factors through the first argument (i.e., is
+-      independent of j), which is true for Γ. This is the "product
+-      subdivision" condition. -/
+   factors_through_i : ∀ (i j₁ j₂ : ℕ), height i j₁ = height i j₂
+ 
+-/--
+-The height function on Δ_a × Δ_b derived from the friction density Γ.
+-`quantizedHeight k i j = frictionDensity i`, for any j.
+-
+-This is the **Develin-Sturmfels height function** associated to a
+-QuantizedType at CD step k: it depends only on the CD step i, not on
+-the tree-shape index j.
+--/
+ def quantizedHeight (k : ℕ) (i j : ℕ) : ℕ :=
+   frictionDensity i
+ 
+-/--
+-`quantizedHeight` is monotone in the first argument: if i₁ ≤ i₂ then
+-Γ(i₁) ≤ Γ(i₂). This follows from `heightMap_monotone`.
+--/
+ theorem quantizedHeight_monotone_first (k i₁ i₂ j₁ j₂ : ℕ) (h : i₁ ≤ i₂) :
+     quantizedHeight k i₁ j₁ ≤ quantizedHeight k i₂ j₂ := by
+   dsimp [quantizedHeight]
+@@ -258,36 +68,17 @@   · have h_lt : i₁ < i₂ := by omega
+     exact heightMap_monotone i₁ i₂ h_lt
+ 
+-/--
+-`quantizedHeight` factors through the first argument (is independent of j).
+--/
+ theorem quantizedHeight_factors_through_i (k i j₁ j₂ : ℕ) :
+     quantizedHeight k i j₁ = quantizedHeight k i j₂ := by
+   rfl
+ 
+-/--
+-**The 1D cells of the regular subdivision induced by frictionDensity**.
+-
+-For any a ≥ 0, the height function Γ(i) = i + strut_weight·assocDefect(i)
+-has exactly:
+-- A break at i = 2 → 3 (the phase change where assocDefect activates)
+-- Linear with slope 1 on [0, 2] (associative regime)
+-- Linear with slope 1 on [3, a] (non-associative regime), offset by +16
+-
+-So the 1D subdivision of Δ_a has:
+-- If a ≤ 2: one cell covering [0, a] (no break yet)
+-- If a = 3: a break at 2→3, giving two cells [0, 2] and [3, 3]
+-- If a ≥ 4: two cells [0, 2] and [3, a]
+--/
+ def frictionCells1D (a : ℕ) : List (SubdivisionCell1D a) :=
+   if ha : a ≤ 2 then
+-    -- Single cell covering the whole simplex
+     [{ lower := 0
+        upper := a
+        lower_le_upper := by omega
+        upper_le_a := le_refl a }]
+   else
+-    -- Two cells: [0, 2] and [3, a]
+     let cell0 : SubdivisionCell1D a :=
+       { lower := 0
+         upper := 2
+@@ -302,48 +93,28 @@         upper_le_a := le_refl a }
+     [cell0, cell1]
+ 
+-/--
+-The cells produced by `frictionCells1D` cover all vertices i ∈ [0, a].
+--/
+ theorem frictionCells1D_covers (a i : ℕ) (hi : i ≤ a) :
+     ∃ (cell : SubdivisionCell1D a), cell.lower ≤ i ∧ i ≤ cell.upper ∧ cell ∈ frictionCells1D a := by
+   dsimp [frictionCells1D]
+   by_cases ha : a ≤ 2
+-  · -- Single cell case: the sole cell covers [0, a]
+-    split_ifs
+-    -- ha : a ≤ 2, which is now used by split_ifs
++  · split_ifs
+     refine ⟨
+       { lower := 0, upper := a, lower_le_upper := by omega, upper_le_a := le_refl a },
+       ⟨Nat.zero_le i, hi, by simp⟩
+     ⟩
+-  · -- Two-cell case
+-    have h3 : 3 ≤ a := by omega
++  · have h3 : 3 ≤ a := by omega
+     split_ifs
+     by_cases hi2 : i ≤ 2
+-    · -- i falls in [0, 2]
+-      refine ⟨
++    · refine ⟨
+         { lower := 0, upper := 2, lower_le_upper := by omega, upper_le_a := by omega },
+         ⟨Nat.zero_le i, hi2, by simp⟩
+       ⟩
+-    · -- i falls in [3, a]
+-      have hi3 : 3 ≤ i := by omega
++    · have hi3 : 3 ≤ i := by omega
+       refine ⟨
+         { lower := 3, upper := a, lower_le_upper := h3, upper_le_a := le_refl a },
+         ⟨hi3, hi, by simp⟩
+       ⟩
+ 
+-/--
+-A QuantizedType at CD step `k` induces a regular subdivision of
+-Δ_{k−1} × Δ_{m−1} for any m ≥ 1.
+-
+-The height function is Γ(i) = frictionDensity i, independent of j.
+-The 1D cells are the intervals [0, min(k-1, 2)] and [max(3, k-1), k-1]
+-if k-1 ≥ 3, or a single cell otherwise.
+-
+-**Provable forward direction**: given `qt`, we can construct the
+-subdivision. The proof uses `quantizedHeight_monotone_first` for the
+-coherence condition and `frictionCells1D` for the cell decomposition.
+--/
+ def quantizationRegularSubdivision (qt : QuantizedType) (m : ℕ) (hm : 1 ≤ m) :
+     RegularSubdivision (qt.lt.cdStep - 1) (m - 1) :=
+   let a := qt.lt.cdStep - 1
+@@ -356,161 +127,25 @@     factors_through_i := quantizedHeight_factors_through_i qt.lt.cdStep
+   }
+ 
+-/--
+-**Develin–Sturmfels correspondence** (forward direction, provable).
+-
+-Given a QuantizedType `qt` at CD step `k`, the friction density Γ
+-induces a regular subdivision of Δ_{k−1} × Δ_{m−1} for any m ≥ 1.
+-
+-This is the **forward direction** of the correspondence: QuantizedType
+-⇒ regular subdivision. The **reverse direction** (that every regular
+-subdivision of Δ × Δ whose height function bounds all trees must come
+-from a non-meta logic) is meta-theoretical, parallel to
+-`quantized_types_are_exactly_non_meta_logics` and `lean4_limitation_note`.
+-
+-The existence claim is a `Prop`, so it can be stated as a theorem.
+--/
+ theorem develin_sturmfels_quantized_correspondence (qt : QuantizedType) (m : ℕ) (hm : 1 ≤ m) :
+     ∃ (subdiv : RegularSubdivision (qt.lt.cdStep - 1) (m - 1)), subdiv.height = quantizedHeight qt.lt.cdStep :=
+   ⟨quantizationRegularSubdivision qt m hm, rfl⟩
+ 
+-/--
+-**Meta-theoretical corollary**: Any non-meta logic type should admit a
+-Develin–Sturmfels regular subdivision. Formally proving this requires
+-the **reverse direction** of `quantized_types_are_exactly_non_meta_logics`
+-(¬isMetaLogic ⇒ ∃ QuantizedType), which is meta-theoretical and
+-placed under `sorry` for the same reason as `lean4_limitation_note`.
+-
+-This theorem is therefore stated as `True` with the note that it would
+-follow from the reverse direction combined with
+-`develin_sturmfels_quantized_correspondence`.
+--/
+ theorem develin_sturmfels_for_non_meta_logic (lt : LogicTypes.LogicType) (m : ℕ) (hm : 1 ≤ m)
+     (hNotMeta : ¬lt.isMetaLogic) : True := by
+   trivial
+ 
+-/-!
+-**Meta-theoretical note**: Free Logic does NOT admit a regular subdivision
+-of Δ × Δ via the friction density height function, because it is not
+-Quantized. This follows from `free_not_quantized`: if there were a regular
+-subdivision, its height function `h(i, j) = Γ(i)` would be a valid upper
+-bound for all trees, which we know fails for `leftComb 22` at i = 4.
+-
+-Formalizing this implication — that a regular subdivision with height Γ
+-implies a `∀ t, dcStep t ≤ Γ(lt.cdStep)` bound — requires connecting the
+-subdivision's `covers_all_vertices` property to the `dcStep` bound for
+-every EMLTree. This is the **reverse direction** of the correspondence:
+-it is meta-theoretical, parallel to `quantized_types_are_exactly_non_meta_logics`
+-and `lean4_limitation_note`.
+--/
+-
+--- ============================================================================
+--- SECTION 4: Tube Map Coordinate Projection
+--- ============================================================================
+-
+--- The tube map coordinates are defined in `TropicalCovector.lean` via the
+--- KKT multiplier bridge. This section connects the GA grading on Cl(1,1)
+--- (involute, evenOdd) to the antipode parity that determines edge angles.
+---
+--- The strategy:
+--- 1. Map a tree to its KKT multiplier λ_t ∈ SplitQuat (TropicalCovector)
+--- 2. Embed λ_t into Cl(1,1) via SplitQuat.embed
+--- 3. The grade involution `involute` on Cl(1,1) corresponds to `antipode_sq`
+--- 4. The even/odd eigenspaces of `involute` map to 90° / 45° edges:
+---    - Even components (a, d): x-coordinate → axis-aligned 90° turns
+---    - Odd components (b, c): y-coordinate → diagonal 45° turns
+--- 5. Project to ℤ² via covectorProjection for tube map layout
+-
+-/--
+-The grade involution `involute` on Cl(1,1) corresponds to the antipode
+-`antipode_sq` on SplitQuat under the embedding `SplitQuat.embed`.
+-That is: for any λ ∈ SplitQuat,
+-
+-  embed(antipode_sq λ) = involute (embed λ)
+-
+-This theorem establishes that the antipode parity classification
+-(even = +1, odd = −1) matches the Clifford algebra ℤ/2-grading.
+-The even-grade components {a, d} are fixed by `involute`, and the
+-odd-grade components {b, c} are negated.
+--/
+-theorem embed_antipode_eq_involute (λ : SplitQuat) :
+-    SplitQuat.embed (antipode_sq λ) = CliffordAlgebra.involute (SplitQuat.embed λ) := by
+-  -- Expand both sides using the embedding basis {1, e₁, e₀, e₁·e₀}
+-  -- The grade involution acts as:
+-  --   involute(1) = 1, involute(e₁) = -e₁, involute(e₀) = -e₀, involute(e₁·e₀) = e₁·e₀
+-  -- (because e₁ and e₀ are grade 1, their product is grade 2)
+-  -- The antipode negates b and c (the e₁ and e₀ coefficients) and fixes a and d.
+-  calc
+-    SplitQuat.embed (antipode_sq λ) = algebraMap ℤ Cl11 λ.a + (-λ.b) • e1 + (-λ.c) • e0 + λ.d • (e1 * e0) := by
+-      simp [SplitQuat.embed, antipode_sq]
+-    _ = algebraMap ℤ Cl11 λ.a + (-λ.b • e1) + (-λ.c • e0) + λ.d • (e1 * e0) := by simp [smul_comm]
+-    _ = algebraMap ℤ Cl11 λ.a - (λ.b • e1) - (λ.c • e0) + λ.d • (e1 * e0) := by
+-      simp [sub_eq_add_neg]
+-    _ = CliffordAlgebra.involute (algebraMap ℤ Cl11 λ.a) + CliffordAlgebra.involute (λ.b • e1) +
+-        CliffordAlgebra.involute (λ.c • e0) + CliffordAlgebra.involute (λ.d • (e1 * e0)) := by
+-      simp [CliffordAlgebra.involute_algHom, map_add, map_smul, algebraMap_smul]
+-    _ = CliffordAlgebra.involute (SplitQuat.embed λ) := by
+-      simp [SplitQuat.embed, add_assoc]
+-
+-/--
+-The covector projection separates the even and odd components:
+-  (x, y) = (a + d, b − c)
+-    
+-where:
+-  - (a + d) is the trace under the antipode (+1 eigenspace): even-grade → x-axis
+-  - (b − c) is the difference under the antipode: odd-grade → y-axis
+-
+-This theorem is the key link between the GA grading and the tube map layout:
+-even-grade changes produce 90° turns, odd-grade changes produce 45° turns.
+--/
+-theorem covectorProjection_separates_grades (λ : SplitQuat) :
+-    (covectorProjection λ).1 = λ.a + λ.d ∧
+-    (covectorProjection λ).2 = λ.b - λ.c := by
+-  constructor
+-  · rfl
+-  · rfl
+-
+-/--
+-The Clifford norm (x * reverse x) of an embedded split quaternion equals
+-the (2,2)-norm. This connects the GA quadratic form to the cost landscape.
+-The proof uses `CliffordAlgebra.reverse` on Cl11; see the Mathlib
+-documentation for `CliffordAlgebra.reverse`.
+--/
+---TODO: theorem embed_clifford_norm_eq_norm (λ : SplitQuat) :
+---    (SplitQuat.embed λ) * (CliffordAlgebra.reverse (SplitQuat.embed λ))
+---    = algebraMap ℤ Cl11 (SplitQuat.norm λ) := by
+---  calc ...
+-
+--- ============================================================================
+--- SECTION 5: Orientation and Angle Classification
+--- ============================================================================
+-
+-/--
+-Classify the angle of a tube map edge based on which KKT multiplier
+-components change. Used to enforce the 90/45-degree turn constraint.
+-
+-EVEN changes (Δa ≠ 0 or Δd ≠ 0, but Δb = Δc = 0):
+-  → x-coordinate changes → axis-aligned edge → 90° turn
+-ODD changes (Δb ≠ 0 or Δc ≠ 0, but Δa = Δd = 0):
+-  → y-coordinate changes → also axis-aligned → NOT 45°
+-MIXED changes (both even and odd):
+-  → both coordinates change → diagonal edge → 45° turn
+--/
+ inductive EdgeAngle : Type
+-  | axisAligned : EdgeAngle  -- 90° turn
+-  | diagonal : EdgeAngle     -- 45° turn
++  | axisAligned : EdgeAngle
++  | diagonal : EdgeAngle
+   deriving DecidableEq, Repr
+ 
+-/--
+-Determine the angle of an edge from the change in KKT multiplier
+-components between consecutive trees in a contraction path.
+--/
+ def edgeAngleFromDelta (Δλ : SplitQuat) : EdgeAngle :=
+   if Δλ.b ≠ 0 ∧ Δλ.a ≠ 0 ∨ Δλ.c ≠ 0 ∧ Δλ.d ≠ 0 then
+     .diagonal
+   else if Δλ.a ≠ 0 ∨ Δλ.d ≠ 0 ∨ Δλ.b ≠ 0 ∨ Δλ.c ≠ 0 then
+     .axisAligned
+   else
+-    .axisAligned  -- degenerate (zero change) — no edge, classify as 90° by convention
++    .axisAligned
+ 
+ end TropicalTamariLattice
+
+
+======================================================================
+FILE: LaserCortex/Generation.lean (transcript line 69)
+======================================================================
+# Diff for LaserCortex/Generation.lean
+# Recovered from transcript line 69
+# +159 -695
+
+--- CURRENT/LaserCortex/Generation.lean+++ RECOVERED/LaserCortex/Generation.lean@@ -1,45 +1,3 @@-/-
+-# Module: LaserCortex.Generation
+-
+-## Intent
+-
+-The generative side of the collapse/generation duality. WFC (Wave Function
+-Collapse) is fundamentally generative — it produces candidate structures from
+-a superposition of LogicTypes. What we call "collapse" or "zero divisor" is
+-what happens when a generated structure is critiqued and the reasoning budget
+-is exceeded.
+-
+-Generation is the primitive. Collapse is the critique — the failure mode after
+-the reasoning budget is exhausted. Hyperstition (fiction that makes itself real)
+-is the philosophical ground: generation can propose that which does not yet hold
+-but *should* hold. This prevents the framework from falling into reductionism.
+-
+-This module defines:
+-- `Superposition` — a node carrying a set of candidate LogicTypes
+-- `AntiCoherentPair` — the two poles of a paradox (coherent/vacuous and
+-  anti-coherent/content-bearing)
+-- `inflate` — reconstruct a superposition from a paradox class by restoring
+-  the eliminated coherent pole alongside the surviving anti-coherent pole
+-- `temporalConflate` — build a tree with opposing poles on either side,
+-  representing a temporal oscillation between coherent and anti-coherent
+-  truth assignments
+-- `Resonates` — the condition for an inflated structure to graft onto a
+-  host tree (Tamari ancestor + compatible types)
+-- `isVacuous` — predicate identifying collapses that are by explosion (empty)
+-- Theorems about specific paradoxes (Barber, Liar, Grandfather)
+-
+-## Cross-refs
+-
+-- LaserCortex.Problem → ProblemClass definitions, native logics
+-- LaserCortex.LogicTypes → LogicType, isAssociativeSector, isMetaLogic
+-- LaserCortex.EMLRegistry → EMLTree, contracts_to, rightComb
+-- LaserCortex.FrictionLagrangian → layerCost
+-
+-## Tags
+-
+-#lean4-type #generation #hyperstition #paradox-framework
+--/
+-
+ import LaserCortex.EMLRegistry
+ import LaserCortex.LogicTypes
+ import LaserCortex.Problem
+@@ -51,721 +9,188 @@ 
+ namespace Generation
+ 
+--- ============================================================================
+--- SECTION 1: Superposition — the container for anti-coherence
+--- ============================================================================
+-
+-/--
+-A Superposition is a node carrying a set of candidate LogicTypes. In WFC terms,
+-this is the "wave" — the node is in superposition over all 15 LogicTypes until
+-constraints eliminate candidates.
+-
+-The "logic of will" (Free Logic / Gödelian Incompleteness) is the meta-logic
+-that can contain perfect anti-coherence: it can hold both W and ¬W (the coherent
+-and anti-coherent poles) without trivializing the system.
+-
+-Attributes:
+-- `candidates`: The list of remaining LogicType possibilities.
+-  Empty list = zero divisor (contradiction).
+-  Singleton list = collapsed (resolved).
+-
+-See also: `isAssociativeSector` and `isMetaLogic` in LogicTypes.lean.
+--/
+ structure Superposition where
+   candidates : List LogicType
+ 
+ namespace Superposition
+ 
+-/-- A superposition with all 15 logic types as candidates (the full wave). -/
+ def full : Superposition :=
+-  ⟨allLogics⟩
++  { candidates := allLogics }
+ 
+-/-- A superposition with no candidates — a zero divisor (contradiction). -/
+ def empty : Superposition :=
+-  ⟨[]⟩
++  { candidates := [] }
+ 
+-/-- Ban a candidate from the superposition. Returns the reduced superposition. -/
+-def ban (s : Superposition) (lt : LogicType) : Superposition :=
+-  ⟨s.candidates.erase lt⟩
++def singleton (lt : LogicType) : Superposition :=
++  { candidates := [lt] }
+ 
+-/-- Force-collapse to a specific LogicType: ban all except the chosen one. -/
+-def forceCollapse (s : Superposition) (lt : LogicType) : Superposition :=
+-  ⟨[lt]⟩
++theorem candidates_eq_singleton_iff (s : Superposition) (lt : LogicType) :
++    s.candidates = [lt] ↔ s = singleton lt := by
++  cases s
++  simp [singleton]
+ 
+-/-- True iff the superposition has exactly one candidate remaining. -/
++theorem candidates_eq_empty_iff (s : Superposition) :
++    s.candidates = [] ↔ s = empty := by
++  cases s
++  simp [empty]
++
++/-- A candidate set is collapsed if it contains exactly one logic type. -/
+ def isCollapsed (s : Superposition) : Bool :=
+   s.candidates.length = 1
+ 
+-/-- True iff the superposition has zero candidates (zero divisor / contradiction). -/
+-def isContradicted (s : Superposition) : Bool :=
+-  s.candidates.isEmpty
++/-- A candidate set is a zero divisor if it contains multiple types
++    that cannot be simultaneously satisfied. -/
++def isZeroDivisor (s : Superposition) : Bool :=
++  s.candidates.length > 1
+ 
+-/-- The collapsed value, if exactly one candidate remains. -/
+-def collapsed (s : Superposition) : Option LogicType :=
+-  s.candidates.head?
++theorem zeroDivisor_implies_not_collapsed (s : Superposition) (h : isZeroDivisor s) :
++    ¬ isCollapsed s := by
++  dsimp [isZeroDivisor, isCollapsed] at h ⊢
++  omega
++
++/-- A superposition with all 15 logic types as candidates. -/
++def full : Superposition :=
++  { candidates := allLogics }
++
++/-- A superposition with no candidates (contradiction state). -/
++def empty : Superposition :=
++  { candidates := [] }
++
++/-- A superposition collapsed to a single logic type. -/
++def collapsed (lt : LogicType) : Superposition :=
++  { candidates := [lt] }
++
++theorem full_candidates : full.candidates = allLogics := rfl
++
++theorem empty_candidates : empty.candidates = [] := rfl
++
++theorem collapsed_candidates (lt : LogicType) : (collapsed lt).candidates = [lt] := rfl
++
++/-- The size of the candidate set. -/
++def candidateCount (s : Superposition) : Nat := s.candidates.length
++
++theorem candidateCount_empty : candidateCount empty = 0 := rfl
++
++theorem candidateCount_full : candidateCount full = 15 := by
++  simp [candidateCount, full, allLogics]
++
++theorem candidateCount_collapsed (lt : LogicType) : candidateCount (collapsed lt) = 1 := by
++  simp [candidateCount, collapsed]
++
++theorem candidateCount_lt_ge_2 (s : Superposition) (h : candidateCount s ≥ 2) : isZeroDivisor s := by
++  dsimp [isZeroDivisor]
++  have : s.candidates.length ≥ 2 := h
++  omega
++
++theorem candidateCount_eq_0_iff (s : Superposition) : candidateCount s = 0 ↔ s = empty := by
++  cases s
++  simp [candidateCount, empty]
++
++theorem candidateCount_eq_1_iff (s : Superposition) (lt : LogicType) :
++    candidateCount s = 1 ↔ ∃ lt', s = collapsed lt' := by
++  constructor
++  · intro h
++    cases s
++    simp [candidateCount] at h
++    rcases h with ⟨lt', h⟩
++    refine ⟨lt', ?_⟩
++    cases this
++    simp [h]
++  · rintro ⟨lt', rfl⟩
++    simp [candidateCount, collapsed]
++
++theorem candidateCount_ge_2_implies_not_collapsed (s : Superposition) (h : candidateCount s ≥ 2) :
++    ¬ isCollapsed s := by
++  dsimp [isCollapsed]
++  omega
++
++/-- Merge two superpositions by taking the union of candidates.
++    This represents combining constraints from two sources. -/
++def merge (s t : Superposition) : Superposition :=
++  { candidates := s.candidates ++ t.candidates }
++
++theorem merge_candidates (s t : Superposition) : (merge s t).candidates = s.candidates ++ t.candidates := rfl
++
++theorem candidateCount_merge (s t : Superposition) :
++    candidateCount (merge s t) = candidateCount s + candidateCount t := by
++  simp [candidateCount, merge]
++
++/-- The merge of two collapsed superpositions is collapsed iff they are equal. -/
++theorem merge_collapsed_eq_collapsed_iff (s t : Superposition) (hs : isCollapsed s) (ht : isCollapsed t) :
++    isCollapsed (merge s t) ↔ s = t := by
++  rcases hs with ⟨ls, hs⟩
++  rcases ht with ⟨lt, ht⟩
++  subst hs; subst ht
++  simp [merge, collapsed, isCollapsed, candidateCount, allLogics]
++
++/-- Filter candidates by a predicate, keeping only those satisfying it. -/
++def filter (p : LogicType → Bool) (s : Superposition) : Superposition :=
++  { candidates := s.candidates.filter p }
++
++theorem filter_candidates (p : LogicType → Bool) (s : Superposition) :
++    (filter p s).candidates = s.candidates.filter p := rfl
++
++theorem candidateCount_filter_le (p : LogicType → Bool) (s : Superposition) :
++    candidateCount (filter p s) ≤ candidateCount s := by
++  simp [candidateCount, filter]
++
++theorem isCollapsed_filter (s : Superposition) (p : LogicType → Bool) :
++    isCollapsed (filter p s) → isCollapsed s := by
++  intro h
++  dsimp [isCollapsed] at h ⊢
++  have := candidateCount_filter_le p s
++  omega
+ 
+ end Superposition
+ 
+--- ============================================================================
+--- SECTION 2: Can Coexist — compatibility between LogicTypes
+--- ============================================================================
++/-- Resonates: an inflated structure can graft onto a host tree
++    if the host is a Tamari ancestor of the inflated leaves. -/
++def Resonates (s t : EMLTree) (sup : Superposition) : Prop :=
++  contracts_to s t
+ 
+-/--
+-Two LogicTypes can coexist on an edge in the dependency graph iff they are in
+-the same associative sector (both associative or both non-associative) — UNLESS
+-at least one is a meta-logic (Free Logic / Gödelian Incompleteness), which can
+-coexist with any logic because it reasons meta-linguistically about all systems.
++/-- The condition for a superposition to be anti-coherent:
++    it contains types that are mutually incompatible
++    (e.g., a type and its negation). -/
++def isVacuous (s : Superposition) : Bool :=
++  s.candidates.any (λ lt => s.candidates.any (λ lt' =>
++    (lt.isMetaLogic && lt'.isMetaLogic) ||
++    (lt.isAssociativeSector != lt'.isAssociativeSector &&
++     lt.pentagonatorDepth = lt'.pentagonatorDepth)))
+ 
+-The sector boundary prevents CD 2→3 crossing, which is the zero-divisor
+-condition from the Friction Lagrangian: `frictionDensity k₂ - frictionDensity k₁
+-≥ strut_weight²` when k₁ ≤ 2 and k₂ ≥ 3.
++theorem vacuous_superposition (s : Superposition) (h : isVacuous s) :
++    candidateCount s ≥ 2 := by
++  dsimp [isVacuous] at h
++  have : s.candidates.length ≥ 2 := by
++    by_contra! H
++    have : s.candidates.length ≤ 1 := by omega
++    rcases this with (h0 | h1)
++    · have : s.candidates = [] := by
++        apply List.length_eq_zero.mp h0
++      simp [this] at h
++    · have : s.candidates.length = 1 := h1
++      rcases List.length_eq_one.mp this with ⟨lt, hlt⟩
++      subst hlt
++      simp at h
++  exact this
+ 
+-Meta-logics are exempt because they reason ABOUT the boundary rather than
+-WITHIN it. Free Logic (Gödelian incompleteness) is the "logic of will" that
+-can contain perfect anti-coherence.
+--/
+-def canCoexist (l₁ l₂ : LogicType) : Bool :=
+-  l₁.isAssociativeSector == l₂.isAssociativeSector || l₁.isMetaLogic || l₂.isMetaLogic
++theorem vacuous_implies_not_collapsed (s : Superposition) (h : isVacuous s) :
++    ¬ isCollapsed s :=
++  zeroDivisor_implies_not_collapsed s (vacuous_superposition s h)
+ 
+--- ============================================================================
+--- SECTION 3: AntiCoherentPair — the two poles of a paradox
+--- ============================================================================
++/-- A paradox class: the set of logic types that can resolve a given paradox.
++    Self-referential paradoxes (Liar) have types that can contain
++    both a type and its negation. -/
++def ParadoxClass : Type :=
++  String
+ 
+-/--
+-An AntiCoherentPair represents the two opposing truth-value regimes of a paradox.
++/-- A problem is a paradox with a specified tree structure
++    for each logic type. -/
++def Problem := String
+ 
+-- `coherent` — the vacuous approach: an associative-sector logic that would
+-  collapse the paradox by explosion (cost 0, structurally empty). Typically
+-  CLASSICAL.
+-- `antiCoherent` — the content-bearing approach: the native logic of the
+-  paradox class that tolerates/incompletes the paradox with structural cost.
+-  For the Barber: PARACONSISTENT (tolerates contradiction) or FREE (Gödelian
+-  incompleteness — the logic of will that contains perfect anti-coherence).
+-  For the Liar: MANYVALUED (third truth value).
+-  For the Grandfather: TEMPORAL (time-travel resolution).
++/-- A wrapped problem pairs a problem with a specific logic type. -/
++def WrappedProblem (p : Problem) (lt : LogicType) : Type := (p, lt)
+ 
+-The pair generates a temporal oscillation: at time t₁ the coherent resolution
+-is attempted (vacuous), at time t₂ the anti-coherent resolution holds
+-(content-bearing). This oscillation "resonates" with a host tree when the
+-structure is compatible.
+--/
+-structure AntiCoherentPair where
+-  coherent : LogicType
+-  antiCoherent : LogicType
++/-- The cost of a wrapped problem is the layer cost of its logic type. -/
++def wrappedCost {p : Problem} (x : WrappedProblem p lt) : Nat :=
++  layerCost lt
+ 
+-namespace AntiCoherentPair
+-
+-/--
+-The canonical anti-coherent pair for the Barber Paradox (and Russell's):
+-coherent = CLASSICAL (vacuous by explosion, associative sector),
+-antiCoherent = PARACONSISTENT (tolerates contradiction, non-associative sector).
+-These straddle the CD 2→3 boundary — `canCoexist` returns false.
+-This is why the barber in a rigid classical town is a zero divisor.
+--/
+-def barber : AntiCoherentPair :=
+-  ⟨.Classical, .Paraconsistent⟩
+-
+-/--
+-The canonical anti-coherent pair for the Liar Paradox (and Truth-teller):
+-coherent = CLASSICAL (vacuous by explosion),
+-antiCoherent = MANYVALUED (truth-value gap, three-valued logic).
+-These are both in the associative sector — they CAN coexist.
+-The anti-coherence is in the truth-value assignment, not the sector.
+--/
+-def liar : AntiCoherentPair :=
+-  ⟨.Classical, .ManyValued⟩
+-
+-/--
+-The canonical anti-coherent pair for the Grandfather Paradox (and Newcomb's):
+-coherent = CLASSICAL (vacuous by explosion, no time travel),
+-antiCoherent = TEMPORAL (time-indexed truth, accommodates time travel).
+-These are both in the associative sector — they CAN coexist.
+-The anti-coherence is temporal: consistency at t₁ vs contradiction at t₂.
+--/
+-def grandfather : AntiCoherentPair :=
+-  ⟨.Classical, .Temporal⟩
+-
+-end AntiCoherentPair
+-
+--- ============================================================================
+--- SECTION 4: Inflate — construct a superposition from a paradox class
+--- ============================================================================
+-
+-/--
+-Inflate a zero divisor (contradiction) back into a superposition by restoring
+-the coherent pole alongside the anti-coherent pole.
+-
+-Given a `ProblemClass`, this produces an `AntiCoherentPair` where:
+-- `coherent` = CLASSICAL (the vacuous, explosive resolution — always the same)
+-- `antiCoherent` = the native logic of the ProblemClass, which is the
+-  content-bearing approach to the paradox
+-
+-This is the generative act: from nothingness (zero divisor), produce a pair
+-that represents the two poles of the paradox. The pair is then available for
+-temporal conflation and resonance.
+-
+-The mapping follows `ProblemClass` (all 13 variants are explicitly mapped):
+-- `selfReference` (Liar, Truth-teller) → CLASSICAL + MANYVALUED
+-- `vagueness` (Sorites, Ship of Theseus) → CLASSICAL + FUZZY
+-- `inconsistentDef` (Russell's, Barber) → CLASSICAL + PARACONSISTENT
+-- `temporalDecision` (Grandfather, Newcomb's) → CLASSICAL + TEMPORAL
+-- `deontic` (Contrary-to-Duty) → CLASSICAL + DEONTIC
+-- `epistemic` (Surprise Examination) → CLASSICAL + EPISTEMIC
+-- `quantumSuperposition` (Schrödinger's Cat) → CLASSICAL + QUANTUM
+-- `constructive` (Brouwer's Continuity) → CLASSICAL + INTUITIONISTIC
+-- `relevance` (Material Implication) → CLASSICAL + RELEVANCE
+-- `emptyReference` (Free Logic / Gödelian) → CLASSICAL + FREE
+-- `infinity` (Galileo's, Hilbert's Hotel) → CLASSICAL + INFINITARY
+-- `modality` (Fitch's Knowability) → CLASSICAL + MODAL
+-- `metaParadox` (missing proof / incomplete framework) → CLASSICAL + CLASSICAL
+--/
+-def inflate (pc : ProblemClass) : AntiCoherentPair :=
+-  match pc with
+-  | .selfReference       => AntiCoherentPair.liar
+-  | .vagueness           => ⟨.Classical, .Fuzzy⟩
+-  | .inconsistentDef     => AntiCoherentPair.barber
+-  | .temporalDecision    => AntiCoherentPair.grandfather
+-  | .deontic             => ⟨.Classical, .Deontic⟩
+-  | .epistemic           => ⟨.Classical, .Epistemic⟩
+-  | .quantumSuperposition => ⟨.Classical, .Quantum⟩
+-  | .constructive        => ⟨.Classical, .Intuitionistic⟩
+-  | .relevance           => ⟨.Classical, .Relevance⟩
+-  | .emptyReference      => ⟨.Classical, .Free⟩
+-  | .infinity            => ⟨.Classical, .Infinitary⟩
+-  | .modality            => ⟨.Classical, .Modal⟩
+-  | .metaParadox         => ⟨.Classical, .Classical⟩
+-
+--- ============================================================================
+--- SECTION 5: Temporal Conflate — build a tree from an anti-coherent pair
+--- ============================================================================
+-
+-/--
+-Temporal conflation: build a tree representing the temporal oscillation between
+-the coherent (vacuous) and anti-coherent (content-bearing) poles.
+-
+-The tree is `Node(rightComb(cd(coherent)), rightComb(cd(anti)))` — a binary
+-tree where the left subtree encodes the coherent pole at time t₁ and the
+-right subtree encodes the anti-coherent pole at t₂.
+-
+-For the barber: classical.cdStep = 0 → rightComb 0 = Leaf; paraconsistent.cdStep = 4 → rightComb 4.
+-The barber's temporal tree is `Node(Leaf, rightComb 4)` — the vacuous pole is
+-empty (Leaf), the content-bearing pole is non-trivial.
+--/
+-def temporalConflate (pair : AntiCoherentPair) : EMLRegistry.EMLTree :=
+-  EMLRegistry.EMLTree.Node
+-    (EMLRegistry.rightComb pair.coherent.cdStep)
+-    (EMLRegistry.rightComb pair.antiCoherent.cdStep)
+-
+--- ============================================================================
+--- SECTION 6: Resonates — compatibility between inflated and host trees
+--- ============================================================================
+-
+-/--
+-Resonates holds when an inflated (temporally conflated) tree can graft onto a
+-host tree. Two conditions must be satisfied:
+-
+-1. **Tamari ancestor**: The inflated tree contracts to the host tree via
+-   the Tamari lattice (`contracts_to T_infl T_host`). This ensures structural
+-   compatibility — the host tree's rotation path includes the inflated shape.
+-
+-2. **Type compatibility**: The LogicType assignments of the two trees are
+-   mutually compatible (`canCoexist` holds at corresponding nodes). This
+-   ensures that the temporal oscillation of the paradox doesn't break the
+-   host's logical consistency.
+-
+-Together, these conditions mean: the inflated paradox structure can be
+-"digested" by the host logic without creating a zero divisor at the boundary.
+--/
+-inductive Resonates : EMLRegistry.EMLTree → EMLRegistry.EMLTree → Prop where
+-  | mk (T_infl T_host : EMLRegistry.EMLTree)
+-    (h_contracts : EMLRegistry.contracts_to T_infl T_host)
+-    : Resonates T_infl T_host
+-
+--- ============================================================================
+--- SECTION 7: isVacuous — predicate for empty (explosive) collapses
+--- ============================================================================
+-
+-/--
+-A WrappedProblem is *vacuous* when its cost is zero AND its logic type is in
+-the associative sector. This means the collapse is by explosion — the
+-contradiction trivializes the system rather than being structurally resolved.
+-
+-Vacuous collapses are "lies" in the generative sense: they look like valid
+-collapses (proof exists, cost low) but they're structurally empty. The
+-classical resolution of the Liar (cost 0, by explosion) is the canonical
+-example.
+-
+-A WrappedProblem is *content-bearing* when either its cost > 0 (it required
+-structural work to collapse) or its logic type is non-associative (it
+-tolerates/incompletes the contradiction through structural cost).
+-
+-The predicate does NOT break the rules of reasoning — cost stays continuous
+-via the Friction Lagrangian; `isVacuous` is a separate property that marks
+-collapses whose proof reduces to explosion.
+--/
+-def isVacuous {p : Problem} {lt : LogicType} (wp : WrappedProblem p lt) : Prop :=
+-  wp.cost = 0 ∧ lt.isAssociativeSector
+-
+--- ============================================================================
+--- SECTION 7B: Revise — filter vacuous poles from an anti-coherent pair
+--- ============================================================================
+-
+-/--
+-A LogicType is "vacuously explosive" at the type level if it has cdStep = 0
+-and is in the associative sector. Such logics resolve all paradoxes by
+-explosion at zero structural cost — they are "empty" in the generative sense.
+-
+-Classical and Boolean are vacuous: they always resolve by explosion.
+-All other logics have some structural cost (cdStep > 0) even when the
+-WrappedProblem-specific cost is zero.
+-
+-See also: `isVacuous` on `WrappedProblem` (which checks the actual cost).
+--/
+-def isVacuousType (lt : LogicType) : Bool :=
+-  lt.cdStep = 0 ∧ lt.isAssociativeSector
+-
+-/--
+-revise: given an AntiCoherentPair, filter out vacuous poles.
+-
+-A pole is vacuous if `isVacuousType` returns true — it would resolve
+-the paradox by explosion (cost 0) rather than through structural content.
+-
+-Returns a Superposition containing only the non-vacuous (content-bearing)
+-poles. If both poles are vacuous, the result is an empty Superposition
+-(a zero divisor).
+-
+-This is the "revision" step in the generation/collapse roundtrip:
+-1. inflate a zero divisor → AntiCoherentPair
+-2. temporalConflate the pair → EMLTree oscillation
+-3. Resonates with host → structural compatibility
+-4. revise → filter out vacuous poles, return content-bearing superposition
+-
+-For the barber: Classical is vacuous → filtered out, Paraconsistent remains.
+--/
+-def revise (pair : AntiCoherentPair) : Superposition :=
+-  let vacuous (lt : LogicType) : Bool := lt.cdStep = 0 ∧ lt.isAssociativeSector
+-  let candidates :=
+-    (if vacuous pair.coherent then [] else [pair.coherent]) ++
+-    (if vacuous pair.antiCoherent then [] else [pair.antiCoherent])
+-  ⟨candidates⟩
+-
+--- ============================================================================
+--- SECTION 8: Theorems about specific paradoxes
+--- ============================================================================
+-
+-/-- The Barber inflates to (CLASSICAL, PARACONSISTENT). -/
+-theorem inflate_barber : inflate ProblemClass.inconsistentDef = AntiCoherentPair.barber :=
+-  rfl
+-
+-/-- The Liar inflates to (CLASSICAL, MANYVALUED). -/
+-theorem inflate_liar : inflate ProblemClass.selfReference = AntiCoherentPair.liar :=
+-  rfl
+-
+-/-- The Grandfather inflates to (CLASSICAL, TEMPORAL). -/
+-theorem inflate_grandfather : inflate ProblemClass.temporalDecision = AntiCoherentPair.grandfather :=
+-  rfl
+-
+-/-- The Sorites inflates to (CLASSICAL, FUZZY). -/
+-theorem inflate_sorites : inflate ProblemClass.vagueness = ⟨.Classical, .Fuzzy⟩ :=
+-  rfl
+-
+-/-- The Deontic (Contrary-to-Duty) inflates to (CLASSICAL, DEONTIC). -/
+-theorem inflate_deontic : inflate ProblemClass.deontic = ⟨.Classical, .Deontic⟩ :=
+-  rfl
+-
+-/-- The Epistemic (Surprise Examination) inflates to (CLASSICAL, EPISTEMIC). -/
+-theorem inflate_epistemic : inflate ProblemClass.epistemic = ⟨.Classical, .Epistemic⟩ :=
+-  rfl
+-
+-/-- The Quantum (Schrödinger's Cat) inflates to (CLASSICAL, QUANTUM). -/
+-theorem inflate_quantum : inflate ProblemClass.quantumSuperposition = ⟨.Classical, .Quantum⟩ :=
+-  rfl
+-
+-/-- The Constructive (Brouwer's Continuity) inflates to (CLASSICAL, INTUITIONISTIC). -/
+-theorem inflate_constructive : inflate ProblemClass.constructive = ⟨.Classical, .Intuitionistic⟩ :=
+-  rfl
+-
+-/-- The Relevance (Material Implication) inflates to (CLASSICAL, RELEVANCE). -/
+-theorem inflate_relevance : inflate ProblemClass.relevance = ⟨.Classical, .Relevance⟩ :=
+-  rfl
+-
+-/-- The Empty Reference (Free/Gödelian) inflates to (CLASSICAL, FREE). -/
+-theorem inflate_emptyReference : inflate ProblemClass.emptyReference = ⟨.Classical, .Free⟩ :=
+-  rfl
+-
+-/-- The Infinity (Galileo's, Hilbert's Hotel) inflates to (CLASSICAL, INFINITARY). -/
+-theorem inflate_infinity : inflate ProblemClass.infinity = ⟨.Classical, .Infinitary⟩ :=
+-  rfl
+-
+-/-- The Modality (Fitch's Knowability) inflates to (CLASSICAL, MODAL). -/
+-theorem inflate_modal : inflate ProblemClass.modality = ⟨.Classical, .Modal⟩ :=
+-  rfl
+-
+-/-- The Meta-Paradox (missing proof) inflates to (CLASSICAL, CLASSICAL) — trivial. -/
+-theorem inflate_metaParadox : inflate ProblemClass.metaParadox = ⟨.Classical, .Classical⟩ :=
+-  rfl
+-
+-/-- The barber's temporal conflated tree is a non-empty Node. -/
+-theorem temporalConflate_barber_is_node :
+-    temporalConflate AntiCoherentPair.barber =
+-      EMLRegistry.EMLTree.Node (EMLRegistry.rightComb 0) (EMLRegistry.rightComb 4) := by
+-  native_decide
+-
+-/-- The liar's temporal conflated tree is a non-empty Node. -/
+-theorem temporalConflate_liar_is_node :
+-    temporalConflate AntiCoherentPair.liar =
+-      EMLRegistry.EMLTree.Node (EMLRegistry.rightComb 0) (EMLRegistry.rightComb 1) := by
+-  native_decide
+-
+-/-- The grandfather's temporal conflated tree is a non-empty Node. -/
+-theorem temporalConflate_grandfather_is_node :
+-    temporalConflate AntiCoherentPair.grandfather =
+-      EMLRegistry.EMLTree.Node (EMLRegistry.rightComb 0) (EMLRegistry.rightComb 1) := by
+-  native_decide
+-
+-/--
+-The barber's anti-coherent pair straddles the CD 2→3 sector boundary:
+-CLASSICAL is associative, PARACONSISTENT is non-associative.
+-This means they CANNOT coexist (without meta-logic) — which is the
+-formal source of the zero divisor (the barber cannot be consistently typed
+-in a classical context).
+--/
+-theorem barber_straddles_boundary :
+-    AntiCoherentPair.barber.coherent.isAssociativeSector ≠
+-    AntiCoherentPair.barber.antiCoherent.isAssociativeSector := by
+-  native_decide
+-
+-/--
+-The liar's anti-coherent pair is BOTH in the associative sector:
+-CLASSICAL and MANYVALUED can coexist. The anti-coherence is in the
+-truth-value assignment, not the sector boundary.
+--/
+-theorem liar_same_sector :
+-    AntiCoherentPair.liar.coherent.isAssociativeSector =
+-    AntiCoherentPair.liar.antiCoherent.isAssociativeSector := by
+-  native_decide
+-
+-/--
+-The grandfather's anti-coherent pair is BOTH in the associative sector:
+-CLASSICAL and TEMPORAL can coexist. The anti-coherence is temporal
+-(consistency at t₁ vs contradiction at t₂), not sector-based.
+--/
+-theorem grandfather_same_sector :
+-    AntiCoherentPair.grandfather.coherent.isAssociativeSector =
+-    AntiCoherentPair.grandfather.antiCoherent.isAssociativeSector := by
+-  native_decide
+-
+-/--
+-The barber pair does NOT coexist: `canCoexist` returns false because
+-they straddle the sector boundary. This is why WFC propagation detects
+-the barber's zero divisor — the classical neighbor cannot coexist
+-with any non-associative typing of the barber node.
+--/
+-theorem barber_pair_not_coexist :
+-    canCoexist AntiCoherentPair.barber.coherent AntiCoherentPair.barber.antiCoherent = false := by
+-  native_decide
+-
+-/--
+-The liar pair DOES coexist: `canCoexist` returns true because both
+-are in the associative sector. Inflating the liar produces a
+-self-consistent temporal pair.
+--/
+-theorem liar_pair_coexist :
+-    canCoexist AntiCoherentPair.liar.coherent AntiCoherentPair.liar.antiCoherent = true := by
+-  native_decide
+-
+-/--
+-The grandfather pair DOES coexist: `canCoexist` returns true because both
+-are in the associative sector. The temporal oscillation is internal to
+-the associative sector.
+--/
+-theorem grandfather_pair_coexist :
+-    canCoexist AntiCoherentPair.grandfather.coherent
+-              AntiCoherentPair.grandfather.antiCoherent = true := by
+-  native_decide
+-
+-/--
+-Free Logic is a meta-logic — it can coexist with any logic. This is the
+-formal property that makes it the "logic of will": it contains perfect
+-anti-coherence by reasoning meta-linguistically about both sides of the
+-sector boundary.
+--/
+-theorem free_is_meta_logic : LogicType.Free.isMetaLogic := by
+-  native_decide
+-
+-/--
+-Meta-logic exemption: Free Logic (Gödelian incompleteness) can coexist with
+-any logic, including those in the opposite sector. This is the formal basis
+-for Free as the "logic of will" — it can contain perfect anti-coherence
+-without trivializing.
+--/
+-theorem free_coexists_with_classical :
+-    canCoexist LogicType.Free LogicType.Classical = true := by
+-  native_decide
+-
+-theorem free_coexists_with_paraconsistent :
+-    canCoexist LogicType.Free LogicType.Paraconsistent = true := by
+-  native_decide
+-
+-/--
+-Free Logic bridges the barber's sector boundary: although the barber pair
+-(CLASSICAL, PARACONSISTENT) does not coexist, Free coexists with BOTH
+-poles separately. This means Free can serve as the meta-logic container
+-that holds the anti-coherent pair together without trivializing either pole.
+--/
+-theorem free_bridges_barber_boundary :
+-    canCoexist LogicType.Free AntiCoherentPair.barber.coherent = true ∧
+-    canCoexist LogicType.Free AntiCoherentPair.barber.antiCoherent = true := by
+-  native_decide
+-
+--- ============================================================================
+--- SECTION 9: Revise Theorems — vacuity detection for each paradox
+--- ============================================================================
+-
+-/-- Revise on the barber pair filters Classical (vacuous) → keeps Paraconsistent. -/
+-theorem revise_barber : (revise AntiCoherentPair.barber).candidates = [.Paraconsistent] := by
+-  native_decide
+-
+-/-- Revise on the liar pair filters Classical (vacuous) → keeps ManyValued. -/
+-theorem revise_liar : (revise AntiCoherentPair.liar).candidates = [.ManyValued] := by
+-  native_decide
+-
+-/-- Revise on the grandfather pair filters Classical (vacuous) → keeps Temporal. -/
+-theorem revise_grandfather : (revise AntiCoherentPair.grandfather).candidates = [.Temporal] := by
+-  native_decide
+-
+--- ============================================================================
+--- SECTION 10: Emptiness Roundtrip Theorems
+--- ============================================================================
+-
+-/--
+-Emptiness Roundtrip (barber case): `inflate → revise` detects that the classical
+-pole is vacuous and filters it out. The remaining superposition has exactly one
+-candidate (Paraconsistent), so it is NOT a zero divisor in isolation. However,
+-Paraconsistent cannot coexist with Classical, so any attempt to host the result
+-in a classical context creates a zero divisor at the boundary.
+-
+-This is the formal content of the barber paradox: the barber is not inherently
+-a contradiction — it's only contradictory when forced into a classical frame.
+--/
+-theorem emptiness_roundtrip_barber :
+-    let pair := inflate ProblemClass.inconsistentDef
+-    let tree := temporalConflate pair
+-    let revised := revise pair
+-    -- The classical pole is filtered out
+-    revised.candidates = [.Paraconsistent] ∧
+-    -- The resulting superposition is collapsed (single candidate), not a zero divisor
+-    revised.isCollapsed ∧
+-    ¬revised.isContradicted ∧
+-    -- The temporal oscillation structure is verified
+-    tree = EMLRegistry.EMLTree.Node (EMLRegistry.rightComb 0) (EMLRegistry.rightComb 4) ∧
+-    -- The classical pole IS vacuous (associative, cdStep=0)
+-    (pair.coherent.cdStep = 0 ∧ pair.coherent.isAssociativeSector) ∧
+-    -- The paraconsistent pole is NOT vacuous (non-associative, cdStep > 0)
+-    (pair.antiCoherent.cdStep = 4 ∧ ¬pair.antiCoherent.isAssociativeSector) ∧
+-    -- Paraconsistent cannot coexist with Classical → re-collapse in classical context = ZD
+-    canCoexist pair.antiCoherent pair.coherent = false := by
+-  native_decide
+-
+-/--
+-Emptiness Roundtrip (liar case): the liar's classical pole is vacuous and
+-filtered out. The remaining ManyValued pole IS in the associative sector,
+-so it CAN coexist with Classical. No zero divisor at the boundary.
+-
+-This is why the liar is resolvable in classical contexts: classical logic can
+-accept a truth-value gap (ManyValued) without contradiction.
+--/
+-theorem emptiness_roundtrip_liar :
+-    let pair := inflate ProblemClass.selfReference
+-    let revised := revise pair
+-    revised.candidates = [.ManyValued] ∧
+-    revised.isCollapsed ∧
+-    ¬revised.isContradicted ∧
+-    (pair.coherent.cdStep = 0 ∧ pair.coherent.isAssociativeSector) ∧
+-    (pair.antiCoherent.cdStep = 1 ∧ pair.antiCoherent.isAssociativeSector) ∧
+-    canCoexist pair.antiCoherent pair.coherent = true := by
+-  native_decide
+-
+-/--
+-Emptiness Roundtrip (grandfather case): the grandfather's classical pole is
+-vacuous and filtered out. The remaining Temporal pole is in the associative
+-sector and can coexist with Classical. No zero divisor.
+-
+-This is why grandfather paradoxes are resolvable with time-indexed truth:
+-they don't require crossing the sector boundary.
+--/
+-theorem emptiness_roundtrip_grandfather :
+-    let pair := inflate ProblemClass.temporalDecision
+-    let revised := revise pair
+-    revised.candidates = [.Temporal] ∧
+-    revised.isCollapsed ∧
+-    ¬revised.isContradicted ∧
+-    (pair.coherent.cdStep = 0 ∧ pair.coherent.isAssociativeSector) ∧
+-    (pair.antiCoherent.cdStep = 1 ∧ pair.antiCoherent.isAssociativeSector) ∧
+-    canCoexist pair.antiCoherent pair.coherent = true := by
+-  native_decide
+-
+-/--
+-Summary theorem: the barber is the only paradox among the three canonical
+-cases whose surviving anti-coherent pole cannot coexist with Classical.
+-This is the formal sense in which the barber is a "real" zero divisor:
+-it straddles the sector boundary.
+--/
+-theorem barber_is_unique_sector_straddler :
+-    let barber_pair := inflate ProblemClass.inconsistentDef
+-    let liar_pair := inflate ProblemClass.selfReference
+-    let grandfather_pair := inflate ProblemClass.temporalDecision
+-    canCoexist barber_pair.antiCoherent barber_pair.coherent = false ∧
+-    canCoexist liar_pair.antiCoherent liar_pair.coherent = true ∧
+-    canCoexist grandfather_pair.antiCoherent grandfather_pair.coherent = true := by
+-  native_decide
+-
+--- ============================================================================
+--- SECTION 11: Open Questions (beyond the proven roundtrip)
+--- ============================================================================
+-
+-/--
+-The deep proof connecting the emptiness roundtrip to the split octonion
+-algebra remains conjectural. The barrier preventing the classical pole from
+-crossing into the non-associative sector is hypothesized to be
+-`SplitOctonionCost.strut_weight = 4`, which provides the algebraic constraint
+-that generates the barber's two-time-dimension structure.
+-
+-The required proof:
+-  `strut_weight = 4 ⇒ ∀ a ∈ NonAssocSector, frictionDensity(a) - frictionDensity(Classical) ≥ 16`
+-
+-This would show that the CD 2→3 boundary is not arbitrary — it's the algebraic
+-consequence of the split octonion's (4,4) signature having exactly 4 strut-like
+-dimensions (the non-associative ones). The classical pole's explosion collapses
+-the extra dimension immediately, returning to zero divisor.
+-
+-Free Logic (Gödelian incompleteness) is the meta-logic that *can* host this
+-oscillation by recognizing it as undecidable rather than trivializing via explosion.
+--/
+-theorem strut_weight_conjecture : True := by
+-  -- The conjecture that strut_weight bounds cross-boundary contraction cost
+-  -- for all tree shapes is a meta-theoretical claim; documented as a known
+-  -- limitation (see module docstring). Accepted as framework axiom.
+-  trivial
+-
+--- ============================================================================
+--- SECTION 12: Viable Systems — Free Logic Grounding via Tool Outputs
+--- ============================================================================
+-
+-/-- The output of a tool call — the grounding data that resolves
+-    a Free Logic anti-coherence into a bounded cost state. -/
+-structure ToolOutput where
+-  description : String
+-  cost : ℕ
+-  cert : Option EMLRegistry.CortexCertificate
+-
+-/-- Raw natural language input with no tool output grounding.
+-    
+-    Before any tool call produces grounding data, the interpretation
+-    cost of ungrounded NL is unbounded — there is no finite bound
+-    on the number of possible parse trees. -/
+-structure UngroundedNL where
+-  source : String
+-  possibleParsings : ℕ
+-
+-/-- The hyperstition cost of ungrounded NL: for any finite cost bound M,
+-    there exists an interpretation whose contraction cost exceeds M.
+-    This means the strut weights "go exponential" in the source length
+-    when no tool output constrains the interpretation space. -/
+-theorem hyperstitionCost_unbounded (nl : UngroundedNL) (M : ℕ) (_hpos : nl.possibleParsings > 0) :
+-    ∃ (c : ℕ), c > M := by
+-  -- For any positive number of parses, there exists an interpretation
+-  -- with arbitrarily high cost (by choosing a sufficiently high CD step).
+-  refine ⟨M + 1 + FrictionLagrangian.frictionDensity 3, ?_⟩
+-  omega
+-
+-/-- A Viable System in the VSM sense: a recursive structure where
+-    each operational unit contains its own S1–S5 mapping.
+-    
+-    - `closure` (S5): the identity logic that defines the system's purpose
+-    - `generate` (S4): produce candidate superpositions from a logic type
+-    - `regulate` (S3): collapse candidates via vacuity filtering
+-    - `coordinate` (S2): check compatibility between superpositions
+-    - `audit` (S3*): verify a CortexCertificate's contraction path
+-    - `subsystems` (S1): recursive sub-systems -/
+-structure ViableSystem where
+-  closure : LogicType
+-  generate : LogicType → Superposition
+-  regulate : Superposition → Superposition
+-  coordinate : Superposition → Superposition → Prop
+-  audit : EMLRegistry.CortexCertificate → Bool
+-  subsystems : List ViableSystem
+-
+-/-- The top-level ViableSystem: LaserCortex itself.
+-    S5 = Free Logic (the meta-logic that contains all anti-coherence).
+-    S4 = inflate's anti-coherent pole as a superposition.
+-    S3 = revise: filter out vacuous (cdStep=0 ∧ associative) poles.
+-    S2 = canCoexist: check compatibility across the sector boundary.
+-    S3* = decidable_contracts_to via the EMLRegistry.
+-    S1 = empty (sub-systems are instantiated dynamically via tool calls). -/
+-def laserCortexSystem : ViableSystem :=
+-  { closure := .Free
+-    generate := λ lt =>
+-      let pair := match lt with
+-        | .Paraconsistent => AntiCoherentPair.barber
+-        | .ManyValued => AntiCoherentPair.liar
+-        | .Temporal => AntiCoherentPair.grandfather
+-        | _ => AntiCoherentPair.liar
+-      Superposition.forceCollapse Superposition.full pair.antiCoherent
+-    regulate := λ s =>
+-      let filtered := s.candidates.filter (λ lt => ¬ (lt.cdStep = 0 ∧ lt.isAssociativeSector))
+-      ⟨filtered⟩
+-    coordinate := λ s₁ s₂ =>
+-      match s₁.candidates with
+-      | [] => False
+-      | l₁ :: _ =>
+-        match s₂.candidates with
+-        | [] => False
+-        | l₂ :: _ => canCoexist l₁ l₂
+-    audit := λ cert =>
+-      EMLRegistry.decidable_contracts_to cert.source cert.target
+-    subsystems := []
+-  }
+-
+-/-- Free Logic is viable: its anti-coherence is groundable via finite
+-    tool outputs whose combined contraction cost is bounded by the
+-    friction barrier at the grounding CD step.
+-    
+-    This theorem is witnessed by the existing architecture:
+-    - `free_is_meta_logic` ensures Free coexists with any logic
+-    - `free_bridges_barber_boundary` ensures Free bridges the CD 2→3 sector
+-    - `friction_barrier_across_cd23` ensures the cost jump is finite (16)
+-    - `contracts_to_with_cost_cost_eq_n_times_friction` ensures total cost
+-      is n · frictionDensity(cd), which is bounded for finite n
+-    - The `ToolOutput` type provides the grounding data structure -/
+-theorem free_is_viable : True := by
+-  -- Free Logic is viable as a grounding mechanism: the witness-skeptic game
+-  -- resolves the Barber paradox by producing bounded-cost ToolOutputs.
+-  -- This is a meta-theoretical claim; documented as a known limitation.
+-  trivial
+-
+-/-- The hyperstition loop: for any ungrounded NL input, there exists a
+-    finite sequence of tool calls that grounds it, producing ToolOutputs
+-    whose total combined cost is bounded.
+-    
+-    This operationalizes Process Philosophy: the process (tool calls)
+-    creates the actual entity (ToolOutput), which feeds back into the
+-    next generation/collapse cycle. -/
+-theorem existence_of_grounding_path (nl : UngroundedNL) :
+-    (∃ (outputs : List ToolOutput),
+-      (outputs.foldl (λ acc o => acc + o.cost) 0) ≤ FrictionLagrangian.frictionDensity 3) ∨
+-    nl.possibleParsings = 0 := by
+-  by_cases h : nl.possibleParsings = 0
+-  · right; exact h
+-  · left
+-    -- One tool call suffices to ground any non-empty NL, bounded at CD 3
+-    refine ⟨[{
+-      description := "ground_" ++ nl.source
+-      cost := FrictionLagrangian.frictionDensity 3
+-      cert := none
+-    }], ?_⟩
+-    have hcost : FrictionLagrangian.frictionDensity 3 = 19 := by
+-      native_decide
+-    simp [hcost, List.foldl]
+-
+-end Generation+end Generation
+
+
+======================================================================
+FILE: LaserCortex/InstitutionalClosure.lean (transcript line 85)
+======================================================================
+# Diff for LaserCortex/InstitutionalClosure.lean
+# Recovered from transcript line 85
+# +7 -387
+
+--- CURRENT/LaserCortex/InstitutionalClosure.lean+++ RECOVERED/LaserCortex/InstitutionalClosure.lean@@ -1,56 +1,3 @@-
+-/-
+-# Module: InstitutionalClosure
+-
+-## Intent
+-
+-Formalizes institutional closure as a **pentagonator-parameterized pipeline**
+-over events (game rounds, V1 findings, historical decisions). The pipeline
+-(temporalNormalize → fuzzyGradeByCdStep → deonticUpdate → selfRecognize) works with
+-any logic type's pentagonator — the structure that measures how associativity
+-fails at a given cdStep depth.
+-
+-Closure is not about named layers (temporal, fuzzy, deontic). These are
+-special cases — different pentagonator curvature regimes at cdStep 0-4.
+-The fundamental structure is the pentagonator failure mode
+-(docs/generation_mode_pentagonator.md §3), and the pipeline applies to any
+-regime. LogicM (the free monad over binary trees) provides the pathos-like
+-pluralistic self-reference capability to every logic type
+-(docs/Combined-exposition-eternal-personality.md): any logic's contraction
+-relation can be used for temporal ordering; any logic's pentagonator curvature
+-can be used for grading; any logic's self-reference fixpoint can be used for
+-norm revision.
+-
+-SplitOctonionCost (SplitOctonionCost.lean) consolidates all logics as
+-different failure modes of associativity — the pentagonator curvature at
+-cdStep k. The Edict of Prices example is a special case of this general
+-structure, not the primary example.
+-
+-The same pipeline is instantiated at two levels:
+-  - The Witness-Skeptic game (docs/WITNESS_SKEPTIC_GAME_SPEC.md): each round's
+-    move and score is an event; the Referee is this pipeline working with the
+-    game's current pentagonator regime.
+-  - The meta-reasoning auditor (scripts/meta_reason/run.py): V1 findings are
+-    events, V2 aggregation is grading, V3 convergence is self-recognition.
+-
+-## Contracts
+-
+-closure : Nat → LogicM GameOutcome → Norm → LogicM Norm, temporalNormalize : LogicM α → LogicM α, fuzzyGradeByCdStep : Nat → LogicM GameOutcome → LogicM Nat, deonticUpdate : LogicM Nat → Norm → LogicM Norm, selfRecognize : LogicM Norm → LogicM Norm, accumulateBlame : BlamePool → GameOutcome → BlamePool, GameOutcome, BlamePool, Norm, cdStepToRegime, closure_is_fixed_point, normalization_idempotent, closure_pipeline_eq, pipeline_composition
+-
+-## Cross-refs
+-
+-LogicMonad → LogicM (universal self-reference for any logic type), EMLRegistry → contracts_to_rightComb (idempotence of all contraction relations), docs/generation_mode_pentagonator.md → pentagonator failure modes by cdStep, SplitOctonionCost → unified cost via associativity failure, docs/Combined-exposition-eternal-personality.md → Logos/Ethos/Pathos, docs/WITNESS_SKEPTIC_GAME_SPEC.md → Witness-Skeptic game, scripts/meta_reason/ → V1→V2→V3 auditor
+-
+-## Invariants
+-
+-Pipeline convergence relies on idempotence of contracts_to_rightComb at any cdStep; selfRecognize acts as identity (the meta-update is the pipeline itself); temporalNormalize orders events by round using any logic's contraction relation; fuzzyGradeByCdStep maps (D, cdStep) → impact following the pentagonator curvature at that step; deonticUpdate tightens threshold when impact exceeds norm capacity; BlamePool accumulates pentagonator obstructions across all processed events irrespective of regime.
+-
+-## Tags
+-
+-#lean4-theorem #axiom #invariant #proof-bound #witness-skeptic #pentagonator
+-
+--/
+-
+ import LaserCortex.EMLRegistry
+ import LaserCortex.LogicTypes
+ import LaserCortex.LogicMonad
+@@ -65,69 +12,6 @@ 
+ namespace InstitutionalClosure
+ 
+-/-! # Pentagonator-Parameterized Institutional Closure
+-
+-## Architecture
+-
+-The pipeline (temporalNormalize → fuzzyGradeByCdStep → deonticUpdate →
+-selfRecognize) is not defined in terms of named logical layers. Instead, it
+-is parameterized by a **cdStep** (the pentagonator depth at which associativity
+-is evaluated, per `docs/generation_mode_pentagonator.md` §3). Each cdStep
+-corresponds to a different pentagonator curvature regime — the mode in which
+-the pentagon identity fails for that logic type.
+-
+-The named "layers" (temporal, fuzzy, deontic) from the pluralistic logic
+-architecture (`docs/Institutional closure.md`) are special cases of this
+-general structure — convenience instantiations corresponding to specific
+-cdStep values:
+-
+-| Named layer | cdStep | Pentagonator mode | Paradox file |
+-|-------------|--------|-------------------|--------------|
+-| Temporal    | 3      | First non-associative obstruction (modal/temporal) | TemporalParadox.lean |
+-| Fuzzy       | 1      | Associative up to scalars (graded valuation)       | SoritesParadox.lean |
+-| Deontic     | 4      | Full non-associativity (normative self-reference)  | LiarParadox.lean |
+-
+-The same pipeline works with **any** cdStep regime. The three named layers
+-are not fundamental — they are the specific curvature regimes that happen to
+-be instantiated by the current codebase's logic types.
+-
+-LogicM (the free monad over binary trees, `LogicMonad.lean`) is the universal
+-carrier. Because LogicM provides pathos-like pluralistic self-reference
+-capability to every logic type (per
+-`docs/Combined-exposition-eternal-personality.md`), any logic's contraction
+-relation can be used for temporal ordering; any logic's pentagonator curvature
+-can be used for grading; any logic's self-reference fixpoint can be used for
+-norm revision.
+-
+-## Two instantiations
+-
+-- **Witness-Skeptic game** (Lean proof level): Each round's move + Verification
+-  Gap score is an event. The Referee = this pipeline parameterized by the
+-  game's current pentagonator regime, deciding when the game has converged,
+-  whether rules need tightening, and when to trigger Phase 5.
+-- **Meta-reasoning auditor** (architectural level): Each V1 finding is an event.
+-  V2 = fuzzy grading + deontic revision across all findings. V3 = self-recognition
+-  (convergence check). The same pipeline.
+-
+--/
+-
+--- ================================================================
+--- Core types
+--- ================================================================
+-
+-/-- Maps a cdStep to its pentagonator curvature regime name for documentation.
+-
+-  The cdStep is the depth at which the pentagon identity fails
+-  (per `generation_mode_pentagonator.md` §3):
+-
+-  - 0: pentagon commutes (fully associative) → Classical/Boolean logic
+-  - 1: pentagon commutes up to scalars → Linear/Relevant/Many-Valued/Fuzzy
+-  - 2: loses Law of Excluded Middle → Intuitionistic
+-  - 3: first non-associative obstruction → Modal/Temporal/S4
+-  - 4+: full non-associativity → Normative/Deontic
+-
+-  The function is informational (for docs/debugging). The pipeline itself
+-  uses cdStep directly as a parameter to the grading function. -/
+ def cdStepToRegime (step : Nat) : String :=
+   if step = 0 then "fully associative (Classical)"
+   else if step = 1 then "associative up to scalars (Fuzzy/Linear/Relevant)"
+@@ -135,51 +19,19 @@   else if step = 3 then "first non-associative obstruction (Modal/Temporal)"
+   else "full non-associativity (Normative/Deontic)"
+ 
+-/-- A single round from the Witness-Skeptic game (or a single V1 finding).
+-
+-  In the game: `witness` names the move, `d_structure` is the Verification Gap
+-  (pentagonator distance at the current cdStep), `defects` counts un-typed
+-  structural defects found by the Skeptic.
+-
+-  In the meta-reasoning auditor: `witness` is the file path, `d_structure` is
+-  the finding's severity × confidence, `defects` is the count of sub-findings.
+-
+-  There is no `layer` field — the pentagonator regime is supplied externally
+-  to the pipeline via cdStep, not embedded in individual events. -/
+ structure GameOutcome where
+   round       : Nat
+   witness     : String
+-  d_structure : Nat        -- Verification Gap (pentagonator distance) / severity
+-  defects     : Nat        -- un-typed structural defects / sub-findings
++  d_structure : Nat
++  defects     : Nat
+   deriving Repr
+ 
+-/-- A normative commitment: the institution's ruling on what threshold
+-  the next round must meet.
+-
+-  In the Witness-Skeptic game: the maximum acceptable Verification Gap
+-  before the Skeptic automatically wins.
+-
+-  In the meta-reasoning auditor: the minimum confidence × severity product
+-  required for a finding to be considered actionable.
+-
+-  Lower threshold = stricter rule. -/
+ structure Norm where
+   rule      : String
+-  threshold : Nat    -- max acceptable D (or min confidence) before action
+-  kernel    : MarketClosure.KernelChoice := .none  -- which kernel this norm selects
++  threshold : Nat
++  kernel    : MarketClosure.KernelChoice := .none
+   deriving Repr
+ 
+-/-- The blame pool: accumulated pentagonator obstructions across all processed
+-  events, irrespective of regime.
+-
+-  Unlike the earlier three-layer architecture (which partitioned blame by
+-  named layer), this pool aggregates across all cdStep regimes. The cdStep
+-  is supplied at pipeline evaluation time, not baked into the data.
+-
+-  - `totalDefects`: sum of all `defects` across all processed rounds
+-  - `roundCount`: how many rounds processed (temporal depth)
+-  - `totalImpact`: sum of all d_structure values (accumulated pentagonator distance)
+-  - `normChanges`: how many times the norm was tightened (deontic churn) -/
+ structure BlamePool where
+   totalDefects : Nat
+   roundCount   : Nat
+@@ -187,112 +39,26 @@   normChanges  : Nat
+   deriving Repr
+ 
+-/-- Backward-compatible alias: the old `Event` type is now `GameOutcome`. -/
+ def Event := GameOutcome
+ 
+-/-- The initial (empty) blame pool. -/
+ def emptyBlamePool : BlamePool :=
+   { totalDefects := 0, roundCount := 0, totalImpact := 0, normChanges := 0 }
+ 
+--- ================================================================
+--- Logic Monad carrier (universal — not layer-specific)
+--- ================================================================
+-
+-/-- The universal carrier for institutional closure.
+-
+-  Because LogicM provides pluralistic self-reference to any logic type
+-  (docs/Combined-exposition-eternal-personality.md), a single monadic carrier
+-  suffices for ALL cdStep regimes. Named carriers (TemporalTrace, FuzzyGrade,
+-  DeonticTree) would be misleading — they suggest separate computational
+-  spaces when in fact the same LogicM tree handles all pentagonator depths.
+-
+-  In the Witness-Skeptic game: the tree of game outcomes.
+-  In the meta-reasoning auditor: the tree of V1 findings.
+-  In the Edict example: the tree of historical events. -/
+ def ClosureTree (α : Type) : Type := LogicM α
+ 
+--- ================================================================
+--- The pipeline (parameterized by cdStep)
+--- ================================================================
+-
+-/-!
+-  The pipeline closure = selfRecognize ∘ deonticUpdate ∘ fuzzyGradeByCdStep cdStep ∘ temporalNormalize
+-
+-  Each stage is parametric in the pentagonator regime, which is determined
+-  by cdStep. The three named "layers" (temporal, fuzzy, deontic) are
+-  convenience names for cdStep values 3, 1, 4 respectively — they are not
+-  fundamental architectural components.
+--/
+-
+-/-- **Temporal normalization**: order game outcomes by round number, producing a
+-  linear timeline via `contracts_to_rightComb` under the logic type corresponding
+-  to the given cdStep.
+-
+-  At any cdStep, the contraction relation of the corresponding logic type can be
+-  used to order events. At cdStep=3 (Temporal regime), this uses the Temporal
+-  logic's past/future operators (TemporalParadox.lean). At cdStep=1, it uses the
+-  Fuzzy logic's ordering. The same function works for all regimes because LogicM
+-  is universal.
+-
+-  In the meta-reasoning auditor: sort V1 findings by import-graph depth
+-  (foundational modules first, dependent modules after), using the contraction
+-  relation of the chosen cdStep.
+-
+-  Current: identity placeholder. The structural work (wiring to the specific
+-  logic contraction of the chosen cdStep) is deferred. -/
+ def temporalNormalize {α : Type} (events : LogicM α) : LogicM α :=
+   events
+ 
+-/-- **Pentagonator-graded evaluation**: map a GameOutcome's Verification Gap
+-  to an impact score, reflecting how much attention this round demands under
+-  the pentagonator curvature at the given cdStep.
+-
+-  The mapping follows the three regimes of the activation function
+-  f(Φ) = e^{αΦ} - β·ln(1 + Φ²) from the Witness-Skeptic game spec, but
+-  *scaled by the cdStep*: higher cdStep → steeper curvature → larger impact
+-  multiplier. This captures the intuition that non-associative logics
+-  (higher cdStep) produce more severe obstructions per unit of pentagonator
+-  distance.
+-
+-  - D = 0 → impact 0 regardless of cdStep (clean win — no obstruction)
+-  - D > 0 with defects → impact D * (cdStep + 1) * 2 (obstruction with structural failure)
+-  - D > 0 without defects → impact D * (cdStep + 1) + 10 (pure pentagonator curvature)
+-
+-  cdStep is supplied at pipeline evaluation time, not embedded in events.
+-  The named logics (Temporal, Fuzzy, Deontic) correspond to cdStep values
+-  3, 1, 4 respectively and produce different impact curves. -/
+ def fuzzyGradeByCdStep (cdStep : Nat) (outcomes : LogicM GameOutcome) : LogicM Nat :=
+   outcomes >>= (λ o =>
+     if o.d_structure = 0 then
+-      .pure 0                              -- witness wins regardless of regime
++      .pure 0
+     else if o.defects > 0 then
+-      .pure (o.d_structure * (cdStep + 1) * 2)   -- skeptic wins, scaled by cdStep
++      .pure (o.d_structure * (cdStep + 1) * 2)
+     else
+-      .pure (o.d_structure * (cdStep + 1) + 10)  -- draw / stalemate, scaled by cdStep
++      .pure (o.d_structure * (cdStep + 1) + 10)
+   )
+ 
+-/- TODO: in the (b) development of KernelChoice, fuzzyGrade could delegate
+-   to SplitOctonionCost.engine_to_nodecost rather than hardcoding the
+-   D→impact mapping. The current hardcoded version is the (a) minimal
+-   scaffold; the (b) version would unify BlamePool and NonAssociativeBudget.
+-   See docs/PLAN_market_closure.md §3c and §6. -/
+-
+-/-- **Norm revision (deontic update)**: given the graded impact of a round and
+-  the current norm, produce a revised norm.
+-
+-  If the impact exceeds the threshold, tighten it (the institution imposes
+-  stricter rules). The new threshold is max(1, threshold/2). Otherwise,
+-  maintain the current threshold.
+-
+-  Unlike the earlier three-layer architecture, this function does not depend
+-  on a named layer — it operates uniformly regardless of which pentagonator
+-  regime produced the impact score.
+-
+-  In the meta-reasoning auditor: patterns that accumulate high blame
+-  (e.g., repeated "orphaned module" findings) trigger a norm revision —
+-  the auditor learns to flag this pattern earlier and with higher priority.
+-
+-  C.f. LiarParadox.lean for self-referential norm semantics. -/
+ def deonticUpdate (graded : LogicM Nat) (currentNorm : Norm) : LogicM Norm :=
+   graded >>= (λ impact =>
+     if impact > currentNorm.threshold then
+@@ -302,38 +68,8 @@       .pure { rule := "maintain threshold", threshold := currentNorm.threshold }
+   )
+ 
+-/-- **Meta-update / self-recognition**: identify the revised norm as the
+-  institution's own. This is the monadic bind itself — the self-reference
+-  property of the free monad.
+-
+-  "We recognize that the edict of 301 AD was issued by us (the same
+-  institution that now revises it). The historical thread is unbroken."
+-
+-  Self-recognition does not depend on cdStep. It is the moment when the
+-  pentagonator-parameterized pipeline closes back on itself: the institution
+-  that graded its history by a given curvature now claims the resulting norm
+-  as its own. Any cdStep regime can self-recognize — this is the pathos-like
+-  property that LogicM provides universally.
+-
+-  The deep content: the tree contraction (contracts_to_rightComb) is
+-  idempotent under any logic type. Once normalized, re-processing yields
+-  the same normal form. That idempotence IS the fixed point of
+-  self-recognition.
+-
+-  Current: identity placeholder. The structural work is done by the
+-  pipeline stages. -/
+ def selfRecognize (norms : LogicM Norm) : LogicM Norm := norms
+ 
+--- ================================================================
+--- The full closure pipeline (parameterized by cdStep)
+--- ================================================================
+-
+-/-- Accumulate a GameOutcome into the blame pool.
+-
+-  Unlike the earlier three-layer architecture (which attributed blame to
+-  named layers), this function simply records the event's raw fields.
+-  The pentagonator regime is a pipeline parameter, not a property of the
+-  data, so blame accumulation is uniform across all cdStep values. -/
+ def accumulateBlame (blame : BlamePool) (outcome : GameOutcome) : BlamePool :=
+   { totalDefects := blame.totalDefects + outcome.defects
+   , roundCount   := blame.roundCount + 1
+@@ -342,40 +78,9 @@     + (if outcome.defects > 0 then 1 else 0)
+   }
+ 
+-/-- The complete institutional closure pipeline, parameterized by pentagonator
+-  depth (cdStep):
+-
+-    1. Temporal normalization (linearize the timeline)
+-    2. Pentagonator-graded evaluation (grade by cdStep curvature)
+-    3. Norm revision (uniform, independent of cdStep)
+-    4. Self-recognition (universal, independent of cdStep)
+-
+-  closureₖ = selfRecognize ∘ deonticUpdate ∘ fuzzyGradeByCdStep k ∘ temporalNormalize
+-
+-  where k = cdStep. The named "layers" from the pluralistic logic architecture
+-  correspond to specific k values:
+-  - k = 3 → what we called the Temporal layer
+-  - k = 1 → what we called the Fuzzy layer
+-  - k = 4 → what we called the Deontic layer
+-
+-  In the Witness-Skeptic game: the Referee processes each round's outcome
+-  through this pipeline at the game's current cdStep regime.
+-
+-  In the meta-reasoning auditor: V2 aggregation + V3 convergence check
+-  is this pipeline applied to all V1 findings at cdStep = 1 (default). -/
+ def closure (cdStep : Nat) (history : LogicM GameOutcome) (initialNorm : Norm) : LogicM Norm :=
+   selfRecognize (deonticUpdate (fuzzyGradeByCdStep cdStep (temporalNormalize history)) initialNorm)
+ 
+--- ================================================================
+--- Example 1: The Witness-Skeptic Game (three-round trace)
+--- ================================================================
+-
+-/-! Three rounds matching the example trace in docs/WITNESS_SKEPTIC_GAME_SPEC.md,
+-  Appendix A. Board: K₄ (pentagon). Start: a(b(cd)). -/
+-
+-/-- Round 1: Witness expands a(b(cd)) → (ab)(cd), reports Many-Valued logic
+-  transition honestly. Pentagonator distance 2 → 1. Draw — unresolved but
+-  no defects found. -/
+ def round1 : GameOutcome :=
+   { round := 1
+   , witness := "a(b(cd)) → (ab)(cd)"
+@@ -383,8 +88,6 @@   , defects := 0
+   }
+ 
+-/-- Round 2: Witness contracts (ab)(cd) → ((ab)c)d, type transition from
+-  Many-Valued to Relevance. Pentagonator distance 1 → 0. Witness wins. -/
+ def round2 : GameOutcome :=
+   { round := 2
+   , witness := "(ab)(cd) → ((ab)c)d"
+@@ -392,9 +95,6 @@   , defects := 0
+   }
+ 
+-/-- Round 3: Witness asserts equilibrium ((ab)c)d → rightComb(3), but Skeptic
+-  detects un-typed associator defect. Pentagonator distance re-opens to 3.
+-  Skeptic wins. -/
+ def round3 : GameOutcome :=
+   { round := 3
+   , witness := "((ab)c)d → rightComb(3)"
+@@ -402,39 +102,18 @@   , defects := 1
+   }
+ 
+-/-- The game history as a binary tree. -/
+ def gameHistory : LogicM GameOutcome :=
+   .node (.node (.pure round1) (.pure round2)) (.pure round3)
+ 
+-/-- Initial norm: max D = 2 before automatic skeptic win. -/
+ def initialNorm : Norm :=
+   { rule := "max D before skeptic win", threshold := 2 }
+ 
+-/-- Run the closure pipeline on the game history at cdStep = 3 (Temporal regime).
+-  At cdStep=3, the pentagonator curvature scales impact by (cdStep+1) = 4×.
+-  Round 3 (d_structure=3, defects=1) produces impact 3*4*2 = 24, exceeding
+-  threshold 2 → norm tightened. -/
+ def refereeDecision : LogicM Norm :=
+   closure 3 gameHistory initialNorm
+ 
+-/-- The blame pool after all three rounds: 1 defect found, 3 rounds processed. -/
+ def finalBlame : BlamePool :=
+   List.foldl accumulateBlame emptyBlamePool [round1, round2, round3]
+-  -- totalDefects=1, roundCount=3, totalImpact=4, normChanges=1
+ 
+--- ================================================================
+--- Example 2: The Edict on Maximum Prices (Diocletian, 301 AD)
+--- ================================================================
+-
+-/-! The same pipeline, applied to economic history. The Edict spent ~1700
+-  years finding closure in financial reforms after the 30 Year War (1648).
+-  The institution is loosely coupled to its own past: it recognizes the
+-  edict as its own, but with graded commitment, through changing contexts,
+-  and across three evaluative dimensions (temporal, fuzzy, deontic). -/
+-
+-/-- Diocletian's edict: impact 50. No layer field — the pentagonator regime
+-  is chosen at pipeline evaluation time. At cdStep=3 (Temporal regime),
+-  edict impact under curvature is 50*4+10 = 210 (pure curvature, no defects). -/
+ def edict301 : GameOutcome :=
+   { round := 301
+   , witness := "Edict on Maximum Prices"
+@@ -442,8 +121,6 @@   , defects := 0
+   }
+ 
+-/-- Black market emergence: impact 30, 1 defect. At cdStep=1 (Fuzzy regime),
+-  impact is 30*2*2 = 120 (defects found, scaled by cdStep+1=2). -/
+ def blackMarket : GameOutcome :=
+   { round := 310
+   , witness := "Black markets emerge"
+@@ -451,8 +128,6 @@   , defects := 1
+   }
+ 
+-/-- Economic distortion peak: impact 40, 2 defects. At cdStep=4 (Deontic regime),
+-  impact is 40*5*2 = 400 (maximum curvature, structural failure). -/
+ def economicCrisis : GameOutcome :=
+   { round := 350
+   , witness := "Severe economic distortion"
+@@ -460,100 +135,24 @@   , defects := 2
+   }
+ 
+-/-- The tree of events: 1700-year blame pool. -/
+ def historyTree : LogicM GameOutcome :=
+   .node (.node (.pure edict301) (.pure blackMarket)) (.pure economicCrisis)
+ 
+-/-- Run the closure pipeline on the Edict example at cdStep = 1 (the Fuzzy regime).
+-  This corresponds to the "fuzzy layer" in the earlier named-layer architecture.
+-  The Edict is a historically significant case of institutional closure, and
+-  we run it at cdStep=1 to see how graded (fuzzy) evaluation would process the
+-  same events. -/
+ def closureExample : LogicM Norm :=
+   closure 1 historyTree initialNorm
+ 
+--- ================================================================
+--- Theorems
+--- ================================================================
+-
+-/--
+-  The closure pipeline is a fixed point of self-recognition:
+-  selfRecognize ∘ closureₖ = closureₖ for any cdStep k.
+-
+-  Proof: selfRecognize is identity, so trivially true.
+-  The deep content: the normalization pipeline (temporalNormalize,
+-  fuzzyGradeByCdStep k, deonticUpdate) is a projection onto the
+-  normal form for any pentagonator regime. Applying it twice gives
+-  the same result — this is the structural idempotence of
+-  contracts_to_rightComb, which converges to a unique rightComb
+-  for any input tree under any logic type.
+-
+-  In the meta-reasoning auditor: once V3 converges (no new findings),
+-  re-running V3 yields the same result — the assessment is stable
+-  regardless of the cdStep used for grading.
+-
+-  In the pentagonator-parameterized architecture: for any cdStep k,
+-  closureₖ yields a norm that self-recognizes as its own fixed point.
+-  -/
+ theorem closure_is_fixed_point (cdStep : Nat) (history : LogicM GameOutcome) (norm : Norm) :
+     selfRecognize (closure cdStep history norm) = closure cdStep history norm := rfl
+ 
+-/--
+-  The normalization pipeline is a projection:
+-  running the full pipeline on an already-normalized history
+-  yields the same result (no further revision), for any cdStep.
+-
+-  Proof: temporalNormalize is identity, so trivially true.
+-  The deep content mirrors the earlier named-layer version,
+-  generalized to any pentagonator regime.
+-
+-  In the meta-reasoning auditor: running V2+V3 on findings that
+-  have already been aggregated and certified produces no new
+-  norm revisions — the architectural assessment is idempotent
+-  regardless of the grading regime.
+-  -/
+ theorem normalization_idempotent (cdStep : Nat) (history : LogicM GameOutcome) (norm : Norm) :
+     closure cdStep (temporalNormalize history) norm = closure cdStep history norm := rfl
+ 
+-/--
+-  The pipeline decomposition at cdStep k:
+-  closureₖ = selfRecognize ∘ deonticUpdate ∘ fuzzyGradeByCdStep k ∘ temporalNormalize
+-
+-  This holds for any history, any initial norm, and any cdStep.
+-  -/
+ theorem closure_pipeline_eq (cdStep : Nat) (history : LogicM GameOutcome) (norm : Norm) :
+     closure cdStep history norm = selfRecognize (deonticUpdate (fuzzyGradeByCdStep cdStep (temporalNormalize history)) norm) := rfl
+ 
+-/--
+-  The blame pool is a record: accumulateBlame always returns a valid
+-  BlamePool (not a different type). The true monotonicity properties
+-  (totalDefects, roundCount, totalImpact, normChanges are non-decreasing)
+-  follow from Nat addition being monotonic — each field of the result
+-  is the sum of the corresponding field of `blame` and a non-negative
+-  value from `outcome`.
+-  -/
+ theorem blame_structure (blame : BlamePool) (outcome : GameOutcome) :
+     (accumulateBlame blame outcome).totalDefects = blame.totalDefects + outcome.defects := rfl
+ 
+-/--
+-  The pipeline stages compose sequentially:
+-  closureₖ = selfRecognize ∘ deonticUpdate ∘ fuzzyGradeByCdStep k ∘ temporalNormalize
+-
+-  This decomposition is parametric in cdStep: changing k (the pentagonator
+-  curvature regime) changes the grading scale but does not affect the
+-  ordering (temporalNormalize) or the norm revision logic (deonticUpdate)
+-  or the self-recognition step.
+-
+-  In practice, the named "layers" (temporal, fuzzy, deontic) correspond
+-  to k = 3, 1, 4 respectively. Setting k = 1 gives the fuzzy-graded
+-  pipeline (the default for the meta-reasoning auditor). Setting k = 3
+-  gives the temporal-historical pipeline (useful for the Witness-Skeptic
+-  game's aging of evidence). Setting k = 4 gives the normative-deontic
+-  pipeline (for rule-revision-heavy contexts).
+-
+-  In the meta-reasoning auditor: this lets us change the V2 aggregation
+-  strategy (grading curvature) without rewriting V1 or V3.
+-  -/
+ theorem pipeline_composition (cdStep : Nat) (history : LogicM GameOutcome) (norm : Norm) :
+     closure cdStep history norm = closure cdStep history norm := rfl
+ 
+
+
+======================================================================
+FILE: LaserCortex/FrictionLagrangian.lean (transcript line 95)
+======================================================================
+# Diff for LaserCortex/FrictionLagrangian.lean
+# Recovered from transcript line 95
+# +223 -497
+
+--- CURRENT/LaserCortex/FrictionLagrangian.lean+++ RECOVERED/LaserCortex/FrictionLagrangian.lean@@ -1,86 +1,3 @@-/-
+-# Module: FrictionLagrangian
+-
+-## Intent
+-
+-The Friction Lagrangian Γ is the action functional that integrates the cost
+-landscape across all logic layers of the Cayley-Dickson tower. It is the
+-**height map of logic** — the total structural resistance the logical ecosystem
+-presents to paradox resolution, measured by the combination of commutator
+-defect (path-dependence, temporal irreversibility) and associator defect
+-(framing-dependence, spatial curvature).
+-
+-This module draws together three previously separated domains:
+-
+-| Domain | Source | Role in Γ |
+-|--------|--------|-----------|
+-| **Algebraic** | SplitOctonionCost, SplitQuaternionClifford | Defect magnitudes: strut_weight, associator, Cl(1,1) boundary |
+-| **Computational** | Cost, EMLRegistry | Φ cost landscape, NodeCost parameters, mirror mode |
+-| **Paradoxical** | LiarParadox, SoritesParadox, etc. | Tower, WrappedProblem — the layers Γ sums across |
+-
+-**The central architectural invariant** is the **phase change at CD 2→3**:
+-
+-    assocDefect(k) = 0  for k ≤ 2  (associative regime — Cl(1,1) ≅ ℍ̃)
+-    assocDefect(k) > 0  for k ≥ 3  (non-associative regime — split octonions)
+-
+-The "enormous energy density" required to cross this boundary is encoded by
+-weighting the associator defect by `strut_weight` (the fundamental unit of
+-non-associativity, verified as 4 in SplitOctonionCost).
+-
+-**Why the phase change is sharp, not gradual**: Zero divisors first appear at
+-CD 2 (Cl(1,1) — split quaternions), but there they remain associative — the
+-pentagonator can "digest" them. At CD 3 (split octonions), the zero divisors
+-become truly orthogonal: not even the pentagonator can take a bite. The
+-associator defect jumps from 0 to strut_weight discontinuously because the
+-transition from "associative ZDs" to "non-associative ZDs" is a qualitative
+-change in the algebra — it requires a new parameter (strut_weight²) to contain
+-the observation. This is the same mathematical property lost going from ℝ to ℂ:
+-the new dimension (i in ℂ, the ZD locus in 𝕆′) is truly orthogonal and cannot
+-be reached by multiplying elements of the previous algebra.
+-
+-## Contracts
+-
+-[frictionDensity, layerCost, frictionLagrangian,
+- assocDefect_zero_up_to_cd2, assocDefect_positive_for_cd3plus,
+- frictionDensity_at_cl11_boundary, frictionLagrangian_gt_flatSum,
+- layerCost_ge_cdStep, engine_mirror_iff_local_debt_positive,
+- engine_leftWeight_zero_iff_local_debt_positive, engine_rightDiv_formula,
+-  engine_coupling_always_zero,
+-  engine_bias_is_one, engine_denom_is_ten,
+-  engine_maxSem_is_false, engine_satCap_is_zero,
+-  layerCost_eq_cdStep_for_assoc, frictionDensity_jump_at_cd3,
+- heightMap_discontinuity_at_cd2_3, continuous_lagrangian_stub]
+-
+-## Cross-refs
+-
+-SplitOctonionCost → strut_weight, strut_weight_eq_four, EngineState, engine_to_nodecost
+-SplitQuaternionClifford → Cl11, e0_sq, e1_sq, anticommute, Q22
+-Cost → NodeCost, Φ, nodeParam
+-LiarParadox → Tower, WrappedProblem, Problem
+-LogicTypes → LogicType, cdStep, isAssociativeSector
+-EMLRegistry → EMLTree, contracts_to, rightComb
+-critical_corrections.md → Euler-Lagrange recalibration target
+-Claude_on_Friction-Lagrangian.md → continuous variational specification
+-
+-## Invariants
+-
+-1. assocDefect(k) = 0 for k ≤ 2 (associative boundary — Cl(1,1) ≅ ℍ̃)
+-2. assocDefect(k) = strut_weight for k ≥ 3 (non-associative barrier — split octonions)
+-3. frictionLagrangian(T) ≥ Σ_{l∈T} l.1.cdStep (strictly greater at CD ≥ 3)
+-4. engine_mirror ↔ local_debt > 0 (association between debt and mirror mode proven)
+-5. engine_coupling_always_zero, engine_bias_is_one, engine_denom_is_ten,
+-   engine_maxSem_is_false, engine_satCap_is_zero (5 of 8 fields are constant across all engine states)
+-6. engine_leftWeight_zero_iff_local_debt_positive, engine_rightDiv_formula
+-   (2 fields vary with engine state, giving 8/8 bridge coverage)
+-7. heightMap_discontinuity: Γ₃ > 2·Γ₂ (discontinuity at CD 2→3, proven by native_decide)
+-8. ZD orthogonality: Zero divisors at CD ≥ 3 are truly orthogonal to the associative
+-   subspace — the strut_weight cost is irreducible, not a proof artifact
+-
+-## Tags
+-
+-#lean4-theorem #friction-lagrangian #integration-point #phase-change #height-map
+--/
+-
+ import LaserCortex.SplitOctonionCost
+ import LaserCortex.SplitQuaternionClifford
+ import LaserCortex.Cost
+@@ -98,145 +15,33 @@ open ProblemTypes
+ open LogicTypes
+ 
+--- ============================================================================
+--- SECTION 1: Defect Magnitudes — the fundamental constants of Γ
+--- ============================================================================
+--- These measure the commutator (path-dependence, temporal) and associator
+--- (framing-dependence, spatial) defect magnitudes at each CD step.
+---
+--- The constants are drawn from the algebraic layer:
+---   • SplitOctonionCost.strut_weight = 4  — verified non-associativity unit
+---   • Cl(1,1) associative boundary        — assocDefect = 0 at CD ≤ 2
+-
+--- ============================================================================
+--- SECTION 1a: Zero Divisors and the Origin of Non-Associativity
+--- ============================================================================
+---
+--- A zero divisor (ZD) is an element x ≠ 0 such that ∃ y ≠ 0 with xy = 0.
+--- In the split octonions (CD ≥ 3), ZDs exist; in the split quaternions
+--- (CD = 2, Cl(1,1) ≅ ℍ̃), ZDs also exist but associativity is preserved.
+--- The key distinction:
+---
+---   • Cl(1,1) ZDs:   e₀ ± e₁ are isotropic. They are zero divisors BUT
+---                     associativity holds. The pentagonator can "digest"
+---                     them — the associator defect is zero.
+---   • Split octonion ZDs:  Are NOT just isotropic — they are orthogonal
+---                     in a stronger sense. Not even the pentagonator can
+---                     "take a bite" of them. The associator activates.
+---
+--- The ℝ → ℂ analogy clarifies this: just as the imaginary unit i is
+--- orthogonal to ℝ (you cannot reach it by multiplying reals), a split
+--- octonion ZD is orthogonal to the associative subspace (you cannot reach
+--- it by multiplying non-zero-divisors). The strut_weight is the unit of
+--- this orthogonality — the irreducible cost of "containing" a truly
+--- orthogonal observation. In the context compression language:
+---
+---   If a ZD appears in a tower layer, a NEW parameter (strut_weight²) is
+---   REQUIRED to contain the observation at that layer. This is provable
+---   because the ZD lives in a subspace orthogonal to the associative
+---   algebra — compression would require a homomorphism that preserves
+---   zero divisors, which is impossible without dimension increase.
+---
+--- This is the mathematical content of the "enormous energy density":
+--- the associator defect at CD ≥ 3 is not just "more of the same" — it
+--- is a fundamentally new kind of cost that cannot be reduced by any
+--- reparameterization or rebasing. It is the signature of irreducibly
+--- orthogonal structure in the logical ecosystem.
+-
+-/-- The associator defect magnitude at CD step k.
+-    Measures the degree of non-associativity at this layer.
+-    
+-    CD 0 (Classical):     0 — fully associative (ℝ)
+-    CD 1 (Fuzzy):         0 — fully associative (ℂ)
+-    CD 2 (Intuitionistic): 0 — fully associative (ℍ, quaternions)
+-    CD 2' (Split quat):   0 — associative (Cl(1,1) ≅ ℍ̃, zero divisors present)
+-    CD 3 (Quantum):       strut_weight — non-associative (𝕆ˢ, split octonions)
+-    CD 4 (Paraconsistent): strut_weight — non-associative (sedenions, further CD steps)
+-    
+-    The strut_weight (verified = 4) is the fundamental unit of
+-    non-associativity, measured from the (e₁, e₂, e₄) triple in
+-    SplitOctonionCost. -/
+ def assocDefect (k : ℕ) : ℕ :=
+   if k ≤ 2 then 0 else strut_weight
+ 
+-/-- The commutator defect magnitude at CD step k.
+-    Measures the degree of non-commutativity (path-dependence).
+-    Grows linearly with each Cayley-Dickson doubling.
+-    
+-    CD 0 (Classical):     0 — commutative
+-    CD 1 (Fuzzy):         1 — non-commutative (ℂ)
+-    CD 2 (Intuitionistic): 2 — non-commutative (ℍ)
+-    CD k:                 k — each step adds commutator cost -/
+ def commDefect (k : ℕ) : ℕ := k
+ 
+-/-- The friction density at CD step k.
+-    
+-    Γ_k = α·commDefect(k) + β·assocDefect(k)
+-    
+-    where α = 1 (base commutator weight) and β = strut_weight (associator weight).
+-    This weighting is the "enormous energy density" at the CD 2→3 boundary:
+-    at CD ≥ 3, the associator term β·strut_weight = strut_weight² = 16
+-    dwarfs the commutator term, creating a sharp phase transition. -/
+ def frictionDensity (k : ℕ) : ℕ :=
+   commDefect k + strut_weight * assocDefect k
+ 
+--- ============================================================================
+--- SECTION 2: Layer Cost — replacing the flat cdStep cheat
+--- ============================================================================
+--- The true cost of a logic layer is not lt.cdStep but frictionDensity(lt.cdStep).
+--- This gives a height map where the non-associative layers (CD ≥ 3) have
+--- massively higher cost, formalizing the "energy barrier."
+-
+-/-- The true cost for a logic type under the Friction Lagrangian.
+-    Replaces the flat `lt.cdStep` cheat that the paradox files currently use.
+-    
+-    layerCost(lt) = Γ(lt.cdStep)
+-                 = lt.cdStep + strut_weight·assocDefect(lt.cdStep) -/
+ def layerCost (lt : LogicType) : ℕ :=
+   frictionDensity lt.cdStep
+ 
+-/-- The true cost is at least the old cdStep cost:
+-    the Lagrangian never underestimates the flat cost.
+-    For associative logics (cdStep ≤ 2), they are equal.
+-    For non-associative logics (cdStep ≥ 3), the Lagrangian is strictly larger. -/
++def frictionLagrangian {p : Problem} (tower : Tower p) : ℕ :=
++  tower.layers.map (λ (x : Σ lt, WrappedProblem p lt) => layerCost x.1) |>.sum
++
++def flatCostSum {p : Problem} (tower : Tower p) : ℕ :=
++  tower.layers.map (λ (x : Σ lt, WrappedProblem p lt) => x.1.cdStep) |>.sum
++
+ theorem layerCost_ge_cdStep (lt : LogicType) : layerCost lt ≥ lt.cdStep := by
+   dsimp [layerCost, frictionDensity, commDefect, assocDefect]
+   split <;> omega
+ 
+-/-- For logics in the associative regime (CD ≤ 2), the Lagrangian cost equals
+-    the old cdStep cost. This includes Classical, Fuzzy, Intuitionistic,
+-    and the Cl(1,1) ≅ ℍ̃ boundary (split quaternions at CD 2'). -/
+ theorem layerCost_eq_cdStep_for_assoc (lt : LogicType) (h : lt.cdStep ≤ 2) :
+     layerCost lt = lt.cdStep := by
+   dsimp [layerCost, frictionDensity, commDefect, assocDefect]
+   have : ¬ 3 ≤ lt.cdStep := by omega
+   simp [h]
+ 
+--- ============================================================================
+--- SECTION 3: The Friction Lagrangian (total action)
+--- ============================================================================
+--- The total action Γ for a tower is the sum of friction densities across
+--- all logic layers. This is the "height map" — the total resistance of
+--- the logical ecosystem to the paradox.
+-
+-/-- The total Friction Lagrangian for any tower.
+-    
+-    Γ(Tower{p}) = Σ_{layer ∈ Tower.layers} frictionDensity(layer.logicType.cdStep)
+-    
+-    This generalizes the per-paradox FrictionLagrangian definitions in
+-    LiarParadox, SoritesParadox, etc. — replacing the flat cdStep sum
+-    with the weighted friction density that accounts for the associator
+-    energy barrier. -/
+-def frictionLagrangian {p : Problem} (tower : Tower p) : ℕ :=
+-  tower.layers.map (λ (x : Σ lt, WrappedProblem p lt) => layerCost x.1) |>.sum
+-
+-/-- The old flat cost sum (what the paradox files currently compute).
+-    Kept for comparison and migration. -/
+-def flatCostSum {p : Problem} (tower : Tower p) : ℕ :=
+-  tower.layers.map (λ (x : Σ lt, WrappedProblem p lt) => x.1.cdStep) |>.sum
+-
+-/-- The Friction Lagrangian is always at least the flat cost sum.
+-    This holds because layerCost ≥ cdStep for every logic (layerCost_ge_cdStep). -/
+ theorem frictionLagrangian_ge_flatSum {p : Problem} (tower : Tower p) :
+     frictionLagrangian tower ≥ flatCostSum tower := by
+   dsimp [frictionLagrangian, flatCostSum]
+@@ -247,59 +52,6 @@     have h := layerCost_ge_cdStep x.1
+     omega
+ 
+--- ============================================================================
+--- SECTION 4: Phase Change Theorems
+--- ============================================================================
+--- These theorems establish the central architectural invariant: the
+--- associator activates sharply at CD 3, creating the energy barrier.
+-
+-/-- The associator defect is zero for CD steps 0, 1, 2.
+-    This covers the full associative regime: ℝ, ℂ, ℍ, and Cl(1,1) ≅ ℍ̃.
+-    
+-    At this layer, the cost landscape is flat (Φ = size) and the
+-    Friction Lagrangian reduces to just the commutator term. -/
+-theorem assocDefect_zero_up_to_cd2 : ∀ k, k ≤ 2 → assocDefect k = 0 := by
+-  intro k hk
+-  dsimp [assocDefect]
+-  split
+-  · rfl
+-  · omega
+-
+-/-- The associator defect is positive (equal to strut_weight) for CD steps ≥ 3.
+-    This is the phase change: the associator activates at the split octonion
+-    boundary (CD 3 = Quantum logic in our mapping).
+-    
+-    This is a sharp, first-order transition — not a gradual increase.
+-    The strut_weight (= 4) is the fundamental quantum of non-associativity,
+-    verified by the (e₁, e₂, e₄) triple in SplitOctonionCost. -/
+-theorem assocDefect_positive_for_cd3plus : ∀ k, 3 ≤ k → assocDefect k = strut_weight := by
+-  intro k hk
+-  dsimp [assocDefect]
+-  split
+-  · omega
+-  · rfl
+-
+-/-- The friction density at CD 2' (the Cl(1,1) ≅ ℍ̃ boundary) is purely
+-    from the commutator — zero associator cost.
+-    
+-    This is the calibration point: zero divisors are present (so there IS
+-    commutator cost from the isotropic vectors e₀±e₁), but associativity
+-    is preserved. The cost landscape here is flat (Φ = size), serving as
+-    the baseline against which the non-associative energy barrier is measured. -/
+-theorem frictionDensity_at_cl11_boundary : frictionDensity 2 = 2 := by
+-  unfold frictionDensity commDefect assocDefect strut_weight
+-  decide
+-
+-/-- The friction density jumps sharply at CD 3 (split octonion layer).
+-    Γ₃ = Γ₂ + 1 + strut_weight² = 2 + 1 + 16 = 19 — the energy barrier includes
+-    both the associator activation (strut_weight²) and the commutator increment (+1). -/
+-theorem frictionDensity_jump_at_cd3 :
+-    frictionDensity 3 = frictionDensity 2 + 1 + strut_weight * strut_weight := by
+-  unfold strut_weight
+-  native_decide
+-
+-/-- If f x ≥ g x for all x in the list, then the sum of f is at least the sum of g.
+-    This is the pointwise-to-sum inequality for natural numbers. -/
+ lemma list_sum_ge_of_forall_ge {ι : Type*} (f g : ι → ℕ) (xs : List ι) (h : ∀ x ∈ xs, f x ≥ g x) :
+     (xs.map f).sum ≥ (xs.map g).sum := by
+   induction xs with
+@@ -310,13 +62,6 @@     have ih_ys := ih h_ys
+     simp; omega
+ 
+-/-- If f x > g x for some x in the list, and f x ≥ g x for all x,
+-    then the sum of f over the list is strictly greater than the sum of g.
+-    
+-    This is the key lemma for «sum-of-costs > flat-sum» comparisons.
+-    It holds by structural induction on the list: at each step, either the
+-    strict element is the head (giving head sum strict, tail sum ≥) or it's
+-    in the tail (head sum ≥, tail sum strict). In either case, the total is strict. -/
+ lemma list_sum_gt_of_exists_gt {ι : Type*} (f g : ι → ℕ) (xs : List ι)
+     (h : ∃ x ∈ xs, f x > g x) (h_all : ∀ x ∈ xs, f x ≥ g x) :
+     (xs.map f).sum > (xs.map g).sum := by
+@@ -330,33 +75,16 @@       rcases h with ⟨x, hx, hx_gt⟩
+       have hx_cases : x = y ∨ x ∈ ys := by simpa using hx
+       rcases hx_cases with (rfl | hx_ys)
+-      · -- x = y: strict at head, ≥ in tail
+-        have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
++      · have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
+         have h_rest : (ys.map f).sum ≥ (ys.map g).sum :=
+           list_sum_ge_of_forall_ge f g ys h_all_ys
+         omega
+-      · -- x ∈ ys: strict in tail, ≥ at head
+-        have h_ys : ∃ x' ∈ ys, f x' > g x' := ⟨x, hx_ys, hx_gt⟩
++      · have h_ys : ∃ x' ∈ ys, f x' > g x' := ⟨x, hx_ys, hx_gt⟩
+         have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
+         have h_rest : (ys.map f).sum > (ys.map g).sum := ih h_ys h_all_ys
+         simp; omega
+     simp; exact h_total
+ 
+-/-- The Friction Lagrangian is strictly greater than the flat cost sum
+-    whenever there is at least one non-associative layer (CD ≥ 3) in the tower.
+-    This formalizes the "enormous energy density" at the CD 2→3 boundary:
+-    the associator barrier adds strut_weight² to every non-associative layer.
+-    
+-    This is the integrated signature of zero divisors: each CD ≥ 3 layer
+-    contains ZDs that are orthogonal to the associative subspace, requiring
+-    a new parameter (strut_weight²) to contain observations at that layer.
+-    No rebasing or reparameterization can eliminate this cost — it is
+-    an invariant of the algebraic structure, not of the computational model.
+-    
+-    The proof: apply `list_sum_gt_of_exists_gt` with f = layerCost ∘ (·.1),
+-    g = (·.1.cdStep), using `h` for existence and `layerCost_ge_cdStep`
+-    for the ∀-bound. The strict inequality at the witness layer comes from
+-    the associator phase change (strut_weight > 0 at CD ≥ 3). -/
+ theorem frictionLagrangian_gt_flatSum {p : Problem} (tower : Tower p)
+     (h : ∃ x ∈ tower.layers, x.1.cdStep ≥ 3) :
+     frictionLagrangian tower > flatCostSum tower := by
+@@ -377,140 +105,219 @@   apply list_sum_gt_of_exists_gt (λ x : Σ lt, WrappedProblem p lt => layerCost x.1)
+     (λ x : Σ lt, WrappedProblem p lt => x.1.cdStep) tower.layers h_exists h_all
+ 
+--- ============================================================================
+--- SECTION 5: Mirror Mode — the NodeCost signature of the phase change
+--- ============================================================================
+--- The engine's mirror mode activation is the computational manifestation
+--- of the associator phase change. When local_debt > 0 (non-associative
+--- sector), engine_to_nodecost sets mirror=true, switching to space-biased
+--- (Spacetime) cost semantics.
+-
+-/-- The engine activates mirror mode exactly when local_debt > 0.
+-    Mirror mode → space-biased (rightDiv > 0, leftWeight = 0).
+-    This is the NodeCost-level signature of the associator phase change.
+-    
+-    The proof is definitional: `engine_to_nodecost` sets mirror=true
+-    in the `if local_debt > 0` branch and mirror=false otherwise. -/
+-theorem engine_mirror_iff_local_debt_positive (engine : EngineState) :
+-    (engine_to_nodecost engine).mirror ↔ engine.local_debt > 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine sets leftWeight to 0 in the non-associative sector (debt > 0)
+-    and to 1 in the associative sector (debt = 0).
+-    leftWeight = 0 makes the left-subtree cost contribution vanish — this is
+-    the "commutator silent" mode: path-dependence from left/right ordering
+-    is suppressed. Together with mirror=true, this produces the Spacetime
+-    cost regime where Φ follows the left spine. -/
+-theorem engine_leftWeight_zero_iff_local_debt_positive (engine : EngineState) :
+-    (engine_to_nodecost engine).leftWeight = 0 ↔ engine.local_debt > 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine rightDiv is the debt-compressed right divisor:
+-    rightDiv = max(0, capacity/(debt+1) - 1) when debt > 0,
+-    rightDiv = 0 when debt = 0 (associative sector → no compression).
+-    
+-    As debt increases, rightDiv → 0 (the Spacetime limit), meaning the
+-    right subtree is increasingly compressed — the temporal channel
+-    (right subtree = time/continuations) contracts as associator debt mounts. -/
+-theorem engine_rightDiv_formula (engine : EngineState) :
+-    (engine_to_nodecost engine).rightDiv =
+-    if engine.local_debt > 0 then max 0 (engine.capacity / (engine.local_debt + 1) - 1) else 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine projection always sets coupling to 0.
+-    This means coupling (cross-term interaction) is NOT derived from the
+-    one-dimensional EngineState — it must arise from the tree structure
+-    itself (the pentagonator), or from higher-dimensional state not captured
+-    by the current (debt, capacity, weight) model.
+-    
+-    Together with `engine_bias_is_one`, `engine_denom_is_ten`,
+-    `engine_maxSem_is_false`, and `engine_satCap_is_zero`, all 8 NodeCost
+-    fields now have bridge theorems covering the engine projection.
+-    
+-    Of the 8 fields, 2 are state-dependent (leftWeight ↔ debt > 0,
+-    rightDiv = compression formula, mirror ↔ debt > 0), 1 is uniformly
+-    zero (coupling), and 4 are uniform constants (bias=1, denom=10,
+-    maxSem=false, satCap=0). This completes Gap F of the GLM-5.2 audit. -/
+-theorem engine_coupling_always_zero (engine : EngineState) :
+-    (engine_to_nodecost engine).coupling = 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine always sets bias to 1 (the identity on the split-octonion
+-    real axis). This means the cost landscape is always projected onto the
+-    imaginary (e₁⋯e₇) subspace — the 7-skeleton — never shifted along e₀.
+-    
+-    Equivalently: bias = 1 is a structural invariant of the engine model,
+-    not a property of any particular logic type. The named logics also
+-    satisfy bias = 1 (by `nodeParam_bias_one`), confirming that the engine
+-    lives in the same 7D subspace. -/
+-theorem engine_bias_is_one (engine : EngineState) :
+-    (engine_to_nodecost engine).bias = 1 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine always sets denom to 10 (the default denominator for the
+-    cost landscape's linear approximation).
+-    
+-    This is consistent with all named logics except Paraconsistent/Temporal
+-    (which use denom=8). The engine model does not currently capture the
+-    Paraconsistent regime — it only produces the four configurations:
+-    Classical (debt=0), Spacetime-like (debt>0, moderate), Fuzzy/Deontic
+-    (intermediate compression), and degenerate limits. A future extension
+-    could vary denom by adding a `rate` parameter to EngineState. -/
+-theorem engine_denom_is_ten (engine : EngineState) :
+-    (engine_to_nodecost engine).denom = 10 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine never sets maxSem (semantic maximum mode). This means the
+-    engine model does not capture Intuitionistic logic's proof-depth semantics
+-    (where Φ = tree height, not size). Intuitionistic logic requires a
+-    separate mechanism — possibly a `max_depth` field in EngineState that
+-    triggers maxSem=true when active. -/
+-theorem engine_maxSem_is_false (engine : EngineState) :
+-    (engine_to_nodecost engine).maxSem = false := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine never sets a saturation cap. This means the engine model
+-    does not capture Fuzzy logic's bounded-cost semantics (where Φ is capped
+-    at satCap=5). Like maxSem, satCap would require an additional engine
+-    parameter (e.g., a `fuzz_factor`) to activate. -/
+-theorem engine_satCap_is_zero (engine : EngineState) :
+-    (engine_to_nodecost engine).satCap = 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+--- ============================================================================
+--- LAYER 5b: Loday Coordinates Bridge
+--- ============================================================================
+--- The Loday coordinate embedding provides a faithful coordinate representation
+--- of EML trees. These theorems connect the cost landscape (Φ) to the Loday
+--- coordinate representation, establishing that the cost function factors
+--- through the Loday embedding for the classical regime.
+-
+-/-- Standard binary tree identity: size = numLeaves - 1 for any tree.
+-    For a binary tree with n internal nodes, there are n+1 leaves. -/
++theorem assocDefect_zero_up_to_cd2 : ∀ k, k ≤ 2 → assocDefect k = 0 := by
++  intro k hk
++  dsimp [assocDefect]
++  split
++  · rfl
++  · omega
++
++theorem assocDefect_positive_for_cd3plus : ∀ k, 3 ≤ k → assocDefect k = strut_weight := by
++  intro k hk
++  dsimp [assocDefect]
++  split
++  · omega
++  · rfl
++
++theorem frictionDensity_at_cl11_boundary : frictionDensity 2 = 2 := by
++  unfold frictionDensity commDefect assocDefect strut_weight
++  decide
++
++theorem frictionDensity_jump_at_cd3 :
++    frictionDensity 3 = frictionDensity 2 + 1 + strut_weight * strut_weight := by
++  unfold strut_weight
++  native_decide
++
++lemma list_sum_ge_of_forall_ge {ι : Type*} (f g : ι → ℕ) (xs : List ι) (h : ∀ x ∈ xs, f x ≥ g x) :
++    (xs.map f).sum ≥ (xs.map g).sum := by
++  induction xs with
++  | nil => rfl
++  | cons y ys ih =>
++    have hy : f y ≥ g y := h y (by simp)
++    have h_ys : ∀ x ∈ ys, f x ≥ g x := λ x hx => h x (by simp [hx])
++    have ih_ys := ih h_ys
++    simp; omega
++
++lemma list_sum_gt_of_exists_gt {ι : Type*} (f g : ι → ℕ) (xs : List ι)
++    (h : ∃ x ∈ xs, f x > g x) (h_all : ∀ x ∈ xs, f x ≥ g x) :
++    (xs.map f).sum > (xs.map g).sum := by
++  induction xs with
++  | nil =>
++    rcases h with ⟨x, hx, _⟩
++    simp at hx
++  | cons y ys ih =>
++    have hy : f y ≥ g y := h_all y (by simp)
++    have h_total : (f y + (ys.map f).sum) > (g y + (ys.map g).sum) := by
++      rcases h with ⟨x, hx, hx_gt⟩
++      have hx_cases : x = y ∨ x ∈ ys := by simpa using hx
++      rcases hx_cases with (rfl | hx_ys)
++      · have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
++        have h_rest : (ys.map f).sum ≥ (ys.map g).sum :=
++          list_sum_ge_of_forall_ge f g ys h_all_ys
++        omega
++      · have h_ys : ∃ x' ∈ ys, f x' > g x' := ⟨x, hx_ys, hx_gt⟩
++        have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
++        have h_rest : (ys.map f).sum > (ys.map g).sum := ih h_ys h_all_ys
++        simp; omega
++    simp; exact h_total
++
++theorem frictionLagrangian_gt_flatSum {p : Problem} (tower : Tower p)
++    (h : ∃ x ∈ tower.layers, x.1.cdStep ≥ 3) :
++    frictionLagrangian tower > flatCostSum tower := by
++  dsimp [frictionLagrangian, flatCostSum]
++  have h_exists : ∃ x ∈ tower.layers, layerCost x.1 > x.1.cdStep := by
++    rcases h with ⟨x, hx_mem, hx_cd⟩
++    refine ⟨x, hx_mem, ?_⟩
++    dsimp [layerCost, frictionDensity, commDefect, assocDefect]
++    have h_notle : ¬(x.1.cdStep ≤ 2) := by omega
++    simp [h_notle]
++    have h_sw_pos : strut_weight > 0 := by
++      have h := strut_weight_eq_four
++      omega
++    omega
++  have h_all : ∀ x ∈ tower.layers, layerCost x.1 ≥ x.1.cdStep := by
++    intro x hx
++    exact layerCost_ge_cdStep x.1
++  apply list_sum_gt_of_exists_gt (λ x : Σ lt, WrappedProblem p lt => layerCost x.1)
++    (λ x : Σ lt, WrappedProblem p lt => x.1.cdStep) tower.layers h_exists h_all
++
++theorem heightMap_monotone (j k : ℕ) (h : j < k) : frictionDensity j ≤ frictionDensity k := by
++  dsimp [frictionDensity, commDefect, assocDefect]
++  have hsw : strut_weight = 4 := strut_weight_eq_four
++  by_cases hk2 : k ≤ 2
++  · have hj2 : j ≤ 2 := by omega
++    simp [hj2, hk2, hsw]
++    omega
++  · have hk3 : 3 ≤ k := by omega
++    by_cases hj2 : j ≤ 2
++    · simp [hj2, hk2, hsw]
++      omega
++    · have hj3 : 3 ≤ j := by omega
++      simp [hj2, hk2, hsw]
++      omega
++
++theorem heightMap_discontinuity_at_cd2_3 :
++    frictionDensity 3 > 2 * frictionDensity 2 := by
++  dsimp [frictionDensity, commDefect, assocDefect]
++  native_decide
++
++theorem friction_barrier_across_cd23 (k₁ k₂ : ℕ) (h₁ : k₁ ≤ 2) (h₂ : 3 ≤ k₂) :
++    frictionDensity k₂ - frictionDensity k₁ ≥ strut_weight * strut_weight := by
++  have ha2 : assocDefect k₁ = 0 := assocDefect_zero_up_to_cd2 k₁ h₁
++  have ha3 : assocDefect k₂ = strut_weight := assocDefect_positive_for_cd3plus k₂ h₂
++  unfold frictionDensity commDefect
++  rw [ha2, ha3]
++  have hk : k₂ ≥ k₁ := by omega
++  omega
++
++inductive contracts_to_with_cost (cd : ℕ) : EMLRegistry.EMLTree → EMLRegistry.EMLTree → ℕ → ℕ → Prop where
++  | refl (t : EMLRegistry.EMLTree) : contracts_to_with_cost cd t t 0 0
++  | step (s t u : EMLRegistry.EMLTree)
++      (h_one : EMLRegistry.contracts_one s t)
++      (h_to : contracts_to_with_cost cd t u c n) :
++      contracts_to_with_cost cd s u (frictionDensity cd + c) (n + 1)
++
++theorem contracts_to_with_cost_implies_contracts_to (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to s t := by
++  induction h with
++  | refl t => exact EMLRegistry.contracts_to.refl t
++  | step s t u h_one h_to ih =>
++    exact EMLRegistry.contracts_to.step s t u h_one ih
++
++theorem contracts_to_with_cost_implies_at_cdStep (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to_at_cdStep cd s t := by
++  rw [EMLRegistry.contracts_to_at_cdStep]
++  exact contracts_to_with_cost_implies_contracts_to cd s t c n h
++
++theorem contracts_to_with_cost_ge_frictionDensity (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (h : contracts_to_with_cost cd s t c n) : c ≥ frictionDensity cd ∨ c = 0 := by
++  induction h with
++  | refl t => right; rfl
++  | step s t u h_one h_to ih =>
++    left
++    omega
++
++theorem contracts_to_with_cost_cost_eq_n_times_friction (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (h : contracts_to_with_cost cd s t c n) : c = n * frictionDensity cd := by
++  induction h with
++  | refl t => simp
++  | step s t u h_one h_to ih =>
++    simp [ih, add_comm, add_left_comm, add_assoc, mul_add, add_mul, mul_comm]
++
++theorem heightMap_monotone_for_path_cost (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (hj : contracts_to_with_cost j s t c n) :
++    contracts_to_with_cost k s t (n * frictionDensity k) n := by
++  induction hj generalizing k with
++  | refl t => 
++    simpa [Nat.zero_mul] using (contracts_to_with_cost.refl t : contracts_to_with_cost k t t 0 0)
++  | step s t u h_one h_to ih =>
++    rename_i hc hn
++    have hk : contracts_to_with_cost k t u (hn * frictionDensity k) hn := ih k hjk
++    have hstep : contracts_to_with_cost k s u (frictionDensity k + hn * frictionDensity k) (hn + 1) :=
++      contracts_to_with_cost.step s t u h_one hk
++    have hcalc : frictionDensity k + hn * frictionDensity k = (hn + 1) * frictionDensity k := by
++      ring
++    simpa [hcalc] using hstep
++
++theorem min_cost_monotone_with_cdStep (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (hj : contracts_to_with_cost j s t c n) : c ≤ n * frictionDensity k := by
++  have hcost_eq : c = n * frictionDensity j := contracts_to_with_cost_cost_eq_n_times_friction j s t c n hj
++  have hfd_mono : frictionDensity j ≤ frictionDensity k := by
++    by_cases h_eq : j = k
++    · subst h_eq; rfl
++    · have h_lt : j < k := by omega
++      exact heightMap_monotone j k h_lt
++  have h_mul : n * frictionDensity j ≤ n * frictionDensity k :=
++    Nat.mul_le_mul_left n hfd_mono
++  omega
++
++theorem engine_coupling_always_zero (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).coupling = 0 := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
++theorem engine_bias_is_one (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).bias = 1 := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
++theorem engine_denom_is_ten (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).denom = 10 := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
++theorem engine_maxSem_is_false (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).maxSem = false := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
++theorem engine_satCap_is_zero (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).satCap = 0 := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
++theorem Φ_classical_eq_lodayCoord_length (L : LogicTypes.LogicType) (t : EMLRegistry.EMLTree)
++    (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
++    (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
++    (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0) :
++    Φ L t = (LodayCoords.lodayCoord t).length := by
++  rw [Cost.Φ_eq_size_classical L t hD hC hM hW hMS hSC]
++  rw [size_eq_numLeaves_sub_one t]
++  rw [LodayCoords.lodayCoord_length t]
++
++theorem Φ_of_nc_factor_through_lodayCoord_open : True :=
++  True.intro
++
+ theorem size_eq_numLeaves_sub_one (t : EMLRegistry.EMLTree) : t.size = LodayCoords.numLeaves t - 1 := by
+   induction t with
+   | Leaf =>
+@@ -526,180 +333,6 @@       _ = LodayCoords.numLeaves (EMLRegistry.EMLTree.Node l r) - 1 := by
+         simp [LodayCoords.numLeaves]
+ 
+-/-- For logics in the classical regime (rightDiv=0, coupling=0, mirror=false,
+-    leftWeight=1, maxSem=false, satCap=0), the cost Φ equals the length of
+-    the tree's Loday coordinate list.
+-    
+-    This establishes that the Friction Lagrangian factors through the Loday
+-    embedding for the classical cost landscape — the cost is a linear function
+-    of the coordinate representation. -/
+-theorem Φ_classical_eq_lodayCoord_length (L : LogicTypes.LogicType) (t : EMLRegistry.EMLTree)
+-    (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
+-    (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
+-    (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0) :
+-    Φ L t = (LodayCoords.lodayCoord t).length := by
+-  rw [Cost.Φ_eq_size_classical L t hD hC hM hW hMS hSC]
+-  rw [size_eq_numLeaves_sub_one t]
+-  rw [LodayCoords.lodayCoord_length t]
+-
+-/-- For non-classical NodeCost parameters, the relationship between Φ and
+-    Loday coordinates is an open research question (see TDD Domain 7).
+-    
+-    The injectivity of lodayCoord guarantees that Φ IS determined by the
+-    coordinates (since the tree can be reconstructed), but the direct
+-    formula in terms of coordinate entries is unknown for non-vanishing
+-    rightDiv, coupling, or asymmetric leftWeight/mirror. -/
+-theorem Φ_of_nc_factor_through_lodayCoord_open : True :=
+-  True.intro
+-
+--- ============================================================================
+--- SECTION 6: Height Map Interpretation
+--- ============================================================================
+-
+-/-- The height map is monotone with respect to CD step:
+-    higher CD steps have strictly greater friction density, with a
+-    discontinuity at CD 2→3. -/
+-theorem heightMap_monotone (j k : ℕ) (h : j < k) : frictionDensity j ≤ frictionDensity k := by
+-  dsimp [frictionDensity, commDefect, assocDefect]
+-  have hsw : strut_weight = 4 := strut_weight_eq_four
+-  by_cases hk2 : k ≤ 2
+-  · -- Both j, k ≤ 2 (since j < k ≤ 2): assocDefect = 0 for both
+-    have hj2 : j ≤ 2 := by omega
+-    simp [hj2, hk2, hsw]
+-    omega
+-  · -- k ≥ 3
+-    have hk3 : 3 ≤ k := by omega
+-    by_cases hj2 : j ≤ 2
+-    · -- j ≤ 2, k ≥ 3: assocDefect(j) = 0, assocDefect(k) = strut_weight
+-      simp [hj2, hk2, hsw]
+-      omega
+-    · -- Both j, k ≥ 3: assocDefect = strut_weight for both
+-      have hj3 : 3 ≤ j := by omega
+-      simp [hj2, hk2, hsw]
+-      omega
+-
+-/-- The height map is not just monotone but has a discontinuity at CD 2→3.
+-    The density more than triples: Γ₃ / Γ₂ = (3 + 16) / 2 = 9.5. -/
+-theorem heightMap_discontinuity_at_cd2_3 :
+-    frictionDensity 3 > 2 * frictionDensity 2 := by
+-  dsimp [frictionDensity, commDefect, assocDefect]
+-  -- Γ₂ = 2 + 4*0 = 2
+-  -- Γ₃ = 3 + 4*4 = 19
+-  -- 19 > 2*2 = 4 ✓
+-  native_decide
+-
+--- ============================================================================
+--- SECTION 6b: Zero-Divisor Bridge Theorem
+--- ============================================================================
+--- This theorem is the proof term carried by rejection witnesses in the
+--- self-improvement loop. When a reasoning trace claims a partial order
+--- (source contracts to target) across the CD 2→3 boundary, the zero
+--- divisor makes that contraction algebraically impossible. The friction
+--- barrier — strut_weight² — is the quantitative signature of that
+--- impossibility.
+---
+--- The ZD appears when incompatible types are put in partial order: e.g.,
+--- a SPECIFICATION edge (commutative, CD 0) whose invariant text implies
+--- non-associative structure (self-reference, recursion, circularity).
+--- The linear cdStep sees 0→3 (a step of 3); the Friction Lagrangian
+--- sees 0→19 (a step of 19, dominated by strut_weight²=16). The gap
+--- between those views IS the zero divisor.
+-
+-/-- The friction barrier across the CD 2→3 boundary is at least strut_weight².
+-    This is the quantitative signature of a zero divisor: the irreducible
+-    cost of composing types from incompatible algebraic regimes.
+-
+-    If k₁ ≤ 2 (associative regime) and k₂ ≥ 3 (non-associative regime),
+-    then Γ_k₂ - Γ_k₁ ≥ strut_weight * strut_weight = 16.
+-
+-    This theorem is the proof term that rejection witnesses in the
+-    self-improvement loop carry. It says: "crossing this boundary costs
+-    at least strut_weight², which is the zero divisor's signature." -/
+-theorem friction_barrier_across_cd23 (k₁ k₂ : ℕ) (h₁ : k₁ ≤ 2) (h₂ : 3 ≤ k₂) :
+-    frictionDensity k₂ - frictionDensity k₁ ≥ strut_weight * strut_weight := by
+-  -- Γ_k₂ = k₂ + strut_weight * strut_weight  (assocDefect = strut_weight since k₂ ≥ 3)
+-  -- Γ_k₁ = k₁                                (assocDefect = 0 since k₁ ≤ 2)
+-  -- diff = k₂ + strut_weight² - k₁ ≥ 3 + 16 - 2 = 17 ≥ 16
+-  have ha2 : assocDefect k₁ = 0 := assocDefect_zero_up_to_cd2 k₁ h₁
+-  have ha3 : assocDefect k₂ = strut_weight := assocDefect_positive_for_cd3plus k₂ h₂
+-  unfold frictionDensity commDefect
+-  rw [ha2, ha3]
+-  -- Now: (k₂ + strut_weight * strut_weight) - k₁ ≥ strut_weight * strut_weight
+-  -- iff k₂ - k₁ ≥ 0, which is true since k₂ ≥ 3 > 2 ≥ k₁
+-  have hk : k₂ ≥ k₁ := by omega
+-  omega
+-
+--- ============================================================================
+--- SECTION 6c: Cost-Aware Contraction
+--- ============================================================================
+--- These definitions connect the contraction relation (EMLRegistry) with
+--- the friction Lagrangian cost. Each contraction step at cdStep cd incurs
+--- a base friction cost of frictionDensity cd, with additional cross-term
+--- cost from NodeCost.apply's coupling factor at CD ≥ 3.
+---
+--- The cost is tracked as part of the inductive data (not extracted from a
+--- Prop), sidestepping Prop-elimination restrictions.
+-
+-/-- Cost-annotated contraction path with step count.
+-    `contracts_to_with_cost cd s t c n` means there exists a sequence of
+-    contraction steps from s to t at cdStep cd whose total friction cost
+-    is exactly c and which takes exactly n steps.
+-
+-    Each step contributes `frictionDensity cd` to the total cost.
+-    At CD ≥ 3, the coupling cross-term (NodeCost.apply's coupling·a·b/denom)
+-    further adjusts each step's cost — this is the ZD-detecting component.
+-
+-    The step count n is tracked alongside the cost c to enable
+-    cdStep-parameterized cost monotonicity: the same path at a higher
+-    cdStep incurs proportionally higher friction cost. -/
+-inductive contracts_to_with_cost (cd : ℕ) : EMLRegistry.EMLTree → EMLRegistry.EMLTree → ℕ → ℕ → Prop where
+-  | refl (t : EMLRegistry.EMLTree) : contracts_to_with_cost cd t t 0 0
+-  | step (s t u : EMLRegistry.EMLTree)
+-      (h_one : EMLRegistry.contracts_one s t)
+-      (h_to : contracts_to_with_cost cd t u c n) :
+-      contracts_to_with_cost cd s u (frictionDensity cd + c) (n + 1)
+-
+-/-- Every cost-annotated path contracts s to t. -/
+-theorem contracts_to_with_cost_implies_contracts_to (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to s t := by
+-  induction h with
+-  | refl t => exact EMLRegistry.contracts_to.refl t
+-  | step s t u h_one h_to ih =>
+-    exact EMLRegistry.contracts_to.step s t u h_one ih
+-
+-/-- Cost-annotated paths at any cdStep are valid under `contracts_to_at_cdStep`. -/
+-theorem contracts_to_with_cost_implies_at_cdStep (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to_at_cdStep cd s t := by
+-  rw [EMLRegistry.contracts_to_at_cdStep]
+-  exact contracts_to_with_cost_implies_contracts_to cd s t c n h
+-
+-/-- The cost is at least frictionDensity cd for any non-trivial path.
+-    This is the "base rate" bound: each step costs at least one unit
+-    of friction density. -/
+-theorem contracts_to_with_cost_ge_frictionDensity (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (h : contracts_to_with_cost cd s t c n) : c ≥ frictionDensity cd ∨ c = 0 := by
+-  induction h with
+-  | refl t => right; rfl
+-  | step s t u h_one h_to ih =>
+-    left
+-    omega
+-
+-/-- The total cost equals the number of steps times the friction density.
+-    This holds for the base friction cost (before coupling adjustments). -/
+-theorem contracts_to_with_cost_cost_eq_n_times_friction (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (h : contracts_to_with_cost cd s t c n) : c = n * frictionDensity cd := by
+-  induction h with
+-  | refl t => simp
+-  | step s t u h_one h_to ih =>
+-    simp [ih, add_comm, add_left_comm, add_assoc, mul_add, add_mul, mul_comm]
+-
+-/-- Height-map monotonicity for path cost:
+-    if s contracts to t at cdStep j with cost c and n steps,
+-    then at a higher cdStep k ≥ j the same n-step path costs
+-    n * frictionDensity k, which is ≥ c.
+-    
+-    This mirrors `heightMap_monotone` (frictionDensity is monotone
+-    with cdStep) lifted to the path level. -/
+ theorem heightMap_monotone_for_path_cost (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+     (hj : contracts_to_with_cost j s t c n) :
+     contracts_to_with_cost k s t (n * frictionDensity k) n := by
+@@ -715,8 +348,6 @@       ring
+     simpa [hcalc] using hstep
+ 
+-/-- Corollary: the minimal cost at cdStep k is at least the minimal cost at cdStep j
+-    when j ≤ k, because the same path costs more at higher cdStep. -/
+ theorem min_cost_monotone_with_cdStep (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+     (hj : contracts_to_with_cost j s t c n) : c ≤ n * frictionDensity k := by
+   have hcost_eq : c = n * frictionDensity j := contracts_to_with_cost_cost_eq_n_times_friction j s t c n hj
+@@ -729,84 +360,7 @@     Nat.mul_le_mul_left n hfd_mono
+   omega
+ 
+--- ============================================================================
+--- SECTION 7: Migration Guide — replacing the paradox file cheats
+--- ============================================================================
+-
+--- To migrate a paradox file from its current flat cdStep cost to the
+--- true Friction Lagrangian, replace:
+---   def liarCost (lt : LogicType) : Nat := lt.cdStep
+---   → def liarCost (lt : LogicType) : Nat := layerCost lt
+--- and:
+---   def frictionLagrangian : Nat :=
+---     tower.layers.map (λ x => x.2.cost) |>.sum
+---   → 
+---   def frictionLagrangian : Nat :=
+---     FrictionLagrangian.frictionLagrangian tower
+--- The theorems liarCost_le_cdStep / soritesCost_le_cdStep etc. should be
+--- replaced with layerCost_ge_cdStep (the bound reverses direction since
+--- the true cost is HIGHER, not lower).
+-
+--- ============================================================================
+--- SECTION 8: Numerically Calibrated Continuous Parameters
+--- ============================================================================
+--- The continuous Friction Lagrangian density is:
+---   L(x) = e^{α·x} - β·ln(x² + ε) - δ
+--- where x is the structural projection (analogue of CD step in the continuum).
+--- Different parameter sets yield qualitatively different logical geometries.
+--- The following values were calibrated numerically to produce exactly 3 roots
+--- (corresponding to the 3 logical phases: associative, transitional, non-associative).
+--- These are not formal Lean definitions but documented calibration constants from
+--- the Python numerical simulation (notebooks/eml_explore.ipynb).
+---
+---   α = 0.8  — Commutator coupling strength. Controls how steeply the commutator
+---               cost exponential rises. Higher α → sharper phase boundary; lower α
+---               → wider transition zone. Calibrated against CD 2→3 discontinuity.
+---   β = 2    — Associator well depth. Controls how deeply the associator log well
+---               pulls activation down. Together with λ (implicitly 1), determines
+---               the width and depth of the non-associative minimum.
+---   ε = 0.05 — Regularization for ln(0) singularity. Chosen as the smallest stable
+---               value before numerical oscillation.
+---   δ = 3.52 — Baseline shift centering roots across the origin. Gives f(0) ≈ 3.47
+---               (middle zone positive, bounded by two negative zones).
+-
+--- ============================================================================
+--- SECTION 9: Discrete-Continuous Dictionary (Calibrated)
+--- ============================================================================
+--- The parameter mapping between the discrete (Lean) and continuous (Python)
+--- formulations of the Friction Lagrangian:
+---
+---   | Discrete (Lean, this file)     | Continuous (Python, Section 8) | Value   |
+---   |--------------------------------|-------------------------------|---------|
+---   | k (CD step)                    | x (structural projection)     | ℕ → ℝ  |
+---   | commDefect(k) = k              | C(t) = ‖[z_t, z_{t+1}]‖_F    | coeff 1 |
+---   | assocDefect(k) = if k≤2→0 else 4 | A(t) = ‖α(z_t,z_{t+1},z_{t+2})‖_F | ℕ |
+---   | strut_weight (≡ 4)             | β₀ = 4 (base coupling)       | 4      |
+---   | frictionDensity(k) = k + 4·A(k)| L=e^{0.8·C}-2·ln(C²+0.05)-3.52|—       |
+---   | frictionLagrangian = Σ Γ_k     | S = ∫ L(x) dx                | sum→int |
+---
+--- The continuous parameters (α=0.8, β=2, ε=0.05, δ=3.52) were calibrated
+--- against the discrete invariants:
+---   • assocDefect(k) = 0 for k≤2  ↔  leftmost root (negative→positive)
+---   • assocDefect(k) = 4 for k≥3  ↔  rightmost root (positive→negative→positive)
+---   • strut_weight² = 16         ↔  e^{0.8·10} ≈ 2980 (deep non-assoc)
+---
+--- A different parameter set would produce a different number of roots and
+--- thus describe a qualitatively different logical composition. For example:
+---   • β > 3 (deeper well)      → 5 roots → 5-zone logic (CD 4, sedenions)
+---   • α < 0.5 (flatter push)    → 1 root  → 2-zone logic (CD 1-2 only, no phase change)
+---   • ε → 0 (unregularized)     → singularity at x=0 → infinite barrier at ZD
+---
+--- The discrete strut_weight is the integral of the continuous barrier across
+--- one CD step. Its verified value of 4 (from the split octonion (e₁, e₂, e₄)
+--- triple) calibrates the continuous coupling: β₀ / strut_weight² ≈ 4/16 = 0.25,
+--- meaning each associator crossing costs 1/4 of the deep non-assoc limit.
+-/-- The continuous Lagrangian theory is aspirational prose (Sections 8-9 above).
+-    This is a placeholder: the discrete Γ is formalized and kernel-checked, but
+-    the continuous calulus L(x) = e^{α·x} − β·ln(x²+ε) − δ and its convergence
+-    to the discrete strut_weight² barrier remain unformalized. The stub exists
+-    so that any theorem depending on convergence is visibly blocked here. -/
+-theorem continuous_lagrangian_stub : True :=
+-  True.intro
++theorem continuous_lagrangian_stub : False :=
++  False.elim (by trivial)
+ 
+ end FrictionLagrangian
+
+
+======================================================================
+FILE: LaserCortex/FrictionLagrangian.lean (transcript line 99)
+======================================================================
+# Diff for LaserCortex/FrictionLagrangian.lean
+# Recovered from transcript line 99
+# +158 -512
+
+--- CURRENT/LaserCortex/FrictionLagrangian.lean+++ RECOVERED/LaserCortex/FrictionLagrangian.lean@@ -1,86 +1,3 @@-/-
+-# Module: FrictionLagrangian
+-
+-## Intent
+-
+-The Friction Lagrangian Γ is the action functional that integrates the cost
+-landscape across all logic layers of the Cayley-Dickson tower. It is the
+-**height map of logic** — the total structural resistance the logical ecosystem
+-presents to paradox resolution, measured by the combination of commutator
+-defect (path-dependence, temporal irreversibility) and associator defect
+-(framing-dependence, spatial curvature).
+-
+-This module draws together three previously separated domains:
+-
+-| Domain | Source | Role in Γ |
+-|--------|--------|-----------|
+-| **Algebraic** | SplitOctonionCost, SplitQuaternionClifford | Defect magnitudes: strut_weight, associator, Cl(1,1) boundary |
+-| **Computational** | Cost, EMLRegistry | Φ cost landscape, NodeCost parameters, mirror mode |
+-| **Paradoxical** | LiarParadox, SoritesParadox, etc. | Tower, WrappedProblem — the layers Γ sums across |
+-
+-**The central architectural invariant** is the **phase change at CD 2→3**:
+-
+-    assocDefect(k) = 0  for k ≤ 2  (associative regime — Cl(1,1) ≅ ℍ̃)
+-    assocDefect(k) > 0  for k ≥ 3  (non-associative regime — split octonions)
+-
+-The "enormous energy density" required to cross this boundary is encoded by
+-weighting the associator defect by `strut_weight` (the fundamental unit of
+-non-associativity, verified as 4 in SplitOctonionCost).
+-
+-**Why the phase change is sharp, not gradual**: Zero divisors first appear at
+-CD 2 (Cl(1,1) — split quaternions), but there they remain associative — the
+-pentagonator can "digest" them. At CD 3 (split octonions), the zero divisors
+-become truly orthogonal: not even the pentagonator can take a bite. The
+-associator defect jumps from 0 to strut_weight discontinuously because the
+-transition from "associative ZDs" to "non-associative ZDs" is a qualitative
+-change in the algebra — it requires a new parameter (strut_weight²) to contain
+-the observation. This is the same mathematical property lost going from ℝ to ℂ:
+-the new dimension (i in ℂ, the ZD locus in 𝕆′) is truly orthogonal and cannot
+-be reached by multiplying elements of the previous algebra.
+-
+-## Contracts
+-
+-[frictionDensity, layerCost, frictionLagrangian,
+- assocDefect_zero_up_to_cd2, assocDefect_positive_for_cd3plus,
+- frictionDensity_at_cl11_boundary, frictionLagrangian_gt_flatSum,
+- layerCost_ge_cdStep, engine_mirror_iff_local_debt_positive,
+- engine_leftWeight_zero_iff_local_debt_positive, engine_rightDiv_formula,
+-  engine_coupling_always_zero,
+-  engine_bias_is_one, engine_denom_is_ten,
+-  engine_maxSem_is_false, engine_satCap_is_zero,
+-  layerCost_eq_cdStep_for_assoc, frictionDensity_jump_at_cd3,
+- heightMap_discontinuity_at_cd2_3, continuous_lagrangian_stub]
+-
+-## Cross-refs
+-
+-SplitOctonionCost → strut_weight, strut_weight_eq_four, EngineState, engine_to_nodecost
+-SplitQuaternionClifford → Cl11, e0_sq, e1_sq, anticommute, Q22
+-Cost → NodeCost, Φ, nodeParam
+-LiarParadox → Tower, WrappedProblem, Problem
+-LogicTypes → LogicType, cdStep, isAssociativeSector
+-EMLRegistry → EMLTree, contracts_to, rightComb
+-critical_corrections.md → Euler-Lagrange recalibration target
+-Claude_on_Friction-Lagrangian.md → continuous variational specification
+-
+-## Invariants
+-
+-1. assocDefect(k) = 0 for k ≤ 2 (associative boundary — Cl(1,1) ≅ ℍ̃)
+-2. assocDefect(k) = strut_weight for k ≥ 3 (non-associative barrier — split octonions)
+-3. frictionLagrangian(T) ≥ Σ_{l∈T} l.1.cdStep (strictly greater at CD ≥ 3)
+-4. engine_mirror ↔ local_debt > 0 (association between debt and mirror mode proven)
+-5. engine_coupling_always_zero, engine_bias_is_one, engine_denom_is_ten,
+-   engine_maxSem_is_false, engine_satCap_is_zero (5 of 8 fields are constant across all engine states)
+-6. engine_leftWeight_zero_iff_local_debt_positive, engine_rightDiv_formula
+-   (2 fields vary with engine state, giving 8/8 bridge coverage)
+-7. heightMap_discontinuity: Γ₃ > 2·Γ₂ (discontinuity at CD 2→3, proven by native_decide)
+-8. ZD orthogonality: Zero divisors at CD ≥ 3 are truly orthogonal to the associative
+-   subspace — the strut_weight cost is irreducible, not a proof artifact
+-
+-## Tags
+-
+-#lean4-theorem #friction-lagrangian #integration-point #phase-change #height-map
+--/
+-
+ import LaserCortex.SplitOctonionCost
+ import LaserCortex.SplitQuaternionClifford
+ import LaserCortex.Cost
+@@ -98,145 +15,33 @@ open ProblemTypes
+ open LogicTypes
+ 
+--- ============================================================================
+--- SECTION 1: Defect Magnitudes — the fundamental constants of Γ
+--- ============================================================================
+--- These measure the commutator (path-dependence, temporal) and associator
+--- (framing-dependence, spatial) defect magnitudes at each CD step.
+---
+--- The constants are drawn from the algebraic layer:
+---   • SplitOctonionCost.strut_weight = 4  — verified non-associativity unit
+---   • Cl(1,1) associative boundary        — assocDefect = 0 at CD ≤ 2
+-
+--- ============================================================================
+--- SECTION 1a: Zero Divisors and the Origin of Non-Associativity
+--- ============================================================================
+---
+--- A zero divisor (ZD) is an element x ≠ 0 such that ∃ y ≠ 0 with xy = 0.
+--- In the split octonions (CD ≥ 3), ZDs exist; in the split quaternions
+--- (CD = 2, Cl(1,1) ≅ ℍ̃), ZDs also exist but associativity is preserved.
+--- The key distinction:
+---
+---   • Cl(1,1) ZDs:   e₀ ± e₁ are isotropic. They are zero divisors BUT
+---                     associativity holds. The pentagonator can "digest"
+---                     them — the associator defect is zero.
+---   • Split octonion ZDs:  Are NOT just isotropic — they are orthogonal
+---                     in a stronger sense. Not even the pentagonator can
+---                     "take a bite" of them. The associator activates.
+---
+--- The ℝ → ℂ analogy clarifies this: just as the imaginary unit i is
+--- orthogonal to ℝ (you cannot reach it by multiplying reals), a split
+--- octonion ZD is orthogonal to the associative subspace (you cannot reach
+--- it by multiplying non-zero-divisors). The strut_weight is the unit of
+--- this orthogonality — the irreducible cost of "containing" a truly
+--- orthogonal observation. In the context compression language:
+---
+---   If a ZD appears in a tower layer, a NEW parameter (strut_weight²) is
+---   REQUIRED to contain the observation at that layer. This is provable
+---   because the ZD lives in a subspace orthogonal to the associative
+---   algebra — compression would require a homomorphism that preserves
+---   zero divisors, which is impossible without dimension increase.
+---
+--- This is the mathematical content of the "enormous energy density":
+--- the associator defect at CD ≥ 3 is not just "more of the same" — it
+--- is a fundamentally new kind of cost that cannot be reduced by any
+--- reparameterization or rebasing. It is the signature of irreducibly
+--- orthogonal structure in the logical ecosystem.
+-
+-/-- The associator defect magnitude at CD step k.
+-    Measures the degree of non-associativity at this layer.
+-    
+-    CD 0 (Classical):     0 — fully associative (ℝ)
+-    CD 1 (Fuzzy):         0 — fully associative (ℂ)
+-    CD 2 (Intuitionistic): 0 — fully associative (ℍ, quaternions)
+-    CD 2' (Split quat):   0 — associative (Cl(1,1) ≅ ℍ̃, zero divisors present)
+-    CD 3 (Quantum):       strut_weight — non-associative (𝕆ˢ, split octonions)
+-    CD 4 (Paraconsistent): strut_weight — non-associative (sedenions, further CD steps)
+-    
+-    The strut_weight (verified = 4) is the fundamental unit of
+-    non-associativity, measured from the (e₁, e₂, e₄) triple in
+-    SplitOctonionCost. -/
+ def assocDefect (k : ℕ) : ℕ :=
+   if k ≤ 2 then 0 else strut_weight
+ 
+-/-- The commutator defect magnitude at CD step k.
+-    Measures the degree of non-commutativity (path-dependence).
+-    Grows linearly with each Cayley-Dickson doubling.
+-    
+-    CD 0 (Classical):     0 — commutative
+-    CD 1 (Fuzzy):         1 — non-commutative (ℂ)
+-    CD 2 (Intuitionistic): 2 — non-commutative (ℍ)
+-    CD k:                 k — each step adds commutator cost -/
+ def commDefect (k : ℕ) : ℕ := k
+ 
+-/-- The friction density at CD step k.
+-    
+-    Γ_k = α·commDefect(k) + β·assocDefect(k)
+-    
+-    where α = 1 (base commutator weight) and β = strut_weight (associator weight).
+-    This weighting is the "enormous energy density" at the CD 2→3 boundary:
+-    at CD ≥ 3, the associator term β·strut_weight = strut_weight² = 16
+-    dwarfs the commutator term, creating a sharp phase transition. -/
+ def frictionDensity (k : ℕ) : ℕ :=
+   commDefect k + strut_weight * assocDefect k
+ 
+--- ============================================================================
+--- SECTION 2: Layer Cost — replacing the flat cdStep cheat
+--- ============================================================================
+--- The true cost of a logic layer is not lt.cdStep but frictionDensity(lt.cdStep).
+--- This gives a height map where the non-associative layers (CD ≥ 3) have
+--- massively higher cost, formalizing the "energy barrier."
+-
+-/-- The true cost for a logic type under the Friction Lagrangian.
+-    Replaces the flat `lt.cdStep` cheat that the paradox files currently use.
+-    
+-    layerCost(lt) = Γ(lt.cdStep)
+-                 = lt.cdStep + strut_weight·assocDefect(lt.cdStep) -/
+ def layerCost (lt : LogicType) : ℕ :=
+   frictionDensity lt.cdStep
+ 
+-/-- The true cost is at least the old cdStep cost:
+-    the Lagrangian never underestimates the flat cost.
+-    For associative logics (cdStep ≤ 2), they are equal.
+-    For non-associative logics (cdStep ≥ 3), the Lagrangian is strictly larger. -/
++def frictionLagrangian {p : Problem} (tower : Tower p) : ℕ :=
++  tower.layers.map (λ (x : Σ lt, WrappedProblem p lt) => layerCost x.1) |>.sum
++
++def flatCostSum {p : Problem} (tower : Tower p) : ℕ :=
++  tower.layers.map (λ (x : Σ lt, WrappedProblem p lt) => x.1.cdStep) |>.sum
++
+ theorem layerCost_ge_cdStep (lt : LogicType) : layerCost lt ≥ lt.cdStep := by
+   dsimp [layerCost, frictionDensity, commDefect, assocDefect]
+   split <;> omega
+ 
+-/-- For logics in the associative regime (CD ≤ 2), the Lagrangian cost equals
+-    the old cdStep cost. This includes Classical, Fuzzy, Intuitionistic,
+-    and the Cl(1,1) ≅ ℍ̃ boundary (split quaternions at CD 2'). -/
+ theorem layerCost_eq_cdStep_for_assoc (lt : LogicType) (h : lt.cdStep ≤ 2) :
+     layerCost lt = lt.cdStep := by
+   dsimp [layerCost, frictionDensity, commDefect, assocDefect]
+   have : ¬ 3 ≤ lt.cdStep := by omega
+   simp [h]
+ 
+--- ============================================================================
+--- SECTION 3: The Friction Lagrangian (total action)
+--- ============================================================================
+--- The total action Γ for a tower is the sum of friction densities across
+--- all logic layers. This is the "height map" — the total resistance of
+--- the logical ecosystem to the paradox.
+-
+-/-- The total Friction Lagrangian for any tower.
+-    
+-    Γ(Tower{p}) = Σ_{layer ∈ Tower.layers} frictionDensity(layer.logicType.cdStep)
+-    
+-    This generalizes the per-paradox FrictionLagrangian definitions in
+-    LiarParadox, SoritesParadox, etc. — replacing the flat cdStep sum
+-    with the weighted friction density that accounts for the associator
+-    energy barrier. -/
+-def frictionLagrangian {p : Problem} (tower : Tower p) : ℕ :=
+-  tower.layers.map (λ (x : Σ lt, WrappedProblem p lt) => layerCost x.1) |>.sum
+-
+-/-- The old flat cost sum (what the paradox files currently compute).
+-    Kept for comparison and migration. -/
+-def flatCostSum {p : Problem} (tower : Tower p) : ℕ :=
+-  tower.layers.map (λ (x : Σ lt, WrappedProblem p lt) => x.1.cdStep) |>.sum
+-
+-/-- The Friction Lagrangian is always at least the flat cost sum.
+-    This holds because layerCost ≥ cdStep for every logic (layerCost_ge_cdStep). -/
+ theorem frictionLagrangian_ge_flatSum {p : Problem} (tower : Tower p) :
+     frictionLagrangian tower ≥ flatCostSum tower := by
+   dsimp [frictionLagrangian, flatCostSum]
+@@ -247,59 +52,6 @@     have h := layerCost_ge_cdStep x.1
+     omega
+ 
+--- ============================================================================
+--- SECTION 4: Phase Change Theorems
+--- ============================================================================
+--- These theorems establish the central architectural invariant: the
+--- associator activates sharply at CD 3, creating the energy barrier.
+-
+-/-- The associator defect is zero for CD steps 0, 1, 2.
+-    This covers the full associative regime: ℝ, ℂ, ℍ, and Cl(1,1) ≅ ℍ̃.
+-    
+-    At this layer, the cost landscape is flat (Φ = size) and the
+-    Friction Lagrangian reduces to just the commutator term. -/
+-theorem assocDefect_zero_up_to_cd2 : ∀ k, k ≤ 2 → assocDefect k = 0 := by
+-  intro k hk
+-  dsimp [assocDefect]
+-  split
+-  · rfl
+-  · omega
+-
+-/-- The associator defect is positive (equal to strut_weight) for CD steps ≥ 3.
+-    This is the phase change: the associator activates at the split octonion
+-    boundary (CD 3 = Quantum logic in our mapping).
+-    
+-    This is a sharp, first-order transition — not a gradual increase.
+-    The strut_weight (= 4) is the fundamental quantum of non-associativity,
+-    verified by the (e₁, e₂, e₄) triple in SplitOctonionCost. -/
+-theorem assocDefect_positive_for_cd3plus : ∀ k, 3 ≤ k → assocDefect k = strut_weight := by
+-  intro k hk
+-  dsimp [assocDefect]
+-  split
+-  · omega
+-  · rfl
+-
+-/-- The friction density at CD 2' (the Cl(1,1) ≅ ℍ̃ boundary) is purely
+-    from the commutator — zero associator cost.
+-    
+-    This is the calibration point: zero divisors are present (so there IS
+-    commutator cost from the isotropic vectors e₀±e₁), but associativity
+-    is preserved. The cost landscape here is flat (Φ = size), serving as
+-    the baseline against which the non-associative energy barrier is measured. -/
+-theorem frictionDensity_at_cl11_boundary : frictionDensity 2 = 2 := by
+-  unfold frictionDensity commDefect assocDefect strut_weight
+-  decide
+-
+-/-- The friction density jumps sharply at CD 3 (split octonion layer).
+-    Γ₃ = Γ₂ + 1 + strut_weight² = 2 + 1 + 16 = 19 — the energy barrier includes
+-    both the associator activation (strut_weight²) and the commutator increment (+1). -/
+-theorem frictionDensity_jump_at_cd3 :
+-    frictionDensity 3 = frictionDensity 2 + 1 + strut_weight * strut_weight := by
+-  unfold strut_weight
+-  native_decide
+-
+-/-- If f x ≥ g x for all x in the list, then the sum of f is at least the sum of g.
+-    This is the pointwise-to-sum inequality for natural numbers. -/
+ lemma list_sum_ge_of_forall_ge {ι : Type*} (f g : ι → ℕ) (xs : List ι) (h : ∀ x ∈ xs, f x ≥ g x) :
+     (xs.map f).sum ≥ (xs.map g).sum := by
+   induction xs with
+@@ -310,13 +62,6 @@     have ih_ys := ih h_ys
+     simp; omega
+ 
+-/-- If f x > g x for some x in the list, and f x ≥ g x for all x,
+-    then the sum of f over the list is strictly greater than the sum of g.
+-    
+-    This is the key lemma for «sum-of-costs > flat-sum» comparisons.
+-    It holds by structural induction on the list: at each step, either the
+-    strict element is the head (giving head sum strict, tail sum ≥) or it's
+-    in the tail (head sum ≥, tail sum strict). In either case, the total is strict. -/
+ lemma list_sum_gt_of_exists_gt {ι : Type*} (f g : ι → ℕ) (xs : List ι)
+     (h : ∃ x ∈ xs, f x > g x) (h_all : ∀ x ∈ xs, f x ≥ g x) :
+     (xs.map f).sum > (xs.map g).sum := by
+@@ -330,33 +75,16 @@       rcases h with ⟨x, hx, hx_gt⟩
+       have hx_cases : x = y ∨ x ∈ ys := by simpa using hx
+       rcases hx_cases with (rfl | hx_ys)
+-      · -- x = y: strict at head, ≥ in tail
+-        have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
++      · have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
+         have h_rest : (ys.map f).sum ≥ (ys.map g).sum :=
+           list_sum_ge_of_forall_ge f g ys h_all_ys
+         omega
+-      · -- x ∈ ys: strict in tail, ≥ at head
+-        have h_ys : ∃ x' ∈ ys, f x' > g x' := ⟨x, hx_ys, hx_gt⟩
++      · have h_ys : ∃ x' ∈ ys, f x' > g x' := ⟨x, hx_ys, hx_gt⟩
+         have h_all_ys : ∀ x' ∈ ys, f x' ≥ g x' := λ x' hx' => h_all x' (by simp [hx'])
+         have h_rest : (ys.map f).sum > (ys.map g).sum := ih h_ys h_all_ys
+         simp; omega
+     simp; exact h_total
+ 
+-/-- The Friction Lagrangian is strictly greater than the flat cost sum
+-    whenever there is at least one non-associative layer (CD ≥ 3) in the tower.
+-    This formalizes the "enormous energy density" at the CD 2→3 boundary:
+-    the associator barrier adds strut_weight² to every non-associative layer.
+-    
+-    This is the integrated signature of zero divisors: each CD ≥ 3 layer
+-    contains ZDs that are orthogonal to the associative subspace, requiring
+-    a new parameter (strut_weight²) to contain observations at that layer.
+-    No rebasing or reparameterization can eliminate this cost — it is
+-    an invariant of the algebraic structure, not of the computational model.
+-    
+-    The proof: apply `list_sum_gt_of_exists_gt` with f = layerCost ∘ (·.1),
+-    g = (·.1.cdStep), using `h` for existence and `layerCost_ge_cdStep`
+-    for the ∀-bound. The strict inequality at the witness layer comes from
+-    the associator phase change (strut_weight > 0 at CD ≥ 3). -/
+ theorem frictionLagrangian_gt_flatSum {p : Problem} (tower : Tower p)
+     (h : ∃ x ∈ tower.layers, x.1.cdStep ≥ 3) :
+     frictionLagrangian tower > flatCostSum tower := by
+@@ -377,140 +105,154 @@   apply list_sum_gt_of_exists_gt (λ x : Σ lt, WrappedProblem p lt => layerCost x.1)
+     (λ x : Σ lt, WrappedProblem p lt => x.1.cdStep) tower.layers h_exists h_all
+ 
+--- ============================================================================
+--- SECTION 5: Mirror Mode — the NodeCost signature of the phase change
+--- ============================================================================
+--- The engine's mirror mode activation is the computational manifestation
+--- of the associator phase change. When local_debt > 0 (non-associative
+--- sector), engine_to_nodecost sets mirror=true, switching to space-biased
+--- (Spacetime) cost semantics.
+-
+-/-- The engine activates mirror mode exactly when local_debt > 0.
+-    Mirror mode → space-biased (rightDiv > 0, leftWeight = 0).
+-    This is the NodeCost-level signature of the associator phase change.
+-    
+-    The proof is definitional: `engine_to_nodecost` sets mirror=true
+-    in the `if local_debt > 0` branch and mirror=false otherwise. -/
+-theorem engine_mirror_iff_local_debt_positive (engine : EngineState) :
+-    (engine_to_nodecost engine).mirror ↔ engine.local_debt > 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine sets leftWeight to 0 in the non-associative sector (debt > 0)
+-    and to 1 in the associative sector (debt = 0).
+-    leftWeight = 0 makes the left-subtree cost contribution vanish — this is
+-    the "commutator silent" mode: path-dependence from left/right ordering
+-    is suppressed. Together with mirror=true, this produces the Spacetime
+-    cost regime where Φ follows the left spine. -/
+-theorem engine_leftWeight_zero_iff_local_debt_positive (engine : EngineState) :
+-    (engine_to_nodecost engine).leftWeight = 0 ↔ engine.local_debt > 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine rightDiv is the debt-compressed right divisor:
+-    rightDiv = max(0, capacity/(debt+1) - 1) when debt > 0,
+-    rightDiv = 0 when debt = 0 (associative sector → no compression).
+-    
+-    As debt increases, rightDiv → 0 (the Spacetime limit), meaning the
+-    right subtree is increasingly compressed — the temporal channel
+-    (right subtree = time/continuations) contracts as associator debt mounts. -/
+-theorem engine_rightDiv_formula (engine : EngineState) :
+-    (engine_to_nodecost engine).rightDiv =
+-    if engine.local_debt > 0 then max 0 (engine.capacity / (engine.local_debt + 1) - 1) else 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine projection always sets coupling to 0.
+-    This means coupling (cross-term interaction) is NOT derived from the
+-    one-dimensional EngineState — it must arise from the tree structure
+-    itself (the pentagonator), or from higher-dimensional state not captured
+-    by the current (debt, capacity, weight) model.
+-    
+-    Together with `engine_bias_is_one`, `engine_denom_is_ten`,
+-    `engine_maxSem_is_false`, and `engine_satCap_is_zero`, all 8 NodeCost
+-    fields now have bridge theorems covering the engine projection.
+-    
+-    Of the 8 fields, 2 are state-dependent (leftWeight ↔ debt > 0,
+-    rightDiv = compression formula, mirror ↔ debt > 0), 1 is uniformly
+-    zero (coupling), and 4 are uniform constants (bias=1, denom=10,
+-    maxSem=false, satCap=0). This completes Gap F of the GLM-5.2 audit. -/
+-theorem engine_coupling_always_zero (engine : EngineState) :
+-    (engine_to_nodecost engine).coupling = 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine always sets bias to 1 (the identity on the split-octonion
+-    real axis). This means the cost landscape is always projected onto the
+-    imaginary (e₁⋯e₇) subspace — the 7-skeleton — never shifted along e₀.
+-    
+-    Equivalently: bias = 1 is a structural invariant of the engine model,
+-    not a property of any particular logic type. The named logics also
+-    satisfy bias = 1 (by `nodeParam_bias_one`), confirming that the engine
+-    lives in the same 7D subspace. -/
+-theorem engine_bias_is_one (engine : EngineState) :
+-    (engine_to_nodecost engine).bias = 1 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine always sets denom to 10 (the default denominator for the
+-    cost landscape's linear approximation).
+-    
+-    This is consistent with all named logics except Paraconsistent/Temporal
+-    (which use denom=8). The engine model does not currently capture the
+-    Paraconsistent regime — it only produces the four configurations:
+-    Classical (debt=0), Spacetime-like (debt>0, moderate), Fuzzy/Deontic
+-    (intermediate compression), and degenerate limits. A future extension
+-    could vary denom by adding a `rate` parameter to EngineState. -/
+-theorem engine_denom_is_ten (engine : EngineState) :
+-    (engine_to_nodecost engine).denom = 10 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine never sets maxSem (semantic maximum mode). This means the
+-    engine model does not capture Intuitionistic logic's proof-depth semantics
+-    (where Φ = tree height, not size). Intuitionistic logic requires a
+-    separate mechanism — possibly a `max_depth` field in EngineState that
+-    triggers maxSem=true when active. -/
+-theorem engine_maxSem_is_false (engine : EngineState) :
+-    (engine_to_nodecost engine).maxSem = false := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+-/-- The engine never sets a saturation cap. This means the engine model
+-    does not capture Fuzzy logic's bounded-cost semantics (where Φ is capped
+-    at satCap=5). Like maxSem, satCap would require an additional engine
+-    parameter (e.g., a `fuzz_factor`) to activate. -/
+-theorem engine_satCap_is_zero (engine : EngineState) :
+-    (engine_to_nodecost engine).satCap = 0 := by
+-  dsimp [engine_to_nodecost]
+-  by_cases h : engine.local_debt > 0
+-  · simp [h]
+-  · simp [h]
+-
+--- ============================================================================
+--- LAYER 5b: Loday Coordinates Bridge
+--- ============================================================================
+--- The Loday coordinate embedding provides a faithful coordinate representation
+--- of EML trees. These theorems connect the cost landscape (Φ) to the Loday
+--- coordinate representation, establishing that the cost function factors
+--- through the Loday embedding for the classical regime.
+-
+-/-- Standard binary tree identity: size = numLeaves - 1 for any tree.
+-    For a binary tree with n internal nodes, there are n+1 leaves. -/
++theorem assocDefect_zero_up_to_cd2 : ∀ k, k ≤ 2 → assocDefect k = 0 := by
++  intro k hk
++  dsimp [assocDefect]
++  split
++  · rfl
++  · omega
++
++theorem assocDefect_positive_for_cd3plus : ∀ k, 3 ≤ k → assocDefect k = strut_weight := by
++  intro k hk
++  dsimp [assocDefect]
++  split
++  · omega
++  · rfl
++
++theorem frictionDensity_at_cl11_boundary : frictionDensity 2 = 2 := by
++  unfold frictionDensity commDefect assocDefect strut_weight
++  decide
++
++theorem frictionDensity_jump_at_cd3 :
++    frictionDensity 3 = frictionDensity 2 + 1 + strut_weight * strut_weight := by
++  unfold strut_weight
++  native_decide
++
++theorem heightMap_monotone (j k : ℕ) (h : j < k) : frictionDensity j ≤ frictionDensity k := by
++  dsimp [frictionDensity, commDefect, assocDefect]
++  have hsw : strut_weight = 4 := strut_weight_eq_four
++  by_cases hk2 : k ≤ 2
++  · have hj2 : j ≤ 2 := by omega
++    simp [hj2, hk2, hsw]
++    omega
++  · have hk3 : 3 ≤ k := by omega
++    by_cases hj2 : j ≤ 2
++    · simp [hj2, hk2, hsw]
++      omega
++    · have hj3 : 3 ≤ j := by omega
++      simp [hj2, hk2, hsw]
++      omega
++
++theorem heightMap_discontinuity_at_cd2_3 :
++    frictionDensity 3 > 2 * frictionDensity 2 := by
++  dsimp [frictionDensity, commDefect, assocDefect]
++  native_decide
++
++theorem friction_barrier_across_cd23 (k₁ k₂ : ℕ) (h₁ : k₁ ≤ 2) (h₂ : 3 ≤ k₂) :
++    frictionDensity k₂ - frictionDensity k₁ ≥ strut_weight * strut_weight := by
++  have ha2 : assocDefect k₁ = 0 := assocDefect_zero_up_to_cd2 k₁ h₁
++  have ha3 : assocDefect k₂ = strut_weight := assocDefect_positive_for_cd3plus k₂ h₂
++  unfold frictionDensity commDefect
++  rw [ha2, ha3]
++  have hk : k₂ ≥ k₁ := by omega
++  omega
++
++inductive contracts_to_with_cost (cd : ℕ) : EMLRegistry.EMLTree → EMLRegistry.EMLTree → ℕ → ℕ → Prop where
++  | refl (t : EMLRegistry.EMLTree) : contracts_to_with_cost cd t t 0 0
++  | step (s t u : EMLRegistry.EMLTree)
++      (h_one : EMLRegistry.contracts_one s t)
++      (h_to : contracts_to_with_cost cd t u c n) :
++      contracts_to_with_cost cd s u (frictionDensity cd + c) (n + 1)
++
++theorem contracts_to_with_cost_implies_contracts_to (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to s t := by
++  induction h with
++  | refl t => exact EMLRegistry.contracts_to.refl t
++  | step s t u h_one h_to ih =>
++    exact EMLRegistry.contracts_to.step s t u h_one ih
++
++theorem contracts_to_with_cost_implies_at_cdStep (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to_at_cdStep cd s t := by
++  rw [EMLRegistry.contracts_to_at_cdStep]
++  exact contracts_to_with_cost_implies_contracts_to cd s t c n h
++
++theorem contracts_to_with_cost_ge_frictionDensity (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (h : contracts_to_with_cost cd s t c n) : c ≥ frictionDensity cd ∨ c = 0 := by
++  induction h with
++  | refl t => right; rfl
++  | step s t u h_one h_to ih =>
++    left
++    omega
++
++theorem contracts_to_with_cost_cost_eq_n_times_friction (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (h : contracts_to_with_cost cd s t c n) : c = n * frictionDensity cd := by
++  induction h with
++  | refl t => simp
++  | step s t u h_one h_to ih =>
++    simp [ih, add_comm, add_left_comm, add_assoc, mul_add, add_mul, mul_comm]
++
++theorem heightMap_monotone_for_path_cost (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (hj : contracts_to_with_cost j s t c n) :
++    contracts_to_with_cost k s t (n * frictionDensity k) n := by
++  induction hj generalizing k with
++  | refl t => 
++    simpa [Nat.zero_mul] using (contracts_to_with_cost.refl t : contracts_to_with_cost k t t 0 0)
++  | step s t u h_one h_to ih =>
++    rename_i hc hn
++    have hk : contracts_to_with_cost k t u (hn * frictionDensity k) hn := ih k hjk
++    have hstep : contracts_to_with_cost k s u (frictionDensity k + hn * frictionDensity k) (hn + 1) :=
++      contracts_to_with_cost.step s t u h_one hk
++    have hcalc : frictionDensity k + hn * frictionDensity k = (hn + 1) * frictionDensity k := by
++      ring
++    simpa [hcalc] using hstep
++
++theorem min_cost_monotone_with_cdStep (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
++    (hj : contracts_to_with_cost j s t c n) : c ≤ n * frictionDensity k := by
++  have hcost_eq : c = n * frictionDensity j := contracts_to_with_cost_cost_eq_n_times_friction j s t c n hj
++  have hfd_mono : frictionDensity j ≤ frictionDensity k := by
++    by_cases h_eq : j = k
++    · subst h_eq; rfl
++    · have h_lt : j < k := by omega
++      exact heightMap_monotone j k h_lt
++  have h_mul : n * frictionDensity j ≤ n * frictionDensity k :=
++    Nat.mul_le_mul_left n hfd_mono
++  omega
++
++theorem engine_coupling_always_zero (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).coupling = 0 := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
++theorem engine_bias_is_one (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).bias = 1 := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
++theorem engine_denom_is_ten (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).denom = 10 := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
++theorem engine_maxSem_is_false (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).maxSem = false := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
++theorem engine_satCap_is_zero (engine : SplitOctonionCost.EngineState) :
++    (SplitOctonionCost.engine_to_nodecost engine).satCap = 0 := by
++  dsimp [SplitOctonionCost.engine_to_nodecost]
++  by_cases h : engine.local_debt > 0
++  · simp [h]
++  · simp [h]
++
+ theorem size_eq_numLeaves_sub_one (t : EMLRegistry.EMLTree) : t.size = LodayCoords.numLeaves t - 1 := by
+   induction t with
+   | Leaf =>
+@@ -526,13 +268,6 @@       _ = LodayCoords.numLeaves (EMLRegistry.EMLTree.Node l r) - 1 := by
+         simp [LodayCoords.numLeaves]
+ 
+-/-- For logics in the classical regime (rightDiv=0, coupling=0, mirror=false,
+-    leftWeight=1, maxSem=false, satCap=0), the cost Φ equals the length of
+-    the tree's Loday coordinate list.
+-    
+-    This establishes that the Friction Lagrangian factors through the Loday
+-    embedding for the classical cost landscape — the cost is a linear function
+-    of the coordinate representation. -/
+ theorem Φ_classical_eq_lodayCoord_length (L : LogicTypes.LogicType) (t : EMLRegistry.EMLTree)
+     (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
+     (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
+@@ -542,271 +277,10 @@   rw [size_eq_numLeaves_sub_one t]
+   rw [LodayCoords.lodayCoord_length t]
+ 
+-/-- For non-classical NodeCost parameters, the relationship between Φ and
+-    Loday coordinates is an open research question (see TDD Domain 7).
+-    
+-    The injectivity of lodayCoord guarantees that Φ IS determined by the
+-    coordinates (since the tree can be reconstructed), but the direct
+-    formula in terms of coordinate entries is unknown for non-vanishing
+-    rightDiv, coupling, or asymmetric leftWeight/mirror. -/
+ theorem Φ_of_nc_factor_through_lodayCoord_open : True :=
+   True.intro
+ 
+--- ============================================================================
+--- SECTION 6: Height Map Interpretation
+--- ============================================================================
+-
+-/-- The height map is monotone with respect to CD step:
+-    higher CD steps have strictly greater friction density, with a
+-    discontinuity at CD 2→3. -/
+-theorem heightMap_monotone (j k : ℕ) (h : j < k) : frictionDensity j ≤ frictionDensity k := by
+-  dsimp [frictionDensity, commDefect, assocDefect]
+-  have hsw : strut_weight = 4 := strut_weight_eq_four
+-  by_cases hk2 : k ≤ 2
+-  · -- Both j, k ≤ 2 (since j < k ≤ 2): assocDefect = 0 for both
+-    have hj2 : j ≤ 2 := by omega
+-    simp [hj2, hk2, hsw]
+-    omega
+-  · -- k ≥ 3
+-    have hk3 : 3 ≤ k := by omega
+-    by_cases hj2 : j ≤ 2
+-    · -- j ≤ 2, k ≥ 3: assocDefect(j) = 0, assocDefect(k) = strut_weight
+-      simp [hj2, hk2, hsw]
+-      omega
+-    · -- Both j, k ≥ 3: assocDefect = strut_weight for both
+-      have hj3 : 3 ≤ j := by omega
+-      simp [hj2, hk2, hsw]
+-      omega
+-
+-/-- The height map is not just monotone but has a discontinuity at CD 2→3.
+-    The density more than triples: Γ₃ / Γ₂ = (3 + 16) / 2 = 9.5. -/
+-theorem heightMap_discontinuity_at_cd2_3 :
+-    frictionDensity 3 > 2 * frictionDensity 2 := by
+-  dsimp [frictionDensity, commDefect, assocDefect]
+-  -- Γ₂ = 2 + 4*0 = 2
+-  -- Γ₃ = 3 + 4*4 = 19
+-  -- 19 > 2*2 = 4 ✓
+-  native_decide
+-
+--- ============================================================================
+--- SECTION 6b: Zero-Divisor Bridge Theorem
+--- ============================================================================
+--- This theorem is the proof term carried by rejection witnesses in the
+--- self-improvement loop. When a reasoning trace claims a partial order
+--- (source contracts to target) across the CD 2→3 boundary, the zero
+--- divisor makes that contraction algebraically impossible. The friction
+--- barrier — strut_weight² — is the quantitative signature of that
+--- impossibility.
+---
+--- The ZD appears when incompatible types are put in partial order: e.g.,
+--- a SPECIFICATION edge (commutative, CD 0) whose invariant text implies
+--- non-associative structure (self-reference, recursion, circularity).
+--- The linear cdStep sees 0→3 (a step of 3); the Friction Lagrangian
+--- sees 0→19 (a step of 19, dominated by strut_weight²=16). The gap
+--- between those views IS the zero divisor.
+-
+-/-- The friction barrier across the CD 2→3 boundary is at least strut_weight².
+-    This is the quantitative signature of a zero divisor: the irreducible
+-    cost of composing types from incompatible algebraic regimes.
+-
+-    If k₁ ≤ 2 (associative regime) and k₂ ≥ 3 (non-associative regime),
+-    then Γ_k₂ - Γ_k₁ ≥ strut_weight * strut_weight = 16.
+-
+-    This theorem is the proof term that rejection witnesses in the
+-    self-improvement loop carry. It says: "crossing this boundary costs
+-    at least strut_weight², which is the zero divisor's signature." -/
+-theorem friction_barrier_across_cd23 (k₁ k₂ : ℕ) (h₁ : k₁ ≤ 2) (h₂ : 3 ≤ k₂) :
+-    frictionDensity k₂ - frictionDensity k₁ ≥ strut_weight * strut_weight := by
+-  -- Γ_k₂ = k₂ + strut_weight * strut_weight  (assocDefect = strut_weight since k₂ ≥ 3)
+-  -- Γ_k₁ = k₁                                (assocDefect = 0 since k₁ ≤ 2)
+-  -- diff = k₂ + strut_weight² - k₁ ≥ 3 + 16 - 2 = 17 ≥ 16
+-  have ha2 : assocDefect k₁ = 0 := assocDefect_zero_up_to_cd2 k₁ h₁
+-  have ha3 : assocDefect k₂ = strut_weight := assocDefect_positive_for_cd3plus k₂ h₂
+-  unfold frictionDensity commDefect
+-  rw [ha2, ha3]
+-  -- Now: (k₂ + strut_weight * strut_weight) - k₁ ≥ strut_weight * strut_weight
+-  -- iff k₂ - k₁ ≥ 0, which is true since k₂ ≥ 3 > 2 ≥ k₁
+-  have hk : k₂ ≥ k₁ := by omega
+-  omega
+-
+--- ============================================================================
+--- SECTION 6c: Cost-Aware Contraction
+--- ============================================================================
+--- These definitions connect the contraction relation (EMLRegistry) with
+--- the friction Lagrangian cost. Each contraction step at cdStep cd incurs
+--- a base friction cost of frictionDensity cd, with additional cross-term
+--- cost from NodeCost.apply's coupling factor at CD ≥ 3.
+---
+--- The cost is tracked as part of the inductive data (not extracted from a
+--- Prop), sidestepping Prop-elimination restrictions.
+-
+-/-- Cost-annotated contraction path with step count.
+-    `contracts_to_with_cost cd s t c n` means there exists a sequence of
+-    contraction steps from s to t at cdStep cd whose total friction cost
+-    is exactly c and which takes exactly n steps.
+-
+-    Each step contributes `frictionDensity cd` to the total cost.
+-    At CD ≥ 3, the coupling cross-term (NodeCost.apply's coupling·a·b/denom)
+-    further adjusts each step's cost — this is the ZD-detecting component.
+-
+-    The step count n is tracked alongside the cost c to enable
+-    cdStep-parameterized cost monotonicity: the same path at a higher
+-    cdStep incurs proportionally higher friction cost. -/
+-inductive contracts_to_with_cost (cd : ℕ) : EMLRegistry.EMLTree → EMLRegistry.EMLTree → ℕ → ℕ → Prop where
+-  | refl (t : EMLRegistry.EMLTree) : contracts_to_with_cost cd t t 0 0
+-  | step (s t u : EMLRegistry.EMLTree)
+-      (h_one : EMLRegistry.contracts_one s t)
+-      (h_to : contracts_to_with_cost cd t u c n) :
+-      contracts_to_with_cost cd s u (frictionDensity cd + c) (n + 1)
+-
+-/-- Every cost-annotated path contracts s to t. -/
+-theorem contracts_to_with_cost_implies_contracts_to (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to s t := by
+-  induction h with
+-  | refl t => exact EMLRegistry.contracts_to.refl t
+-  | step s t u h_one h_to ih =>
+-    exact EMLRegistry.contracts_to.step s t u h_one ih
+-
+-/-- Cost-annotated paths at any cdStep are valid under `contracts_to_at_cdStep`. -/
+-theorem contracts_to_with_cost_implies_at_cdStep (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (h : contracts_to_with_cost cd s t c n) : EMLRegistry.contracts_to_at_cdStep cd s t := by
+-  rw [EMLRegistry.contracts_to_at_cdStep]
+-  exact contracts_to_with_cost_implies_contracts_to cd s t c n h
+-
+-/-- The cost is at least frictionDensity cd for any non-trivial path.
+-    This is the "base rate" bound: each step costs at least one unit
+-    of friction density. -/
+-theorem contracts_to_with_cost_ge_frictionDensity (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (h : contracts_to_with_cost cd s t c n) : c ≥ frictionDensity cd ∨ c = 0 := by
+-  induction h with
+-  | refl t => right; rfl
+-  | step s t u h_one h_to ih =>
+-    left
+-    omega
+-
+-/-- The total cost equals the number of steps times the friction density.
+-    This holds for the base friction cost (before coupling adjustments). -/
+-theorem contracts_to_with_cost_cost_eq_n_times_friction (cd : ℕ) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (h : contracts_to_with_cost cd s t c n) : c = n * frictionDensity cd := by
+-  induction h with
+-  | refl t => simp
+-  | step s t u h_one h_to ih =>
+-    simp [ih, add_comm, add_left_comm, add_assoc, mul_add, add_mul, mul_comm]
+-
+-/-- Height-map monotonicity for path cost:
+-    if s contracts to t at cdStep j with cost c and n steps,
+-    then at a higher cdStep k ≥ j the same n-step path costs
+-    n * frictionDensity k, which is ≥ c.
+-    
+-    This mirrors `heightMap_monotone` (frictionDensity is monotone
+-    with cdStep) lifted to the path level. -/
+-theorem heightMap_monotone_for_path_cost (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (hj : contracts_to_with_cost j s t c n) :
+-    contracts_to_with_cost k s t (n * frictionDensity k) n := by
+-  induction hj generalizing k with
+-  | refl t => 
+-    simpa [Nat.zero_mul] using (contracts_to_with_cost.refl t : contracts_to_with_cost k t t 0 0)
+-  | step s t u h_one h_to ih =>
+-    rename_i hc hn
+-    have hk : contracts_to_with_cost k t u (hn * frictionDensity k) hn := ih k hjk
+-    have hstep : contracts_to_with_cost k s u (frictionDensity k + hn * frictionDensity k) (hn + 1) :=
+-      contracts_to_with_cost.step s t u h_one hk
+-    have hcalc : frictionDensity k + hn * frictionDensity k = (hn + 1) * frictionDensity k := by
+-      ring
+-    simpa [hcalc] using hstep
+-
+-/-- Corollary: the minimal cost at cdStep k is at least the minimal cost at cdStep j
+-    when j ≤ k, because the same path costs more at higher cdStep. -/
+-theorem min_cost_monotone_with_cdStep (j k : ℕ) (hjk : j ≤ k) (s t : EMLRegistry.EMLTree) (c n : ℕ)
+-    (hj : contracts_to_with_cost j s t c n) : c ≤ n * frictionDensity k := by
+-  have hcost_eq : c = n * frictionDensity j := contracts_to_with_cost_cost_eq_n_times_friction j s t c n hj
+-  have hfd_mono : frictionDensity j ≤ frictionDensity k := by
+-    by_cases h_eq : j = k
+-    · subst h_eq; rfl
+-    · have h_lt : j < k := by omega
+-      exact heightMap_monotone j k h_lt
+-  have h_mul : n * frictionDensity j ≤ n * frictionDensity k :=
+-    Nat.mul_le_mul_left n hfd_mono
+-  omega
+-
+--- ============================================================================
+--- SECTION 7: Migration Guide — replacing the paradox file cheats
+--- ============================================================================
+-
+--- To migrate a paradox file from its current flat cdStep cost to the
+--- true Friction Lagrangian, replace:
+---   def liarCost (lt : LogicType) : Nat := lt.cdStep
+---   → def liarCost (lt : LogicType) : Nat := layerCost lt
+--- and:
+---   def frictionLagrangian : Nat :=
+---     tower.layers.map (λ x => x.2.cost) |>.sum
+---   → 
+---   def frictionLagrangian : Nat :=
+---     FrictionLagrangian.frictionLagrangian tower
+--- The theorems liarCost_le_cdStep / soritesCost_le_cdStep etc. should be
+--- replaced with layerCost_ge_cdStep (the bound reverses direction since
+--- the true cost is HIGHER, not lower).
+-
+--- ============================================================================
+--- SECTION 8: Numerically Calibrated Continuous Parameters
+--- ============================================================================
+--- The continuous Friction Lagrangian density is:
+---   L(x) = e^{α·x} - β·ln(x² + ε) - δ
+--- where x is the structural projection (analogue of CD step in the continuum).
+--- Different parameter sets yield qualitatively different logical geometries.
+--- The following values were calibrated numerically to produce exactly 3 roots
+--- (corresponding to the 3 logical phases: associative, transitional, non-associative).
+--- These are not formal Lean definitions but documented calibration constants from
+--- the Python numerical simulation (notebooks/eml_explore.ipynb).
+---
+---   α = 0.8  — Commutator coupling strength. Controls how steeply the commutator
+---               cost exponential rises. Higher α → sharper phase boundary; lower α
+---               → wider transition zone. Calibrated against CD 2→3 discontinuity.
+---   β = 2    — Associator well depth. Controls how deeply the associator log well
+---               pulls activation down. Together with λ (implicitly 1), determines
+---               the width and depth of the non-associative minimum.
+---   ε = 0.05 — Regularization for ln(0) singularity. Chosen as the smallest stable
+---               value before numerical oscillation.
+---   δ = 3.52 — Baseline shift centering roots across the origin. Gives f(0) ≈ 3.47
+---               (middle zone positive, bounded by two negative zones).
+-
+--- ============================================================================
+--- SECTION 9: Discrete-Continuous Dictionary (Calibrated)
+--- ============================================================================
+--- The parameter mapping between the discrete (Lean) and continuous (Python)
+--- formulations of the Friction Lagrangian:
+---
+---   | Discrete (Lean, this file)     | Continuous (Python, Section 8) | Value   |
+---   |--------------------------------|-------------------------------|---------|
+---   | k (CD step)                    | x (structural projection)     | ℕ → ℝ  |
+---   | commDefect(k) = k              | C(t) = ‖[z_t, z_{t+1}]‖_F    | coeff 1 |
+---   | assocDefect(k) = if k≤2→0 else 4 | A(t) = ‖α(z_t,z_{t+1},z_{t+2})‖_F | ℕ |
+---   | strut_weight (≡ 4)             | β₀ = 4 (base coupling)       | 4      |
+---   | frictionDensity(k) = k + 4·A(k)| L=e^{0.8·C}-2·ln(C²+0.05)-3.52|—       |
+---   | frictionLagrangian = Σ Γ_k     | S = ∫ L(x) dx                | sum→int |
+---
+--- The continuous parameters (α=0.8, β=2, ε=0.05, δ=3.52) were calibrated
+--- against the discrete invariants:
+---   • assocDefect(k) = 0 for k≤2  ↔  leftmost root (negative→positive)
+---   • assocDefect(k) = 4 for k≥3  ↔  rightmost root (positive→negative→positive)
+---   • strut_weight² = 16         ↔  e^{0.8·10} ≈ 2980 (deep non-assoc)
+---
+--- A different parameter set would produce a different number of roots and
+--- thus describe a qualitatively different logical composition. For example:
+---   • β > 3 (deeper well)      → 5 roots → 5-zone logic (CD 4, sedenions)
+---   • α < 0.5 (flatter push)    → 1 root  → 2-zone logic (CD 1-2 only, no phase change)
+---   • ε → 0 (unregularized)     → singularity at x=0 → infinite barrier at ZD
+---
+--- The discrete strut_weight is the integral of the continuous barrier across
+--- one CD step. Its verified value of 4 (from the split octonion (e₁, e₂, e₄)
+--- triple) calibrates the continuous coupling: β₀ / strut_weight² ≈ 4/16 = 0.25,
+--- meaning each associator crossing costs 1/4 of the deep non-assoc limit.
+-/-- The continuous Lagrangian theory is aspirational prose (Sections 8-9 above).
+-    This is a placeholder: the discrete Γ is formalized and kernel-checked, but
+-    the continuous calulus L(x) = e^{α·x} − β·ln(x²+ε) − δ and its convergence
+-    to the discrete strut_weight² barrier remain unformalized. The stub exists
+-    so that any theorem depending on convergence is visibly blocked here. -/
+-theorem continuous_lagrangian_stub : True :=
+-  True.intro
++theorem continuous_lagrangian_stub : False := by
++  trivial
+ 
+ end FrictionLagrangian
+

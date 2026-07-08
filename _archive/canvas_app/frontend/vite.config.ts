@@ -1,0 +1,40 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        tamari: path.resolve(__dirname, 'tamari.html'),
+        tamariLattice: path.resolve(__dirname, 'tamari-lattice.html'),
+        transit: path.resolve(__dirname, 'transit.html'),
+        testTubeMap: path.resolve(__dirname, 'test-tube-map.html'),
+        testTamariT4: path.resolve(__dirname, 'test-tamari-t4.html'),
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      // REST API proxy
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      // Note: WebSocket connects directly to backend (ws://localhost:8000/ws/events)
+      // to avoid Vite proxy issues. See websocket.ts
+    },
+  },
+})

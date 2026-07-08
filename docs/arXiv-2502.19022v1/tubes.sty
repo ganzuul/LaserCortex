@@ -1,0 +1,610 @@
+\ProvidesPackage{tubes}
+
+\RequirePackage{tikz}
+\usetikzlibrary{positioning,shapes.geometric,shapes.misc}
+
+\pgfdeclarelayer{foreground}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{strings}
+\pgfsetlayers{background,strings,foreground}
+
+\newlength{\xlength} %global horz scaling
+\newlength{\ylength} %global vert scaling
+\newlength{\tubewidth}
+
+\setlength{\xlength}{0.5cm}
+\setlength{\ylength}{0.4cm}
+\setlength{\tubewidth}{0.5\xlength}
+
+\newif\iftop\pgfkeys{/tikz/top/.is if=top}
+\newif\ifbot\pgfkeys{/tikz/bot/.is if=bot}
+\newif\ifwidebelt\pgfkeys{/tikz/widebelt/.is if=widebelt}
+\newif\ifwiderbelt\pgfkeys{/tikz/widerbelt/.is if=widerbelt}
+
+
+\pgfdeclareshape{end}{
+	\inheritsavedanchors[from=rectangle]
+	\inheritanchorborder[from=rectangle]
+	
+	\savedanchor\centerpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+	}
+	
+	\savedanchor\leftpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+	}
+	
+	\savedanchor\toppoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@y by 0.5\tubewidth
+	}
+
+	\savedanchor\clipzonel{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -0.9\tubewidth
+		\advance\pgf@y by \ylength
+	}
+	\savedanchor\clipzoner{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by 0.9\tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\anchor{center}{\centerpoint}
+		
+	\backgroundpath{
+		\begin{pgfonlayer}{background}
+			\begin{pgfscope}
+				\pgfpathmoveto{\leftpoint}
+				\pgfpatharc{180}{0}{\tubewidth and 0.5\tubewidth}
+				\pgfusepath{stroke}
+			\end{pgfscope}
+		\end{pgfonlayer}
+		\begin{pgfonlayer}{foreground}
+			\begin{pgfscope}
+				\pgfpathrectanglecorners{\clipzonel}{\clipzoner}
+				\pgfusepath{clip}
+				\pgfpathmoveto{\leftpoint}
+				\pgfpatharc{180}{0}{\tubewidth and -0.5\tubewidth}
+				\pgfsetstrokecolor{white}
+				\pgfsetlinewidth{4\pgflinewidth}
+				\pgfusepath{stroke}
+			\end{pgfscope}
+			\begin{pgfscope}
+				\pgfpathmoveto{\leftpoint}
+				\pgfpatharc{180}{0}{\tubewidth and -0.5\tubewidth}
+				\pgfusepath{stroke}
+			\end{pgfscope}
+		\end{pgfonlayer}
+	}
+}
+
+\pgfdeclareshape{end_dot}{
+	\inheritsavedanchors[from=rectangle]
+	\inheritanchorborder[from=rectangle]
+	
+	\savedanchor\centerpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+	}
+	
+	\savedanchor\leftpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+	}
+	
+	\savedanchor\toppoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@y by 0.5\tubewidth
+	}
+
+	\savedanchor\clipzonel{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -0.9\tubewidth
+		\advance\pgf@y by \ylength
+	}
+	\savedanchor\clipzoner{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by 0.9\tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\anchor{center}{\centerpoint}
+		
+	\backgroundpath{
+		\begin{pgfonlayer}{background}
+			\begin{pgfscope}
+				\pgfpathmoveto{\leftpoint}
+				\pgfpatharc{180}{0}{\tubewidth and 0.5\tubewidth}
+				\pgfsetdash{{1}{1}}{0}
+				\pgfusepath{stroke}
+			\end{pgfscope}
+		\end{pgfonlayer}
+		\begin{pgfonlayer}{foreground}
+			\begin{pgfscope}
+				\pgfpathrectanglecorners{\clipzonel}{\clipzoner}
+				\pgfusepath{clip}
+				\pgfpathmoveto{\leftpoint}
+				\pgfpatharc{180}{0}{\tubewidth and -0.5\tubewidth}
+				\pgfsetstrokecolor{white}
+				\pgfsetlinewidth{4\pgflinewidth}
+				\pgfusepath{stroke}
+			\end{pgfscope}
+			\begin{pgfscope}
+				\pgfpathmoveto{\leftpoint}
+				\pgfpatharc{180}{0}{\tubewidth and -0.5\tubewidth}
+				\pgfusepath{stroke}
+			\end{pgfscope}
+		\end{pgfonlayer}
+	}
+}
+
+
+\pgfdeclareshape{pants}{
+	\inheritsavedanchors[from=rectangle]
+	\inheritanchorborder[from=rectangle]
+	
+	\savedanchor\centerpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+	}
+	
+	\savedanchor\top{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@y by \ylength
+	}
+	
+	\savedanchor\topr{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by \tubewidth
+		\advance\pgf@y by \ylength
+		\ifwidebelt
+			\advance\pgf@x by 0.5\tubewidth
+		\fi
+		\ifwiderbelt
+			\advance\pgf@x by 1\tubewidth
+		\fi
+	}
+	
+	\savedanchor\topl{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+		\advance\pgf@y by \ylength
+		\ifwidebelt
+			\advance\pgf@x by -0.5\tubewidth
+		\fi
+		\ifwiderbelt
+			\advance\pgf@x by -1\tubewidth
+		\fi
+	}
+	
+	\savedanchor\leftleg{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -2\tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\savedanchor\leftlegl{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -3\tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\savedanchor\leftlegr{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\savedanchor\rightleg{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by 2\tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\savedanchor\rightlegl{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by \tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\savedanchor\rightlegr{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by 3\tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\anchor{center}{\centerpoint}
+	\anchor{belt}{\top}
+	\anchor{leftleg}{\leftleg}
+	\anchor{rightleg}{\rightleg}
+	
+	\backgroundpath{
+		\begin{pgfonlayer}{background}
+			\pgfpathmoveto{\topl}
+			\ifwiderbelt
+				\pgfpathcurveto{\pgfpoint{-2\tubewidth}{0}}{\pgfpoint{-3\tubewidth}{0}}{\leftlegl}
+			\else
+				\ifwidebelt
+					\pgfpathcurveto{\pgfpoint{-1.5\tubewidth}{0}}{\pgfpoint{-3\tubewidth}{0}}{\leftlegl}
+				\else
+					\pgfpathcurveto{\pgfpoint{-\tubewidth}{0}}{\pgfpoint{-3\tubewidth}{0}}{\leftlegl}
+				\fi
+			\fi
+			\pgfusepath{stroke}
+			\pgfpathmoveto{\topr}
+			\ifwiderbelt
+				\pgfpathcurveto{\pgfpoint{2\tubewidth}{0}}{\pgfpoint{3\tubewidth}{0}}{\rightlegr}
+			\else
+				\ifwidebelt
+					\pgfpathcurveto{\pgfpoint{1.5\tubewidth}{0}}{\pgfpoint{3\tubewidth}{0}}{\rightlegr}
+				\else
+					\pgfpathcurveto{\pgfpoint{\tubewidth}{0}}{\pgfpoint{3\tubewidth}{0}}{\rightlegr}
+				\fi
+			\fi
+			\pgfusepath{stroke}
+			\pgfpathmoveto{\leftlegr}
+			\pgfpathcurveto{\pgfpoint{-0.5\tubewidth}{-0.5\ylength}}{\pgfpoint{0.5\tubewidth}{-0.5\ylength}}{\rightlegl}
+			\pgfusepath{stroke}
+			\iftop
+				{
+				\pgftransformshift{\pgfpoint{0}{\ylength}}
+				\ifwiderbelt
+					\pgftransformscale{2}
+					\pgfnode{end}{center}{}{}{}
+				\else
+					\ifwidebelt
+						\pgftransformscale{1.5}
+						\pgfnode{end}{center}{}{}{}
+					\else
+						\pgfnode{end}{center}{}{}{}
+					\fi
+				\fi
+				}
+			\fi
+			\ifbot
+				{
+				\pgftransformshift{\pgfpoint{2\tubewidth}{-\ylength}}
+				\pgfnode{end_dot}{center}{}{}{}
+				\pgftransformshift{\pgfpoint{-4\tubewidth}{0}}
+				\pgfnode{end_dot}{center}{}{}{}
+				}
+			\fi
+		\end{pgfonlayer}
+	}
+}
+
+\pgfdeclareshape{copants}{
+	\inheritsavedanchors[from=rectangle]
+	\inheritanchorborder[from=rectangle]
+	
+	\savedanchor\centerpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+	}
+	
+	\savedanchor\bot{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@y by -\ylength
+	}
+	
+	\savedanchor\botr{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by \tubewidth
+		\advance\pgf@y by -\ylength
+		\ifwidebelt
+			\advance\pgf@x by 0.5\tubewidth
+		\fi
+		\ifwiderbelt
+			\advance\pgf@x by 1\tubewidth
+		\fi
+	}
+	
+	\savedanchor\botl{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+		\advance\pgf@y by -\ylength
+		\ifwidebelt
+			\advance\pgf@x by -0.5\tubewidth
+		\fi
+		\ifwiderbelt
+			\advance\pgf@x by -1\tubewidth
+		\fi
+	}
+	
+	\savedanchor\leftleg{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -2\tubewidth
+		\advance\pgf@y by \ylength
+	}
+	
+	\savedanchor\leftlegl{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -3\tubewidth
+		\advance\pgf@y by \ylength
+	}
+	
+	\savedanchor\leftlegr{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+		\advance\pgf@y by \ylength
+	}
+	
+	\savedanchor\rightleg{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by 2\tubewidth
+		\advance\pgf@y by \ylength
+	}
+	
+	\savedanchor\rightlegl{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by \tubewidth
+		\advance\pgf@y by \ylength
+	}
+	
+	\savedanchor\rightlegr{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by 3\tubewidth
+		\advance\pgf@y by \ylength
+	}
+	
+	\anchor{center}{\centerpoint}
+	\anchor{belt}{\bot}
+	\anchor{leftleg}{\leftleg}
+	\anchor{rightleg}{\rightleg}
+	
+	\backgroundpath{
+		\begin{pgfonlayer}{background}
+			\pgfpathmoveto{\botl}
+			\ifwiderbelt
+				\pgfpathcurveto{\pgfpoint{-2\tubewidth}{0}}{\pgfpoint{-3\tubewidth}{0}}{\leftlegl}
+			\else
+				\ifwidebelt
+					\pgfpathcurveto{\pgfpoint{-1.5\tubewidth}{0}}{\pgfpoint{-3\tubewidth}{0}}{\leftlegl}
+				\else
+					\pgfpathcurveto{\pgfpoint{-\tubewidth}{0}}{\pgfpoint{-3\tubewidth}{0}}{\leftlegl}
+				\fi
+			\fi
+			\pgfusepath{stroke}
+			\pgfpathmoveto{\botr}
+			\ifwiderbelt
+				\pgfpathcurveto{\pgfpoint{2\tubewidth}{0}}{\pgfpoint{3\tubewidth}{0}}{\rightlegr}
+			\else
+				\ifwidebelt
+					\pgfpathcurveto{\pgfpoint{1.5\tubewidth}{0}}{\pgfpoint{3\tubewidth}{0}}{\rightlegr}
+				\else
+					\pgfpathcurveto{\pgfpoint{\tubewidth}{0}}{\pgfpoint{3\tubewidth}{0}}{\rightlegr}
+				\fi
+			\fi
+			\pgfusepath{stroke}
+			\pgfpathmoveto{\leftlegr}
+			\pgfpathcurveto{\pgfpoint{-0.5\tubewidth}{0.5\ylength}}{\pgfpoint{0.5\tubewidth}{0.5\ylength}}{\rightlegl}
+			\pgfusepath{stroke}
+			\ifbot
+				{
+				\pgftransformshift{\pgfpoint{0}{-\ylength}}
+				\ifwiderbelt
+					\pgftransformscale{2}
+					\pgfnode{end_dot}{center}{}{}{}
+				\else
+					\ifwidebelt
+						\pgftransformscale{1.5}
+						\pgfnode{end_dot}{center}{}{}{}
+					\else
+						\pgfnode{end_dot}{center}{}{}{}
+					\fi
+				\fi
+				}
+			\fi
+			\iftop
+				{
+				\pgftransformshift{\pgfpoint{2\tubewidth}{\ylength}}
+				\pgfnode{end}{center}{}{}{}
+				\pgftransformshift{\pgfpoint{-4\tubewidth}{0}}
+				\pgfnode{end}{center}{}{}{}
+				}
+			\fi
+		\end{pgfonlayer}
+	}
+}
+
+\pgfdeclareshape{tube}{
+	\inheritsavedanchors[from=rectangle]
+	\inheritanchorborder[from=rectangle]
+	
+	\savedanchor\centerpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+	}
+	
+	\savedanchor\bot{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@y by -\ylength
+	}
+	
+	\savedanchor\botr{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by \tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\savedanchor\botl{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+		\advance\pgf@y by -\ylength
+	}
+	
+	\savedanchor\top{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@y by \ylength
+	}
+	
+	\savedanchor\topr{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by \tubewidth
+		\advance\pgf@y by \ylength
+	}
+	
+	\savedanchor\topl{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+		\advance\pgf@y by \ylength
+	}
+
+	\anchor{center}{\centerpoint}
+	\anchor{top}{\top}
+	\anchor{bot}{\bot}
+	
+	\backgroundpath{
+		\begin{pgfonlayer}{background}
+			\pgfpathmoveto{\botl}
+			\pgfpathlineto{\topl}
+			\pgfusepath{stroke}
+			\pgfpathmoveto{\botr}
+			\pgfpathlineto{\topr}
+			\pgfusepath{stroke}
+			\iftop
+				{
+				\pgftransformshift{\pgfpoint{0}{\ylength}}
+				\pgfnode{end}{center}{}{}{}
+				}
+			\fi
+			\ifbot
+				{
+				\pgftransformshift{\pgfpoint{0}{-\ylength}}
+				\pgfnode{end_dot}{center}{}{}{}
+				}
+			\fi
+		\end{pgfonlayer}
+	}
+}
+
+\pgfdeclareshape{cobowl}{
+	\inheritsavedanchors[from=rectangle]
+	\inheritanchorborder[from=rectangle]
+	
+	\savedanchor\centerpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+	}
+	
+	\savedanchor\leftpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+	}
+	
+	\savedanchor\toppoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@y by 0.5\tubewidth
+	}
+	
+	\anchor{center}{\centerpoint}
+		
+	\backgroundpath{
+		\begin{pgfonlayer}{background}
+			\pgfpathmoveto{\leftpoint}
+			\pgfpatharc{180}{0}{\tubewidth and \tubewidth}
+			\pgfusepath{stroke}
+			\pgfnode{end_dot}{center}{}{}{}
+		\end{pgfonlayer}
+	}
+}
+
+\pgfdeclareshape{bowl}{
+	\inheritsavedanchors[from=rectangle]
+	\inheritanchorborder[from=rectangle]
+	
+	\savedanchor\centerpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+	}
+	
+	\savedanchor\leftpoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@x by -\tubewidth
+	}
+	
+	\savedanchor\toppoint{
+		\pgf@x=0pt
+		\pgf@y=0pt
+		\advance\pgf@y by 0.5\tubewidth
+	}
+	
+	\anchor{center}{\centerpoint}
+		
+	\backgroundpath{
+		\begin{pgfonlayer}{background}
+			\pgfpathmoveto{\leftpoint}
+			\pgfpatharc{180}{0}{\tubewidth and -\tubewidth}
+			\pgfusepath{stroke}
+			\iftop
+				\pgfnode{end}{center}{}{}{}
+			\fi
+		\end{pgfonlayer}
+	}
+}
+
+\tikzset{label/.style={
+  shape=rounded rectangle,
+  text=black,
+  draw=black,
+%   fill=orange,
+  fill={rgb,255: red,242; green,233; blue,206},
+  inner sep=0.05cm,
+%   minimum width=0.3cm,
+%   minimum height=0.3cm,
+  font=\scriptsize
+}}
+
+\tikzset{system/.style={
+	text=black,
+	font=\small
+}}
+
+\tikzset{representable/.style={
+  shape=rounded rectangle,
+  text=black,
+  draw=black,
+  fill=white,
+  inner sep=0.04cm,
+%   minimum width=0.3cm,
+%   minimum height=0.3cm,
+  font=\scriptsize
+}}

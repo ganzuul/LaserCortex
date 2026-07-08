@@ -366,6 +366,9 @@ Each term is a question to ask of the system:
 - `lab_notes/001_product_coupling_term.md` — product coupling for tensegrity
 - `lab_notes/002_brute_force_candidates.md` — brute force at n=4
 - `lab_notes/003_brute_force_complexity.md` — 3900X bounds (n=15 practical limit)
+- `lab_notes/019_develin_sturmfels_quantized_type.md` — Develin-Sturmfels correspondence via QuantizedType
+- `lab_notes/020_lean_doc_comment_lexer_bug.md` — Lean 4.31 `/-!` doc comment lexer inconsistency
+- `lab_notes/021_develin_sturmfels_forward_proven.md` — Develin-Sturmfels forward direction PROVEN
 - `docs/topological_isomer_hypothesis.md` — atomic model / strong force analogy
 - `docs/approach.md` — geometry-motion overview
 - `docs/Three-js_pentagonator-demo.md` — Radon-pentagonator visualization connection
@@ -373,3 +376,4 @@ Each term is a question to ask of the system:
 - `LaserCortex/Candidates.lean` — brute force engine
 - `LaserCortex/AMM.lean` — crossImpact, associatorCost
 - `LaserCortex/Cost.lean` — Φ definition and theorems
+- `lab_notes/032_tropical_type_theory_hypothesis.md` — types as coordinates; octolinear transit algebra via Develin–Sturmfels type lattice

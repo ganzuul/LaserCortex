@@ -1,0 +1,38 @@
+\begin{tikzpicture}
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (102) at (-2, 0) {$=$};
+		\node [style=none] (104) at (-0.5, 0.25) {};
+		\node [style=none] (105) at (-1.25, 0.25) {};
+		\node [style=none] (106) at (-1.25, -0.5) {};
+		\node [style=none] (109) at (-0.5, 0.25) {};
+		\node [style=none] (111) at (-0.5, -0.5) {};
+		\node [style=none] (113) at (-0.75, 0.25) {};
+		\node [style=none] (114) at (-0.25, 0.25) {};
+		\node [style=none] (115) at (-0.25, -0.25) {};
+		\node [style=none] (116) at (-0.75, -0.25) {};
+		\node [style=box] (125) at (-1.25, 0) {$s^{-1}$};
+		\node [style=none] (127) at (-1.25, -0.75) {$Fa^*$};
+		\node [style=none] (128) at (-0.5, -0.75) {$Fa$};
+		\node [style=none] (129) at (0.5, 0) {$=$};
+		\node [style=none] (130) at (2, 0.25) {};
+		\node [style=none] (131) at (1.25, 0.25) {};
+		\node [style=none] (132) at (1.25, -0.5) {};
+		\node [style=none] (133) at (2, 0.25) {};
+		\node [style=none] (134) at (2, -0.5) {};
+		\node [style=box] (139) at (1.25, 0) {$s^{-1}$};
+		\node [style=none] (140) at (1.25, -0.75) {$Fa^*$};
+		\node [style=none] (141) at (2, -0.75) {$Fa$};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw [bend right=90, looseness=2.00] (104.center) to (105.center);
+		\draw (105.center) to (106.center);
+		\draw (109.center) to (111.center);
+		\draw [style=functor box] (113.center) to (114.center);
+		\draw [style=functor box] (114.center) to (115.center);
+		\draw [style=functor box] (115.center) to (116.center);
+		\draw [style=functor box] (116.center) to (113.center);
+		\draw [bend right=90, looseness=2.00] (130.center) to (131.center);
+		\draw (131.center) to (132.center);
+		\draw (133.center) to (134.center);
+	\end{pgfonlayer}
+\end{tikzpicture}

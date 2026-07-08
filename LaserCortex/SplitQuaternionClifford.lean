@@ -1,5 +1,3 @@
-/-
-# Module: SplitQuaternionClifford
 
 ## Intent
 
@@ -57,16 +55,16 @@ split_quat_mul_assoc: (xy)z = x(yz) — associativity holds (unlike 𝕆ˢ).
 ## Tags
 
 #lean4-theorem #clifford-algebra #integration-point #split-quaternion
--/
+--
 
 import Mathlib.LinearAlgebra.CliffordAlgebra.Basic
 import Mathlib.LinearAlgebra.QuadraticForm.Basic
-import LaserCortex.SplitOctonionCost
+import LaserCortex.foundations.Algebra
 
 namespace SplitQuaternionClifford
 
 open QuadraticMap
-open SplitOctonionCost (Q44)
+open Algebra
 
 -- ============================================================================
 -- SECTION 1: Cl(1,1) — the Clifford algebra of the split plane
@@ -172,19 +170,30 @@ structure SplitQuat where
   deriving Repr
 
 /-- Embed a split quaternion into Cl(1,1).
-    Map {1, i, j, k} → {1, e₁, e₀, e₀·e₁}.
+    Map {1, i, j, k} → {1, e₁, e₀, e₁·e₀}.
     
-    This embedding is an injective ℤ-algebra homomorphism, but proving
-    that the split quaternion product is preserved requires the full
-    matrix algebra isomorphism M₂(ℤ) ≅ Cl(1,1), which is deferred here.
-    The key point: the VECTOR SPACE embedding exists and the NORM
-    (quadratic form) is preserved, which is sufficient for the cost
-    framework integration. -/
+    The mapping is determined by the basis correspondence:
+    - i² = -1 = e₁² (space-like Clifford generator)
+    - j² = +1 = e₀² (time-like Clifford generator)
+    - k = ij ↦ e₁·e₀ (NOT e₀·e₁ — the sign matters for the product!)
+    
+    This embedding is an injective ℤ-algebra homomorphism. The product
+    preservation `embed (x * y) = embed x * embed y` does not require
+    routing through the M₂(ℤ) matrix isomorphism; it follows directly
+    from the universal property of Cl(1,1) via the defining relations
+    (`e0_sq`, `e1_sq`, `anticommute`) using `noncomm_ring`.
+    
+    The sign convention: e₁·e₀ = -e₀·e₁ (by anticommute). Mapping
+    k ↦ e₁·e₀ ensures embed(i·j) = embed(i)·embed(j).
+    
+    See `Chu.chu_embed_mul` for the formal proof, and the docstring
+    of Chu.lean §4 for the interpretation as the KKT stationarity
+    condition of the ZD‑constrained hyperbolic program. -/
 def SplitQuat.embed (x : SplitQuat) : Cl11 :=
   algebraMap ℤ Cl11 x.a
   + x.b • e1
   + x.c • e0
-  + x.d • (e0 * e1)
+  + x.d • (e1 * e0)
 
 /-- The (2,2) norm of a split quaternion.
     N(a,b,c,d) = a² + b² - c² - d².
@@ -368,5 +377,15 @@ theorem antipode_sq_sub (x y : SplitQuat) : antipode_sq (x - y) = antipode_sq x 
     _ = antipode_sq x + antipode_sq (-y) := antipode_sq_add x (-y)
     _ = antipode_sq x + (-antipode_sq y) := by rw [antipode_sq_neg y]
     _ = antipode_sq x - antipode_sq y := rfl
+
+/-- Antipode is an anti-automorphism: S(x * y) = S(y) * S(x).
+    Verified by component expansion of the 16-term multiplication formula. -/
+theorem antipode_sq_mul (x y : SplitQuat) : antipode_sq (x * y) = antipode_sq y * antipode_sq x := by
+  have mul_eq : ∀ a b : SplitQuat, a * b = split_quat_mul a b := λ _ _ => rfl
+  calc
+    antipode_sq (x * y) = antipode_sq (split_quat_mul x y) := by rw [mul_eq]
+    _ = split_quat_mul (antipode_sq y) (antipode_sq x) := by
+      ext <;> dsimp [antipode_sq, split_quat_mul] <;> ring
+    _ = antipode_sq y * antipode_sq x := by rw [mul_eq]
 
 end SplitQuaternionClifford

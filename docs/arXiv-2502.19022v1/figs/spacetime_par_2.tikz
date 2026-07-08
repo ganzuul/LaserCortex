@@ -1,0 +1,52 @@
+\begin{tikzpicture}
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (13) at (-0.25, 0.45) {$\mathbf{a}$};
+		\node [style=none] (57) at (-0.25, 0.3) {};
+		\node [style=none] (58) at (-0.25, -0.175) {};
+		\node [style=none] (59) at (-0.35, -0.475) {};
+		\node [style=none] (60) at (-0.15, -0.475) {};
+		\node [style=none] (61) at (-0.5, 0.075) {};
+		\node [style=none] (62) at (0, 0.075) {};
+		\node [style=none] (63) at (-0.25, 0) {};
+		\node [style=none] (64) at (-0.25, 0.575) {};
+		\node [style=none] (65) at (0.75, -0.975) {};
+		\node [style=none] (66) at (0.5, 0.575) {};
+		\node [style=none] (67) at (0.5, -0.475) {};
+		\node [style=none] (68) at (0.75, 1.075) {};
+		\node [style=none] (71) at (-0.625, 0.825) {};
+		\node [style=none] (72) at (0.875, 0.825) {};
+		\node [style=none] (73) at (0.875, -0.725) {};
+		\node [style=none] (74) at (-0.625, -0.725) {};
+		\node [style=none] (75) at (0.25, 0.3) {};
+		\node [style=none] (76) at (0.25, -0.175) {};
+		\node [style=none] (77) at (0.15, -0.475) {};
+		\node [style=none] (78) at (0.35, -0.475) {};
+		\node [style=none] (79) at (0, 0.075) {};
+		\node [style=none] (80) at (0.5, 0.075) {};
+		\node [style=none] (81) at (0.25, 0) {};
+		\node [style=none] (82) at (0.25, 0.575) {};
+		\node [style=none] (83) at (0.25, 0.475) {$\mathbf{b}$};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw (58.center) to (59.center);
+		\draw (58.center) to (60.center);
+		\draw (58.center) to (57.center);
+		\draw (61.center) to (63.center);
+		\draw (63.center) to (62.center);
+		\draw [bend left=90, looseness=1.75] (57.center) to (64.center);
+		\draw [bend right=90, looseness=1.75] (57.center) to (64.center);
+		\draw [style=arrow, bend right=15, looseness=0.75] (65.center) to (67.center);
+		\draw [style=arrow, bend right=15, looseness=0.75] (66.center) to (68.center);
+		\draw [style=dottededge] (71.center) to (72.center);
+		\draw [style=dottededge] (72.center) to (73.center);
+		\draw [style=dottededge] (73.center) to (74.center);
+		\draw [style=dottededge] (74.center) to (71.center);
+		\draw (76.center) to (77.center);
+		\draw (76.center) to (78.center);
+		\draw (76.center) to (75.center);
+		\draw (79.center) to (81.center);
+		\draw (81.center) to (80.center);
+		\draw [bend left=90, looseness=1.75] (75.center) to (82.center);
+		\draw [bend right=90, looseness=1.75] (75.center) to (82.center);
+	\end{pgfonlayer}
+\end{tikzpicture}

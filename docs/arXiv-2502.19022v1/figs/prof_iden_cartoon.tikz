@@ -1,0 +1,33 @@
+\begin{tikzpicture}[scale=0.6, {every node/.style}={scale=0.8}]
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none] (367) at (-0.5, -1) {};
+		\node [style=none] (378) at (-0.25, 1) {};
+		\node [style=none] (385) at (0, 0.05) {};
+		\node [style=none] (386) at (0, -0.175) {};
+		\node [style=none] (387) at (-0.1, -0.475) {};
+		\node [style=none] (388) at (0.1, -0.475) {};
+		\node [style=none] (389) at (-0.25, -0.175) {};
+		\node [style=none] (390) at (0.25, -0.175) {};
+		\node [style=none] (391) at (0, 0) {};
+		\node [style=none] (392) at (0, 0.325) {};
+		\node [style=none] (393) at (-0.5, 0.75) {};
+		\node [style=none] (394) at (-0.5, -1) {};
+		\node [style=none] (395) at (0.5, -1) {};
+		\node [style=none] (396) at (0.5, 0.75) {};
+		\node [style=none] (415) at (-0.25, -1.25) {};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw (386.center) to (387.center);
+		\draw (386.center) to (388.center);
+		\draw (386.center) to (385.center);
+		\draw (389.center) to (391.center);
+		\draw (391.center) to (390.center);
+		\draw [bend left=90, looseness=1.75] (385.center) to (392.center);
+		\draw [bend right=90, looseness=1.75] (385.center) to (392.center);
+		\draw [style=dottededge] (393.center) to (396.center);
+		\draw [style=dottededge] (395.center) to (396.center);
+		\draw [style=dottededge] (394.center) to (395.center);
+		\draw [style=new edge style 4] (378.center) to (415.center);
+		\draw [style=dottededge] (394.center) to (393.center);
+	\end{pgfonlayer}
+\end{tikzpicture}

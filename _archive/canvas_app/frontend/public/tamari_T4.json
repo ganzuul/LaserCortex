@@ -1,0 +1,858 @@
+{
+  "stations": {
+    "t0": {
+      "name": "t0",
+      "label": "N(L,N(L,N(L,N(L,L))))",
+      "rank": 0,
+      "y": -6
+    },
+    "t1": {
+      "name": "t1",
+      "label": "N(L,N(L,N(N(L,L),L)))",
+      "rank": 1,
+      "y": -4
+    },
+    "t2": {
+      "name": "t2",
+      "label": "N(L,N(N(L,L),N(L,L)))",
+      "rank": 1,
+      "y": -3
+    },
+    "t3": {
+      "name": "t3",
+      "label": "N(L,N(N(L,N(L,L)),L))",
+      "rank": 2,
+      "y": -2
+    },
+    "t4": {
+      "name": "t4",
+      "label": "N(L,N(N(N(L,L),L),L))",
+      "rank": 3,
+      "y": 0
+    },
+    "t5": {
+      "name": "t5",
+      "label": "N(N(L,L),N(L,N(L,L)))",
+      "rank": 1,
+      "y": -2
+    },
+    "t6": {
+      "name": "t6",
+      "label": "N(N(L,L),N(N(L,L),L))",
+      "rank": 2,
+      "y": 0
+    },
+    "t7": {
+      "name": "t7",
+      "label": "N(N(L,N(L,L)),N(L,L))",
+      "rank": 2,
+      "y": 0
+    },
+    "t8": {
+      "name": "t8",
+      "label": "N(N(N(L,L),L),N(L,L))",
+      "rank": 3,
+      "y": 2
+    },
+    "t9": {
+      "name": "t9",
+      "label": "N(N(L,N(L,N(L,L))),L)",
+      "rank": 3,
+      "y": 0
+    },
+    "t10": {
+      "name": "t10",
+      "label": "N(N(L,N(N(L,L),L)),L)",
+      "rank": 4,
+      "y": 2
+    },
+    "t11": {
+      "name": "t11",
+      "label": "N(N(N(L,L),N(L,L)),L)",
+      "rank": 4,
+      "y": 3
+    },
+    "t12": {
+      "name": "t12",
+      "label": "N(N(N(L,N(L,L)),L),L)",
+      "rank": 5,
+      "y": 4
+    },
+    "t13": {
+      "name": "t13",
+      "label": "N(N(N(N(L,L),L),L),L)",
+      "rank": 6,
+      "y": 6
+    }
+  },
+  "lines": [
+    {
+      "name": "chain-0",
+      "label": "Chain 1",
+      "color": "#e6194b",
+      "shiftCoords": [
+        0,
+        0
+      ],
+      "nodes": [
+        {
+          "coords": [
+            0,
+            0
+          ],
+          "name": "t0",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            -1,
+            0
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            1
+          ]
+        },
+        {
+          "coords": [
+            -2,
+            2
+          ],
+          "name": "t1",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            -2,
+            4
+          ],
+          "name": "t3",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            -2,
+            6
+          ],
+          "name": "t4",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            -1,
+            6
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            7
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            8
+          ],
+          "name": "t10",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            0,
+            8
+          ]
+        },
+        {
+          "coords": [
+            0,
+            9
+          ]
+        },
+        {
+          "coords": [
+            0,
+            10
+          ],
+          "name": "t12",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            0,
+            12
+          ],
+          "name": "t13",
+          "labelPos": "S"
+        }
+      ]
+    },
+    {
+      "name": "chain-1",
+      "label": "Chain 2",
+      "color": "#3b75af",
+      "shiftCoords": [
+        0,
+        0
+      ],
+      "nodes": [
+        {
+          "coords": [
+            0,
+            0
+          ],
+          "name": "t0",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            -1,
+            0
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            1
+          ]
+        },
+        {
+          "coords": [
+            -2,
+            2
+          ],
+          "name": "t1",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            -2,
+            4
+          ],
+          "name": "t3",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            -1,
+            4
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            5
+          ]
+        },
+        {
+          "coords": [
+            0,
+            6
+          ],
+          "name": "t9",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            -1,
+            6
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            7
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            8
+          ],
+          "name": "t10",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            0,
+            8
+          ]
+        },
+        {
+          "coords": [
+            0,
+            9
+          ]
+        },
+        {
+          "coords": [
+            0,
+            10
+          ],
+          "name": "t12",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            0,
+            12
+          ],
+          "name": "t13",
+          "labelPos": "S"
+        }
+      ]
+    },
+    {
+      "name": "chain-2",
+      "label": "Chain 3",
+      "color": "#44aa44",
+      "shiftCoords": [
+        0,
+        0
+      ],
+      "nodes": [
+        {
+          "coords": [
+            0,
+            0
+          ],
+          "name": "t0",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            -1,
+            0
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            1
+          ]
+        },
+        {
+          "coords": [
+            -2,
+            2
+          ],
+          "name": "t1",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            -2,
+            4
+          ],
+          "name": "t3",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            -1,
+            4
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            5
+          ]
+        },
+        {
+          "coords": [
+            0,
+            6
+          ],
+          "name": "t9",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            1,
+            6
+          ]
+        },
+        {
+          "coords": [
+            1,
+            7
+          ]
+        },
+        {
+          "coords": [
+            1,
+            8
+          ],
+          "name": "t11",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            0,
+            8
+          ]
+        },
+        {
+          "coords": [
+            0,
+            9
+          ]
+        },
+        {
+          "coords": [
+            0,
+            12
+          ],
+          "name": "t13",
+          "labelPos": "N"
+        }
+      ]
+    },
+    {
+      "name": "chain-3",
+      "label": "Chain 4",
+      "color": "#f58231",
+      "shiftCoords": [
+        0,
+        0
+      ],
+      "nodes": [
+        {
+          "coords": [
+            0,
+            0
+          ],
+          "name": "t0",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            -1,
+            0
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            1
+          ]
+        },
+        {
+          "coords": [
+            -2,
+            2
+          ],
+          "name": "t1",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            -1,
+            2
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            3
+          ]
+        },
+        {
+          "coords": [
+            0,
+            4
+          ],
+          "name": "t6",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            1,
+            4
+          ]
+        },
+        {
+          "coords": [
+            1,
+            5
+          ]
+        },
+        {
+          "coords": [
+            1,
+            8
+          ],
+          "name": "t11",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            0,
+            8
+          ]
+        },
+        {
+          "coords": [
+            0,
+            9
+          ]
+        },
+        {
+          "coords": [
+            0,
+            12
+          ],
+          "name": "t13",
+          "labelPos": "S"
+        }
+      ]
+    },
+    {
+      "name": "chain-4",
+      "label": "Chain 5",
+      "color": "#911eb4",
+      "shiftCoords": [
+        0,
+        0
+      ],
+      "nodes": [
+        {
+          "coords": [
+            0,
+            0
+          ],
+          "name": "t0",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            0,
+            2
+          ],
+          "name": "t2",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            -1,
+            2
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            3
+          ]
+        },
+        {
+          "coords": [
+            -2,
+            6
+          ],
+          "name": "t4",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            -1,
+            6
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            7
+          ]
+        },
+        {
+          "coords": [
+            -1,
+            8
+          ],
+          "name": "t10",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            0,
+            8
+          ]
+        },
+        {
+          "coords": [
+            0,
+            9
+          ]
+        },
+        {
+          "coords": [
+            0,
+            10
+          ],
+          "name": "t12",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            0,
+            12
+          ],
+          "name": "t13",
+          "labelPos": "N"
+        }
+      ]
+    },
+    {
+      "name": "chain-5",
+      "label": "Chain 6",
+      "color": "#42d4f4",
+      "shiftCoords": [
+        0,
+        0
+      ],
+      "nodes": [
+        {
+          "coords": [
+            0,
+            0
+          ],
+          "name": "t0",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            0,
+            2
+          ],
+          "name": "t2",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            1,
+            2
+          ]
+        },
+        {
+          "coords": [
+            1,
+            3
+          ]
+        },
+        {
+          "coords": [
+            2,
+            4
+          ],
+          "name": "t7",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            2,
+            6
+          ],
+          "name": "t8",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            1,
+            6
+          ]
+        },
+        {
+          "coords": [
+            1,
+            7
+          ]
+        },
+        {
+          "coords": [
+            0,
+            12
+          ],
+          "name": "t13",
+          "labelPos": "S"
+        }
+      ]
+    },
+    {
+      "name": "chain-6",
+      "label": "Chain 7",
+      "color": "#f032e6",
+      "shiftCoords": [
+        0,
+        0
+      ],
+      "nodes": [
+        {
+          "coords": [
+            0,
+            0
+          ],
+          "name": "t0",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            0,
+            2
+          ],
+          "name": "t2",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            1,
+            2
+          ]
+        },
+        {
+          "coords": [
+            1,
+            3
+          ]
+        },
+        {
+          "coords": [
+            2,
+            4
+          ],
+          "name": "t7",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            1,
+            4
+          ]
+        },
+        {
+          "coords": [
+            1,
+            5
+          ]
+        },
+        {
+          "coords": [
+            0,
+            10
+          ],
+          "name": "t12",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            0,
+            12
+          ],
+          "name": "t13",
+          "labelPos": "S"
+        }
+      ]
+    },
+    {
+      "name": "chain-7",
+      "label": "Chain 8",
+      "color": "#bfef45",
+      "shiftCoords": [
+        0,
+        0
+      ],
+      "nodes": [
+        {
+          "coords": [
+            0,
+            0
+          ],
+          "name": "t0",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            1,
+            0
+          ]
+        },
+        {
+          "coords": [
+            1,
+            1
+          ]
+        },
+        {
+          "coords": [
+            2,
+            2
+          ],
+          "name": "t5",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            1,
+            2
+          ]
+        },
+        {
+          "coords": [
+            1,
+            3
+          ]
+        },
+        {
+          "coords": [
+            0,
+            4
+          ],
+          "name": "t6",
+          "labelPos": "S"
+        },
+        {
+          "coords": [
+            1,
+            4
+          ]
+        },
+        {
+          "coords": [
+            1,
+            5
+          ]
+        },
+        {
+          "coords": [
+            1,
+            8
+          ],
+          "name": "t11",
+          "labelPos": "N"
+        },
+        {
+          "coords": [
+            0,
+            8
+          ]
+        },
+        {
+          "coords": [
+            0,
+            9
+          ]
+        },
+        {
+          "coords": [
+            0,
+            12
+          ],
+          "name": "t13",
+          "labelPos": "S"
+        }
+      ]
+    }
+  ]
+}

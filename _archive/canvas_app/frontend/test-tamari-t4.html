@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tamari Lattice T₄ — d3-tube-map Test</title>
+    <style>
+      body { margin: 0; padding: 0; background: #1a1a2e; }
+      #tube-map { width: 100vw; height: 100vh; }
+      h1 {
+        position: absolute;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #ccc;
+        font-family: monospace;
+        font-size: 18px;
+        z-index: 10;
+        background: rgba(26,26,46,0.8);
+        padding: 8px 20px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tamari Lattice T₄ — 14 elements, 21 covering relations</h1>
+    <div id="tube-map"></div>
+    <script type="module">
+      import * as d3 from 'd3';
+      import { tubeMap } from 'd3-tube-map';
+
+      const container = d3.select('#tube-map');
+      const width = 1400;
+      const height = 600;
+
+      const map = tubeMap()
+        .width(width)
+        .height(height)
+        .margin({
+          top: 80,
+          right: 200,
+          bottom: 80,
+          left: 200,
+        });
+
+      d3.json('/tamari_T4.json').then(function (data) {
+        console.log('Loaded tamari_T4.json:', data);
+        console.log('Stations:', Object.keys(data.stations).length);
+        console.log('Lines:', data.lines.length);
+        container.datum(data).call(map);
+      }).catch(function (err) {
+        console.error('Error loading tamari_T4.json:', err);
+        document.body.innerHTML = '<div style="color:red;padding:40px;">Error: ' + err.message + '</div>';
+      });
+    </script>
+  </body>
+</html>
