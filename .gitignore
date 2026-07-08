@@ -95,6 +95,9 @@ external_dependency/*.whl
 results/run_*/
 results/*.json
 
+# Generated plots and visualizations
+plots/
+
 # Node modules and build files
 node_modules/
 dist/
