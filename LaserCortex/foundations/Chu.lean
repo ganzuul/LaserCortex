@@ -404,4 +404,73 @@ theorem kkt_stationarity (x y : SplitQuat) : SplitQuat.embed (x * y) = SplitQuat
 theorem kkt_complementarity (y : SplitQuat) (h : ∀ z, splitQuatPairing y z = 0) : y = 0 :=
   splitQuatPairing_nondegenerate y h
 
+-- ============================================================================
+-- SECTION 6: ChuHom — Morphisms and the Duoidal Distributor
+-- ============================================================================
+
+/-- A Chu space morphism from X to Y consists of primal and dual linear maps
+    that preserve the pairing.  The correct condition for composition is:
+    `β_Y(f(x), y) = β_X(x, f*(y))` — moving the dual map to the other side.
+    This is the morphism type for the category of Chu spaces over SplitQuat. -/
+structure ChuHom (X Y : ChuSpace SplitQuat) where
+  toFun : SplitQuat →ₗ[ℤ] SplitQuat
+  invFun : SplitQuat →ₗ[ℤ] SplitQuat
+  /-- β_Y(f(x), y) = β_X(x, f*(y)).  The dual map can be "slid" across
+      the pairing to the primal side.  This is the Chu-category morphism
+      condition, distinct from the isometry condition β(f(x),f*(y))=β(x,y). -/
+  pair_preserved : ∀ x y, splitQuatPairingAux (toFun x) y =
+    splitQuatPairingAux x (invFun y)
+
+/-- Identity morphism on a Chu space. -/
+def ChuHom.id (X : ChuSpace SplitQuat) : ChuHom X X where
+  toFun := LinearMap.id
+  invFun := LinearMap.id
+  pair_preserved _ _ := rfl
+
+/-- Composition of ChuHom morphisms.
+
+    The dual map composes in reverse order: f⁻¹ ∘ g⁻¹, because
+    dual maps go "backwards" from Y.a' → X.a'.  The proof chains:
+    β(g(f(x)), z) = β(f(x), g*(z)) = β(x, f*(g*(z))). -/
+def ChuHom.comp {X Y Z : ChuSpace SplitQuat} (g : ChuHom Y Z) (f : ChuHom X Y) :
+    ChuHom X Z where
+  toFun := g.toFun ∘ₗ f.toFun
+  invFun := f.invFun ∘ₗ g.invFun
+  pair_preserved x z := by
+    simp only [LinearMap.comp_apply]
+    rw [g.pair_preserved, f.pair_preserved]
+
+/-- The duoidal distributor: interchanges ChuSeq ⊗ ChuSeq → ChuTensor ⊗ ChuTensor.
+
+    Concrete meaning: given four Chu spaces S₁, S₂, S₃, S₄, we have
+    - Source primal:  (S₁.a * S₂.a) * (S₃.a * S₄.a)
+    - Target primal:  (S₁.a * S₃.a) * (S₂.a * S₄.a)
+    - Source dual:    (S₂.a' * S₁.a') * (S₄.a' * S₃.a')
+    - Target dual:    (S₂.a' * S₄.a') * (S₁.a' * S₃.a')
+
+    The distributor shuffles the middle pair, swapping S₂ and S₃.  When the
+    pairing is preserved, this is an iso and the duoidal structure is
+    braided.  When it fails to preserve the pairing, the failure encodes
+    the commutator/associator defect. -/
+structure Distributor (S₁ S₂ S₃ S₄ : ChuSpace SplitQuat) where
+  /-- Forward map on primals: (S₁.a * S₂.a) * (S₃.a * S₄.a) → (S₁.a * S₃.a) * (S₂.a * S₄.a) -/
+  fwd_primal : SplitQuat →ₗ[ℤ] SplitQuat
+  /-- Forward map on duals: (S₂.a' * S₁.a') * (S₄.a' * S₃.a') → (S₂.a' * S₄.a') * (S₁.a' * S₃.a') -/
+  fwd_dual : SplitQuat →ₗ[ℤ] SplitQuat
+  /-- Pairing is preserved under the interchanger: β(fwd_primal x, y) = β(x, fwd_dual y) -/
+  pair_preserved : ∀ x y,
+    splitQuatPairingAux (fwd_primal x) y = splitQuatPairingAux x (fwd_dual y)
+  /-- The forward map sends the source primal to the target primal. -/
+  maps_primal :
+    fwd_primal ((S₁.a * S₂.a) * (S₃.a * S₄.a)) = (S₁.a * S₃.a) * (S₂.a * S₄.a)
+  /-- The forward map sends the source dual to the target dual. -/
+  maps_dual :
+    fwd_dual ((S₂.a' * S₁.a') * (S₄.a' * S₃.a')) = (S₂.a' * S₄.a') * (S₁.a' * S₃.a')
+
+/-- The CD≤2 distributor: the sliding law gives us the pairing preservation
+    for the split-quaternion case.  The primal/dual maps are constructed
+    via the antipode (conjugation). -/
+def cd2_distributor (S₁ S₂ S₃ S₄ : ChuSpace SplitQuat) : Distributor S₁ S₂ S₃ S₄ :=
+  sorry  -- Phase 2: construct via antipode
+
 end Chu
