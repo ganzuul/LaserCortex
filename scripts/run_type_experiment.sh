@@ -3,18 +3,22 @@
 # run_type_experiment.sh — Tropical Type Theory → Graphiti Experiment Runner
 #
 # Usage:
-#   ./scripts/run_type_experiment.sh                     # Default run (r=3)
-#   ./scripts/run_type_experiment.sh --generators 4       # Bigger graph (r=4)
-#   ./scripts/run_type_experiment.sh --step 10 --verbose  # Finer grid
-#   ./scripts/run_type_experiment.sh --keep-db --output results.json
+#   ./scripts/run_type_experiment.sh                                  # episodes only → 2 communities
+#   ./scripts/run_type_experiment.sh --triplets                        # + entity edges → more communities
+#   ./scripts/run_type_experiment.sh --triplets --temporal-path 10     # + temporal chains
+#   ./scripts/run_type_experiment.sh --keep-db --output results.json   # persistent + save
 #   ./scripts/run_type_experiment.sh --help
 #
+# What changes the community count:
+#   --triplets       Adds IS_ADJACENT_TO, AT_STATION, TRANSITIONS_VIA edges between types
+#   --temporal-path  Adds ordered temporal chain episodes (v1→C→W→v2→v3→...)
+#   --generators N   Scaffolding for r=4 (not yet — needs Lean algebra extension)
+#
 # What it does:
-#   1. Runs the Lean type theory experiment
-#   2. Parses the type lattice (stations, types, adjacencies, applyMove transitions)
-#   3. Encodes everything into a temporary Graphiti database
-#   4. Runs community detection
-#   5. Reports the discovered communities and type structure
+#   1. Encodes the type lattice (stations, types, adjacencies, applyMoves) into Graphiti
+#   2. Optionally adds explicit entity-relation-entity edges (triplets)
+#   3. Runs community detection on the entity graph
+#   4. Reports the discovered communities and type structure
 #
 # The Graphiti database is ephemeral (temp file) by default. Use --keep-db
 # to persist it for later inspection via the MCP server.

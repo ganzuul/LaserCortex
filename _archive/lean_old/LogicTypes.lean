@@ -11,11 +11,11 @@ inductive LogicType, inductive LogicClass, inductive MetaContractsTo, structure 
 
 ## Cross-refs
 
-LaserCortex.EMLRegistry → EMLTree, contracts_to, rightComb, contracts_to_rightComb, node_of_rightCombs_contracts_to_rightComb, contracts_one
+LaserCortex.foundations.Tamari → EMLTree, contracts_to, rightComb, contracts_to_rightComb, node_of_rightCombs_contracts_to_rightComb, contracts_one
 
 ## Invariants
 
-LogicNormalForm universally reduces to EMLRegistry.rightComb n across all LogicType variants. LogicContraction defaults to EMLRegistry.contracts_to for all variants; logic-specific semantics are placeholder stubs. MetaContractsTo enforces transitivity, congruence, and intra/inter-logic preservation via LogicTranslation.soundness and .completeness. LogicType.isAssociativeSector partitions logics into split boundary 3 (associative) and 4 (non-associative). LogicType.cdStep maps all 15 logics to their Cayley-Dickson step, consistent with the sector boundary (associative ⇒ cdStep ≤ 2, non-associative ⇒ cdStep ≥ 3).
+LogicNormalForm universally reduces to rightComb n across all LogicType variants. LogicContraction defaults to contracts_to for all variants; logic-specific semantics are placeholder stubs. MetaContractsTo enforces transitivity, congruence, and intra/inter-logic preservation via LogicTranslation.soundness and .completeness. LogicType.isAssociativeSector partitions logics into split boundary 3 (associative) and 4 (non-associative). LogicType.cdStep maps all 15 logics to their Cayley-Dickson step, consistent with the sector boundary (associative ⇒ cdStep ≤ 2, non-associative ⇒ cdStep ≥ 3).
 
 ## Tags
 
@@ -23,9 +23,9 @@ LogicNormalForm universally reduces to EMLRegistry.rightComb n across all LogicT
 
 -/
 
-import LaserCortex.EMLRegistry
+import LaserCortex.foundations.Tamari
 
-export EMLRegistry (contracts_one contracts_to rightComb)
+export EMLTree (contracts_one contracts_to rightComb)
 
 namespace LogicTypes
 
@@ -185,32 +185,32 @@ def LogicType.dimensionIndex : LogicType → Nat := fun lt =>
 For now, all logic types use the same underlying EMLTree structure.
 In the future, this may be extended to logic-specific tree types.
 -/
-def LogicTree (lt : LogicType) : Type := EMLRegistry.EMLTree
+def LogicTree (lt : LogicType) : Type := EMLTree
 
 /-- 
 The contraction relation for each logic type.
 
-For Classical logic, this is the Tamari contraction from EMLRegistry.
+For Classical logic, this is the Tamari contraction from EMLTree
 For other logics, this will be logic-specific contraction relations.
 
 This is a TYPE FAMILY indexed by LogicType.
 -/
-def LogicContraction : LogicType → EMLRegistry.EMLTree → EMLRegistry.EMLTree → Prop
-  | .Classical => EMLRegistry.contracts_to_at_cdStep 0
-  | .Fuzzy => EMLRegistry.contracts_to_at_cdStep 1
-  | .ManyValued => EMLRegistry.contracts_to_at_cdStep 1
-  | .Paraconsistent => EMLRegistry.contracts_to_at_cdStep 4
-  | .Temporal => EMLRegistry.contracts_to_at_cdStep 1
-  | .Deontic => EMLRegistry.contracts_to_at_cdStep 1
-  | .Epistemic => EMLRegistry.contracts_to_at_cdStep 1
-  | .Quantum => EMLRegistry.contracts_to_at_cdStep 3
-  | .Intuitionistic => EMLRegistry.contracts_to_at_cdStep 2
-  | .Relevance => EMLRegistry.contracts_to_at_cdStep 3
-  | .Free => EMLRegistry.contracts_to_at_cdStep 4
-  | .Infinitary => EMLRegistry.contracts_to_at_cdStep 3
-  | .Modal => EMLRegistry.contracts_to_at_cdStep 3
-  | .Spacetime => EMLRegistry.contracts_to_at_cdStep 3
-  | .Boolean => EMLRegistry.contracts_to_at_cdStep 0
+def LogicContraction : LogicType → EMLTree → EMLTree → Prop
+  | .Classical => contracts_to
+  | .Fuzzy => contracts_to
+  | .ManyValued => contracts_to
+  | .Paraconsistent => contracts_to
+  | .Temporal => contracts_to
+  | .Deontic => contracts_to
+  | .Epistemic => contracts_to
+  | .Quantum => contracts_to
+  | .Intuitionistic => contracts_to
+  | .Relevance => contracts_to
+  | .Free => contracts_to
+  | .Infinitary => contracts_to
+  | .Modal => contracts_to
+  | .Spacetime => contracts_to
+  | .Boolean => contracts_to
   -- The base relation is the Tamari contraction. The cdStep parameter
   -- differentiates logics by their Cayley-Dickson stage:
   --   cdStep ≤ 2 (associative, Sector 3): Classical, Fuzzy, ManyValued, Paraconsistent, etc.
@@ -229,11 +229,11 @@ Logic translation: formal specification of how to map between logics.
 
 This is the foundation for cross-logic reasoning.
 -/
-structure LogicTranslation (lt1 lt2 : LogicType) (s : EMLRegistry.EMLTree) (t : EMLRegistry.EMLTree) where
+structure LogicTranslation (lt1 lt2 : LogicType) (s : EMLTree) (t : EMLTree) where
   -- Forward translation: s in lt1 → some tree in lt2
-  forward : EMLRegistry.EMLTree → EMLRegistry.EMLTree
+  forward : EMLTree → EMLTree
   -- Backward translation: t in lt2 → some tree in lt1
-  backward : EMLRegistry.EMLTree → EMLRegistry.EMLTree
+  backward : EMLTree → EMLTree
   -- Soundness: forward preserves lt1 structure
   soundness : ∀ x, LogicContraction lt1 x (forward x)
   -- Completeness: backward preserves lt2 structure
@@ -246,25 +246,25 @@ Meta-contraction: contraction that can cross logic boundaries.
 
 This allows reasoning that involves multiple logic types.
 -/
-inductive MetaContractsTo : LogicType → EMLRegistry.EMLTree → LogicType → EMLRegistry.EMLTree → Prop where
-  | intra : ∀ (lt : LogicType) (s t : EMLRegistry.EMLTree),
+inductive MetaContractsTo : LogicType → EMLTree → LogicType → EMLTree → Prop where
+  | intra : ∀ (lt : LogicType) (s t : EMLTree),
       -- Contraction within the same logic
       LogicContraction lt s t →
       MetaContractsTo lt s lt t
-  | inter : ∀ (lt1 lt2 : LogicType) (s t : EMLRegistry.EMLTree),
+  | inter : ∀ (lt1 lt2 : LogicType) (s t : EMLTree),
       -- Translation between different logics
       LogicTranslation lt1 lt2 s t →
       MetaContractsTo lt1 s lt2 t
-  | trans : ∀ (lt1 lt2 lt3 : LogicType) (s t u : EMLRegistry.EMLTree),
+  | trans : ∀ (lt1 lt2 lt3 : LogicType) (s t u : EMLTree),
       -- Transitivity across logic boundaries
       MetaContractsTo lt1 s lt2 t →
       MetaContractsTo lt2 t lt3 u →
       MetaContractsTo lt1 s lt3 u
-  | congr_left : ∀ (lt1 lt2 : LogicType) (s s' t : EMLRegistry.EMLTree),
+  | congr_left : ∀ (lt1 lt2 : LogicType) (s s' t : EMLTree),
       MetaContractsTo lt1 s lt1 s' →
       MetaContractsTo lt1 s' lt2 t →
       MetaContractsTo lt1 s lt2 t
-  | congr_right : ∀ (lt1 lt2 : LogicType) (s t t' : EMLRegistry.EMLTree),
+  | congr_right : ∀ (lt1 lt2 : LogicType) (s t t' : EMLTree),
       MetaContractsTo lt1 s lt2 t →
       MetaContractsTo lt2 t lt2 t' →
       MetaContractsTo lt1 s lt2 t'
@@ -334,20 +334,20 @@ the cost landscape to a simpler problem in lt2." -/
 def LogicFactorization (lt1 lt2 : LogicType) : Prop :=
   ∀ s t, LogicContraction lt1 s t → LogicContraction lt2 (rightComb s.size) (rightComb t.size)
 
-lemma LogicContraction_reduces (lt : LogicType) (s t : EMLRegistry.EMLTree) :
-    LogicContraction lt s t = EMLRegistry.contracts_to s t := by
+lemma LogicContraction_reduces (lt : LogicType) (s t : EMLTree) :
+    LogicContraction lt s t = contracts_to s t := by
   cases lt <;> rfl
 
 theorem logicFactorization_exists (lt1 lt2 : LogicType) (h : lt2.cdStep ≤ lt1.cdStep) :
     LogicFactorization lt1 lt2 := by
   intro s t hst
-  have h_contracts : EMLRegistry.contracts_to s t := by
+  have h_contracts : contracts_to s t := by
     rw [← LogicContraction_reduces lt1 s t]
     exact hst
-  have hsize : s.size = t.size := EMLRegistry.contracts_to_size_eq h_contracts
+  have hsize : s.size = t.size := contracts_to_size_eq h_contracts
   rw [hsize]
   apply (LogicContraction_reduces lt2 (rightComb t.size) (rightComb t.size)).mpr
-  exact EMLRegistry.contracts_to.refl _
+  exact contracts_to.refl _
 
 -- ============================================================================
 -- SECTION 6: Split-Octonion Connection
@@ -399,39 +399,39 @@ The normal form for each logic type.
 For Classical logic, this is rightComb (the Tamari minimum).
 For other logics, this will be logic-specific.
 -/
-def LogicNormalForm : LogicType → Nat → EMLRegistry.EMLTree
-  | .Classical, n => EMLRegistry.rightComb n
-  | .Fuzzy, n => EMLRegistry.rightComb n  -- Normal form = Tamari minimum
-  | .ManyValued, n => EMLRegistry.rightComb n
-  | .Paraconsistent, n => EMLRegistry.rightComb n
-  | .Temporal, n => EMLRegistry.rightComb n
-  | .Deontic, n => EMLRegistry.rightComb n
-  | .Epistemic, n => EMLRegistry.rightComb n
-  | .Quantum, n => EMLRegistry.rightComb n
-  | .Intuitionistic, n => EMLRegistry.rightComb n
-  | .Relevance, n => EMLRegistry.rightComb n
-  | .Free, n => EMLRegistry.rightComb n
-  | .Infinitary, n => EMLRegistry.rightComb n
-  | .Modal, n => EMLRegistry.rightComb n
-  | .Spacetime, n => EMLRegistry.rightComb n
-  | .Boolean, n => EMLRegistry.rightComb n
+def LogicNormalForm : LogicType → Nat → EMLTree
+  | .Classical, n => rightComb n
+  | .Fuzzy, n => rightComb n
+  | .ManyValued, n => rightComb n
+  | .Paraconsistent, n => rightComb n
+  | .Temporal, n => rightComb n
+  | .Deontic, n => rightComb n
+  | .Epistemic, n => rightComb n
+  | .Quantum, n => rightComb n
+  | .Intuitionistic, n => rightComb n
+  | .Relevance, n => rightComb n
+  | .Free, n => rightComb n
+  | .Infinitary, n => rightComb n
+  | .Modal, n => rightComb n
+  | .Spacetime, n => rightComb n
+  | .Boolean, n => rightComb n
 
 /-- 
 The main contraction theorem for each logic type.
 
-For Classical: contracts_to_rightComb from EMLRegistry.
+For Classical: contracts_to_rightComb from EMLTree
 For others: To be proven.
 -/
-theorem logic_contracts_to_normal_form (lt : LogicType) (t : EMLRegistry.EMLTree) :
+theorem logic_contracts_to_normal_form (lt : LogicType) (t : EMLTree) :
     LogicContraction lt t (LogicNormalForm lt t.size) := by
   -- All logics share contracts_to dynamics with rightComb as normal form
-  have hNF : LogicNormalForm lt t.size = EMLRegistry.rightComb t.size := by
+  have hNF : LogicNormalForm lt t.size = rightComb t.size := by
     cases lt <;> rfl
   rw [hNF]
-  have hLC : LogicContraction lt = EMLRegistry.contracts_to := by
+  have hLC : LogicContraction lt = contracts_to := by
     cases lt <;> rfl
   rw [hLC]
-  exact EMLRegistry.contracts_to_rightComb t
+  exact contracts_to_rightComb t
 
 -- ============================================================================
 -- SECTION 8: Proof Pattern Template
@@ -441,7 +441,7 @@ theorem logic_contracts_to_normal_form (lt : LogicType) (t : EMLRegistry.EMLTree
 /-
 PROOF PATTERN TEMPLATE
 
-The proof of EMLRegistry.node_of_rightCombs_contracts_to_rightComb
+The proof of node_of_rightCombs_contracts_to_rightComb
 establishes the pattern for all logic-specific contraction proofs.
 
 Pattern:
@@ -463,25 +463,25 @@ For other logics, follow the same pattern with logic-specific definitions.
 -/
 
 -- ============================================================================
--- SECTION 9: Integration with EMLRegistry
+-- SECTION 9: Integration with Tamari
 -- Making the pluralistic framework compatible with existing code
 -- ============================================================================
 
--- Classical logic is the baseline, so it uses EMLRegistry directly
-abbrev ClassicalContraction := EMLRegistry.contracts_to
-abbrev ClassicalNormalForm (n : Nat) := EMLRegistry.rightComb n
+-- Classical logic is the baseline, so it uses Tamari directly
+abbrev ClassicalContraction := contracts_to
+abbrev ClassicalNormalForm (n : Nat) := rightComb n
 
--- The classical contraction theorem (from EMLRegistry)
-theorem classical_contracts_to_normal_form (t : EMLRegistry.EMLTree) :
+-- The classical contraction theorem (from Tamari)
+theorem classical_contracts_to_normal_form (t : EMLTree) :
     ClassicalContraction t (ClassicalNormalForm t.size) :=
-  EMLRegistry.contracts_to_rightComb t
+  contracts_to_rightComb t
 
--- The classical composition lemma (from EMLRegistry)
+-- The classical composition lemma (from Tamari)
 theorem classical_node_of_rightCombs (a b : Nat) :
     ClassicalContraction
-      (EMLRegistry.EMLTree.Node (ClassicalNormalForm a) (ClassicalNormalForm b))
+      (EMLTree.Node (ClassicalNormalForm a) (ClassicalNormalForm b))
       (ClassicalNormalForm (1 + a + b)) :=
-  EMLRegistry.node_of_rightCombs_contracts_to_rightComb a b
+  node_of_rightCombs_contracts_to_rightComb a b
 
 -- ============================================================================
 -- SECTION 10: Future Extensions
@@ -664,14 +664,14 @@ theorem pentagon_weakening_is_surjective :
 **Status**: Framework Skeleton Complete  
 **Next Review**: After Phase 0 completion (Classical logic fully proven)  
 **Dependencies**:
-- LaserCortex/EMLRegistry.lean (compiling)
+- LaserCortex/EMLTreelean (compiling)
 - docs/PLURALISTIC_LOGIC_FRAMEWORK.md (design document)
 
 **Next Steps**:
 1. ✅ Document findings (PLURALISTIC_LOGIC_FRAMEWORK.md)
-2. ✅ Prove node_of_rightCombs_contracts_to_rightComb (EMLRegistry.lean)
+2. ✅ Prove node_of_rightCombs_contracts_to_rightComb (EMLTreelean)
 3. ✅ Create LogicTypes.lean (THIS FILE)
-4. ⏳ Complete contracts_to_rightComb verification (EMLRegistry.lean)
+4. ⏳ Complete contracts_to_rightComb verification (EMLTreelean)
 5. ⏳ Test compilation of both files
 
 *End of file*

@@ -1,0 +1,101 @@
+/: 034: Graphiti Oscillation as Market Failure — NormCode Analysis Plan
+/: Phase 1: Feed oscillation trace from experiment
+/: Phase 2: Lift to formal model (EMLTree anti-coherent pair)
+/: Phase 3: Ground the fix as a NormCode norm (prefer_current rule)
+/: Phase 4: Verify closure fixed point with and without tie-breaking
+
+concept community_7, community_9, pivot_node_C, tie_condition
+concept oscillation_state, stable_state, closure_outcome
+concept iter_count, vote_tally_7, vote_tally_9
+concept deg_s2ville, deg_s3ville, symmetric_deg_condition
+concept type_lattice_graph, adjacency_edge, edge_weight
+concept converged_norm, oscillating_norm, certificate
+
+/: Data structures for the per-iteration trace -:/
+concept iteration_assignments    /: Map node→community per iteration -:/
+concept vote_history             /: Record of vote tallies at C per iteration -:/
+concept tie_break_rule           /: "prefer current" or "prefer higher" -:/
+
+/: Relations -:/
+
+relation build_entity_graph : type_lattice_graph -> adjacency_edge
+    /: From the 11 types and 5 adjacencies -:/
+
+relation measure_neighbor_votes : adjacency_edge -> vote_tally_7 × vote_tally_9
+    /: For each node, count edge_weight to comm 7 vs comm 9 -:/
+
+relation detect_symmetric_tie : vote_tally_7 × vote_tally_9 -> tie_condition
+    /: True when vote_tally_7 = vote_tally_9 -:/
+
+relation iterate_no_break : adjacency_edge × tie_break_rule -> oscillation_state
+    /: Without prefer_current: infinite oscillation -:/
+
+relation iterate_with_break : adjacency_edge × tie_break_rule -> stable_state
+    /: With prefer_current: converges in ≤ |V| steps -:/
+
+relation closure_on_oscillation : oscillation_state -> oscillating_norm
+    /: closure() on oscillating trace has no fixed point -:/
+
+relation closure_on_convergent : stable_state -> converged_norm
+    /: closure() on convergent trace has fixed point -:/
+
+relation certify_stable : converged_norm -> certificate
+    /: Emit CortexCertificate for stable outcome -:/
+
+relation connect_to_dolly_zoom : symmetric_deg_condition -> deg_s2ville × deg_s3ville
+    /: deg(C)_S₂ville = deg(C)_S₃ville  iff  [s₂⁺(i), s₃⁺(j)] = 0 -:/
+
+/: 
+Path A: No tie-breaking — infinite oscillation
+  Shows that the upstream algorithm never converges.
+  closure_is_fixed_point = false.
+:/
+path: oscillation_without_fix(type_lattice_graph, tie_break_rule) -> oscilating_norm
+    <= build_entity_graph(type_lattice_graph)
+    <- adjacency_edge
+    <= measure_neighbor_votes(adjacency_edge)
+    <- vote_tally_7
+    <- vote_tally_9
+    <= detect_symmetric_tie(vote_tally_7, vote_tally_9)
+    <- tie_condition
+    <= iterate_no_break(adjacency_edge, tie_break_rule)
+    <- oscillation_state
+    <= closure_on_oscillation(oscillation_state)
+    <* self_check_norm(oscillating_norm)
+    :closure:
+
+/: 
+Path B: With tie-breaking — converges to stable state
+  Prefer_current breaks the symmetry.
+  closure_is_fixed_point = true.
+:/
+path: convergence_with_fix(type_lattice_graph, tie_break_rule) -> certificate
+    <= build_entity_graph(type_lattice_graph)
+    <- adjacency_edge
+    <= measure_neighbor_votes(adjacency_edge)
+    <- vote_tally_7
+    <- vote_tally_9
+    <= iterate_with_break(adjacency_edge, tie_break_rule)
+    <- stable_state
+    <= closure_on_convergent(stable_state)
+    <- converged_norm
+    <= certify_stable(converged_norm)
+    <- certificate
+    :closure:
+
+/: 
+Path C: Lift to Lean formal layer
+  Connect the concrete oscillation to the commutator vanishing theorem.
+:/
+path: lift_to_lean(type_lattice_graph, pivot_node_C) -> deg_s2ville × deg_s3ville
+    <= build_entity_graph(type_lattice_graph)
+    <- adjacency_edge
+    <= connect_to_dolly_zoom(symmetric_deg_condition)
+    <- deg_s2ville
+    <- deg_s3ville
+
+/: 
+Observable: when deg_s2ville = deg_s3ville, the oscillation is structurally
+necessary — no tie-breaking rule can make the market converge without
+changing the underlying graph topology.
+:/

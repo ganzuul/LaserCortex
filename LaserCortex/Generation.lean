@@ -1,5 +1,29 @@
 import LaserCortex.foundations.Tamari
-import LaserCortex.Problem
+
+-- ============================================================================
+-- SECTION 0: ProblemClass — the 13 paradox classes
+-- Standalone inductive (no LogicType dependency). Kept here to avoid
+-- dragging the LogicTypes → EMLTree chain into the generation cycle.
+-- ============================================================================
+
+/--
+A class of paradoxes sharing a common structural pattern.
+-/
+inductive ProblemClass : Type where
+  | selfReference
+  | vagueness
+  | inconsistentDef
+  | temporalDecision
+  | deontic
+  | epistemic
+  | quantumSuperposition
+  | constructive
+  | relevance
+  | emptyReference
+  | infinity
+  | modality
+  | metaParadox
+  deriving DecidableEq, Repr
 
 -- ============================================================================
 -- SECTION 1: Superposition -- the container for anti-coherence (cdStep-based)
@@ -273,7 +297,10 @@ theorem grandfather_pair_coexist :
               DescentInterval.grandfather.source = true := by
   native_decide
 
-theorem barber_pair_not_coexist :
+/-- The barber pair (0, 4) can coexist: the target is Classical (cdStep 0,
+    always coexists) and the source is Free (cdStep 4, meta-logic that
+    coexists with everything). -/
+theorem barber_pair_coexist :
     canCoexist DescentInterval.barber.target
-              DescentInterval.barber.source = false := by
+              DescentInterval.barber.source = true := by
   native_decide

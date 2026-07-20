@@ -754,6 +754,13 @@ theorem SplitQuat.grade_add (x y : SplitQuat) : (x + y).grade = x.grade + y.grad
     rw [h_add, h_neg, h_mul, ih]
     ring
 
+theorem antipode_sq_zsmul (r : ℤ) (x : SplitQuat) : antipode_sq (r • x) = r • antipode_sq x := by
+  apply SplitQuat.ext_components
+  · simp [antipode_sq, split_quat_zsmul_a]
+  · simp [antipode_sq, split_quat_zsmul_b]
+  · simp [antipode_sq, split_quat_zsmul_c]
+  · simp [antipode_sq, split_quat_zsmul_d]
+
 @[simp] theorem split_oct_zsmul_e0 (r : ℤ) (z : SplitOctonion) : (r • z).e0 = r * z.e0 := by
   induction r using Int.induction_on with
   | zero => rw [zero_smul, zero_mul]; rfl

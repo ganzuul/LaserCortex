@@ -102,13 +102,37 @@ The plugin registers a single `graphiti` tool with these modes:
 
 | Mode | Purpose | Key args |
 |------|---------|----------|
-| `add` | Store a memory (project-config, architecture, preference, etc.) | `content`, `type`, `scope` (user/project), `source` (text/json/message) |
+| `add` | Store a memory — queues episode for LLM entity extraction | `content`, `type`, `scope` (user/project), `source` (text/json/message) |
 | `search` | Semantic + graph search across memories | `query`, `scope`, `limit`, `centerNodeId` |
 | `list` | Recent episodes | `scope`, `limit` |
 | `profile` | User preferences (cross-project) | `query` |
 | `forget` | Remove a memory | `memoryId` |
 | `graph` | Explore entity relationships | `centerNodeId`, `query`, `scope` |
 | `status` | Server health | — |
+
+### Source formats (`add` mode)
+
+| Source | When to use | Behavior |
+|--------|-------------|----------|
+| `text` | Plain conversation or notes | LLM extracts entities + relationships from free text |
+| `json` | Structured data (config, specs) | Parsed as JSON; entities extracted from structure |
+| `message` | Chat/conversation content | Optimized for dialogue-style content |
+
+### Entity types (auto-extracted on `add`)
+
+The LLM extracts these entity types from episode content:
+
+| Type | Priority | What it captures |
+|------|----------|-----------------|
+| `Preference` | **Highest** | User wants, likes, dislikes, choices, opinions ("I want X", "skip Y") |
+| `Requirement` | High | Specific needs, features, functionality ("we need X", "X must have Y") |
+| `Procedure` | High | Sequential instructions, conditional steps ("first do X, then Y") |
+| `Organization` | Normal | Companies, institutions, groups, formal entities |
+| `Document` | Normal | Books, articles, reports, emails, videos |
+| `Event` | Normal | Meetings, deadlines, planned or unplanned occurrences |
+| `Location` | Normal | Physical or virtual places |
+| `Topic` | **Last resort** | Subject of conversation or knowledge domain |
+| `Object` | **Last resort** | Physical items, tools, devices |
 
 ### Memory Scopes
 
@@ -142,6 +166,10 @@ graphiti(mode: "add", content: "lake build runs 194 jobs", type: "project-config
 graphiti(mode: "search", query: "decisions about DescentInterval")
 graphiti(mode: "list", scope: "project", limit: 20)
 graphiti(mode: "forget", memoryId: "uuid-here")
+graphiti(mode: "graph", centerNodeId: "<uuid>", query: "related patterns")
+graphiti(mode: "profile", query: "testing preferences")
+graphiti(mode: "status")
+graphiti(mode: "help")
 ```
 
 ### Migration from Open Notebook Librarian

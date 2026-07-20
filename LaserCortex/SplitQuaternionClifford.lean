@@ -1,4 +1,4 @@
-
+/-!
 ## Intent
 
 Constructs Cl(1,1) over ℤ — the Clifford algebra of the split plane with
@@ -55,7 +55,7 @@ split_quat_mul_assoc: (xy)z = x(yz) — associativity holds (unlike 𝕆ˢ).
 ## Tags
 
 #lean4-theorem #clifford-algebra #integration-point #split-quaternion
---
+-/
 
 import Mathlib.LinearAlgebra.CliffordAlgebra.Basic
 import Mathlib.LinearAlgebra.QuadraticForm.Basic
