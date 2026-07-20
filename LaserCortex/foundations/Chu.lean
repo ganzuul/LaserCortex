@@ -79,7 +79,7 @@ def splitQuatPairingAux (y z : SplitQuat) : ℤ :=
 theorem splitQuatPairingAux_eq_product (y z : SplitQuat) :
     splitQuatPairingAux y z = (antipode_sq y * z).a := by
   dsimp [splitQuatPairingAux, antipode_sq]
-  simp [split_quat_mul_a, neg_mul, mul_neg, sub_eq_add_neg]
+  simp [split_quat_mul_a, neg_mul, sub_eq_add_neg]
 
 def splitQuatPairing : SplitQuat →ₗ[ℤ] SplitQuat →ₗ[ℤ] ℤ :=
   { toFun := λ y =>
@@ -232,12 +232,107 @@ def chuSpaceOf (x : SplitQuat) : ChuSpace SplitQuat :=
     a' := antipode_sq x
     pair := splitQuatPairing }
 
-theorem chu_embed_mul (x y : SplitQuat) : SplitQuat.embed (x * y) = SplitQuat.embed x * SplitQuat.embed y := by
-  unfold SplitQuat.embed
-  simp [Algebra.smul_def]
-  noncomm_ring
+open Quaternion QuaternionAlgebra
+
+/-- Convert a split quaternion to mathlib's quaternion algebra `ℍ[ℤ,-1,1]`
+    (i.e. `QuaternionAlgebra ℤ (-1) 0 1`), where `i² = -1` and `j² = 1`.
+
+    Componentwise this is the identity: `(a,b,c,d) ↦ ⟨a, b, c, d⟩`. -/
+def toQuaternionAlgebra (x : SplitQuat) : ℍ[ℤ, -1, 1] :=
+  ⟨x.a, x.b, x.c, x.d⟩
+
+/-- SplitQuat multiplication is definitionally the `ℍ[ℤ,-1,1]` table. -/
+theorem toQuaternionAlgebra_mul (x y : SplitQuat) :
+    toQuaternionAlgebra (x * y) = toQuaternionAlgebra x * toQuaternionAlgebra y := by
+  change toQuaternionAlgebra (split_quat_mul x y) =
+    (⟨x.a, x.b, x.c, x.d⟩ : ℍ[ℤ, -1, 1]) * ⟨y.a, y.b, y.c, y.d⟩
+  simp only [toQuaternionAlgebra, split_quat_mul, mk_mul_mk]
+  refine QuaternionAlgebra.ext ?_ ?_ ?_ ?_ <;> dsimp <;> ring
+
+/-- Linear equivalence swapping axes: `ε0 ↦ (0,1)`, `ε1 ↦ (1,0)`, so that
+    `Q11` (signature +1,−1) matches `CliffordAlgebraQuaternion.Q (-1) 1`
+    (signature −1,+1). -/
+def q11LinEquiv : (Fin 2 → ℤ) ≃ₗ[ℤ] (ℤ × ℤ) where
+  toFun v := (v 1, v 0)
+  invFun p i := if i = 0 then p.2 else p.1
+  left_inv v := by
+    ext i
+    fin_cases i <;> simp
+  right_inv p := by
+    ext <;> simp
+  map_add' x y := by
+    ext <;> simp [Pi.add_apply]
+  map_smul' m x := by
+    ext <;> simp [Pi.smul_apply]
+
+theorem q11LinEquiv_ε0 : q11LinEquiv ε0 = (0, 1) := by
+  simp [q11LinEquiv, ε0]
+
+theorem q11LinEquiv_ε1 : q11LinEquiv ε1 = (1, 0) := by
+  simp [q11LinEquiv, ε1]
+
+/-- Quadratic isometry equivalence `Q11 ≃qᵢ Q(-1,1)`. -/
+def q11IsometryEquiv :
+    Q11.IsometryEquiv (CliffordAlgebraQuaternion.Q (-1 : ℤ) (1 : ℤ)) where
+  toLinearEquiv := q11LinEquiv
+  map_app' v := by
+    simp [q11LinEquiv, CliffordAlgebraQuaternion.Q_apply, Q11, QuadraticMap.proj_apply]
+    ring
+
+/-- Algebra equivalence `Cl11 ≃ₐ CliffordAlgebra (Q (-1) 1)`. -/
+noncomputable def cl11EquivQuatCl :
+    Cl11 ≃ₐ[ℤ] CliffordAlgebra (CliffordAlgebraQuaternion.Q (-1 : ℤ) (1 : ℤ)) :=
+  CliffordAlgebra.equivOfIsometry q11IsometryEquiv
+
+theorem cl11EquivQuatCl_eq_map (x : Cl11) :
+    cl11EquivQuatCl x = CliffordAlgebra.map q11IsometryEquiv.toIsometry x := by
+  rfl
+
+theorem cl11EquivQuatCl_ι (v : Fin 2 → ℤ) :
+    cl11EquivQuatCl (CliffordAlgebra.ι Q11 v) =
+      CliffordAlgebra.ι _ (q11LinEquiv v) := by
+  rw [cl11EquivQuatCl_eq_map, CliffordAlgebra.map_apply_ι]
+  -- toIsometry applies as q11LinEquiv
+  rfl
+
+theorem cl11EquivQuatCl_e0' :
+    cl11EquivQuatCl e0' = CliffordAlgebra.ι _ (0, 1) := by
+  rw [e0', cl11EquivQuatCl_ι, q11LinEquiv_ε0]
+
+theorem cl11EquivQuatCl_e1' :
+    cl11EquivQuatCl e1' = CliffordAlgebra.ι _ (1, 0) := by
+  rw [e1', cl11EquivQuatCl_ι, q11LinEquiv_ε1]
+
+theorem cl11EquivQuatCl_algebraMap (r : ℤ) :
+    cl11EquivQuatCl (algebraMap ℤ Cl11 r) =
+      algebraMap ℤ _ r := by
+  rw [cl11EquivQuatCl_eq_map]
+  exact (CliffordAlgebra.map q11IsometryEquiv.toIsometry).commutes r
+
+/-- Under the isometry, `embed` is exactly mathlib's `ofQuaternion`. -/
+theorem cl11EquivQuatCl_embed (x : SplitQuat) :
+    cl11EquivQuatCl (SplitQuat.embed x) =
+      CliffordAlgebraQuaternion.ofQuaternion (toQuaternionAlgebra x) := by
+  rw [SplitQuat.embed, toQuaternionAlgebra, CliffordAlgebraQuaternion.ofQuaternion_mk]
+  simp only [map_add, map_smul, map_mul, cl11EquivQuatCl_algebraMap,
+    cl11EquivQuatCl_e0', cl11EquivQuatCl_e1']
+  rfl
+
+/-- The embedding `SplitQuat → Cl(1,1)` is a multiplicative homomorphism.
+
+    Real-world content: the split-quaternion product *is* the Clifford product
+    of Cl(1,1) under `1 ↦ 1`, `i ↦ e₁'`, `j ↦ e₀'`, `k ↦ e₁'e₀'`.  The proof
+    routes through mathlib's `QuaternionAlgebra ≃ CliffordAlgebra` rather than
+    expanding 16 basis products by hand. -/
+theorem chu_embed_mul (x y : SplitQuat) :
+    SplitQuat.embed (x * y) = SplitQuat.embed x * SplitQuat.embed y := by
+  -- Transport across the AlgEquiv `cl11EquivQuatCl` (injective)
+  apply cl11EquivQuatCl.injective
+  rw [map_mul, cl11EquivQuatCl_embed, cl11EquivQuatCl_embed, cl11EquivQuatCl_embed,
+    toQuaternionAlgebra_mul, map_mul]
 
 theorem chu_zsmul_eq_mul (r : ℤ) (x : Cl11) : r • x = (algebraMap ℤ Cl11 r) * x := by
+  -- On Cl11 the Algebra ℤ instance's smul is algebraMap-mul
   simp
 
 -- ============================================================================
@@ -276,13 +371,32 @@ theorem ChuSeq_assoc (X Y Z : ChuSpace SplitQuat) :
     ChuSeq (ChuSeq X Y) Z = ChuSeq X (ChuSeq Y Z) := by
   ext <;> simp [ChuSeq, split_quat_mul_a, split_quat_mul_b, split_quat_mul_c, split_quat_mul_d] <;> ring
 
-theorem Chu_distributor (X Y Z W : ChuSpace SplitQuat) (P : SplitQuat) :
-    splitQuatPairingAux ((X.a * Y.a) * (Z.a * W.a)) P =
-    splitQuatPairingAux (X.a * Z.a) ((Y.a' * W.a') * P) := by
-  dsimp [splitQuatPairingAux]
-  simp only [split_quat_mul_a, split_quat_mul_b, split_quat_mul_c, split_quat_mul_d]
-  set_option maxRecDepth 2000000 in
+/-- Sliding law for the (2,2) pairing: `β(u*v, w) = β(v, S(u)*w)`.
+
+    Plain English: because the split-quaternion norm is multiplicative, its
+    bilinear polarization lets you move a left factor across the pairing by
+    conjugating (the antipode).  This is the algebraic content of a duoidal
+    distributor at the truncated ℤ-algebra level. -/
+theorem splitQuatPairingAux_mul_slide (u v w : SplitQuat) :
+    splitQuatPairingAux (u * v) w = splitQuatPairingAux v (antipode_sq u * w) := by
+  dsimp [splitQuatPairingAux, antipode_sq]
+  simp only [show ∀ a b : SplitQuat, (a * b) = split_quat_mul a b from fun _ _ => rfl,
+    split_quat_mul]
   ring
+
+/-- Distributor coherence (pairing form).
+
+    The earlier statement mixing independent `Y.a` with `Y.a'` was false for
+    general Chu spaces.  The correct identity slides a left factor across the
+    pairing via the antipode:
+    `β((x*y)*(z*w), p) = β(y*(z*w), S(x)*p)`. -/
+theorem Chu_distributor (x y z w p : SplitQuat) :
+    splitQuatPairingAux ((x * y) * (z * w)) p =
+      splitQuatPairingAux (y * (z * w)) (antipode_sq x * p) := by
+  -- (x*y)*(z*w) = x*(y*(z*w)) by associativity of SplitQuat
+  have hassoc : (x * y) * (z * w) = x * (y * (z * w)) := split_quat_mul_assoc x y (z * w)
+  rw [hassoc]
+  exact splitQuatPairingAux_mul_slide x (y * (z * w)) p
 
 theorem kkt_stationarity (x y : SplitQuat) : SplitQuat.embed (x * y) = SplitQuat.embed x * SplitQuat.embed y :=
   chu_embed_mul x y
