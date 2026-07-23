@@ -13,7 +13,7 @@ minimizers are the coherent observational trajectories.
 
 ## Motivation
 
-The document `docs/GPL_on_free_energy.md` proposes:
+The document `docs/GPT_on_free_energy.md` proposes:
 
 > Is there a scalar functional on coherence positions whose minimizers
 > are exactly the coherent observational trajectories?
@@ -59,7 +59,7 @@ The analogy to thermodynamic free energy F = U − TS:
 - `SubdivisionClosure.lean` → weightedCost, closure, dcStep
 - `Generation.lean` → DescentInterval, revise, Superposition
 - `foundations/Tamari.lean` → EMLTree, contracts_to, rightComb, dcStep
-- `docs/GPL_on_free_energy.md` — the free energy analogy
+- `docs/GPT_on_free_energy.md` — the free energy analogy
 -/
 
 -- ============================================================================
@@ -408,7 +408,7 @@ theorem grandfather_generation_survives_cd1 :
 -- the per-step cost, making non-associative contraction fundamentally more
 -- expensive than associative contraction.
 --
--- Connection to `docs/GPL_on_free_energy.md`:
+-- Connection to `docs/GPT_on_free_energy.md`:
 --
 -- - The document's `C = E − D` maps to `ΔΦ = Φ − Φ_min` (excess = total − minimum)
 -- - The document's `F = R / λΓ` maps to `η = dcStep / frictionDensity` (density)
