@@ -935,3 +935,190 @@ theorem antipode_preserves_norm (x : SplitOctonion) : octonion_norm (antipode x)
     _ = x.e0 * x.e0 + x.e1 * x.e1 + x.e2 * x.e2 + x.e3 * x.e3 -
       x.e4 * x.e4 - x.e5 * x.e5 - x.e6 * x.e6 - x.e7 * x.e7 := by ring
     _ = octonion_norm x := rfl
+
+-- ============================================================================
+-- SplitComplex — the (1,1) split-complex algebra over ℤ
+-- ============================================================================
+
+/--
+The split-complex numbers ℂ' over ℤ: `a + bj` where `j² = +1`.
+This is the bottom rung of the Cayley-Dickson ladder, carrying the split
+signature (1,1). The norm `N(a + bj) = a² − b²` is the **Lorentz-signature
+Pythagorean theorem** — the analogue of `a² + b² = c²` in Minkowski space.
+
+## Relation to the Tamari metric space
+
+The Tamari coherence interval `coherenceInterval(cd, t) = dcStep² − frictionDensity²`
+is exactly the split-complex norm on the point `(dcStep, frictionDensity)`.
+This embedding is a step in the dimension-reduction chain:
+
+    (4,4) split-octonion → (5,3) via KKT → (3,1) spacetime → (1,1) split-complex
+
+where the (1,1) signature is the *observable* projection: one timelike coordinate
+and one spacelike coordinate.
+
+## Connection to Euler angles and gimbal lock
+
+The Euclidean l₂ norm `a² + b²` is defined by the Pythagorean theorem and
+parameterises compact rotations (SO(3) via Euler angles). The gimbal lock
+singularity at β = ±π/2 is a coordinate singularity in the (1,1) signature:
+the split-complex norm `a² − b²` regularises this singularity by working in
+the split (Lorentzian) metric, where hyperbolic rotations (boosts) are
+globally smooth.
+-/
+structure SplitComplex where
+  a : ℤ  -- real/scalar/timelike component
+  b : ℤ  -- split-imaginary/spacelike component (j² = +1)
+  deriving Repr, Inhabited
+
+namespace SplitComplex
+
+@[ext]
+lemma ext_components {x y : SplitComplex} (ha : x.a = y.a) (hb : x.b = y.b) : x = y := by
+  cases x; cases y; simp at ha hb; simp [ha, hb]
+
+/-- The identity element: `1 = 1 + 0j` -/
+def one : SplitComplex := ⟨1, 0⟩
+
+/-- The split-imaginary unit `j`: `j² = +1` -/
+def j : SplitComplex := ⟨0, 1⟩
+
+/-- Addition -/
+def add (x y : SplitComplex) : SplitComplex :=
+  ⟨x.a + y.a, x.b + y.b⟩
+
+/-- Split-complex multiplication: `(a + bj)(c + dj) = (ac + bd) + (ad + bc)j` -/
+def mul (x y : SplitComplex) : SplitComplex :=
+  ⟨x.a * y.a + x.b * y.b, x.a * y.b + x.b * y.a⟩
+
+/--
+The **split-complex norm**: `N(a + bj) = a² − b²`.
+
+This is the **Lorentz-signature Pythagorean theorem**. In Euclidean geometry,
+the Pythagorean theorem is `a² + b² = c²`. In Lorentzian (Minkowski) geometry,
+the invariant interval is `Δs² = Δt² − Δx²`. The split-complex norm is exactly
+this: it measures the Lorentzian "distance" of a point from the origin.
+
+When the norm is positive, the interval is timelike; zero is lightlike (the
+null cone, where zero divisors live); negative is spacelike.
+-/
+def norm (x : SplitComplex) : ℤ :=
+  x.a * x.a - x.b * x.b
+
+/-- `j² = +1` — the defining property of split-complex numbers.
+    Contrast with the ordinary complex numbers where `i² = -1`. -/
+theorem j_sq : mul j j = one := by
+  ext <;> simp [mul, j, one]
+
+/--
+The norm is multiplicative: `N(xy) = N(x)N(y)`.
+
+This is the composition-algebra property that lifts from the compact
+(Euclidean) case to the split (Lorentzian) case. For the ordinary
+complex numbers, `|zw| = |z||w|`; for the split-complex numbers,
+the same holds but with the indefinite norm.
+-/
+theorem norm_mul (x y : SplitComplex) : norm (mul x y) = norm x * norm y := by
+  simp [norm, mul]; ring
+
+/--
+The norm factorises: `N(a,b) = (a−b)(a+b)`.
+
+This factorisation reveals the **zero-divisor structure**: when `a = b` or
+`a = −b`, the norm vanishes. These are the lightlike (null) directions
+of the (1,1) metric — exactly the two 45° lines in Minkowski space.
+
+In the context of the Tamari metric space, this corresponds to the
+**quench-collapse boundary** where `dcStep = frictionDensity` — the tree
+sits on the associator light cone.
+-/
+theorem norm_factors (x : SplitComplex) : norm x = (x.a - x.b) * (x.a + x.b) := by
+  simp [norm]; ring
+
+/--
+The **Lorentz-signature Pythagorean theorem**: the split-complex norm is the
+difference of squares. `a² − b²` replaces the Euclidean `a² + b²`.
+
+This is the indefinite quadratic form of signature (1,1). The "hypotenuse"
+c is now an interval that can be positive (timelike), zero (lightlike), or
+negative (spacelike). The sign of the norm classifies the causal type of
+the interval.
+-/
+theorem pythagorean (x : SplitComplex) : norm x = x.a ^ 2 - x.b ^ 2 := by
+  simp [norm, pow_two]
+
+end SplitComplex
+
+-- ============================================================================
+-- Composition identity for the (4,4) norm
+-- ============================================================================
+
+/--
+The **composition identity** for the split octonion (4,4)-signature norm:
+
+    N(x · y) = N(x) · N(y)
+
+This is the Cayley-Dickson norm multiplication law — the defining property
+of a composition algebra. The norm `octonion_norm` is multiplicative with
+respect to `split_oct_mul`.
+
+This is the *only* quadratic form (up to scalar) on SplitOctonion that is
+composition-compatible with the given multiplication table. The (5,3)
+antipode-pairing forms (`fiveThreeNorm` and its variant) are NOT multiplicative.
+
+The proof is a polynomial identity over ℤ in 16 variables, discharged by `ring`.
+-/
+theorem octonion_norm_mul (x y : SplitOctonion) :
+    octonion_norm (split_oct_mul x y) = octonion_norm x * octonion_norm y := by
+  rcases x with ⟨x0, x1, x2, x3, x4, x5, x6, x7⟩
+  rcases y with ⟨y0, y1, y2, y3, y4, y5, y6, y7⟩
+  dsimp [split_oct_mul, octonion_norm]
+  ring
+
+-- ============================================================================
+-- The (5,3) norms: antipode-derived quadratic forms
+-- ============================================================================
+
+/--
+The **antipode copairing norm** `fiveThreeNorm`:
+
+    fiveThreeNorm(x) = e₀² + e₁² + e₂² + e₃² + e₄² − e₅² − e₆² − e₇²
+
+Signature (5,3): the positive sector is {e₀, e₁, e₂, e₃, e₄} and the negative
+sector is {e₅, e₆, e₇}. This emerges naturally from the antipode involution:
+it equals `(x · S(x)).e₀` — the counit of the product of an element with its
+antipode.
+
+CRUCIAL: This form is NOT composition-compatible with `split_oct_mul`.
+The (4,4) norm is the unique (up to scalar) multiplicative form on this algebra.
+-/
+def fiveThreeNorm (x : SplitOctonion) : ℤ :=
+  x.e0*x.e0 + x.e1*x.e1 + x.e2*x.e2 + x.e3*x.e3 + x.e4*x.e4
+    - x.e5*x.e5 - x.e6*x.e6 - x.e7*x.e7
+
+/-- The fiveThreeNorm equals the antipode copairing `(x · S(x)).e₀`. -/
+theorem fiveThreeNorm_eq_antipode_copairing (x : SplitOctonion) :
+    fiveThreeNorm x = (split_oct_mul x (antipode x)).e0 := by
+  rcases x with ⟨a, b, c, d, e, f, g, h⟩
+  dsimp [fiveThreeNorm, antipode, split_oct_mul]
+  ring
+
+/--
+The (5,3) antipode-copairing form is **NOT multiplicative**: there exist
+elements `x, y` such that `fiveThreeNorm(x·y) ≠ fiveThreeNorm(x) * fiveThreeNorm(y)`.
+
+Counterexample: `x = ⟨1,1,0,0,0,0,0,0⟩`, `y = ⟨0,0,0,0,1,0,0,0⟩`.
+  fiveThreeNorm(x) = 2,  fiveThreeNorm(y) = 1  (e₄ is in the (5,3) positive sector).
+  x · y = ⟨0,0,0,0,1,1,0,0⟩,  fiveThreeNorm(x·y) = 0  (+1 from e₄, −1 from e₅).
+  0 ≠ 2 × 1 = 2.
+
+This shows that the (5,3) signature is an *algebraic shadow* of the (4,4)
+composition algebra, not a composition algebra in its own right on this
+multiplication table.
+-/
+theorem fiveThreeNorm_non_composition :
+    ¬ (∀ x y : SplitOctonion, fiveThreeNorm (split_oct_mul x y) = fiveThreeNorm x * fiveThreeNorm y) := by
+  intro h
+  have := h ⟨1,1,0,0,0,0,0,0⟩ ⟨0,0,0,0,1,0,0,0⟩
+  dsimp [fiveThreeNorm, split_oct_mul] at this
+  norm_num at this
