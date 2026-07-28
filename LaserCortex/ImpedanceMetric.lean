@@ -1,6 +1,6 @@
 import Mathlib
 import LaserCortex.foundations.Algebra
-import LaserCortex.foundations.AtomicShell
+import LaserCortex.AtomicShell
 
 /-!
 # Layer 2 — The Impedance-Matched Metric Space

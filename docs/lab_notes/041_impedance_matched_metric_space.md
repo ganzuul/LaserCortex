@@ -1,7 +1,7 @@
 # Lab Note 041 — Layer 2: The Impedance-Matched Metric Space
 
 **Date**: 2026-07-27
-**Status**: Formalized and proven in `LaserCortex/foundations/ImpedanceMetric.lean`
+**Status**: Formalized and proven in `LaserCortex/ImpedanceMetric.lean`
 **Builds**: 8542 jobs, clean
 **Axioms (core minimum-energy theorem)**: `propext + Quot.sound` (standard Mathlib `ring` basis — same as `octonion_norm_mul` itself)
 
@@ -160,7 +160,7 @@ maximality, defect `−2` exited through the `ω = e₄` direction.*
 
 ## 7. File References
 
-- `foundations/ImpedanceMetric.lean` — the complete Layer 2 module:
+- `ImpedanceMetric.lean` — the complete Layer 2 module:
   - §1: `impedanceDefect`, `IsMatched`
   - §2: `MatchedSubalgebra`, closure (`matchedSubalgebra_mul_closed`), norm
     coincidence (`octonion_norm_eq_fiveThreeNorm_on_matched`), matches on the
@@ -172,7 +172,7 @@ maximality, defect `−2` exited through the `ω = e₄` direction.*
     `matched_kernel_proper_subalgebra`)
 - `foundations/Algebra.lean` — `octonion_norm_mul`, `fiveThreeNorm`,
   `fiveThreeNorm_non_composition`, `omega_mul_e5`, basis vectors
-- `foundations/AtomicShell.lean` — Layer 1 atomic model
+- `AtomicShell.lean` — Layer 1 atomic model
 - `docs/lab_notes/040_atomic_shell_model.md` — Layer 1 lab note
 
 ## 8. Open (Next Passes)

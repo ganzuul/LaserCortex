@@ -1,7 +1,7 @@
 # Lab Note 042 — Layer 3: Emissive & Absorptive Sub-algebras; Supercompleteness Detection
 
 **Date**: 2026-07-28
-**Status**: Formalized and proven in `LaserCortex/foundations/EmissiveAbsorptive.lean`
+**Status**: Formalized and proven in `LaserCortex/EmissiveAbsorptive.lean`
 **Builds**: 8543 jobs (single-module target), clean
 **Axiom basis (headliners)**: `propext + Quot.sound + Classical.choice` (standard Mathlib);
 the pure-arithmetic headliner `supercomplete_cycle_defect_zero` is on `propext` only.
@@ -144,7 +144,7 @@ total is zero, conserving the (4,4) charge of Layer 1 — exactly what the
 
 ## 6. File References
 
-- `foundations/EmissiveAbsorptive.lean` (this note) — the Layer 3 module:
+- `EmissiveAbsorptive.lean` (this note) — the Layer 3 module:
   - §1: `IsIdempotent`, `ScalarSubalgebra`, `IsSupercomplete`; idempotency witnesses
     (`split_zero_idempotent`, `split_one_idempotent`); squaring witnesses (`e1_sq`
     through `e7_sq`); the seven supercomplete witnesses (`e1_supercomplete` through
@@ -158,10 +158,10 @@ total is zero, conserving the (4,4) charge of Layer 1 — exactly what the
 - `foundations/Algebra.lean` — `split_oct_mul` (l.79–89), `omega_sq` (l.326),
   `omega_mul_e5` (l.342), basis vectors `e0_vec ... e7_vec` (l.205–212),
   `split_neg` (l.97), `split_one` (l.48).
-- `foundations/AtomicShell.lean` — Layer 1 atomic model, `stateTransition`,
+- `AtomicShell.lean` — Layer 1 atomic model, `stateTransition`,
   `fundamental_atomic_transition`, private witnesses `x1 = ⟨1,1,0,0,0,0,0,0⟩`,
   `x2 = ⟨0,0,0,0,1,0,0,0⟩`, `xxy`.
-- `foundations/ImpedanceMetric.lean` — Layer 2 impedance matching:
+- `ImpedanceMetric.lean` — Layer 2 impedance matching:
   `impedanceDefect`, `IsMatched`, `MatchedSubalgebra`,
   `defect_e1_e2_zero`, `defect_e1_e4_neg`, `defect_e4_e5_pos`.
 

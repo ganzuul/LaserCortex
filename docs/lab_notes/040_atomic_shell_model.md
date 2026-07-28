@@ -1,7 +1,7 @@
 # Lab Note 040 — Atomic Shell Model From the Metric Space
 
 **Date**: 2026-07-27
-**Status**: Formalized and proven in `LaserCortex/foundations/AtomicShell.lean`
+**Status**: Formalized and proven in `LaserCortex/AtomicShell.lean`
 **Builds**: 8541 jobs, clean
 
 ## 1. Executive Summary
@@ -9,7 +9,7 @@
 The two-shell atomic spectrum — a coarse shell separated by the 9.5×
 `frictionDensity` wall at cd 2→3 and a fine shell given by the (5,3)
 antipode-copairing form — has been derived as a *theorem* in
-`foundations/AtomicShell.lean`. The model assembles three previously-proven
+`AtomicShell.lean`. The model assembles three previously-proven
 ingredients into a single predictive structure, and a witness-based
 existence theorem (`fundamental_atomic_transition`) shows that octonion
 multiplication produces a concrete, certified state transition: fine shell
@@ -148,7 +148,7 @@ from 2 to −2.
 
 ## 7. File References
 
-- `foundations/AtomicShell.lean` — full module: coarse shells (Section 1),
+- `AtomicShell.lean` — full module: coarse shells (Section 1),
   fine shells (Section 2), the fundamental transition (Section 3), atomic
   state and `fundamental_atomic_transition` (Section 4).
 - `foundations/Algebra.lean` — `octonion_norm_mul` (~l.1071), `fiveThreeNorm`

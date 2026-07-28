@@ -1,7 +1,7 @@
 import Mathlib
 import LaserCortex.foundations.Algebra
-import LaserCortex.foundations.AtomicShell
-import LaserCortex.foundations.ImpedanceMetric
+import LaserCortex.AtomicShell
+import LaserCortex.ImpedanceMetric
 
 /-!
 # Layer 3 — Emissive & Absorptive Sub-algebras; Supercompleteness Detection
