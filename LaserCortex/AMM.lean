@@ -36,7 +36,13 @@ widens accordingly.
 `associatorCostTree(cd : ℕ)(t1 t2 t3 : EMLTree) : ℕ`,
 `reserveGuard(cd : ℕ)(pool : Pool)(tree : EMLTree) : Bool`,
 `certifiedClose(cd : ℕ)(pool : Pool)(tree : EMLTree)(dx : ℕ) : CloseResult`,
-`MarketType`, `CertifiedPrice`, `decideMarketType`, `marketClosure`
+`MarketType`, `CertifiedPrice`, `decideMarketType`, `marketClosure`,
+`crossImpactTree_eq_rightSpine_mul` (closed-form cross-impact via the
+SubdivisionClosure §9 composition law),
+`classical_logic_market_always_open`, `composing_closed_markets_costs`
+(closure breaking), `paradox_dominance` (supercriticality is contagious),
+`closedMarket_parts_affordable`, `logicMarketType` (phase diagram of
+composable logics — see lab_notes/048)
 
 ## Cross-refs
 
@@ -445,5 +451,192 @@ theorem paradoxMarket_iff_cost_ge_reserve (cd : ℕ) (pool : Pool) (tree : EMLTr
   · by_cases hge : weightedCost cd tree ≥ pool.reserveB
     · simp [hzero, hge]
     · simp [hzero, hge]
+
+-- ============================================================================
+-- Section 8: Phase diagram of composable logics
+--
+-- The three market types ARE thermodynamic phases: openMarket = vacuum
+-- (absolute zero), closedMarket = subcritical liquid, paradoxMarket =
+-- superheated. Because `decideMarketType` is decidable and executable, the
+-- AMM COMPUTES the phase diagram rather than merely describing it. This
+-- section gives closed forms for the phase boundaries under route
+-- composition, using the composition law (SubdivisionClosure §9).
+-- ============================================================================
+
+/-- CLOSED-FORM CROSS-IMPACT. The AMM's cross-impact factorises exactly:
+
+        crossImpactTree cd t₁ t₂ = rightSpine t₁ × frictionDensity cd
+
+    Routing through a composite pool costs precisely the left subsystem's
+    output-chain depth times the algebraic friction. Zero iff the left
+    subtree is a leaf (no output chain) or cd = 0 (classical logic). -/
+theorem crossImpactTree_eq_rightSpine_mul (cd : ℕ) (t₁ t₂ : EMLTree) :
+    crossImpactTree cd t₁ t₂ = rightSpine t₁ * frictionDensity cd := by
+  unfold crossImpactTree weightedCost
+  rw [dcStep_node_compose]
+  set x := dcStep t₁ * frictionDensity cd with hx
+  set y := dcStep t₂ * frictionDensity cd with hy
+  have hexp : (dcStep t₁ + dcStep t₂ + rightSpine t₁) * frictionDensity cd
+      = x + y + rightSpine t₁ * frictionDensity cd := by
+    rw [hx, hy]
+    ring
+  rw [hexp]
+  omega
+
+/-- **Classical logic is friction-free: every market opens.** At CD 0 the
+    friction density vanishes, every weighted cost is zero, and the AMM
+    certifies any route for free. -/
+theorem classical_logic_market_always_open (pool : Pool) (tree : EMLTree) :
+    decideMarketType (logicCd .classical) pool tree = .openMarket := by
+  have hzero : weightedCost (logicCd LogicName.classical) tree = 0 := by
+    show weightedCost 0 tree = 0
+    unfold weightedCost
+    have h0 : frictionDensity 0 = 0 :=
+      frictionDensity_eq_k_for_k_le_2 0 (by omega)
+    rw [h0]
+    ring
+  dsimp [decideMarketType]
+  rw [if_pos hzero]
+
+/-- **Closure breaking**: grafting two independently closed (right-comb)
+    markets is NO LONGER free. The composite carries exactly `a` flip-units
+    of coupling cost — equilibrium is not preserved under composition. -/
+theorem composing_closed_markets_costs (cd a b : ℕ) :
+    weightedCost cd (.Node (rightComb a) (rightComb b))
+      = a * frictionDensity cd := by
+  unfold weightedCost
+  rw [dcStep_node_compose, dcStep_rightComb, dcStep_rightComb,
+      rightSpine_rightComb]
+  ring
+
+/-- **Paradox dominance**: one paradoxical component drags the whole
+    composite into the paradox phase. Supercriticality is contagious. -/
+theorem paradox_dominance (cd : ℕ) (pool : Pool) (t₁ t₂ : EMLTree)
+    (hp : weightedCost cd t₁ ≥ pool.reserveB) :
+    decideMarketType cd pool (.Node t₁ t₂) = .paradoxMarket := by
+  have hs := weightedCost_node_superadditive cd t₁ t₂
+  have hge : weightedCost cd (.Node t₁ t₂) ≥ pool.reserveB :=
+    calc pool.reserveB ≤ weightedCost cd t₁ := hp
+      _ ≤ weightedCost cd t₁ + weightedCost cd t₂ := Nat.le_add_right _ _
+      _ ≤ weightedCost cd (.Node t₁ t₂) := hs
+  have hpos : 0 < pool.reserveB := pool.hBpos
+  have hne : weightedCost cd (.Node t₁ t₂) ≠ 0 := by
+    omega
+  dsimp [decideMarketType, reserveGuard]
+  simp [hne, hge]
+
+/-- A closed-market composite keeps BOTH components affordable: neither
+    part's cost can reach the reserve. This is the converse containment of
+    the phase regions under composition. -/
+theorem closedMarket_parts_affordable (cd : ℕ) (pool : Pool) (t₁ t₂ : EMLTree)
+    (hc : weightedCost cd (.Node t₁ t₂) < pool.reserveB) :
+    weightedCost cd t₁ < pool.reserveB ∧ weightedCost cd t₂ < pool.reserveB := by
+  have hs := weightedCost_node_superadditive cd t₁ t₂
+  refine ⟨?_, ?_⟩
+  · calc weightedCost cd t₁ ≤ weightedCost cd t₁ + weightedCost cd t₂ :=
+      Nat.le_add_right _ _
+    _ ≤ weightedCost cd (.Node t₁ t₂) := hs
+    _ < pool.reserveB := hc
+  · calc weightedCost cd t₂ ≤ weightedCost cd t₁ + weightedCost cd t₂ :=
+      Nat.le_add_left _ _
+    _ ≤ weightedCost cd (.Node t₁ t₂) := hs
+    _ < pool.reserveB := hc
+
+/-- Market type, indexed by named logic. This is the evaluation point of
+    the phase diagram of composable logics: each of the 15 logics fixes the
+    CD step, hence the friction density, hence which phase a route lands in. -/
+def logicMarketType (pool : Pool) (tree : EMLTree) (l : LogicName) : MarketType :=
+  decideMarketType (logicCd l) pool tree
+
+-- ============================================================================
+-- Section 9: Loose coupling — perturbed phase boundaries
+--
+-- Strict grafting pays the full coupling tax; the phase boundary
+-- `cost ≥ reserveB` then sits where SubdivisionClosure §9 puts it. LOOSE
+-- coupling discounts the coupling term by λ = num/den ≤ 1 (a trust or
+-- forgiveness coefficient), retreating the boundary and opening a
+-- RISK-TAKING WINDOW: routes damned as paradox under strict coupling may
+-- certify. The governing safety theorem: loosening can RESCUE but never
+-- DAMN. See lab_notes/049.
+-- ============================================================================
+
+/-- The loose-coupling market classifier: same three phases, evaluated at
+    the discounted composite cost instead of the strict one. -/
+def looseMarketType (cd num den : ℕ) (pool : Pool) (t₁ t₂ : EMLTree) : MarketType :=
+  let cost := looseCost cd num den t₁ t₂
+  if cost = 0 then .openMarket
+  else if cost < pool.reserveB then .closedMarket
+  else .paradoxMarket
+
+/-- Classification lemma for the loose classifier: paradox ⇔ cost at or
+    above reserve and nonzero. Mirrors §8's phase lemmas. -/
+theorem looseMarketType_paradox_iff (cd num den : ℕ) (pool : Pool)
+    (t₁ t₂ : EMLTree) :
+    looseMarketType cd num den pool t₁ t₂ = .paradoxMarket ↔
+      pool.reserveB ≤ looseCost cd num den t₁ t₂ ∧
+      looseCost cd num den t₁ t₂ ≠ 0 := by
+  unfold looseMarketType
+  dsimp only
+  split_ifs with h0 hlt
+  · simp [h0]
+  · exact iff_of_false (by simp) (fun hc => Nat.not_le.mpr hlt hc.1)
+  · exact ⟨fun _ => ⟨Nat.le_of_not_gt hlt, h0⟩, fun _ => rfl⟩
+
+/-- **SAFETY THEOREM: loosening can rescue but never damn.** If a loosely
+    coupled composite lands in the paradox phase, the strictly coupled one
+    was paradox too. The perturbation shrinks the paradox region; it never
+    grows it into previously-safe territory. -/
+theorem loose_never_damns (cd num den : ℕ) (pool : Pool) (t₁ t₂ : EMLTree)
+    (hl : num ≤ den) (hden : 0 < den)
+    (h : looseMarketType cd num den pool t₁ t₂ = .paradoxMarket) :
+    decideMarketType cd pool (.Node t₁ t₂) = .paradoxMarket := by
+  have hkey := (looseMarketType_paradox_iff cd num den pool t₁ t₂).mp h
+  have hwc := looseCost_le_weightedCost cd num den hl hden t₁ t₂
+  rw [paradoxMarket_iff_cost_ge_reserve]
+  refine ⟨Nat.le_trans hkey.1 hwc, ?_⟩
+  have h1 := Nat.le_trans hkey.1 hwc
+  omega
+
+/-- **RISK ENVELOPE**: the discount never absorbs more than the coupling
+    term itself. Strict minus loose cost is exactly `S − D ≤ S` where
+    `S = rightSpine t₁ · γ` — so a rescued route was over the boundary by at
+    most its own output-chain friction. (Holds unconditionally; in
+    particular whenever loosening rescues a damned route.) -/
+theorem rescue_envelope_bounded_by_coupling (cd num den : ℕ)
+    (t₁ t₂ : EMLTree) (hl : num ≤ den) (hden : 0 < den) :
+    weightedCost cd (.Node t₁ t₂) - looseCost cd num den t₁ t₂
+      ≤ rightSpine t₁ * frictionDensity cd := by
+  have hexact := looseCost_discount_exact cd num den hl hden t₁ t₂
+  rw [hexact]
+  exact Nat.sub_le _ _
+
+/-- **The institutional triad** — temporal accumulation, fuzzy grading,
+    deontic threshold revision — shares ONE friction density: all three
+    host-logics sit at CD 1. Same heat, different Hopf direction: the triad
+    explores distinct cost geometries at identical temperature. -/
+theorem institutional_triad_friction :
+    logicCd .temporal = logicCd .fuzzy
+      ∧ logicCd .fuzzy = logicCd .deontic
+      ∧ frictionDensity (logicCd .temporal) = 1 := by
+  refine ⟨rfl, rfl, ?_⟩
+  exact frictionDensity_one
+
+/-- **Deontic monotonicity (threshold revision)**: tightening the acceptance
+    threshold (the blame pool pressing on policy) can only shrink the liquid
+    phase. A route certified under a tight reserve stays certified-or-open
+    under a loose one; revision flows one way. -/
+theorem closedMarket_monotone_in_reserve (cd : ℕ) (tight loose : Pool)
+    (tree : EMLTree) (h : tight.reserveB ≤ loose.reserveB)
+    (hc : decideMarketType cd tight tree = .closedMarket) :
+    decideMarketType cd loose tree = .closedMarket
+      ∨ decideMarketType cd loose tree = .openMarket := by
+  rcases (closedMarket_iff_cost_positive_and_reserve_ok cd tight tree).mp hc
+    with ⟨hpos, hlt⟩
+  by_cases hz : weightedCost cd tree = 0
+  · right
+    exact (openMarket_iff_cost_zero cd loose tree).mpr hz
+  · left
+    rw [closedMarket_iff_cost_positive_and_reserve_ok]
+    exact ⟨Nat.pos_of_ne_zero hz, Nat.lt_of_lt_of_le hlt h⟩
 
 end AMM

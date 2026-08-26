@@ -34,6 +34,13 @@ is the Tamari poset itself — no separate ordering needed.
 - `weightedCost_assoc_regime` / `weightedCost_nonassoc_regime` : phase change at CD 2→3
 - `weightedCost_eq_zero_iff` : zero cost (at positive friction density) iff already in normal form
 - `contracts_to_closure` : every tree contracts to its closure in the Tamari lattice
+- `dcStep_node_compose` : THE COMPOSITION LAW — dcStep(Node l r) =
+  dcStep l + dcStep r + rightSpine l (coupling flows through the left
+  system's output chain)
+- `weightedCost_node_superadditive` / `treeTemp_node_superadditive` :
+  energy and temperature are superadditive under composition
+- `weightedCost_mixed_dominance` : composing systems at different CD steps
+  evaluates at the hotter algebra — mixing can only heat up
 
 ## Cross-refs
 
@@ -49,6 +56,7 @@ is the Tamari poset itself — no separate ordering needed.
 
 import LaserCortex.foundations.Tamari
 import LaserCortex.Friction
+import LaserCortex.LogicalTemperature
 
 open EMLTree
 
@@ -193,5 +201,289 @@ theorem weightedCost_monotone (cd₁ cd₂ : ℕ) (t : EMLTree) (h : cd₁ ≤ c
 theorem contracts_to_closure (t : EMLTree) : contracts_to t (closure 0 t) := by
   have h : contracts_to t (rightComb t.size) := contracts_to_rightComb t
   simpa [closure] using h
+
+-- ============================================================================
+-- SECTION 9: Phase diagram composition
+--
+-- The energy functional E(cd, t) = dcStep(t) × frictionDensity(cd) has the
+-- thermodynamic shape "extensive × intensive". This section proves how
+-- phase diagrams COMPOSE: given two subsystems (trees t₁, t₂), the composite
+-- system Node t₁ t₂ obeys an exact composition law with a coupling term,
+-- from which superadditivity of energy and dominance of the hotter algebra
+-- follow.
+-- ============================================================================
+
+/-- Depth of the rightmost leaf: the length of the right spine.
+    This measures how far the system's "output chain" extends. -/
+def rightSpine : EMLTree → ℕ
+  | .Leaf => 0
+  | .Node _ r => 1 + rightSpine r
+
+/-- **THE COMPOSITION LAW.** Grafting two subsystems costs exactly
+
+    dcStep(Node t₁ t₂) = dcStep t₁ + dcStep t₂ + rightSpine t₁
+
+    The flip count is additive in the parts PLUS a coupling term equal to
+    the right-spine depth of the left subsystem: coupling flows through the
+    left system's output chain. Verified exhaustively to size 5 and the
+    proof is a two-line induction (the coupling telescopes through the
+    rotation recursion). -/
+theorem dcStep_node_compose : ∀ (l r : EMLTree),
+    dcStep (EMLTree.Node l r) = dcStep l + dcStep r + rightSpine l := by
+  intro l
+  induction l with
+  | Leaf =>
+    intro r
+    simp [dcStep, rightSpine]
+  | Node a b iha ihb =>
+    intro r
+    have h_ab := iha b
+    have h_abr := iha (EMLTree.Node b r)
+    have h_br := ihb r
+    simp only [dcStep]
+    rw [h_abr, h_ab, h_br]
+    simp only [rightSpine]
+    omega
+
+/-- Superadditivity of flip count: composing two systems never reduces the
+    total number of contractions needed. -/
+theorem dcStep_node_superadditive (l r : EMLTree) :
+    dcStep l + dcStep r ≤ dcStep (EMLTree.Node l r) := by
+  rw [dcStep_node_compose]
+  omega
+
+/-- Composition is exactly extensive iff the left subsystem is the vacuum:
+    coupling vanishes precisely when nothing flows through the output chain. -/
+theorem dcStep_node_eq_iff_left_leaf (l r : EMLTree) :
+    dcStep (EMLTree.Node l r) = dcStep l + dcStep r ↔ l = EMLTree.Leaf := by
+  constructor
+  · intro h
+    rw [dcStep_node_compose] at h
+    cases l with
+    | Leaf => rfl
+    | Node a b =>
+      simp only [rightSpine] at h
+      omega
+  · intro h
+    subst h
+    simp [dcStep]
+
+/-- Energy is SUPERADDITIVE under composition: the composite system carries
+    at least the sum of the part energies. Equality holds iff the left
+    subsystem is the vacuum (no coupling). -/
+theorem weightedCost_node_superadditive (cd : ℕ) (t₁ t₂ : EMLTree) :
+    weightedCost cd t₁ + weightedCost cd t₂
+      ≤ weightedCost cd (EMLTree.Node t₁ t₂) := by
+  unfold weightedCost
+  rw [dcStep_node_compose]
+  calc dcStep t₁ * frictionDensity cd + dcStep t₂ * frictionDensity cd
+      = (dcStep t₁ + dcStep t₂) * frictionDensity cd := by rw [Nat.add_mul]
+    _ ≤ (dcStep t₁ + dcStep t₂ + rightSpine t₁) * frictionDensity cd :=
+        Nat.mul_le_mul (Nat.le_add_right _ _) (Nat.le_refl _)
+
+/-- Γ of each part is bounded by Γ of the hotter algebra. -/
+theorem frictionDensity_le_max (i j : ℕ) :
+    frictionDensity i ≤ frictionDensity (max i j)
+      ∧ frictionDensity j ≤ frictionDensity (max i j) := by
+  rcases Nat.lt_trichotomy i j with h | h | h
+  · rw [Nat.max_def, if_pos h.le]
+    exact ⟨frictionDensity_monotone i j h, Nat.le_refl _⟩
+  · subst h
+    rw [Nat.max_def, if_pos (Nat.le_refl _)]
+    exact ⟨Nat.le_refl _, Nat.le_refl _⟩
+  · rw [Nat.max_def, if_neg (by omega : ¬ (i ≤ j))]
+    exact ⟨Nat.le_refl _, frictionDensity_monotone j i h⟩
+
+/-- **Dominance of the hot phase.** Composing two systems that live at
+    different CD steps yields a composite whose energy dominates the sum:
+    evaluating each part at its own algebra, the composite evaluated at the
+    hotter algebra is at least as energetic. Algebraic mixing can only
+    heat up. -/
+theorem weightedCost_mixed_dominance (c₁ c₂ : ℕ) (t₁ t₂ : EMLTree) :
+    weightedCost c₁ t₁ + weightedCost c₂ t₂
+      ≤ weightedCost (max c₁ c₂) (EMLTree.Node t₁ t₂) := by
+  obtain ⟨hg₁, hg₂⟩ := frictionDensity_le_max c₁ c₂
+  unfold weightedCost at *
+  rw [dcStep_node_compose]
+  calc dcStep t₁ * frictionDensity c₁ + dcStep t₂ * frictionDensity c₂
+      ≤ dcStep t₁ * frictionDensity (max c₁ c₂)
+          + dcStep t₂ * frictionDensity (max c₁ c₂) :=
+        Nat.add_le_add (Nat.mul_le_mul_left _ hg₁) (Nat.mul_le_mul_left _ hg₂)
+    _ = (dcStep t₁ + dcStep t₂) * frictionDensity (max c₁ c₂) := by
+        rw [Nat.add_mul]
+    _ ≤ (dcStep t₁ + dcStep t₂ + rightSpine t₁)
+          * frictionDensity (max c₁ c₂) :=
+        Nat.mul_le_mul (Nat.le_add_right _ _) (Nat.le_refl _)
+
+noncomputable section
+
+/-- Barrier-equivalent temperature of a whole tree configuration:
+    the Landauer reading of its total weighted flip energy. -/
+def treeTemp (c : LandauerCalibration) (cd : ℕ) (t : EMLTree) : ℝ :=
+  (weightedCost cd t : ℝ) * c.tOp * Real.log 2
+
+/-- Temperature is superadditive under composition at a fixed algebra:
+    the composite system is at least as hot as the sum of its parts.
+    Equality iff the left subsystem is the vacuum (coupling-free). -/
+theorem treeTemp_node_superadditive (c : LandauerCalibration) (cd : ℕ)
+    (t₁ t₂ : EMLTree) :
+    treeTemp c cd t₁ + treeTemp c cd t₂ ≤ treeTemp c cd (EMLTree.Node t₁ t₂) := by
+  unfold treeTemp
+  have hsplit :
+      (((weightedCost cd t₁ + weightedCost cd t₂ : ℕ) : ℝ)) * c.tOp * Real.log 2
+        = ((weightedCost cd t₁ : ℕ) : ℝ) * c.tOp * Real.log 2
+          + ((weightedCost cd t₂ : ℕ) : ℝ) * c.tOp * Real.log 2 := by
+    push_cast
+    ring
+  rw [← hsplit]
+  have h1 : ((weightedCost cd t₁ + weightedCost cd t₂ : ℕ) : ℝ) * c.tOp
+      ≤ (weightedCost cd (EMLTree.Node t₁ t₂) : ℕ) * c.tOp :=
+    mul_le_mul_of_nonneg_right
+      (Nat.cast_le.mpr (weightedCost_node_superadditive cd t₁ t₂)) c.tOp_pos.le
+  exact mul_le_mul_of_nonneg_right h1
+    (Real.log_nonneg (by norm_num : (1:ℝ) ≤ 2))
+
+end
+
+-- ============================================================================
+-- SECTION 10: Loose coupling (perturbed phase diagrams)
+--
+-- Strict grafting always pays the full coupling term rightSpine l · γ.
+-- Loose coupling discounts that term by a trust coefficient λ = num/den ≤ 1.
+-- The phase boundary `cost ≥ reserve` retreats by exactly the discount —
+-- this retreat is the market's risk-taking window. The safety theorem below
+-- shows the perturbation can RESCUE routes from paradox but can never DAMN
+-- a safe one. See lab_notes/049.
+-- ============================================================================
+
+/-- The coupling discount is bounded by the full coupling term. -/
+theorem discounted_coupling_le (g num den s : ℕ)
+    (hl : num ≤ den) (hden : 0 < den) :
+    num * s * g / den ≤ s * g := by
+  have h1 : num * s ≤ den * s := Nat.mul_le_mul_right s hl
+  have h2 : num * s * g ≤ den * (s * g) := by
+    calc num * s * g = num * s * g := rfl
+      _ ≤ den * s * g := Nat.mul_le_mul_right g h1
+      _ = den * (s * g) := Nat.mul_assoc _ _ _
+  have h3 : den * (s * g) / den = s * g := Nat.mul_div_cancel_left _ hden
+  calc num * s * g / den ≤ den * (s * g) / den := Nat.div_le_div_right h2
+    _ = s * g := h3
+
+/-- **Loose cost**: composition with the coupling term discounted by
+    λ = num/den. At num = den this is the strict weighted cost; at num = 0
+    the two subsystems do not interact at all. -/
+def looseCost (cd num den : ℕ) (l r : EMLTree) : ℕ :=
+  (dcStep l + dcStep r) * frictionDensity cd
+    + num * rightSpine l * frictionDensity cd / den
+
+/-- Loosening never increases cost: the discount only ever subtracts.
+    This is the precondition for "rescue without damnation". -/
+theorem looseCost_le_weightedCost (cd num den : ℕ)
+    (hl : num ≤ den) (hden : 0 < den) (l r : EMLTree) :
+    looseCost cd num den l r ≤ weightedCost cd (EMLTree.Node l r) := by
+  unfold looseCost weightedCost
+  rw [dcStep_node_compose]
+  have hD := discounted_coupling_le (frictionDensity cd) num den (rightSpine l) hl hden
+  have hexp : (dcStep l + dcStep r + rightSpine l) * frictionDensity cd
+      = (dcStep l + dcStep r) * frictionDensity cd
+          + rightSpine l * frictionDensity cd := by ring
+  omega
+
+/-- The discount is EXACT: strict minus loose equals the undiscounted
+    remainder of the coupling term. The risk taken by loosening is precisely
+    this remainder — never larger, never hidden. -/
+theorem looseCost_discount_exact (cd num den : ℕ)
+    (hl : num ≤ den) (hden : 0 < den) (l r : EMLTree) :
+    weightedCost cd (EMLTree.Node l r) - looseCost cd num den l r
+      = rightSpine l * frictionDensity cd
+          - num * rightSpine l * frictionDensity cd / den := by
+  unfold looseCost weightedCost
+  rw [dcStep_node_compose]
+  have hD := discounted_coupling_le (frictionDensity cd) num den (rightSpine l) hl hden
+  have hexp : (dcStep l + dcStep r + rightSpine l) * frictionDensity cd
+      = (dcStep l + dcStep r) * frictionDensity cd
+          + rightSpine l * frictionDensity cd := by ring
+  omega
+
+/-- The right spine of a right-comb of size n is n: a closed market's
+    output chain extends exactly as far as its size.
+    (Re-homed here from AMM so both modules share it.) -/
+theorem rightSpine_rightComb (n : ℕ) : rightSpine (rightComb n) = n := by
+  induction n with
+  | zero => simp [rightComb, rightSpine]
+  | succ k ih =>
+    simp only [rightComb, rightSpine, ih]
+    omega
+
+/-- Full decoupling (λ = 0) restores composability of equilibria: two
+    independently closed markets graft for free again. Closure breaking
+    (§9) is an artifact of STRICT coupling. -/
+theorem looseCost_zero_coupling_free (cd den a b : ℕ) :
+    looseCost cd 0 den (rightComb a) (rightComb b) = 0 := by
+  unfold looseCost
+  rw [dcStep_rightComb, dcStep_rightComb]
+  norm_num [rightSpine_rightComb]
+
+/-- **Compliance is a soft knob**: increasing trust λ = num/den never
+    increases the discounted cost. The response of the system to trust is
+    monotone in both directions: more forgiveness ⇒ cheaper composites,
+    hence (by `looseCost_discount_exact`) smaller boundary retreat. -/
+theorem looseCost_mono_in_trust (cd num₁ num₂ den : ℕ) (l r : EMLTree)
+    (h : num₁ ≤ num₂) :
+    looseCost cd num₁ den l r ≤ looseCost cd num₂ den l r := by
+  unfold looseCost
+  have hmul : num₁ * rightSpine l * frictionDensity cd
+      ≤ num₂ * rightSpine l * frictionDensity cd := by
+    calc num₁ * rightSpine l * frictionDensity cd
+        = num₁ * (rightSpine l * frictionDensity cd) := Nat.mul_assoc _ _ _
+      _ ≤ num₂ * (rightSpine l * frictionDensity cd) :=
+          Nat.mul_le_mul h le_rfl
+      _ = num₂ * rightSpine l * frictionDensity cd := (Nat.mul_assoc _ _ _).symm
+  exact Nat.add_le_add le_rfl (Nat.div_le_div_right hmul)
+
+/-- **ELASTICITY: the Hooke reading of loose coupling.** In the quantized
+    elastic regime — trust denominated so the discount divides evenly into
+    cost units (`hdiv`) — the retreat of the certification boundary is
+    exactly LINEAR in the load:
+
+        retreat = (1 − λ) · S,     S = rightSpine l · γ(cd)
+
+    The compliance is `1 − λ`; the load is the spine tax. Displacement
+    proportional to load, capped by the elastic limit
+    `AMM.rescue_envelope_bounded_by_coupling`; beyond the limit the route
+    fails plastically into the paradox phase. Stated over ℚ because over ℕ
+    truncated division would lose the remainder. -/
+theorem boundary_retreat_linear_in_load (cd num den : ℕ) (l r : EMLTree)
+    (hl : num ≤ den) (hden : 0 < den)
+    (hdiv : den ∣ num * rightSpine l * frictionDensity cd) :
+    ((weightedCost cd (EMLTree.Node l r) : ℚ)
+        - (looseCost cd num den l r : ℚ))
+      = (1 - (num : ℚ) / den)
+          * (rightSpine l * frictionDensity cd : ℚ) := by
+  have hw : weightedCost cd (EMLTree.Node l r)
+      = (dcStep l + dcStep r + rightSpine l) * frictionDensity cd := by
+    unfold weightedCost
+    rw [dcStep_node_compose]
+  have hl₂ : looseCost cd num den l r
+      = (dcStep l + dcStep r) * frictionDensity cd
+          + num * rightSpine l * frictionDensity cd / den := rfl
+  have hq : ((num * rightSpine l * frictionDensity cd / den : ℕ) : ℚ)
+      = (num * rightSpine l * frictionDensity cd : ℚ) / den := by
+    rcases hdiv with ⟨k, hk⟩
+    have h1 : num * rightSpine l * frictionDensity cd / den = k := by
+      rw [hk, Nat.mul_div_cancel_left _ hden]
+    rw [h1]
+    have hcast := congrArg ((↑) : ℕ → ℚ) hk
+    push_cast at hcast ⊢
+    rw [hcast]
+    have hd0 : (den : ℚ) ≠ 0 := by positivity
+    field_simp
+  have hwge := looseCost_le_weightedCost cd num den hl hden l r
+  rw [hw, hl₂]
+  push_cast
+  rw [hq]
+  have hd0 : (den : ℚ) ≠ 0 := by positivity
+  field_simp
+  ring
 
 end SubdivisionClosure

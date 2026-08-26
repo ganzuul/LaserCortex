@@ -10,11 +10,6 @@ name = "lasercortex"
 root = "Main"
 
 [[require]]
-name = "mathlib"
-path = ".lake/packages/mathlib4"
-# Pinned to rev ab5497e460f08b0e35e30b404eba9f317b6eea36
-
-[[require]]
 name = "checkdecls"
 git = "https://github.com/PatrickMassot/checkdecls.git"
 
@@ -22,3 +17,10 @@ git = "https://github.com/PatrickMassot/checkdecls.git"
 name = "«doc-gen4»"
 git = "https://github.com/leanprover/doc-gen4"
 rev = "main"
+
+# Must come LAST so Mathlib's dependency pins take precedence
+# (required by `lake exe cache get` hash computation).
+[[require]]
+name = "mathlib"
+path = ".lake/packages/mathlib4"
+# Pinned to rev ab5497e460f08b0e35e30b404eba9f317b6eea36
