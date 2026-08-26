@@ -57,6 +57,7 @@ is the Tamari poset itself — no separate ordering needed.
 import LaserCortex.foundations.Tamari
 import LaserCortex.Friction
 import LaserCortex.LogicalTemperature
+import LaserCortex.TamariMetric
 
 open EMLTree
 
@@ -485,5 +486,64 @@ theorem boundary_retreat_linear_in_load (cd num den : ℕ) (l r : EMLTree)
   have hd0 : (den : ℚ) ≠ 0 := by positivity
   field_simp
   ring
+
+-- ============================================================================
+-- C3: mechanical compatibility (Lipschitz restatements)
+-- ============================================================================
+
+/-- **Edge-Lipschitz (C3).** Stress changes by at most one unit of grind per
+elementary flip: `weightedCost cd s ≤ weightedCost cd u + frictionDensity cd`
+for `contracts_one s u`. The cost is γ-Lipschitz along the cover graph — the
+correct "mechanical compatibility" statement, which survives even though the
+Tamari lattice is not graded (a two-point Lipschitz in `dcStep` would need the
+non-existent graded rank). -/
+theorem weightedCost_edge_lipschitz (cd : ℕ) {s u : EMLTree} (h : contracts_one s u) :
+    weightedCost cd s ≤ weightedCost cd u + frictionDensity cd := by
+  unfold weightedCost
+  have hle := TamariMetric.dcStep_contracts_one_le h
+  calc
+    dcStep s * frictionDensity cd ≤ (dcStep u + 1) * frictionDensity cd :=
+      Nat.mul_le_mul_right (frictionDensity cd) hle
+    _ = dcStep u * frictionDensity cd + frictionDensity cd := by ring
+
+/-- **Trust-Lipschitz (C3).** The loose cost is exactly linear in the trust
+numerator: the internal `(dcStep l + dcStep r) · γ` terms cancel, leaving the
+interface term rescaled by `(num₁ − num₂)/den`. This is the "λ-discount =
+conformal rescale of the interface edges only" claim in explicit Lipschitz
+form, with stiffness `rightSpine l · γ / den` — the elastic constant of the
+certification boundary. Stated over ℚ for the same reason as the Hooke
+theorem (ℕ division would truncate the remainder). -/
+theorem looseCost_linear_in_trust (cd num₁ num₂ den : ℕ) (l r : EMLTree)
+    (h₁ : den ∣ num₁ * rightSpine l * frictionDensity cd)
+    (h₂ : den ∣ num₂ * rightSpine l * frictionDensity cd)
+    (hden : 0 < den) :
+    ((looseCost cd num₁ den l r : ℚ) - (looseCost cd num₂ den l r : ℚ))
+      = ((num₁ : ℚ) - (num₂ : ℚ)) * ((rightSpine l * frictionDensity cd : ℚ) / (den : ℚ)) := by
+  have h₁q : ((num₁ * rightSpine l * frictionDensity cd / den : ℕ) : ℚ)
+      = (num₁ * rightSpine l * frictionDensity cd : ℚ) / den := by
+    rcases h₁ with ⟨k, hk⟩
+    have h1 : num₁ * rightSpine l * frictionDensity cd / den = k := by
+      rw [hk, Nat.mul_div_cancel_left _ hden]
+    rw [h1]
+    have hcast := congrArg ((↑) : ℕ → ℚ) hk
+    push_cast at hcast ⊢
+    rw [hcast]
+    have hd0 : (den : ℚ) ≠ 0 := by positivity
+    field_simp
+  have h₂q : ((num₂ * rightSpine l * frictionDensity cd / den : ℕ) : ℚ)
+      = (num₂ * rightSpine l * frictionDensity cd : ℚ) / den := by
+    rcases h₂ with ⟨k, hk⟩
+    have h1 : num₂ * rightSpine l * frictionDensity cd / den = k := by
+      rw [hk, Nat.mul_div_cancel_left _ hden]
+    rw [h1]
+    have hcast := congrArg ((↑) : ℕ → ℚ) hk
+    push_cast at hcast ⊢
+    rw [hcast]
+    have hd0 : (den : ℚ) ≠ 0 := by positivity
+    field_simp
+  unfold looseCost
+  push_cast
+  rw [h₁q, h₂q]
+  ring_nf
 
 end SubdivisionClosure

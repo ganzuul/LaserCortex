@@ -1,6 +1,6 @@
 # Seminar Talk Outline — Math Faculty (30 min)
 
-**Title** (sober): *"A graded cost function on the Tamari lattice of
+**Title** (sober): *"A geodesic cost function on the Tamari lattice of
 Cayley–Dickson composition, formalized in Lean"*
 **Subtitle** (only if asked): *a thermomechanical reading of non-associative syntax*
 **Audience:** pure/applied math faculty. Assume comfort with lattices and
@@ -17,9 +17,10 @@ form. State plainly: *this is the Tamari lattice / associahedron skeleton.*
 
 ## Slide 2 — The question (2 min)
 
-*"How much does it cost to re-associate?"* Define `dcStep t` = number of
-rotations to the right comb = number of inversions = **the rank** in the
-Tamari lattice. Cite: gradedness is classical; I am not claiming it.
+*"How much does it cost to re-associate?"* Define `dcStep t` = minimal number
+of rotations to the right comb = the **geodesic distance**. Cite: the Tamari
+lattice is *not* graded (T₃ is the pentagon N₅); `dcStep` is a geodesic
+potential, not a graded rank — this distinction is load-bearing later.
 
 ## Slide 2b — Why now: the quantum substrate (2 min)
 
@@ -50,8 +51,9 @@ statement (2-line induction, no `sorry`). Emphasize the corollary
 
 ## Slide 5 — What is new vs. known (2 min) ★★ HONESTY SLIDE
 
-Two columns. **Known:** Tamari gradedness, right comb uniqueness, associahedron
-combinatorics. **New here:** (i) the exact composition identity with the
+Two columns. **Known:** the Tamari cover structure (single-rotation Hasse
+diagram), right-comb uniqueness, associahedron combinatorics. **New here:**
+(i) the exact composition identity with the
 coupling term, machine-checked; (ii) the Γ functional with the CD-3 critical
 point; (iii) the potentiality theorem (Slide 8); (iv) the whole thing is
 *formalized* — every theorem is a Lean certificate. Say the sentence:
@@ -90,11 +92,15 @@ layer and the mass-classification layer describe one geometry.
 
 ## Slide 10 — Open problems (3 min)
 
-1. C5 minimality/uniqueness: any C2-satisfying metric is dominated by d.
-2. Formalize C2 (graded-lattice argument).
+1. ~~C5 minimality~~ — **done**: `dcStep` is the maximal Bellman-consistent
+   potential (`dcStep_is_maximal_potential`).
+2. ~~C3 mechanical compatibility~~ — **done**: edge-Lipschitz
+   (`weightedCost_edge_lipschitz`) + trust-Lipschitz (`looseCost_linear_in_trust`).
 3. Strain/stress dictionary: strain = Tamari distance, stress = friction work.
 4. Does the coupling term `rightSpine l` have an invariant (geometric) meaning?
-5. **Formalize the anyon correspondence** — state `contracts_one` = F-move
+5. **The reduced continuum model** — the transit map is many-to-one (132 trees →
+   29 coordinates at size 6); its fiber/quotient and n → ∞ limit shape.
+6. **Formalize the anyon correspondence** — state `contracts_one` = F-move
    against a concrete fusion-category model (e.g. Fibonacci anyons) and audit
    the pentagon identity against the Tamari rotation in Lean.
 

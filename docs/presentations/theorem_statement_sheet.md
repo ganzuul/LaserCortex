@@ -14,7 +14,8 @@ buildable modules `LaserCortex.SubdivisionClosure`, `LaserCortex.AMM`,
   non-associative algebra (the Cayley–Dickson tower's nesting structure).
 - `dcStep t : ℕ` — minimal number of associativity rotations
   (`contracts_one`: `Node (Node a b) c ↦ Node a (Node b c)`) to reach the
-  right comb; equivalently the number of "inversions" of `t`.
+  right comb — the **geodesic distance** in the Tamari graph (note: not the
+  "inversion count"; the Tamari lattice is not graded, T₃ = N₅).
 - `frictionDensity k : ℕ` — the per-rotation grind at Cayley–Dickson level `k`:
 
   Γ₀..Γ₇ = 0, 1, 2, 19, 20, 21, 22, 23  (Γ_k = k for k ≤ 2; k+16 for k ≥ 3)
@@ -110,8 +111,23 @@ Exhaustive computational check (196 trees, sizes ≤ 6) now *confirms* rather
 than substitutes for the proof. Since `weightedCost cd t = γ · dcStep t`, the
 γ-weighted cost is γ times the geodesic distance.
 
-**Open** (C5): minimality/uniqueness — any C2-satisfying metric is dominated
-by `d`.
+## 7. C5 — minimality / universal property
+
+**Thm** `TamariMetric.dcStep_is_maximal_potential`
+```
+for any f with f (rightComb n) = 0 and (contracts_one s u → f s ≤ f u + 1),
+we have f t ≤ dcStep t
+```
+`dcStep` is the pointwise-maximum "Bellman-consistent" potential — the
+universal property that certifies *the* cost, not *a* cost.
+
+## 8. C3 — mechanical compatibility (Lipschitz)
+
+- **Thm** `weightedCost_edge_lipschitz` — `contracts_one s u → weightedCost cd s ≤ weightedCost cd u + γ`:
+  stress changes by at most one grind per flip.
+- **Thm** `looseCost_linear_in_trust` — `looseCost` is exactly linear in the
+  trust numerator over ℚ (under divisibility); the λ-discount rescales only
+  the interface edge, with stiffness `rightSpine l · γ / den`.
 
 ---
 

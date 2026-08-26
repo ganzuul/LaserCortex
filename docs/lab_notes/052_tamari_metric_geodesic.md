@@ -7,7 +7,8 @@
 
 ## 1. What closed
 
-Note 051's headline open problem — *formalize C2 (graded-lattice argument)* — is
+Note 051's headline open problem — *formalize C2 (the potentiality / geodesic
+argument)* — is
 done. The claim was:
 
 > `dcStep t` = the minimal number of `contracts_one` rotations to reach the
@@ -64,24 +65,33 @@ All in namespace `TamariMetric`, importing only `LaserCortex.foundations.Tamari`
 
 ## 4. What this means for the metric arc
 
-`dcStep` is now certified as the **rank function of the Tamari lattice** — a
-graded-lattice invariant, not merely a greedy heuristic. Since
+`dcStep` is now certified as the **geodesic distance** to the normal form —
+the minimal rotation count — not merely a greedy heuristic. Since
 `weightedCost cd t = frictionDensity cd · dcStep t` (SubdivisionClosure), the
 γ-weighted cost `weightedCost` is γ times the geodesic distance, exactly as
 C2 required. The Tamari graph metric is now grounded in a theorem, and the
 computational sweep (note 051) is a *confirmation*, not a substitute.
 
+**A caveat worth recording:** the Tamari lattice is **not graded**. For size 3,
+`dcStep(leftComb) = 2` but the longest cover chain from the left comb to the
+right comb has length 3 — T₃ is the pentagon N₅, and a left-context rotation
+can leave `dcStep` unchanged. So `dcStep` is a *geodesic potential*, **not** a
+graded rank / inversion count. The cost is a distance-to-closure (one-point
+potential), not a two-point metric; C5 below therefore states minimality as a
+*universal property of the potential*, and C3 as *edge-* and *trust*-Lipschitz
+bounds rather than a two-point Lipschitz.
+
 ## 5. Remaining open problems (updated ledger)
 
 | # | Problem | Status |
 |---|---|---|
-| C2 | `dcStep` = geodesic (graded-lattice argument) | **DONE** (this note) |
-| C5 | minimality/uniqueness: any C2-satisfying metric is dominated by `d_γ` | open |
-| C3 | restate envelope/Hooke theorems as Lipschitz / ball statements | open |
+| C2 | `dcStep` = geodesic (minimality of the greedy path) | **DONE** (this note) |
+| C5 | minimality/uniqueness: `dcStep` is the maximal Bellman-consistent potential | **DONE** (Phase A) |
+| C3 | mechanical compatibility: edge-Lipschitz + trust-Lipschitz restatements | **DONE** (Phase A) |
 | — | invariant meaning of `rightSpine l` (survive to higher arities?) | open |
 | — | formalize the anyon correspondence (`contracts_one` = F-move) vs Fibonacci fusion | open |
+| — | reduced continuum model: transit-map fiber/quotient + limit shape | open (deferred) |
 
-**Next target**: C5 (minimality). With `dcStep` certified as the rank, the
-natural statement is a *universal property*: `d_γ` is initial among metrics
-making the cost 1-Lipschitz. This is now a Lean theorem in reach, since the
-lower-bound machinery (`dcStep_le_contracts_to_steps`) is the exact ingredient.
+**Next target**: with `dcStep` certified as the geodesic (and now as the
+maximal Bellman-consistent potential), the natural next step is the reduced
+continuum model — the many-to-one transit map and its n → ∞ limit shape.

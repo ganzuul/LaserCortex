@@ -95,8 +95,8 @@ identification is motivational.
 For a quantum-information audience, the honest deliverables are:
 
 1. **A formalized lower bound** on associator / F-move depth for binary
-   fusion, with a proof that greedy is optimal (C2, verified; graded-lattice
-   proof in progress).
+   fusion, with a proof that greedy is optimal (C2, proven:
+   `dcStep_eq_geodesic`) and the maximal-potential universal property (C5).
 2. **A quantified boundary** — CD 3 / Γ = 19 / 4159 K — separating
    "composable" from "non-composable" algebra, in units that can be converted
    to thermodynamic cost.
@@ -126,8 +126,8 @@ For a quantum-information audience, the honest deliverables are:
 - **CS / PL / QC-engineering:** "Compiling a non-associative gate product has
   an irreducible re-association overhead; we give a machine-checked lower bound
   and show it jumps discontinuously at the octonion algebra."
-- **Math:** "The Tamari rank, equipped with a Cayley–Dickson weight functional,
-  is a geodesic distance with a critical point; the quantum reading is the
+- **Math:** "The Tamari geodesic distance, equipped with a Cayley–Dickson weight functional,
+  is the minimal re-association cost with a critical point; the quantum reading is the
   motivation, the combinatorics is the content."
 
 ## 5. Honesty ledger — read this before presenting
@@ -135,7 +135,8 @@ For a quantum-information audience, the honest deliverables are:
 | Layer | What it is | Status |
 |---|---|---|
 | Composition law, Γ functional, the jump, superadditivity, closure | combinatorics | **proven** (Lean, axiom-clean) |
-| C2 potentiality (cost = geodesic) | graded-lattice identity | **proven** (Lean, `TamariMetric.dcStep_eq_geodesic`) |
+| C2 potentiality (cost = geodesic) | geodesic identity | **proven** (Lean, `TamariMetric.dcStep_eq_geodesic`) |
+| C5 minimality (maximal potential) | universal property | **proven** (Lean, `TamariMetric.dcStep_is_maximal_potential`) |
 | `contracts_one` = F-move; `dcStep` = F-move depth | correspondence | **proposed**, not yet formalized against a fusion model |
 | Γ jump = Clifford/magic split; 4159 K = fault-tolerance threshold | analogy | **speculative**; motivational only |
 | Any claim about actual quantum hardware | — | **not made**; do not make it |

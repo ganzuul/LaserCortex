@@ -1,7 +1,7 @@
 # Preprint Skeleton — positioning and novelty claims
 
-**Working title.** *The cost of re-association: a graded lattice invariant of
-Cayley–Dickson composition, formalized in Lean*
+**Working title.** *The cost of re-association: a geodesic distance and a
+Cayley–Dickson weight functional, formalized in Lean*
 
 **Target venues (ranked).** (1) combinatorial algebra / discrete mathematics
 (e.g. *Order*, *Electron. J. Combin.*, *J. Symb. Comput.* for the
@@ -22,8 +22,9 @@ paper or discussion section).
 
 ## §2 Preliminaries
 
-- `EMLTree`; rotation `contracts_one`; right comb; Tamari lattice, its gradedness
-  and rank (cite Knuth / Tonks / associahedron literature).
+- `EMLTree`; rotation `contracts_one`; right comb; the Tamari lattice and its
+  cover structure (single-rotation Hasse diagram — note it is *not* graded:
+  T₃ = N₅; cite Knuth / Tonks / associahedron literature).
 - Cayley–Dickson tower and the associator's first nontrivial appearance at level 3.
 
 ## §3 The cost function and the composition law
@@ -43,14 +44,20 @@ paper or discussion section).
 - **Theorem** `weightedCost_mixed_dominance` (mixing evaluates at the max).
 - Locate the critical point against the associator (`associatorCostTree_eq_frictionDensity`).
 
-## §5 The metric conjecture (C2) and computational evidence
+## §5 The potentiality theorem (C2) and the universal property (C5)
 
-- Conjecture: `weightedCost cd t = d(t, rightComb (t.size))`.
-- Exhaustive verification (sizes 1–6, 196 trees, Dijkstra); triangle inequality;
+- **Theorem** `dcStep_eq_geodesic`: `weightedCost cd t = γ · d(t, rightComb (t.size))`
+  with `d` the geodesic distance (minimal rotation count).
+- **Theorem** `dcStep_is_maximal_potential`: `dcStep` is the pointwise-maximum
+  Bellman-consistent potential (C5 — the universal property).
+- **Theorem** `weightedCost_edge_lipschitz`, `looseCost_linear_in_trust` (C3 —
+  the mechanical-compatibility / Lipschitz restatements).
+- Exhaustive confirmation (sizes 1–6, 196 trees, Dijkstra); triangle inequality;
   discrimination against discrete/size metrics.
 - The lightcone census and the CD-3 inversion.
-- **Honesty requirement:** this section is *evidence*, not proof; the graded
-  argument is flagged as the path to a formal proof.
+- **Honesty note:** the lattice is not graded, so `dcStep` is a geodesic
+  potential, not a graded rank; the cost is distance-to-closure, not a two-point
+  metric.
 
 ## §6 Formalization
 

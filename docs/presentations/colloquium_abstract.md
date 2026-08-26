@@ -1,6 +1,6 @@
 # Department Colloquium Abstract
 
-**Title.** A graded cost function on the Tamari lattice of Cayley–Dickson
+**Title.** A geodesic cost function on the Tamari lattice of Cayley–Dickson
 composition.
 
 **Abstract.**
@@ -10,8 +10,8 @@ product $((ab)c)$ is one tree, $(a(bc))$ another, and the associahedron /
 Tamari lattice is the space connecting them by single re-associations. We ask a
 quantitative question that the lattice structure alone does not answer: *how
 much does it cost to re-associate?* We define a cost `dcStep` — the minimal
-number of rotations to the unique right-comb normal form, equivalently the rank
-in the Tamari lattice — and a per-rotation weight functional $\Gamma$ on the
+number of rotations to the unique right-comb normal form, the geodesic distance
+in the Tamari graph — and a per-rotation weight functional $\Gamma$ on the
 Cayley–Dickson tower. The resulting cost obeys an exact composition law:
 grafting two trees costs the sum of their costs **plus a coupling term** equal
 to the right-spine depth of the left operand, so that mixing two weight regimes
@@ -21,7 +21,7 @@ split-octonion level where the associator first becomes nontrivial.
 
 We prove (and confirm by exhaustive computation to size six) that this cost
 coincides with geodesic distance to the normal form in the $\Gamma$-weighted
-flip graph: each rotation drops the rank by at most one, so the greedy count is
+flip graph: each rotation drops `dcStep` by at most one, so the greedy count is
 minimal. The known critical point then reappears independently as a
 population-wide inversion of the timelike/spacelike character of routes. All
 theorems are machine-checked in Lean 4 with no axioms beyond classical choice;

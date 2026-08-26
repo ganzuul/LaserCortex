@@ -7,19 +7,21 @@ for when they push.*
 
 ## Objection 1 — "What's actually new here?"
 
-**The ask.** Tamari gradedness and the right comb are classical; the
+**The ask.** The Tamari cover structure and the right comb are classical; the
 associahedron is textbook. So is this just re-encoding known facts?
 
 **Rebuttal (short).** "Three things I claim as new: the exact composition
 identity with the coupling term, machine-checked; the Γ functional with its
-single CD-3 jump; and the potentiality conjecture — cost equals geodesic
-distance — with exhaustive evidence and a clear path to proof. The gradedness
-itself I cite, not claim."
+single CD-3 jump; and the potentiality theorem — cost equals geodesic
+distance — now proven, with exhaustive confirmation. The Tamari cover
+structure itself I cite, not claim."
 
 **Rebuttal (long).** If they still push: the *combination* — a cost function
-that is simultaneously (a) a lattice rank, (b) additive-with-coupling under
-composition, and (c) a geodesic distance — is not in the Tamari literature,
-which treats the rank as combinatorial bookkeeping, not as a weight functional
+that is simultaneously (a) a geodesic distance to the normal form,
+(b) additive-with-coupling under
+composition, and (c) the maximal Bellman-consistent potential — is not in the
+Tamari literature,
+which treats the rotation count as combinatorial bookkeeping, not as a weight functional
 with a phase transition. The Γ jump is what turns bookkeeping into structure.
 
 **Never do.** Do not defend the temperature story as "the novelty." Concede it
@@ -67,7 +69,8 @@ greedy flip count is the minimal number of rotations: each rotation drops
 comb needs at least `dcStep` steps, and the greedy recursion realizes exactly
 that many. The finite check is now a *confirmation*, not the evidence. If
 pressed, the whole argument reduces to the one bound — "each rotation drops
-the rank by at most 1" — which is where the graded-lattice structure lives.
+`dcStep` by at most 1" — which is where the geodesic structure lives (note the
+lattice is *not* graded, so this is a minimality bound, not a rank identity).
 
 ## Objection 5 — "Fifteen logics mapped to temperatures — this is numerology."
 
@@ -117,7 +120,7 @@ with a formalization path, not as results."
 
 **Rebuttal (long).** Point to the honesty ledger (quantum_relevance.md §5).
 The disciplined claim is: *the resource theory of non-associative composition
-is a shared substrate* — the same graded lattice underlies anyon fusion,
+is a shared substrate* — the same Tamari lattice underlies anyon fusion,
 compilation, and our cost. Whoever formalizes the correspondence gets a
 machine-checked lower bound for free. That is a contribution even if the
 physics is someone else's.

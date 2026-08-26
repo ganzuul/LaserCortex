@@ -227,4 +227,38 @@ theorem dcStep_eq_geodesic (t : EMLTree) :
   · intro n hn
     exact dcStep_le_path_to_rightComb hn
 
+-- ============================================================================
+-- C5: minimality / universal property
+-- ============================================================================
+
+/-- Any potential `f` that drops by at most 1 per cover is bounded above by the
+step count of any contraction path: `f s ≤ f t + n`. This is the "1-Lipschitz
+along the cover graph" compatibility condition — the slow-variable / potential
+condition that makes a coarse observable consistent with the rotation dynamics. -/
+theorem potential_le_contracts_to_steps (f : EMLTree → Nat)
+    (h_lip : ∀ {s u : EMLTree}, contracts_one s u → f s ≤ f u + 1)
+    {s t : EMLTree} {n : Nat} (h : ContractsToSteps s t n) :
+    f s ≤ f t + n := by
+  induction h with
+  | refl t => simp
+  | step s u t m h1 ht ih =>
+    calc
+      f s ≤ f u + 1 := h_lip h1
+      _ ≤ (f t + m) + 1 := Nat.add_le_add_right ih 1
+      _ = f t + (m + 1) := by omega
+
+/-- **C5 (minimality / universal property).** `dcStep` is the pointwise-maximum
+potential among those vanishing at the right comb and dropping by at most 1 per
+cover: any such `f` is dominated by `dcStep`. Since `dcStep` itself satisfies
+the conditions (`dcStep_rightComb`, `dcStep_contracts_one_le`), this certifies
+`dcStep` as *the* geodesic cost — not merely a candidate. -/
+theorem dcStep_is_maximal_potential (f : EMLTree → Nat)
+    (h_zero : ∀ n, f (rightComb n) = 0)
+    (h_lip : ∀ {s u : EMLTree}, contracts_one s u → f s ≤ f u + 1)
+    (t : EMLTree) :
+    f t ≤ dcStep t := by
+  have h := potential_le_contracts_to_steps f h_lip (contracts_to_steps_of_dcStep t)
+  have hz : f (rightComb t.size) = 0 := h_zero t.size
+  simpa [hz] using h
+
 end TamariMetric
