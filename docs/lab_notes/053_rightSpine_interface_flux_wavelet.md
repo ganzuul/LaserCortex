@@ -97,7 +97,42 @@ If "interface flux" is the right invariant, then:
 The first is the cheapest to check and would upgrade this note from hypothesis
 to theorem (or kill it cleanly).
 
-## 6. Status
+## 6. Insight for the anyon correspondence
+
+The interface-flux reading does real work for the anyon track — it converts the
+loose "fusion tree = EMLTree" dictionary into three specific, testable claims.
+
+1. **F-move depth decomposes into internal + interface.** `dcStep` = F-move
+   depth (minimal associator applications to trivialize a fusion tree). The
+   composition law says
+   `F-move depth = internal F-moves (within l, within r) + interface F-moves
+   (across the l | r cut)`, and the interface count is exactly `rightSpine l`.
+   In a fusion tree `Node l r`, the nontrivial associativity that crosses the
+   cut is `rightSpine l` — the "detail" attributable to neither side alone.
+
+2. **Γ is the price of interface flux.** The associator strut (Γ: 2 → 19 at
+   CD 3, octonions) is the cost of the cross-boundary F-moves becoming
+   nontrivial. At CD ≤ 2 the associator vanishes — interface flux is free; at
+   CD ≥ 3 each interface F-move costs one grind. The loose-coupling discount
+   (`looseCost_linear_in_trust`, which discounts only the `rightSpine · γ`
+   term) is literally "don't pay for the interface flux" — the rate-distortion
+   dial in anyon clothing.
+
+3. **The pentagon coherence is what makes the flux a well-defined invariant.**
+   The pentagon equation (F-matrix coherence) is exactly the path-independence
+   of `dcStep`: no fusion path beats the greedy one. So the geodesic theorem
+   *is* pentagon coherence restated, and `rightSpine l` is its per-cut
+   contribution. The "flux conservation" prediction of §5 is therefore a
+   topological statement — total F-move depth is a path-independent charge.
+
+**Caveat.** This is the *kinematic* structure (the free associahedron shared by
+every fusion category), not the *dynamical* data (the specific F-matrix weights
+/ 6j symbols of e.g. Fibonacci anyons). The interface-flux claim says *how
+many* cross-boundary F-moves there are and that the associator prices them; a
+concrete model would add *how much* each charges. That piece is still required
+to promote "`contracts_one` = F-move" from correspondence to theorem.
+
+## 7. Status
 
 Open. This is a candidate *meaning*, not a proven invariant. It sits on the
 reduced-model track (the many-to-one transit map and its limit shape) as the
