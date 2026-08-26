@@ -19,9 +19,10 @@ always evaluates at the hotter one. The weight sequence has a single, sharp
 discontinuity — from $\Gamma_2 = 2$ to $\Gamma_3 = 19$ — located exactly at the
 split-octonion level where the associator first becomes nontrivial.
 
-We conjecture and computationally verify (exhaustively, to size six) that this
-cost coincides with geodesic distance to the normal form in the $\Gamma$-weighted
-flip graph; the known critical point then reappears independently as a
+We prove (and confirm by exhaustive computation to size six) that this cost
+coincides with geodesic distance to the normal form in the $\Gamma$-weighted
+flip graph: each rotation drops the rank by at most one, so the greedy count is
+minimal. The known critical point then reappears independently as a
 population-wide inversion of the timelike/spacelike character of routes. All
 theorems are machine-checked in Lean 4 with no axioms beyond classical choice;
 the physical temperature scale is a normalization convention, not a hypothesis.

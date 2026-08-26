@@ -53,7 +53,7 @@ statement (2-line induction, no `sorry`). Emphasize the corollary
 Two columns. **Known:** Tamari gradedness, right comb uniqueness, associahedron
 combinatorics. **New here:** (i) the exact composition identity with the
 coupling term, machine-checked; (ii) the Γ functional with the CD-3 critical
-point; (iii) the potentiality conjecture (Slide 8); (iv) the whole thing is
+point; (iii) the potentiality theorem (Slide 8); (iv) the whole thing is
 *formalized* — every theorem is a Lean certificate. Say the sentence:
 *"The physical story motivates the definitions; the theorems are pure
 combinatorics."*
@@ -70,15 +70,14 @@ The jump at CD 3 is robust: modal logic sits *exactly* at CD 3; paraconsistency
 (CD 4) requires the 4159 K barrier. Frame as: **the non-associative transition
 is a first-order discontinuity in a single integer parameter.**
 
-## Slide 8 — The potentiality conjecture (4 min) ★
+## Slide 8 — The potentiality theorem (4 min) ★
 
-**Conjecture:** `weightedCost cd t = d(t, rightComb (t.size))` — cost IS
-geodesic distance to closure (the greedy count is geodesic).
-**Evidence:** exhaustive Dijkstra over all 196 trees of size ≤ 6, zero
-failures; triangle inequality verified; trivial metrics ruled out.
-**Status:** provable-in-principle (Tamari is graded) but *not yet formalized* —
-this is the open problem. Be explicit about the boundary between verified and
-proven.
+**Theorem** (`TamariMetric.dcStep_eq_geodesic`): `dcStep t` is the minimal
+number of rotations to reach the right comb — the greedy count *is* geodesic.
+**Proof sketch:** each rotation drops `dcStep` by at most 1
+(`dcStep_contracts_one_le`), so any path needs ≥ `dcStep` steps; the greedy
+recursion realizes exactly that many. Two lines of Lean once the one bound is
+in hand. The exhaustive check (196 trees, size ≤ 6) is a *confirmation*.
 
 ## Slide 9 — A lightcone inversion at CD 3 (3 min)
 

@@ -135,7 +135,7 @@ For a quantum-information audience, the honest deliverables are:
 | Layer | What it is | Status |
 |---|---|---|
 | Composition law, Γ functional, the jump, superadditivity, closure | combinatorics | **proven** (Lean, axiom-clean) |
-| C2 potentiality (cost = geodesic) | graded-lattice identity | **verified** (exhaustive, ≤ size 6); proof open |
+| C2 potentiality (cost = geodesic) | graded-lattice identity | **proven** (Lean, `TamariMetric.dcStep_eq_geodesic`) |
 | `contracts_one` = F-move; `dcStep` = F-move depth | correspondence | **proposed**, not yet formalized against a fusion model |
 | Γ jump = Clifford/magic split; 4159 K = fault-tolerance threshold | analogy | **speculative**; motivational only |
 | Any claim about actual quantum hardware | — | **not made**; do not make it |

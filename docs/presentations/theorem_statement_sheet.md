@@ -3,7 +3,8 @@
 *Machine-checked in Lean 4 (mathlib), no `sorry`, no axioms beyond `propext`,
 `Classical.choice`, `Quot.sound`. Lean names in `monospace` refer to the
 buildable modules `LaserCortex.SubdivisionClosure`, `LaserCortex.AMM`,
-`LaserCortex.LogicalTemperature`, `LaserCortex.Friction`.*
+`LaserCortex.LogicalTemperature`, `LaserCortex.Friction`, and
+`LaserCortex.TamariMetric`.*
 
 ---
 
@@ -92,20 +93,27 @@ with trust compliance `λ = num/den ≤ 1`.
 - **Thm** `closedMarket_monotone_in_reserve` — the deontic ratchet: a closed
   market stays closed as reserve tightens.
 
-## 6. The metric conjecture (C2 potentiality)
+## 6. The metric (C2 potentiality) — now a theorem
 
-**Conjecture (computationally verified to size 6, all 196 trees).**
+**Thm** `TamariMetric.dcStep_eq_geodesic`
 ```
-weightedCost cd t = d(t, rightComb (t.size))   — cost IS geodesic distance
+dcStep t = the minimal number of contracts_one rotations to reach rightComb t.size
 ```
-i.e. the greedy rotation count `dcStep` is the **geodesic** count in the
-γ-weighted flip graph (Tamari graph). Exhaustive Dijkstra shows zero failures;
-the triangle inequality (C0) holds; discrete/size metrics are ruled out (C4).
+i.e. the greedy rotation count is the **geodesic** count in the flip graph.
+Proven in `LaserCortex.TamariMetric` (no `sorry`, no axioms) via:
+- `dcStep_contracts_one_le` — each rotation drops `dcStep` by at most 1
+  (the crux; a left-subtree rotation can leave `dcStep` unchanged).
+- `dcStep_le_contracts_to_steps` — lower bound (any path has length ≥ `dcStep`).
+- `contracts_to_steps_of_dcStep` — achievability (greedy reaches in `dcStep` steps).
 
-**Open** (stated, not yet formalized): minimality/uniqueness (C5) — any
-C2-satisfying metric is dominated by `d`.
+Exhaustive computational check (196 trees, sizes ≤ 6) now *confirms* rather
+than substitutes for the proof. Since `weightedCost cd t = γ · dcStep t`, the
+γ-weighted cost is γ times the geodesic distance.
+
+**Open** (C5): minimality/uniqueness — any C2-satisfying metric is dominated
+by `d`.
 
 ---
 
-*Build:* `scripts/lake-wrap.sh -- lake build LaserCortex.SubdivisionClosure LaserCortex.AMM`
+*Build:* `scripts/lake-wrap.sh -- lake build LaserCortex.TamariMetric LaserCortex.SubdivisionClosure LaserCortex.AMM`
 *Formalization:* Lean 4, toolchain v4.31.0-rc1. Axiom audit clean.

@@ -97,7 +97,7 @@ census data.
 |---|---|---|
 | Exact composition identity (coupling = rightSpine) | likely folklore, unrecorded | Lean proof; literature search pending |
 | Γ functional with CD-3 jump | new framing of known associator fact | Lean; note 045–048 |
-| C2 potentiality (cost = geodesic) | conjecture, verified ≤6 | sweep; graded proof open |
+| C2 potentiality (cost = geodesic) | **proven** (Lean, `TamariMetric`) | `dcStep_eq_geodesic`; exhaustive check ≤6 confirms |
 | Lightcone inversion at CD 3 | new observation | census; interpretation-bound |
 | Full machine-checked formalization | methodological contribution | axiom audit |
 | `dcStep` = F-move depth (anyon correspondence) | proposed hypothesis, **not** claimed | quantum_relevance.md §1; formalization open |

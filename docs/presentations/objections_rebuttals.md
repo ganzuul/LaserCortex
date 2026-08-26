@@ -55,17 +55,19 @@ this objection ("is it constructively empty?"). State: no `sorry`, axioms
 limited to `propext`, `Classical.choice`, `Quot.sound`; everything else is
 definitional.
 
-## Objection 4 — "The C2 conjecture is only verified to size 6. Why should I
+## Objection 4 — "The C2 claim is only verified to size 6. Why should I
 believe it?"
 
 **The ask.** Finite check ≠ proof.
 
-**Rebuttal.** Correct — I label it a conjecture. But: (a) the check is
-*exhaustive* over the full flip graph, not sampled; (b) the obstruction to a
-counterexample is structural — a cheaper-than-greedy route would require a
-rotation that *decreases* the rank, which the graded-lattice property forbids;
-so the finite evidence is the *shadow* of the intended proof. The proof is
-flagged as open, not hidden.
+**Rebuttal.** That was the status at the time of the sweep — but it is now a
+theorem. `dcStep_eq_geodesic` (Lean, no `sorry`, no axioms) proves that the
+greedy flip count is the minimal number of rotations: each rotation drops
+`dcStep` by at most 1 (`dcStep_contracts_one_le`), so any path to the right
+comb needs at least `dcStep` steps, and the greedy recursion realizes exactly
+that many. The finite check is now a *confirmation*, not the evidence. If
+pressed, the whole argument reduces to the one bound — "each rotation drops
+the rank by at most 1" — which is where the graded-lattice structure lives.
 
 ## Objection 5 — "Fifteen logics mapped to temperatures — this is numerology."
 
