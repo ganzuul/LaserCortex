@@ -132,7 +132,72 @@ many* cross-boundary F-moves there are and that the associator prices them; a
 concrete model would add *how much* each charges. That piece is still required
 to promote "`contracts_one` = F-move" from correspondence to theorem.
 
-## 7. Status
+## 7. Flux conservation and magnetohydrodynamics
+
+The "flux conservation" prediction of §5 resembles magnetohydrodynamics (MHD)
+at the level of **topological conservation** — a flux that depends only on the
+boundary / is path-independent, because the underlying object is closed.
+
+| Ideal/resistive MHD | This project |
+|---|---|
+| magnetic field `B` | the associator (the nontrivial cross-cut structure) |
+| `B = ∇ × A` (field is a curl) | the associator as a coboundary (exact) |
+| `∇·B = 0` (no monopoles) | the **pentagon equation** (cocycle condition) |
+| flux `= ∫ B·dA = ∮ A·dl` (Stokes: boundary-only) | total `rightSpine` flux = a boundary term |
+| Alfvén frozen-in (comoving flux conserved) | `dcStep` is path-independent under the cover dynamics |
+| **resistivity η turning on** | **the Γ strut turning on at CD 3** |
+
+The two "conservation" senses line up: Stokes' theorem (boundary-only flux)
+↔ the divergence theorem on the cover graph; frozen-in (time-conserved flux)
+↔ path-independence of `dcStep`. Both reduce to the same sentence — *the flux
+is a topological invariant because the underlying object is closed (coherent).*
+
+### Γ is "resistivity"
+
+The sharpest part is the phase transition:
+
+- **Ideal MHD** = zero resistivity = field lines frozen in = no reconnection =
+  flux perfectly conserved.
+- **Resistive MHD** = η > 0 = reconnection allowed = flux dissipates into heat.
+
+Mapped onto the tower:
+
+- **CD ≤ 2 (associative)** = "ideal": associator trivial, pentagon vacuous,
+  re-association free, flux perfectly conserved.
+- **CD ≥ 3 (non-associative)** = "resistive": associator nontrivial, pentagon a
+  real constraint, each interface F-move carries a Γ charge — the flux
+  "dissipates" into cost.
+
+So the Γ jump `2 → 19` at the octonions is **the resistivity turning on** — the
+point where conserved (frozen-in) flux gives way to charged (dissipative)
+reconnection. The loose-coupling discount (`looseCost_linear_in_trust`, removing
+`(1−λ)·S` of interface flux) is then a *finite-resistivity* relaxation: detail
+is allowed to leak away to save cost.
+
+### Limits and the lead
+
+Two limits keep this honest: ours is **discrete** (a combinatorial Stokes/Gauss
+on a graph, not a continuous PDE), and **scalar** (a count `rightSpine`, not a
+vector field `B`). The second is constructive: to make the analogy tight, the
+associator/flux should be promoted to a **1-cochain** on the cover graph whose
+coboundary is the associator and whose integral is `dcStep`.
+
+That names the rigorous target — **cohomology of the associahedron**:
+
+- the pentagon equation *is* the cocycle condition (`δ² = 0`);
+- the associator *is* a 2-cocycle (classically: a Hochschild cocycle);
+- `dcStep` / the flux *is* its cohomology class — conserved because closed,
+  boundary-only because exact off the cut;
+- the phase transition: at CD ≤ 2 the class is trivial (no flux); at CD ≥ 3 it
+  is nontrivial (flux carries charge).
+
+This connects to existing fragments in the repo (`006_hopf_7_skeleton`,
+`023_cd_homotopy_bridge`, the Chu/KKT duality). The MHD intuition is therefore
+not decorative — it names the *formalization*: prove the associator is a
+cocycle and `dcStep` is its cohomology class, so that "flux conservation" is
+`δ² = 0` and the Γ jump is the class going from trivial to nontrivial.
+
+## 8. Status
 
 Open. This is a candidate *meaning*, not a proven invariant. It sits on the
 reduced-model track (the many-to-one transit map and its limit shape) as the
