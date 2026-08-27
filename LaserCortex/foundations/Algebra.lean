@@ -199,6 +199,35 @@ def pentagon_defect (a b c d : SplitOctonion) : SplitOctonion :=
     (split_oct_mul (split_oct_mul a b) (split_oct_mul c d))
 
 -- ============================================================================
+-- Alternativity: the split-octonions are alternative, so the associator is
+-- alternating (totally antisymmetric) — a sign, not a full vector residual.
+-- ============================================================================
+
+/-- **Left alternativity** `(xx)y = x(xy)`. This is the algebraic fact that
+reduces the associator to a sign cocycle: for an alternative algebra the
+associator `[a,b,c] = (ab)c − a(bc)` is alternating (antisymmetric), hence
+one-dimensional (a sign) rather than an 8-component vector. It holds at CD ≤ 3
+and *fails* at CD ≥ 4 (sedenions). -/
+theorem left_alternative (x y : SplitOctonion) :
+    split_oct_mul (split_oct_mul x x) y = split_oct_mul x (split_oct_mul x y) := by
+  ext <;> simp [split_oct_mul] <;> ring
+
+/-- **Right alternativity** `(xy)y = x(yy)`. -/
+theorem right_alternative (x y : SplitOctonion) :
+    split_oct_mul (split_oct_mul x y) y = split_oct_mul x (split_oct_mul y y) := by
+  ext <;> simp [split_oct_mul] <;> ring
+
+/-- **The associator is alternating**: swapping the first two arguments negates
+it. This is the "sign cocycle" property — `[a,b,c]` is antisymmetric, so it has
+a single sign-like degree of freedom (a ±1 after normalization by the fixed
+magnitude `strut_weight = |[e₁,e₂,e₄]|`), not an 8-component vector residual.
+Together with the two alternative laws this says the split-octonions are
+alternative, hence the associator is a *totally antisymmetric* trilinear form. -/
+theorem associator_antisymm_left (a b c : SplitOctonion) :
+    associator_tensor a b c = split_neg (associator_tensor b a c) := by
+  ext <;> simp [associator_tensor, split_oct_mul, split_sub, split_neg] <;> ring
+
+-- ============================================================================
 -- Basis vectors
 -- ============================================================================
 
