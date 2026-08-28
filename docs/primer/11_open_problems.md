@@ -10,11 +10,12 @@ refutation sentence. Order = the order we intend to work them.*
 | 1 | **Imaginary-part property**: the associator `[a,b,c]` has vanishing e₀ component (purely imaginary) — the reduction of the flux to a sign | 4, 6 | open, next |
 | 2 | **Pentagon cocycle identity**: `φ(b,c,d)·φ(a,bc,d)·φ(a,b,c) = φ(a,b,cd)·φ(ab,c,d)` — the δ²=0 check for the sign cocycle | 6, 8 | open, next |
 
-Both are finite `decide`/`ring` computations over the 8-component
-split-octonion table, following the pattern of `strut_weight_eq_four` and
-`pentagon_defect_bound` (`foundations/Algebra.lean`). Item 1 confirms or
-refutes "the handedness is one-dimensional"; item 2 confirms or refutes
-"flux conservation = δ²=0".
+Why these two first: without them, "handedness is a sign" stays analogy
+and "flux is conserved because δ²=0" stays a picture. Both are finite
+`decide`/`ring` computations over the 8-component split-octonion table,
+following the pattern of `strut_weight_eq_four` and `pentagon_defect_bound`
+(`foundations/Algebra.lean`). Item 1 confirms or refutes "the handedness is
+one-dimensional"; item 2 confirms or refutes "flux conservation = δ²=0".
 
 ## 11.2 The closed ledger (what Part II rests on)
 

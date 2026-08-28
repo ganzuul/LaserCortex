@@ -12,11 +12,15 @@
 
 ## 6.2 The flip count is a geodesic **[P]**
 
+We need a flip count that does not depend on which re-association path is
+chosen — otherwise "cost" would be ambiguous. Two facts make it usable.
+
 - `dcStep t` = minimal number of `contracts_one` rotations to the right comb.
-  **[P]** (`TamariMetric.dcStep_eq_geodesic`, no `sorry`): the greedy count is
-  minimal; the flux is **path-independent**.
-- The composition law `dcStep (Node l r) = dcStep l + dcStep r + rightSpine l`
-  **[P]** (`dcStep_node_compose`) — total = coarse + interface (Chapter 7).
+  **[P]** (`TamariMetric.dcStep_eq_geodesic`, no `sorry`). In English: the
+  greedy count is minimal, so the flux is **path-independent**.
+- The flip count then *decomposes*: `dcStep (Node l r) = dcStep l + dcStep r +
+  rightSpine l` **[P]** (`dcStep_node_compose`). In English: total =
+  coarse + interface — the shape Chapter 7 makes central.
 
 *Level for the word "flux": analogy (apt).* The literal content is the two
 proven facts above: the count is minimal and path-independent, so it behaves

@@ -13,12 +13,22 @@ cost of re-association behaves like a slip parameter. §8.3 states the analogy;
 
 ## 8.2 The Γ functional
 
+We need a per-flip weight that is constant except at one place — the CD level
+where associativity is lost — so that the global cost has exactly one
+discontinuity.
+
 - `frictionDensity k` — the per-flip weight on the CD tower;
-   Γ₀..Γ₇ = 0, 1, 2, 19, 20, 21, 22, 23. **[V]**
+  Γ₀..Γ₇ = 0, 1, 2, 19, 20, 21, 22, 23. **[V]** In English: the cost per flip
+  grows by one each rung, *plus* sixteen once the bracket can twist.
 - The single jump 2 → 19 at CD 3 **[P]** (`gamma_increment`,
   `gamma_only_jump_at_cd2_3`); the two-regime collapse **[P]**
-  (`weightedCost_assoc_regime`, `weightedCost_nonassoc_regime`).
-- `weightedCost cd t = dcStep t · frictionDensity cd` **[def]**
+  (`weightedCost_assoc_regime`, `weightedCost_nonassoc_regime`). In English:
+  below CD 3, cost is `k·dcStep`; above, `(k+16)·dcStep` — the strut is the
+  extra sixteen.
+- The global cost is then `weightedCost cd t = dcStep t · frictionDensity cd`
+  **[def]** (`SubdivisionClosure.lean`). In English: total cost = geodesic
+  distance times per-flip price — the product that Chapter 6 made
+  well-defined.
   (`SubdivisionClosure.lean`).
 
 ## 8.3 Γ is "resistivity" **[H]**

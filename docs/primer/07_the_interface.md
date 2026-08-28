@@ -17,13 +17,23 @@ is no transform here, only a recursion.]
 
 ## 7.2 The composition law **[P]**
 
+We need to know how cost composes when two trees are grafted — otherwise the
+flip count cannot be used modularly. The law says it composes additively,
+plus one coupling term.
+
 - `dcStep (Node l r) = dcStep l + dcStep r + rightSpine l`.
-  (**[P]** `dcStep_node_compose`)
+  (**[P]** `dcStep_node_compose`). In English: total = left + right +
+  interface — the shape that will recur as coarse + detail.
 - `rightSpine l` = the depth of l's output chain = **the cross-boundary
-  coupling** = the number of flips that cross the l | r cut.
+  coupling** = the number of flips that cross the l | r cut. This is the
+  quantity the next section hypothesizes as invariant.
 - Verification (worked example, `l = (ab)c`): `rightSpine l = 1`, and
   `((ab)c)·r` needs 1 + 0 + 1 = 2 flips — one internal, one crossing. **[V]**
-- `rightSpine (rightComb n) = n`. **[P]** (`rightSpine_rightComb`)
+  So the "1" in the law is not abstract: it is the single interface flip.
+- The right comb's interface grows with its size: `rightSpine (rightComb n) =
+  n`. **[P]** (`rightSpine_rightComb`). In English: a closed market's output
+  chain extends exactly as far as its size — the boundary case that fixes the
+  scale.
 
 ## 7.3 The interface-flux hypothesis **[H]**
 

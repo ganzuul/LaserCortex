@@ -10,17 +10,28 @@ tower. This chapter is the tower itself.*
   (at 𝕊). **[std]**
 - The split forms (split-quaternion, split-octonion) with indefinite norm;
   zero divisors appear. **[std]**
-- `SplitOctonion` over ℤ: the 8-component structure and the Cayley–Dickson
-  product (`split_oct_mul`) — the substrate of every Part II computation.
-  **[def]**; `strut_weight_eq_four` is the first theorem it yields. **[P]**
+- **Why this structure.** We need a concrete algebra that can *lose*
+  associativity without losing everything else — the split-octonions over the
+  integers provide it. `SplitOctonion` is the 8-component type and
+  `split_oct_mul` its Cayley–Dickson product. **[def]** Every Part II theorem
+  unpacks to polynomial identities in those eight integer components, which is
+  why the substrate earns its keep; `strut_weight_eq_four` is the first such
+  identity. **[P]**
 
 ## 3.2 The associator and the defect functions
 
-- `associator_tensor a b c = (ab)c − a(bc)`. **[def]** (`foundations/Algebra.lean`)
-- `assocDefect k = 0` for k ≤ 2, `strut_weight` for k ≥ 3: the associator's
-  onset as a step function. **[def]** (`Friction.lean`)
-- `frictionDensity k = commDefect k + strut_weight · assocDefect k`
-  (`Friction.lean`): the per-flip weight, linear plus one strut. **[def]**
+- **What failure looks like.** `associator_tensor a b c = (ab)c − a(bc)`
+  measures the defect of associativity at a triple — zero when associativity
+  holds, nonzero when it does not. **[def]** (`foundations/Algebra.lean`)
+  In English: it is the vector by which the two bracketings disagree.
+- **Compressing the defect to a scalar.** `assocDefect k` is 0 for k ≤ 2 and
+  `strut_weight` for k ≥ 3 — a step function that says *when* the
+  associator turns on. **[def]** (`Friction.lean`) It is the switch that
+  Chapter 4's handedness will flip.
+- **Pricing the flip.** `frictionDensity k = commDefect k + strut_weight ·
+  assocDefect k` (`Friction.lean`) **[def]** is the per-flip weight, linear
+  in `k` plus one strut. In English: the cost grows by one each rung, *plus*
+  sixteen once the bracket can twist.
 
 ## 3.3 The critical point
 
