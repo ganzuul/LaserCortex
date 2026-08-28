@@ -19,6 +19,8 @@ magnetohydrodynamics." Internal canon; draft state.*
 | `09_reduced_lattice.md` | 9. The reduced lattice | scaffold |
 | `10_stellarator_plan.md` | 10. The stellarator comparison plan | scaffold |
 | `11_open_problems.md` | 11. Open problems and the ledger | scaffold |
+| `CLAIMS.md` | claims register — one adjudicable row per claim | **current** |
+| `REVIEW_PROTOCOL.md` | multi-model adversarial adjudication rubric | **current** |
 
 "Drafted" = prose in place; "scaffold" = structure, tagged claims, and sources
 in place, prose to be written.
