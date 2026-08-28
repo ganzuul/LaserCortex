@@ -36,6 +36,11 @@ not its vector-field structure — the latter is conjectural here (§6.4).
 
 ## 6.4 The conservation claim
 
+Everything above in this chapter is theorem or computation; this section is
+the hypothesis that would connect them, and it is where the word "flux" either
+graduates to literal structure or stays an analogy. Three claims, from
+softest to hardest:
+
 - **[H]** The pentagon coherence is what makes the flux a well-defined
   invariant: `δ² = 0` for the associator as a cocycle, with `dcStep` its
   cohomology class. Confirm: prove the cocycle identity (item 2) for the sign

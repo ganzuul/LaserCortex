@@ -2,22 +2,57 @@
 
 *Why magnetohydrodynamics; why confinement; why three dimensions.*
 
-## 1.1 Plasma, fields, and the equilibrium problem (draft)
+## 1.1 Plasma, fields, and the equilibrium problem
 
-- Magnetic field as the confining structure; ∇·B = 0; the equilibrium
-  `J × B = ∇p`.
-- **Reduced continuum model:** equilibrium codes do not simulate particles;
-  they solve a *reduced continuum model* — this phrase is load-bearing and
-  recurs in Chapter 9.
-- [std claims: standard magnetohydrodynamics; no tags needed in conventional
-  passages, per front matter.]
+A plasma is a hot, electrically conducting gas: it carries current, and
+currents feel magnetic force. The practical consequence is that a plasma can
+be confined — held away from material walls — by a magnetic field shaped for
+the purpose. Two equations carry the idea. The field is *solenoidal*,
 
-## 1.2 Tokamaks, stellarators, and the cost of symmetry (draft)
+    ∇·B = 0,
 
-- Tokamak = axisymmetry + plasma current; stellarator = fully 3D coils, no
-  toroidal current needed.
-- Stellarator geometry is *much* more complex: no symmetry to lean on.
-- Quasisymmetry / quasi-isodynamicity as design goals; islands; ι/q.
+meaning field lines never begin or end: there are no magnetic monopoles, so
+lines close on themselves or leave the domain. And equilibrium is a force
+balance,
+
+    J × B = ∇p,
+
+between magnetic force (current density crossed with field) and the pressure
+gradient of the hot gas. The `×` is the cross product — the same right-hand
+rule that Chapter 4 makes central — and its meaning is that magnetic force
+acts *sideways*, perpendicular to both current and field. That sideways
+character is what turns confinement into a geometry problem rather than a
+wall-strength problem.
+
+Equilibrium codes do not simulate every particle. They solve the balance above
+as a **reduced continuum model** — coarse fields standing in for fine
+particles — and that same divide-and-conquer between detail and structure is
+what Part II makes precise for re-association.
+
+## 1.2 Tokamaks, stellarators, and the cost of symmetry
+
+A **tokamak** confines plasma in a torus (a doughnut) whose field is
+*axisymmetric*: essentially identical on every toroidal circuit, so the
+geometry repeats and a large plasma current supplies the missing twist. A
+**stellarator** gives up that symmetry and shapes its coils so the twist
+comes from the magnets themselves, with no steady plasma current required.
+The trade is stark: tokamaks live with current-driven instabilities;
+stellarators live with fully three-dimensional geometry.
+
+That geometry has a number. A field line advancing around the torus turns
+through a poloidal angle per toroidal circuit — the **rotational transform**
+`ι` (or its reciprocal, the safety factor `q`). Where `ι` lands on a nice
+rational value, the nested surfaces break into **magnetic islands**: bundles
+of field lines that close on themselves after a few circuits — and between
+islands, chaos. The design programs called **quasisymmetry** and
+**quasi-isodynamicity** are convictions that a well-chosen three-dimensional
+field can recover some of the good behavior that axisymmetry bought for free,
+without buying back the current.
+
+One asymmetry should be registered here, because this whole primer stands on
+it: axisymmetry is not an approximation that is always available. It is a
+*preferred direction* — and preferred directions are exactly what the census
+of Chapter 6 finds vanishing at high "logic temperature" (§1.3).
 
 ## 1.3 Why the Cayley–Dickson tower belongs here — a sketch [H]
 

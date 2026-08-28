@@ -2,11 +2,14 @@
 
 *Anchor E. "How much does a turn cost?"*
 
-## 8.1 Conventional grounding: ideal versus resistive (draft)
+## 8.1 Conventional grounding: the one dial MHD has
 
-- Ideal MHD: flux frozen in, no reconnection, no dissipation.
-- Resistive MHD: reconnection allowed; flux dissipates into heat.
-- The resistivity η is a *dial*, and the ideal limit is η = 0.
+Chapter 2, §2.3 is the grounding; this chapter adds nothing to it. The hinge
+is recalled in one line: resistivity η is the dial that lets field lines slip
+past each other. Ideal MHD is the η = 0 limit — a limit, not the generic case.
+The question this chapter asks is whether our Γ does that job — whether the
+cost of re-association behaves like a slip parameter. §8.3 states the analogy;
+§8.5 says what would have to be proven to make it literal.
 
 ## 8.2 The Γ functional
 

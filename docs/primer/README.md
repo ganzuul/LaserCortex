@@ -21,6 +21,8 @@ magnetohydrodynamics." Internal canon; draft state.*
 | `11_open_problems.md` | 11. Open problems and the ledger | scaffold |
 | `CLAIMS.md` | claims register — one adjudicable row per claim | **current** |
 | `REVIEW_PROTOCOL.md` | multi-model adversarial adjudication rubric | **current** |
+| `PACING_PROTOCOL.md` | reading-level / density-variance pass | **current** |
+| — | instrument: `scripts/pacing_audit.py` | run from repo root |
 
 "Drafted" = prose in place; "scaffold" = structure, tagged claims, and sources
 in place, prose to be written.

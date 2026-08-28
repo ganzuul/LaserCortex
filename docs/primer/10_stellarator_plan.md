@@ -6,19 +6,21 @@ self-contained.*
 
 ## 10.1 Why stellarators are the target [sketch, ties to Chapter 1 §1.3]
 
-Conventional stellarator geometry is three-dimensional with no axisymmetry;
-tokamaks are axisymmetric. The sketch reading developed in Chapter 1: at low
-"logic temperature" (CD ≤ 2) the route census is mostly timelike — a preferred
-direction exists; at CD ≥ 3 the entire population is spacelike — no preferred
-direction remains. A preferred direction is what axisymmetry *is*. So the
-non-associative regime is, in this reading, the regime that *forces* fully
-three-dimensional geometry: exactly the stellarator regime.
+Conventional stellarator geometry is three-dimensional with no axisymmetry.
+Tokamaks are axisymmetric. The difference is not cosmetic: it is the
+difference between a problem with a preferred direction and one without.
 
-**[H — sketch.]** The CD reduced lattice model should therefore show its
-clearest signature in problems where symmetry is *not* available to lean on —
-stellarator equilibria and their optimization — and its cleanest agreement with
-convention in the axisymmetric (tokamak) limit, where the timelike structure
-persists.
+**[V]** (restated from Chapter 6) In the route census, at low "logic
+temperature" (CD ≤ 2) most size-6 routes are timelike — a preferred direction
+exists. At CD ≥ 3 the entire population is spacelike — none remains.
+
+**[H — sketch, the bridge claim.]** A preferred direction is what axisymmetry
+*is*, on this reading. So the non-associative regime is the regime that
+*forces* fully three-dimensional geometry: exactly the stellarator regime.
+The CD reduced lattice model should therefore show its clearest signature in
+problems where symmetry is *not* available to lean on — stellarator
+equilibria and their optimization — and its cleanest agreement with convention
+in the axisymmetric (tokamak) limit, where the timelike structure persists.
 
 Confirmation/refutation sentence: confirm if the model's phase classification
 (timelike/spacelike routes) aligns with the axisymmetric/non-axisymmetric

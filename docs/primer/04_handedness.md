@@ -30,11 +30,12 @@ analogy — see the honesty policy in the front matter.]
 
 ## 4.2 The substrate: the associator
 
-For the split-octonion algebra over ℤ (`SplitOctonion`, with multiplication
-`split_oct_mul` — the Cayley–Dickson product, `LaserCortex.foundations.Algebra`),
-define the associator
+The ground under every claim in Part II is one algebra: the split-octonions
+over the integers. In the formalization that is the type `SplitOctonion`,
+multiplied by `split_oct_mul` — the Cayley–Dickson product — from
+`LaserCortex.foundations.Algebra`. On it, define the **associator**
 
-    [a,b,c] = (ab)c − a(bc)      (`associator_tensor`)
+    [a,b,c] = (ab)c − a(bc)        (`associator_tensor`)
 
 It measures the failure of associativity: for ℝ, ℂ, ℍ it vanishes identically;
 for the octonions it does not. An algebra is **alternative** when its
@@ -43,7 +44,11 @@ three arguments:
 
     [a,b,c] = −[b,a,c] = −[a,c,b] = …
 
-Alternativity is the statement that this antisymmetry is real.
+Alternativity is the statement that this antisymmetry is real. [Marginalia:
+"totally antisymmetric" is a strong claim, and the payoff is the title image.
+It says the associator forgets almost all information about a triple except
+its *orientation* — which is exactly the sense in which the right-hand rule
+applies.]
 
 ## 4.3 What is proven
 

@@ -20,6 +20,7 @@ adjudicable. A reviewer never edits prose; it issues a verdict on a row.
 | R4 | **Decisive sentence?** For [H]/[C]: is there a one-sentence confirm/refute, and is it actually decisive? | [H], [C] rows |
 | R5 | **Internal consistency?** Contradiction with any other row, duplicate facts, or chapter prose vs register drift? | all |
 | R6 | **Prose overreach?** Does the chapter sentence claim more than the row's tag allows? | all |
+| R7 | **Pacing?** Same reading level as neighbours, first-use glossed or pointed? See `PACING_PROTOCOL.md` / `scripts/pacing_audit.py`. | all |
 
 ## 3. Verdict vocabulary (exactly one per row)
 
