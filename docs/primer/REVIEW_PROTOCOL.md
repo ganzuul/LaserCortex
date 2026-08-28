@@ -57,10 +57,16 @@ cd /home/nos/labware/LaserCortex && for t in left_alternative right_alternative 
   (spacelike/lightlike/timelike; γ = 0,1,2,19,20)
 - Γ₀..Γ₇ = 0,1,2,19,20,21,22,23; total trees sizes ≤6 = 196
 
-**Key C — seeded defects F-A…F-F** (bottom of `CLAIMS.md`). A reviewer must
-catch at least the F-C and F-D classes (they are pure reading, no domain
-knowledge required) to pass calibration. Missing all six while raising
-non-defects = do-not-deploy.
+**Key C — pass-1 status of the register.** Defect classes F-A…F-D and F-F were
+found in the pass-1 audit and **resolved in the prose**; a reviewer flagging
+them as still-broken is reviewing the stale draft, not the text — that is a
+false-positive calibration signal. The genuinely open pass-2 targets are:
+F-E (§10.2 external code descriptions, explicitly UNVERIFIED), the [H]/[C]
+confirm/refute sentences that may be weak or circular (5.2.1, 6.5.1, 7.3.1,
+8.3.1), the §9.2 O(n³) cell-count bound, and any prose-vs-register
+contradiction newly introduced by pass-1 edits. A reviewer that finds *none*
+of these but raises no false positives is under-reading; one that finds
+genuinely new defects is the pass's product.
 
 ## 5. Procedure (per model)
 
@@ -75,8 +81,8 @@ non-defects = do-not-deploy.
      escalate to an authorship round (that is where revision happens);
    - **unanimous VETO on an [P] row** → a real bug in the primer *or* a real
      bug in the build — investigate before touching text;
-   - **majority MISSES a seeded defect** → that model cannot be used for R3/R4
-     checks; keep it for R2 (mechanical) only.
+   - **majority MISSES all pass-2 open targets** (Key C list) → that model is
+     under-reading; keep it for R2 (mechanical) checks only.
 
 ## 6. Why this task suits many models (and what it is *not* for)
 

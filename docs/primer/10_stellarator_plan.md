@@ -25,26 +25,34 @@ Confirmation/refutation sentence: confirm if the model's phase classification
 split of conventional equilibria; refute if the classification is insensitive
 to that split.
 
-## 10.2 The conventional side (draft)
+## 10.2 The conventional side
 
-Equilibrium and optimization codes the comparison would use:
+Equilibrium and optimization codes the comparison would use. **[std —
+unverified here.]** *Each line below is a characterization of an external
+code; none is checked against upstream documentation in this draft. Before
+external use, verify each against the tool's current docs — a wrong
+characterization of VMEC/DESC/SIMSOPT/SPEC is the kind of error that
+discredits the comparison plan around it.*
 
-- **VMEC** — nested-flux-surface equilibrium (the W7-X-era workhorse);
-  ideal-MHD equilibrium as a reduced continuum model.
-- **DESC** — pseudospectral equilibrium + optimization (successor-generation).
-- **SIMSOPT** — optimization framework (stage-II stellarator design).
-- **SPEC** — stepped-pressure equilibria with magnetic islands (relaxes the
-  nested-surface assumption — relevant because our flip count is defined on
-  trees that include island-like non-normality, see Chapter 6).
+- **VMEC** — nested-flux-surface (single-helicity) ideal-MHD equilibrium; the
+  W7-X-era workhorse. The description "equilibrium as a reduced continuum
+  model" is *our* framing (Chapter 9), not the code's self-description.
+- **DESC** — spectral/variational equilibrium + optimization.
+- **SIMSOPT** — target-function optimization framework over equilibria
+  (quasisymmetry operators etc.).
+- **SPEC** — stepped-pressure equilibria *without* assumed nested flux
+  surfaces (island/chaotic regions) — relevant because our flip count is
+  defined on trees whose normal forms can sit in island-like regimes
+  (Chapter 6).
 - Coordinate-free quantities to compare against: rotational transform ι,
   field strength on surfaces |B|, island widths, and the *number of free
   parameters* each description needs (see §10.4).
 
-## 10.3 What the CD side contributes (draft)
+## 10.3 What the CD side contributes
 
 - The reduced lattice (Chapter 9): trees → transit coordinates, a many-to-one
-  collapse; `dcStep` as conserved flux (Chapter 6); Γ as resistivity
-  (Chapter 8).
+  collapse **[V]**; `dcStep` as conserved flux **[P]** (with "flux" at
+  analogy level, Chapter 6); Γ as resistivity **[H]** (Chapter 8).
 - The honest object at this stage is the **reduced *lattice* model** — the
   continuum limit (Chapter 9 §9.5) is unproven and deferred.
 

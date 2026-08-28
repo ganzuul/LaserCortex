@@ -89,6 +89,9 @@ conventional term "right-hand rule" does real work and where it must stop.
   associator to reduce to a single sign, its *range* must be 1-dimensional.
   The claim that the associator is purely imaginary (its e₀ component vanishes)
   is the **imaginary-part property** — stated, not yet proven. See Chapter 11.
+  Confirm: prove the e₀ component of `associator_tensor` vanishes identically
+  (Chapter 11, item 1); refute: exhibit any triple of basis elements whose
+  associator has a nonzero e₀ component. **[C]**
 - **"Right-handed" versus "left-handed" is a convention** [marginalia: the
   split-octonion product is fixed; there is no choice of orientation to make.
   The handedness is absolute here, not a convention. Whether a "left-handed"
@@ -109,7 +112,12 @@ antisymmetry is the handedness [reification]; the handedness is one-dimensional
 - **[H]** The "handedness turns on" at CD 3 (associator 0 → nonzero) is the
   phase transition that Chapter 8 re-reads as resistivity. Confirmed in the
   limited sense that `strut_weight_eq_four` gives the onset a fixed magnitude;
-  the *dynamics* reading is open.
+  the *dynamics* reading is open. Confirm: a conventional dynamical quantity
+  (a transport coefficient, a reconnection rate) that tracks Γ across CD
+  levels in Chapter 10's comparison; refute: no such quantity tracks the
+  jump, or the jump's location moves under reparameterization.
+  *Level: picture* — the phase-transition language is currently a way of
+  looking, not a modeled dynamics.
 
 ## 4.6 Where this chapter points
 

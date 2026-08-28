@@ -21,12 +21,14 @@
 
 ## 1.3 Why the Cayley–Dickson tower belongs here — a sketch [H]
 
-**[H — sketch, do not nail down in this draft.]** The lightcone census
-(Chapter 6, and computed in `scripts/metric_sweep.py`): over the 132
-size-6 route configurations, at low "logic temperature" (CD ≤ 2) most routes
-are *timelike* — a preferred causal direction exists; at CD ≥ 3 the entire
-population is *spacelike* — no preferred direction remains. The sketch
-reading: a preferred direction is what axisymmetry *is*, and losing it is
+**[V]** The lightcone census (Chapter 6; computed in
+`scripts/metric_sweep.py` and re-verified by `scripts/presentation_data.py`):
+over the 132 size-6 route configurations, at low "logic temperature"
+(CD ≤ 2) most routes are *timelike* — a preferred causal direction exists; at
+CD ≥ 3 the entire population is *spacelike* — no preferred direction remains.
+
+**[H — sketch, do not nail down in this draft. Level: picture.]** The reading:
+a preferred direction is what axisymmetry *is*, and losing it is
 what stellarator geometry *costs*. So the CD tower's phase diagram of
 handedness (Chapter 5) might be read as a phase diagram of
 "how much geometry is forced": associative regimes tolerate symmetry;

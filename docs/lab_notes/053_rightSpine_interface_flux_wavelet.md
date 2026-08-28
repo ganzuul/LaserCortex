@@ -58,11 +58,17 @@ This ties together three things that had been sitting in separate notes:
    coarse + detail). This is the *algebraic shape* of the reduced model.
 2. **`rightSpine` is the detail coefficient** at the `l | r` cut — the
    high-frequency information lost in a low-pass (coarse) reduction.
-3. **`leftWeight` is the slow variable** the transit map tracks, and it
-   accumulates exactly the `rightSpine` contributions (`leftWeight (Node l r) =
-   l.size + leftWeight l + leftWeight r`). So the reduced model already
-   *keeps* the detail-integral while discarding the exact bracket — the
-   standard low-pass tradeoff.
+3. **`leftWeight` is the slow variable** the transit map tracks. [Correction
+   added 2026-08-28 in the primer pass: an earlier draft said leftWeight
+   "accumulates exactly the `rightSpine` contributions" — that is false, and
+   its own displayed formula refutes it.] `leftWeight (Node l r) =
+   l.size + leftWeight l + leftWeight r` accumulates the *sizes* of the left
+   children along the joins, while `dcStep` (via the composition law)
+   accumulates their *rightSpine* depths: the same recursion path, coarser and
+   finer weights respectively (left-comb of size 4: leftWeight = 3,
+   dcStep = 2). The reduced model keeps the coarse measure; the flux keeps
+   the fine one — the standard low-pass tradeoff, but with the two measures
+   now kept properly distinct.
 
 ## 4. Caveats (where the analogy must not be pushed)
 
