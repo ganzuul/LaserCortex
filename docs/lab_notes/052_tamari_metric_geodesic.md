@@ -91,6 +91,8 @@ bounds rather than a two-point Lipschitz.
 | — | invariant meaning of `rightSpine l` (survive to higher arities?) | open |
 | — | formalize the anyon correspondence (`contracts_one` = F-move) vs Fibonacci fusion | open |
 | — | reduced continuum model: transit-map fiber/quotient + limit shape | open (deferred) |
+| — | **imaginary-part property**: `[a,b,c]` has vanishing e₀ component (the associator is purely imaginary) | open (next) |
+| — | **pentagon cocycle identity**: `φ(b,c,d)·φ(a,bc,d)·φ(a,b,c) = φ(a,b,cd)·φ(ab,c,d)` — the δ²=0 check | open (next) |
 
 **Next target**: with `dcStep` certified as the geodesic (and now as the
 maximal Bellman-consistent potential), the natural next step is the reduced
