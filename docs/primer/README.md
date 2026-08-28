@@ -8,6 +8,7 @@ magnetohydrodynamics." Internal canon; draft state.*
 | File | Chapter | State |
 |---|---|---|
 | `00_front.md` | front matter (abstract, six anchors, honesty policy) | drafted |
+| `00_introduction.md` | Introduction — why this primer exists | **drafted** |
 | `01_the_problem.md` | 1. The problem, conventionally | scaffold |
 | `02_conventional_grounding.md` | 2. Conventional MHD, compressed | scaffold |
 | `03_the_substrate.md` | 3. The CD tower | scaffold |
