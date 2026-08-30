@@ -198,6 +198,64 @@ without asking us whether we are still keeping our story straight.
 
 ---
 
+## I.7 Coda — Seashell vs. coil: what "curled up" should mean
+
+A reader unfamiliar with the subject will have heard one picture: the extra
+dimensions of string theory are "curled up" so small they cannot be seen,
+like a tiny seashell. A seashell is a good image for *smallness*, but not for
+what the mathematics actually hides. What it hides is not smallness but
+**handedness**.
+
+A seashell curl, as usually pictured, is a flat spiral. It has a radius, but
+no orientation in the sense we need: you can curl it either way and still have
+a small circle. A *coil* — a helix, a spring, a flux tube — is different. A
+coil has a *pitch* and a *hand*: right-handed or left-handed, and the two are
+not the same. You need three points to tell which hand a coil is — two points
+can only oscillate back and forth; three can circulate. That is why
+non-associativity needs three inputs to show itself, and why three is the
+minimum that can carry direction.
+
+That is exactly what alternativity gives us, and why Chapter 4 proves it
+rather than posits it. The associator `[a,b,c] = (ab)c − a(bc)` is, on the
+split-octonions, *alternating* — swapping any two arguments flips its sign:
+
+    [a,b,c] = −[b,a,c].
+
+In plain English: re-association has a handedness, like a cross product.
+In the primer's anchors: **alternativity is the polarization of the
+re-association field** — the associator collapses from a vector with many
+directions to a single signed axis. A polarized coil has one way to turn; an
+unpolarized one has all ways. That is the content of "the associator reduces
+to a sign" (Chapter 4, pending the imaginary-part property), and its fixed
+magnitude is `strut_weight = 4`.
+
+So when a conventional account says "the extra dimensions are curled up," a
+sophisticated reader should translate: *curled how?* The answer this primer
+offers is not "into a tiny seashell" but **"into a coil whose handedness is
+the associator."** Downprojecting a higher dimension does not make it
+disappear into smallness; it makes it appear downstairs as a *coil* — a
+handed flux tube whose pitch is the cost Γ and whose polarization is whether
+the associator is a sign (one handedness, octonions) or a vector (many,
+sedenions).
+
+This is why the plasma toy of Chapter 10 is a calibration, not a variant of
+the transit map, and why it is three-dimensional. The toy does not add new
+dynamics to ideal MHD; it shows that ideal-MHD-like dynamics — `∇·B = 0` as
+`d² = 0`, flux as a path-independent count, frozen-in as path-independence —
+already *is* what the CD-grounded associator does, once its handedness is
+taken seriously. And it is why the stellarator sketch of Chapter 1 is not an
+analogy *to* MHD but the same coil, seen from the other side: a preferred
+direction is what axisymmetry *is*, and losing it is what makes geometry fully
+three-dimensional — a coil with no axis to lean on.
+
+[Marginalia: this coda is not a claim that string theory *is wrong* to
+compactify. It is a claim about what "compactify" should be taken to mean
+here: not "make small" but "make axial." Smallness is a radius; handedness
+is an orientation. The primer keeps both, but only the second survives the
+downprojection as structure.]
+
+---
+
 *If this introduction has done its job, the reader knows why the primer
 exists before Chapter 1 begins: not to be modest, but to be grounded — at one
 end in a construction that can be checked line by line, at the other in a
