@@ -227,6 +227,17 @@ theorem associator_antisymm_left (a b c : SplitOctonion) :
     associator_tensor a b c = split_neg (associator_tensor b a c) := by
   ext <;> simp [associator_tensor, split_oct_mul, split_sub, split_neg] <;> ring
 
+/-- **Imaginary-part property** (Chapter 11, item 1): the associator is purely
+imaginary — its `e₀` (real) component vanishes identically. This is the
+reduction of the flux from an 8-component vector to a sign: after this,
+`[a,b,c]` lives in the 7-dimensional imaginary subspace, and together with
+alternating (`associator_antisymm_left`) it is one-dimensional in the sense
+of the primer's "handedness is a sign" claim. -/
+theorem associator_e0_vanishes (a b c : SplitOctonion) :
+    (associator_tensor a b c).e0 = 0 := by
+  simp [associator_tensor, split_oct_mul, split_sub]
+  ring
+
 -- ============================================================================
 -- Basis vectors
 -- ============================================================================
