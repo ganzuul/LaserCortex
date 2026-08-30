@@ -99,4 +99,64 @@ theorem subband_limit_is_rightComb (n : Nat) :
     dcStep (rightComb n) = 0 :=
   dcStep_rightComb n
 
+-- ============================================================================
+-- Operators with a scalar — the algebraic-geometric reading
+-- ============================================================================
+
+/- What it means to attach a scalar to an operator is not "multiply the
+output by a number." It is that the operator lives in a *family* parameterized
+by that scalar — a section of a line bundle over the base that the scalar
+coordinates.
+
+In ordinary language: an operator `T` is a machine `T : X → Y`. An operator
+with a scalar `c` attached, `T_c : X → Y`, is a *deformation* of `T` over the
+affine line `Spec ℤ[c]` (or `𝔸¹`). Varying `c` moves `T_c` in its moduli. The
+scalar is a coordinate on the base; the operator is fibrewise. For us the base
+is the CD tower (the `strut_weight` axis), and `c = chirpRate` is the fibre
+coordinate. This is the Rees construction / deformation to the normal cone in
+miniature: the associated graded of a filtered algebra, spread out over `c`. -/
+
+/-- The scalar attached to the chirplet operator: the strut weight as the
+unit of handedness. `strut_weight = 4 = |[e₁,e₂,e₄]|` is not a free parameter;
+it is the *fixed magnitude* of the handedness proven in `Algebra.lean`. The
+operator `C_c` below is the family `c ↦ C_c` over `Spec ℤ[c]`, and
+`strut_weight` is the distinguished fibre `c = 4`. -/
+noncomputable def chirpScalar : ℤ := (strut_weight : ℤ)
+
+/-- The chirp scalar is `4`. -/
+theorem chirpScalar_eq_four : chirpScalar = 4 := by
+  simp [chirpScalar, strut_weight_eq_four]
+
+/-- The sign cocycle scaled by the strut: the *physical* chirp rate. For a
+triple `(a,b,c)` the associator `[a,b,c]` is `φ(a,b,c) · strut_weight` in its
+non-zero component (after 11.1.1, `φ = ±1`). This is the scalar that will
+attach to the operator: `c = φ · strut_weight`. -/
+noncomputable def scaledChirpRate (a b c : SplitOctonion) : ℤ :=
+  signCocycle a b c * chirpScalar
+
+/-- The scaled chirp rate on the distinguished basis triple is `±4`. -/
+theorem scaledChirpRate_e1_e2_e4 :
+    scaledChirpRate e1_vec e2_vec e4_vec = -4 := by
+  simp only [scaledChirpRate, chirpScalar, signCocycle, associator_tensor,
+        e1_vec, e2_vec, e4_vec, split_oct_mul, split_sub, strut_weight_eq_four]
+  native_decide
+
+/-- The operator family `C_c` (hyperbolic chirplet operator) with scalar `c`
+attached. For `c = 0` this is the wavelet (no chirp); for `c = chirpScalar`
+it is the chirplet. In Lean terms this is *not* `c * T` (post-multiplication
+by a number) but `T_c` — the `c`-fibre of a family. The distinction matters:
+`c * T` would rescale the output uniformly; `T_c` deforms the *rule* of `T`
+itself (here, the detail coefficient `rightSpine l` becomes
+`rightSpine l * (1 + c·φ/ strut_weight)`-like). The scalar lives in the
+*base*, not in the fibre. -/
+noncomputable def chirpletOperator (_c : ℤ) (l : EMLTree) : ℤ :=
+  (rightSpine l : ℤ) * _c
+
+theorem chirpletOperator_zero (l : EMLTree) : chirpletOperator 0 l = 0 := by
+  simp [chirpletOperator]
+
+theorem chirpletOperator_chirpScalar (l : EMLTree) :
+    chirpletOperator chirpScalar l = (rightSpine l : ℤ) * 4 := by
+  simp [chirpletOperator, chirpScalar, strut_weight_eq_four]
+
 end HyperbolicChirplet
