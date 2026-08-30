@@ -238,6 +238,29 @@ theorem associator_e0_vanishes (a b c : SplitOctonion) :
   simp [associator_tensor, split_oct_mul, split_sub]
   ring
 
+/-- **Sign cocycle** (Chapter 11, item 2 — stub): the associator's sign,
+`φ(a,b,c) = 1` if `[a,b,c]=0` else `-1`. For alternative algebras this is the
+±1 cocycle whose pentagon is the flux-conservation `δ²=0`. Pending the
+imaginary-part + alternating reductions, the associator is a 7-vector, not a
+sign — so this definition is the *coarsened* sign, sufficient for the
+pentagon check on basis elements. -/
+def signCocycle (a b c : SplitOctonion) : ℤ :=
+  if associator_tensor a b c = 0 then 1 else -1
+
+/-- Basis vector `eᵢ` as a `SplitOctonion` (single 1 in position `i`). -/
+def basisVec (i : Fin 8) : SplitOctonion :=
+  ofVec fun j => if j = i then 1 else 0
+
+/-- **Pentagon cocycle identity on basis elements** (Chapter 11, item 2):
+`φ(b,c,d)·φ(a,bc,d)·φ(a,b,c) = φ(a,b,cd)·φ(ab,c,d)` — the `δ²=0` check.
+For basis elements this is a finite check over 8⁴ = 4096 quadruples.
+The associator sign as defined above is a 3-cocycle on the basis. -/
+theorem pentagon_cocycle_basis (a b c d : Fin 8) :
+    let A := basisVec a; let B := basisVec b; let C := basisVec c; let D := basisVec d
+    signCocycle B C D * signCocycle A (split_oct_mul B C) D * signCocycle A B C =
+    signCocycle A B (split_oct_mul C D) * signCocycle (split_oct_mul A B) C D := by
+  native_decide +revert
+
 -- ============================================================================
 -- Basis vectors
 -- ============================================================================
