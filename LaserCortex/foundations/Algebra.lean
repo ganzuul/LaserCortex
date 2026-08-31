@@ -308,6 +308,92 @@ theorem pentagon_defect_bound : (octonion_norm (pentagon_defect e1_vec e2_vec e4
   decide
 
 -- ============================================================================
+-- Associator spectrum on the basis (lab note 056 §4, hypothesis-2 test)
+-- ============================================================================
+
+/-- The associator evaluated on the basis triple `(eᵢ, eⱼ, eₖ)`. -/
+def assocBasis (i j k : Fin 8) : SplitOctonion :=
+  associator_tensor (basisVec i) (basisVec j) (basisVec k)
+
+/-- The eight basis indices. -/
+def basisIdx : List (Fin 8) := [0, 1, 2, 3, 4, 5, 6, 7]
+
+/-- All 8³ = 512 ordered basis triples. -/
+def basisTriples : List (Fin 8 × Fin 8 × Fin 8) :=
+  basisIdx.flatMap fun i =>
+    basisIdx.flatMap fun j =>
+      basisIdx.map fun k => (i, j, k)
+
+/-- Sum of absolute component values: the *honest* magnitude. Unlike the Q44
+norm it cannot vanish on a nonzero element, so it is immune to the (4,4)
+null-cone degeneracy. -/
+def compL1 (x : SplitOctonion) : Nat :=
+  x.e0.natAbs + x.e1.natAbs + x.e2.natAbs + x.e3.natAbs +
+  x.e4.natAbs + x.e5.natAbs + x.e6.natAbs + x.e7.natAbs
+
+/-- Number of ordered basis triples whose associator has Q44-norm of absolute
+value `n` — the histogram of lab note 056 §4. -/
+def assocNormHist (n : Nat) : Nat :=
+  (basisTriples.filter fun t =>
+    (octonion_norm (assocBasis t.1 t.2.1 t.2.2)).natAbs == n).length
+
+/-- **Strut quantization on the basis** (lab note 056 §4, hypothesis-2 test):
+the histogram of `|[eᵢ,eⱼ,eₖ]|` over all 512 ordered basis triples has exactly
+two bars, `0 ↦ 344` and `4 ↦ 168`. No basis triple realizes an intermediate
+magnitude 1, 2, or 3 — the strut is *quantized*: basis associators are 0 or
+full-strength. This refutes hypothesis 2 (1,2,3 as basis associator norms)
+and leaves hypothesis 1 (c = 1,2,3 as intermediate Rees fibres of the
+chirplet operator, not as basis magnitudes) as the live reading. Combinatorially
+the 168 = 28 × 6 are the six orderings of each of the 28 non-associative
+imaginary triples (the Fano-plane count, matching the classical octonions). -/
+theorem strut_quantized_on_basis :
+    assocNormHist 0 = 344 ∧ assocNormHist 1 = 0 ∧ assocNormHist 2 = 0 ∧
+    assocNormHist 3 = 0 ∧ assocNormHist 4 = 168 := by
+  native_decide
+
+/-- No intermediate magnitudes anywhere: every basis triple has
+`|[eᵢ,eⱼ,eₖ]| ∈ {0, 4}`. -/
+theorem assocBasis_norm_eq_zero_or_four (i j k : Fin 8) :
+    (octonion_norm (assocBasis i j k)).natAbs = 0 ∨
+    (octonion_norm (assocBasis i j k)).natAbs = 4 := by
+  native_decide +revert
+
+/-- The 168 nonzero count, stated directly on the associator (not via Q44):
+168 of the 512 ordered basis triples have a nonzero associator. -/
+theorem assocBasis_nonzero_count :
+    (basisTriples.filter fun t =>
+      !decide (assocBasis t.1 t.2.1 t.2.2 = 0)).length = 168 := by
+  native_decide
+
+/-- **Null-cone freeness of the basis associator spectrum**: a nonzero basis
+associator is always ±2 times a single basis vector (`compL1 = 2`), so it never
+lies on the (4,4) null cone and its `|Q44 norm|` is exactly 4. The Q44 norm is
+therefore a faithful magnitude on this spectrum — no degeneracy to hide behind. -/
+theorem assocBasis_nonzero_null_free (i j k : Fin 8) :
+    assocBasis i j k ≠ 0 →
+      compL1 (assocBasis i j k) = 2 ∧
+      (octonion_norm (assocBasis i j k)).natAbs = 4 := by
+  native_decide +revert
+
+/-- Sign split of the 168 nonzero triples: the associator's Q44 norm is `−4` on
+96 triples (the associator lands in the space-like sector e₄…e₇, as for
+`strut_weight` at (e₁,e₂,e₄)) and `+4` on 72 triples (it lands in the
+time-like sector e₁…e₃). Both signs are realized, which is why `strut_weight`
+uses `(- ·).toNat`: the *distinguished* fibre (e₁,e₂,e₄) has norm −4. -/
+theorem assocBasis_sign_split :
+    (basisTriples.filter fun t =>
+      octonion_norm (assocBasis t.1 t.2.1 t.2.2) == (-4 : Int)).length = 96 ∧
+    (basisTriples.filter fun t =>
+      octonion_norm (assocBasis t.1 t.2.1 t.2.2) == (4 : Int)).length = 72 := by
+  native_decide
+
+/-- Every nonzero basis associator is supported on the imaginary sector: if any
+index is `0` (the unit e₀), the associator vanishes. -/
+theorem assocBasis_vanishes_with_unit (i j k : Fin 8) (h : i = 0 ∨ j = 0 ∨ k = 0) :
+    assocBasis i j k = 0 := by
+  native_decide +revert
+
+-- ============================================================================
 -- Commutator and the Cayley–Dickson doubling identity
 -- ============================================================================
 
