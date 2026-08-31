@@ -124,9 +124,10 @@ cell-centred Lax-Friedrichs scheme — copy its HUD design, not its numerics.
 The genuinely small formal object for any of these options is the discrete
 identity **D ∘ C = 0** (divergence of the chosen curl stencil vanishes
 identically) — a finite-index ring/simp statement, and exactly the
-correctness argument the instrument claim needs. Recommended: formalize
-`DC_eq_zero` for the 2-D central stencil in Lean *before* the shader ships
-(Lean → Python mirror → WGSL/GLSL binding order). Open question carried
+correctness argument the instrument claim needs. **Done 2026-08-31**:
+formalized as `Stencil.div_curl_eq_zero` in `LaserCortex/Stencil.lean`
+(`ZMod` indices, `AddCommGroup` values, no size hypotheses — see lab note
+058 §6). Remaining: the Python mirror → WGSL/GLSL binding order. Open question carried
 forward: whether §11.3-4 ("flux conservation as divergence theorem") is the
 right home for the continuum half (`d/dt ∮ B·dl = 0` under ideal induction).
 

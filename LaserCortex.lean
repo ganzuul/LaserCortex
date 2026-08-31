@@ -9,3 +9,4 @@ import LaserCortex.Entanglement
 import LaserCortex.Hopf
 import LaserCortex.AMM
 import LaserCortex.TemporalParadox
+import LaserCortex.Stencil
