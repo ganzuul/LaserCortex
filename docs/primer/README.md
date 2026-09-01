@@ -6,7 +6,7 @@ magnetohydrodynamics." Internal canon; draft state.*
 ## File map
 
 | File | Chapter | State |
-|---|---|---|
+| --- | --- | --- |
 | `00_front.md` | front matter (abstract, six anchors, honesty policy) | drafted |
 | `00_introduction.md` | Introduction — why this primer exists | **drafted** |
 | `01_the_problem.md` | 1. The problem, conventionally | scaffold |
@@ -31,7 +31,7 @@ in place, prose to be written.
 ## Source concordance (which repo material feeds which chapter)
 
 | Source | Feeds chapters |
-|---|---|
+| --- | --- |
 | `foundations/Algebra.lean` (associator, alternativity, strut_weight, basis spectrum) | 3, 4, 5, 6, 8, 11 |
 | `Stencil.lean` (discrete div–curl certificate, F1) | 6, 8 |
 | `HyperbolicChirplet.lean` (chirplet family, Rees fibres) | 8, 9 |
