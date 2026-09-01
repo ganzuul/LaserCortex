@@ -55,15 +55,20 @@ F-move" is registered as open ledger item 8; note that the F2 program
 "rotation ratio = local signCocycle" *is* the statement that φ is the F-symbol
 of the skeleton.
 
-### Skeleton
+### Skeleton — disambiguation (four senses live in this repo)
 
-**Warning: three senses live in this repo. Never use the bare word without a
-qualifier.**
+**Never use the bare word without a qualifier.** The names share the word
+"skeleton"; the *numbers* in the names belong to different kinds of
+mathematics.
 
 * **(a) The 7-Skeleton** (project-specific, notes 006/007): the collapse of
   the 15 named logics onto the seven non-identity basis directions e₁…e₇ of
-  the split octonion — the *logic-space* skeleton, justified by the carrier
-  morphism `toSO`.
+  the split octonion, living in the 7-dimensional affine hyperplane
+  (bias = 1), justified by the carrier morphism `toSO`. Here **7 is a
+  count and a dimension: |{e₁…e₇}| = dim(hyperplane) = 7** — the number of
+  imaginary basis directions. The "Hopf" in the name refers to the
+  division-algebra/Hopf-fibration ladder (dimensions 1, 2, 4, 8;
+  imaginary parts 0, 1, 3, 7), *not* to a CW filtration.
 * **(b) The basis skeleton** (this note, and the F2/057/058 usage): the
   signed basis set {±e₀, …, ±e₇} closed under `split_oct_mul`. It is a
   **loop of order 16**, not a group — closure holds (64-case check), the unit
@@ -74,16 +79,43 @@ qualifier.**
   multiplicative closure of the standard basis under the Cayley–Dickson
   doubling (studied in loop theory, e.g. Drápal's work on Cayley–Dickson
   loops [C, exact citation to pin]). `signCocycle` measures the loop's
-  failure to be a group; 057's quantization is a skeleton theorem; F2's
+  failure to be a group; 057's quantization is a theorem on it; F2's
   transport lives on it.
 * **(c) The k-skeleton of a cell complex** (topology standard; used in note
-  019): here specifically the **1-skeleton of the associahedron** — vertices
-  = bracketings, edges = rotations — which *is* the Tamari graph. In §4 the
-  "Tamari ribbon" is a picture on exactly this 1-skeleton.
+  019 and `docs/generation_mode_pentagonator.md`): here specifically the
+  **1-skeleton of the associahedron** (equivalently of the tropical normal
+  complex) — vertices = bracketings, edges = rotations — which *is* the
+  Tamari graph (note 019 flags the isomorphism as NEEDS PROOF). Here the
+  **number k is a cell dimension**: "1-skeleton" means "keep only the
+  vertices and edges of the complex". It is *not* on the same number-line as
+  sense (a)'s 7. In §4 the "Tamari ribbon" is a picture on exactly this
+  1-skeleton.
+* **(d) The tree-shape skeleton** (note 008, "rearranges the tree skeleton",
+  and ordinary speech in this repo): a bracketing *shape* with the leaf
+  content stripped off. Mathematically this is just a vertex of sense (c)'s
+  graph — keep it mentioned so "skeleton of a term" isn't read as (a) or (b).
 
-Sense (b) is what "the skeleton" means in 057/058/F2, and sense (c) is what
-"the graph the sign transports on" means in this note. Sense (a) is a
-different projection of the same e₁…e₇ directions onto logic-space.
+**Are the enumerations the same? The precise answer:**
+
+| sense | the number is… | enumeration it lives on |
+| --- | --- | ---|
+| (a) 7-Skeleton | count of imaginary directions = hyperplane dimension | the labels e₁…e₇ |
+| (b) basis skeleton | (no number in the name; order 16) | the labels e₀…e₇, ± |
+| (c) 1-skeleton | max cell dimension kept | ℕ (filtration index k) |
+| (d) tree-shape | — | — |
+
+So (a) and (b) **do share one enumeration** — they are the same underlying
+basis, (a) being (b) modulo sign, with e₀ dropped and read as logic-points
+(the 7 points of note 006 literally *are* e₁…e₇; that's the correspondence
+the note establishes). But (c) shares nothing with them numerically: the 1 of
+"1-skeleton" and the 7 of "7-skeleton" are different *species* of number
+(cell dimension vs basis count), and there is no such thing as "the
+2-skeleton" or "the 7-skeleton" of the associahedron being invoked anywhere
+in notes 006–019. If we ever want the CW version of (a)'s Hopf ladder, the
+honest name is "the Hopf ladder" (note 006 §4), not "the k-skeleton ladder".
+
+Sense (b) is what "the skeleton" means unqualified in 057/058/F2; sense (c)
+is what "the graph the sign transports on" means in this note.
 
 ### Twist (topological spin) — needed below
 
