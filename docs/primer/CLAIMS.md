@@ -79,6 +79,8 @@ Part I, used in Part III for external-code claims).*
 | 6.5.2 | 6.5 | Discrete div(curl ψ) = 0 for every field, grid, and value group (ψ-form closure is exact) | [P] | `Stencil.div_curl_eq_zero`, `div_curl` | literal | |
 | 6.5.3 | 6.5 | The identity's content is the commutativity of mixed central differences | [P] | `Stencil.dx_dy` | literal | |
 | 6.5.4 | 6.5 | Closure certificate survives non-associative values; associator defects enter a step only through multiplicative channels | [P]+[H] | `Stencil.div_curl` over `AddCommGroup` (proven); localization to MHD dynamics is prose-level | analogy (apt) → literal-if-modeled | |
+| 6.5.5 | 6.5 | F2a: any two bracketings of a signed-basis word evaluate ±-equal (all n); skeleton rotation never changes axis or magnitude | [P] | `Coherence.basisWord_eq_or_neg`, `signed_rotOr` | literal (skeleton) | |
+| 6.5.6 | 6.5 | F2 bridge: the rotation's value ratio *is* the local `signCocycle` (φ = the F-symbol of the skeleton); pentagon loop closes at the value level | [P] | `Coherence.rotBridge`, `pentagonLoop` | literal (skeleton); item-8 single-edge case | |
 
 ### Chapter 7 — The cut
 

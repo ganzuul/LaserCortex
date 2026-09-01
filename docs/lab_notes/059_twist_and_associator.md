@@ -221,11 +221,15 @@ they live on different graphs.
   precise separation it must respect — an anyon model realizing our rotation
   as an F-move must *not* also claim the strip's θ; the fusion model needs
   both slots explicitly (that is what "concrete fusion model" should mean).
-* **F2** (058 §5) is the next build slot; its bridge theorem
-  ("rotation ratio = local signCocycle", rot_ratio) makes φ literally the
-  transport along one F-move on the skeleton — the first concrete instance
-  of item 8 — and the pentagon re-proof corollary cross-checks
-  `pentagon_cocycle_basis` from the value level. [C→P gated on F2.]
+* **F2** (058 §5) **landed 2026-09-01** (`LaserCortex/Coherence.lean`):
+  the bridge theorem shipped as `rotBridge` — φ *is* the transport along
+  one re-bracketing on the skeleton (first concrete instance of item 8);
+  `basisWord_eq_or_neg` gives sign coherence for all n; `pentagonLoop`
+  re-checked `pentagon_cocycle_basis` [P] from the value level, passed.
+  The scope lesson is now in the record: the arbitrary-elements reading of
+  the F2 spec is **false** (the general associator is a vector); the true
+  general-n statement over arbitrary elements is Artin (058 F2c, ledger
+  7b).
 * The strip model's own claims (charge from confinement topology, g-factor
   from energy ratio) are untouched by this note; nothing here endorses or
   refutes them.
@@ -238,7 +242,7 @@ they live on different graphs.
 * §3.4 literature anchors: **[std/C]** — Kapustin–Li, Gu–Wen exact
   attributions pinned pending one citation pass; the "no toroidal-electron
   connection in the anyon literature" finding is a negative search result.
-* §5 F2 items: gated on F2 landing.
+* §5 F2 items: **delivered** 2026-09-01 (skeleton scope; see the bullet).
 
 ---
 

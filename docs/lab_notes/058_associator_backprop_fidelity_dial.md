@@ -3,9 +3,9 @@
 **Date**: 2026-08-31
 **Follows**: 056 (Rees fibres, `strut_weight = 4`), 057 (strut quantization on the basis),
 049/050 (loose coupling, elasticity of the certification boundary), primer §11 ledger
-**Status**: PERSPECTIVE + F1 proven — steering answers received (global `c` first; local
-`c` → particle fusion [H]; substrate competence as the conjectural prize). §6 changelog
-opened 2026-08-31. To be revised further after F2–F3.
+**Status**: PERSPECTIVE + F1, F2 proven — steering answers received (global `c` first;
+local `c` → particle fusion [H]; substrate competence as the conjectural prize). §6
+changelog updated 2026-09-01. F3 (and F2c/Artin) remain.
 **Protocol**: Timespace Decomposition v0.3 — (4,4) Signature Model
 
 ---
@@ -150,6 +150,14 @@ available.
   pentagon identity; generalize `pentagon_cocycle_basis` [P] (n = 4, basis) toward
   general n. This is the artifact that turns §1's "analogy" into a citable theorem —
   and the single gate for §2's particle-fusion and substrate-competence readings.
+  **DONE 2026-09-01 as `LaserCortex/Coherence.lean`, with a scope correction**: the
+  literal reading for *arbitrary* elements is false (the general associator is a
+  seven-dimensional vector — no scalar factor connects bracketings). The honest
+  theorem is skeleton-level: on signed-basis words all bracketings agree up to sign
+  for every n (`basisWord_eq_or_neg`), per-edge the sign *is* `signCocycle`
+  (`rotBridge`), and the pentagon loop re-checks at the value level
+  (`pentagonLoop`). See §6. The surviving arbitrary-elements general-n statement
+  is Artin's theorem — logged as **F2c**.
 * **F3 — `c`-dial theorems:** monotonicity of `chirpletDetail_c` / reconnection cost in
   `c`; exact-discount identity at the endpoints {0, 4}; `looseCost`-shape bounds. Also
   the right place to revisit the `chirpRate` stub (057 §3.2).
@@ -216,12 +224,64 @@ in 4.1 s; axioms `[propext, Quot.sound]` only — fully constructive, no
    all-or-nothing per axis, a hint that graded local fidelity (F5) will
    quantize along the same grain.
 
+**2026-09-01 — F2 proven, with a scope correction**
+(`LaserCortex/Coherence.lean`; root-imported; builds in 11 s; axioms
+`propext, Quot.sound, Classical.choice` + the per-theorem `native_decide`
+axioms — same footprint as the 057 spectrum).
+
+1. **What was proven.** (i) *Skeleton closure* (`basisVec_mul`,
+   `basisLike.mul`): products of signed basis vectors stay on the signed
+   basis — the Cayley–Dickson loop Q₃ of 059 §0b, now with its first
+   formal appearance. (ii) *Rotation is ±* (`signed_rotOr`, 4096 signed
+   cases): one re-bracketing preserves or negates the value — never a new
+   axis, never a scale change. (iii) *The bridge* (`rotBridge`): on
+   skeleton triples, the two bracketings are equal exactly when
+   `signCocycle = 1` and exact negations when it is `−1` — φ **is** the
+   per-edge transport sign, the first concrete instance of ledger item 8
+   ("`contracts_one` = F-move"), true at skeleton level as an F-symbol
+   identity. (iv) *Pentagon at the value level* (`pentagonLoop`): the
+   product of the five edge cocycles around K₄ is 1 — an independent
+   re-check of `pentagon_cocycle_basis` [P] through bracketing transport.
+   (v) *F2a, all n* (`basisWord_eq_or_neg`): any two bracketings of the
+   same signed-basis word evaluate ±-equal — proved by `Path`-induction
+   through right-comb normalization, no size bound.
+2. **What was corrected.** The §5 spec (and ledger 7a's wording) asked for
+   "differ by a `signCocycle`-governed factor" over *arbitrary* elements.
+   That statement is **false**: `[x,y,z]` is a seven-dimensional vector for
+   general `x, y, z` — there is no scalar factor. The module header records
+   the counter-reading honestly and proves the strongest true form instead:
+   sign coherence on the skeleton. The surviving general-n statement for
+   arbitrary elements is **Artin's theorem** (two-generated words associate
+   *exactly*, zero defect — the alternativity ingredients are already [P]);
+   logged as **F2c**.
+3. **Feedback into the perspective.** The §1 claim ("bracketing-dependence
+   of backprop rides on the associator") now has its exact scope: for
+   basis-valued network weights, evaluation-order changes are *sign
+   changes governed by a flat ℤ/2 transport* — no magnitude drift, no
+   direction drift (F2a + rotBridge), and the transport is consistent
+   because the loop closes (pentagonLoop). What the skeleton buys: the
+   error atom of 057 is the *only* quantum that appears; what it costs:
+   continuum-valued networks do **not** inherit sign coherence — the
+   defect becomes vectorial, and taming it is exactly the priced
+   multiplicative channel of §6.5-localization/F1-remark. This sharpening
+   (dial-relevant defect = vectorial associator in the continuum, pure
+   sign on the skeleton) should shape F3.
+4. **A construction note.** The associahedron-topology argument the plan
+   feared ("all n needs simple-connectivity of Kₙ") dissolved: F2a
+   quantifies over arbitrary trees directly via the rcomb normalization —
+   connectivity of the rotation paths is proved by structural induction
+   (`path_rcomb`), not assumed from topology. 019's "1-skeleton = Tamari
+   lattice" gets partial vindication: our `Path` is exactly the rotation
+   graph, and every tree reaches the same normal form.
+
 ---
 
 ## References
 
 * `LaserCortex/foundations/Algebra.lean` — spectrum section (057), `signCocycle`,
   `pentagon_cocycle_basis`, `associator_e0_vanishes`
+* `LaserCortex/Coherence.lean` — skeleton closure, rotation ±, `rotBridge`,
+  `pentagonLoop`, `basisWord_eq_or_neg` (F2)
 * `LaserCortex/HyperbolicChirplet.lean` — `chirpletOperator`, `chirpScalar`, stub
   `chirpRate` (F3 target)
 * `LaserCortex/SubdivisionClosure.lean` — `dcStep_node_compose`, `looseCost_*`,

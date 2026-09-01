@@ -34,6 +34,7 @@ in place, prose to be written.
 | --- | --- |
 | `foundations/Algebra.lean` (associator, alternativity, strut_weight, basis spectrum) | 3, 4, 5, 6, 8, 11 |
 | `Stencil.lean` (discrete div–curl certificate, F1) | 6, 8 |
+| `Coherence.lean` (skeleton bracket coherence, F2) | 4, 6, 8, 11 |
 | `HyperbolicChirplet.lean` (chirplet family, Rees fibres) | 8, 9 |
 | `foundations/Tamari.lean` (contracts_one, dcStep, leftWeight) | 6, 7, 9 |
 | `TamariMetric.lean` (C2, C5) | 6, 9, 11 |
