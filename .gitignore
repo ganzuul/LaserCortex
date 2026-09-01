@@ -158,3 +158,4 @@ LaserCortex/unified_spacetime_engine_explicit.lean
 .phonebook_cache.json
 DEPENDENCY_GRAPH.json
 MASTER_RECON_PHONEBOOK.md
+.mcp.json
