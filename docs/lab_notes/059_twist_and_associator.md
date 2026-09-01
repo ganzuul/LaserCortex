@@ -98,7 +98,7 @@ mathematics.
 **Are the enumerations the same? The precise answer:**
 
 | sense | the number is… | enumeration it lives on |
-| --- | --- | ---|
+| --- | --- | --- |
 | (a) 7-Skeleton | count of imaginary directions = hyperplane dimension | the labels e₁…e₇ |
 | (b) basis skeleton | (no number in the name; order 16) | the labels e₀…e₇, ± |
 | (c) 1-skeleton | max cell dimension kept | ℕ (filtration index k) |
@@ -201,6 +201,17 @@ they live on different graphs.
 
 ## 5. Consequences and to-dos
 
+* **Terminology debt (owner directive, 2026-09-01):** revisit the **"Hopf
+  7-Skeleton"** name of note 006 and choose a better term. The name carries
+  a pun that collides with the CW k-skeleton (sense (c) above): its "7" is
+  a basis count / hyperplane dimension, and its "Hopf" points at the
+  division-algebra ladder (note 006 §4), yet the compound reads to any
+  topologist as a CW filtration of something. Candidates to weigh when the
+  rename happens: *the Seven Directions*, *the imaginary seven*, *the
+  cost-geometry heptad*, or reserving "skeleton" exclusively for senses
+  (b)/(c). Whatever is chosen, update notes 006/007 references,
+  `SplitOctonionLogic.lean` (Domain 0), and any bare "skeleton" in prose.
+  This note's §0 disambiguation table is the interim canon until then.
 * **Ch 5 §5.2** ("polarization = range reduction vector → sign") gains a
   sharpened neighbor: *polarization is the associator being a sign; the
   electron's half-spin is the twist being a sign; both are ℤ/2, different
