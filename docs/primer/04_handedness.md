@@ -88,15 +88,20 @@ conventional term "right-hand rule" does real work and where it must stop.
 
 - **Antisymmetry in the *arguments* is proven** [P]. Swapping two factors
   negates the associator. This part of the right-hand rule is a theorem.
-- **The "sign, not vector" reduction is not yet proven** [C]. In ℝ³, an
-  alternating trilinear form is a scalar (the determinant) — the sign. In
-  higher dimension, alternating forms need not be 1-dimensional. For the
-  associator to reduce to a single sign, its *range* must be 1-dimensional.
-  The claim that the associator is purely imaginary (its e₀ component vanishes)
-  is the **imaginary-part property** — stated, not yet proven. See Chapter 11.
-  Confirm: prove the e₀ component of `associator_tensor` vanishes identically
-  (Chapter 11, item 1); refute: exhibit any triple of basis elements whose
-  associator has a nonzero e₀ component. **[C]**
+- **The scalar part is proven to vanish; the reduction to a single
+  direction is not** [P]/[C]. In ℝ³, an alternating trilinear form is a
+  scalar (the determinant) — the sign. In higher dimension, alternating
+  forms need not be 1-dimensional. The first step has landed: the
+  associator's e₀ component vanishes identically **[P]**
+  (`associator_e0_vanishes`) — the flux has dropped its scalar part and
+  lives in the seven imaginary directions. On the basis lattice the picture
+  sharpens: every nonzero basis associator is ±2 times a *single* imaginary
+  axis, and its magnitude is quantized (§8.6) **[P]** — but the landing axis
+  varies from triple to triple, so "one signed direction for all physics"
+  remains **[C]**. What the formalization did instead: `signCocycle`
+  deliberately quotients the axis away, and *that* coarsened sign passes
+  the pentagon coherence check on the basis **[P]** (`pentagon_cocycle_basis`,
+  Chapter 6 §6.4). Confirm/refute for the remaining step: Chapter 11.
 - **"Right-handed" versus "left-handed" is a convention** [marginalia: the
   split-octonion product is fixed; there is no choice of orientation to make.
   The handedness is absolute here, not a convention. Whether a "left-handed"
@@ -104,8 +109,9 @@ conventional term "right-hand rule" does real work and where it must stop.
   for the CD homotopy of Chapter 3.]
 
 So Chapter 4's honest claim is: **the associator is antisymmetric [P]; the
-antisymmetry is the handedness [reification]; the handedness is one-dimensional
-(a sign) [C, pending the imaginary-part property].**
+antisymmetry is the handedness [reification]; the handedness is signed and
+quantized in magnitude on the lattice [P]; its reduction to a single signed
+direction is [C]**.
 
 ## 4.5 Hypotheses
 

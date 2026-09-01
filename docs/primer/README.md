@@ -14,9 +14,9 @@ magnetohydrodynamics." Internal canon; draft state.*
 | `03_the_substrate.md` | 3. The CD tower | scaffold |
 | `04_handedness.md` | 4. Handedness (right-hand rule) | **drafted** (exemplar) |
 | `05_polarization.md` | 5. Polarization | scaffold |
-| `06_flux.md` | 6. Flux | scaffold |
+| `06_flux.md` | 6. Flux | **drafted** (§6.5 stencil certificate added) |
 | `07_the_interface.md` | 7. The cut / interface | scaffold |
-| `08_resistivity.md` | 8. Resistivity | scaffold |
+| `08_resistivity.md` | 8. Resistivity | **drafted** (§8.6 quantum and dial added) |
 | `09_reduced_lattice.md` | 9. The reduced lattice | scaffold |
 | `10_stellarator_plan.md` | 10. The stellarator comparison plan | scaffold |
 | `11_open_problems.md` | 11. Open problems and the ledger | scaffold |
@@ -32,7 +32,9 @@ in place, prose to be written.
 
 | Source | Feeds chapters |
 |---|---|
-| `foundations/Algebra.lean` (associator, alternativity, strut_weight) | 3, 4, 5, 6, 11 |
+| `foundations/Algebra.lean` (associator, alternativity, strut_weight, basis spectrum) | 3, 4, 5, 6, 8, 11 |
+| `Stencil.lean` (discrete div–curl certificate, F1) | 6, 8 |
+| `HyperbolicChirplet.lean` (chirplet family, Rees fibres) | 8, 9 |
 | `foundations/Tamari.lean` (contracts_one, dcStep, leftWeight) | 6, 7, 9 |
 | `TamariMetric.lean` (C2, C5) | 6, 9, 11 |
 | `SubdivisionClosure.lean` (composition law, loose coupling, C3) | 6, 7, 8 |
@@ -42,6 +44,7 @@ in place, prose to be written.
 | notes 044–050 (temperature, phase diagram, loose coupling) | 3, 8 |
 | notes 051–052 (metric, sweep, non-gradedness) | 6, 9 |
 | notes 053–054 (interface flux, wavelet/MHD/anyon, anchors) | 4, 5, 6, 7, 8 |
+| notes 055–058 (chirplet derivation, Rees, quantization, fidelity dial) | 4, 6, 8, 11 |
 | `scripts/metric_sweep.py`, `scripts/presentation_data.py`, `plots/` | 6, 9, 10 |
 | conventional MHD / stellarator literature (restated, no external repo) | 1, 2, 10 |
 

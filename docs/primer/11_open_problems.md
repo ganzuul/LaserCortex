@@ -42,6 +42,7 @@ associator (+4); the distinguished fibre (e₁,e₂,e₄) has norm −4.
 | — | Γ jump 2 → 19, unique | `gamma_increment`, `gamma_only_jump_at_cd2_3` | **[P]** |
 | — | alternativity; associator antisymmetric | `left_alternative`, `right_alternative`, `associator_antisymm_left` | **[P]** |
 | — | `strut_weight = 4` | `strut_weight_eq_four` | **[P]** |
+| — | discrete div∘curl certificate (closure free for ψ-form fields, any grid, any `AddCommGroup` values) | `Stencil.dx_dy`, `Stencil.div_curl_eq_zero`, `div_curl` | **[P]** |
 | 11.1.1 | imaginary-part property: associator e₀ component vanishes | `associator_e0_vanishes` | **[P]** |
 | 11.1.2 | pentagon cocycle identity on basis elements (δ²=0 for the sign cocycle) | `pentagon_cocycle_basis` | **[P]** |
 | 11.1.3 | strut quantization: basis associator spectrum is {0, 4}; 1,2,3 un-realized; null-cone free | `strut_quantized_on_basis`, `assocBasis_norm_eq_zero_or_four`, `assocBasis_nonzero_null_free`, `assocBasis_sign_split` | **[P]** |
@@ -51,10 +52,11 @@ associator (+4); the distinguished fibre (e₁,e₂,e₄) has norm −4.
 | # | Problem | Chapter | Status |
 | --- | --- | --- | --- |
 | 3 | Right-spine/left-spine antipode duality (symmetrize the decomposition) | 7 | open |
-| 4 | Flux conservation as a "divergence theorem" (total flux = boundary term) | 7, 6 | open |
+| 4 | Flux conservation as a "divergence theorem" (total flux = boundary term) | 7, 6 | open — discrete closure half now **[P]** (§6.5 / `Stencil.lean`); the continuum/divergence-theorem reading remains |
 | 5 | The **alternator strut**: a second Γ term at CD 4 (depolarization) | 5, 8 | open |
 | 6 | The **limit shape**: empirical measure of transit coords → continuous limit | 9 | open, deferred |
 | 7 | Invariant meaning of `rightSpine` (= interface flux?) | 7 | open |
+| 7a | **Bracketing coherence for general n** (lab note 058, F2): any two bracketings of an n-fold product differ by a `signCocycle`-governed factor, pentagon-consistently — the artifact that turns "associator = backpropagation defect" into a theorem and gates the fusion and competence readings (058 §2) | 4, 6, 8 | open, next |
 | 8 | Anyon correspondence: `contracts_one` = F-move, vs a concrete fusion model | 6 | open |
 | 9 | The timelike/spacelike ↔ axisymmetry/stellarator sketch | 1, 10 | open |
 
@@ -65,9 +67,10 @@ a ledger row.
 ## 11.4 The formalization roadmap (draft)
 
 1. Items 1–2 (immediate) — grounds Chapters 4 and 6. *Done, along with
-   item 3 (basis spectrum / strut quantization). Next immediate step:
-   revisit the `HyperbolicChirplet` `[C]` gate and the `chirpRate` stub,
-   now that 11.1.1/11.1.2 hold.*
+   item 3 (basis spectrum / strut quantization) and the F1 stencil
+   certificate (`Stencil.lean`, closure-exactness of the ψ-form).*
+   Next immediate step: revisit the `HyperbolicChirplet` `[C]` gate and
+   the `chirpRate` stub, now that 11.1.1/11.1.2 hold.
 2. Items 3–4 — grounds the interface chapter's "divergence theorem" and the
    antipode-dual picture.
 3. Item 5 — decides whether CD 4 is a phase (the falsifiable gap of Chapter 5).

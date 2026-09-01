@@ -62,15 +62,65 @@ which is not yet modeled.
   formula). *Level: analogy* — the Kelvin reading is a normalization
   convention (Chapter 3, §3.3), not a measured temperature.
 
-## 8.5 What would make the analogy literal (draft)
+## 8.5 What would make the analogy literal (updated)
 
-- [C] The pentagon cocycle identity (Chapter 6) is the "∇·B = 0" statement;
-  with it, flux conservation is δ²=0 and the Γ jump is the class becoming
-  nontrivial.
+- The pentagon cocycle identity (Chapter 6) is **[P] on the basis**
+  (`pentagon_cocycle_basis`), and the discrete `∇·B = 0` statement is
+  independently **[P]** (§6.5). What remains **[H]** is the identification:
+  that flux conservation *is* δ²=0 and the Γ jump is that class becoming
+  nontrivial — the reading, now that both of its halves are separately
+  proven, is the last mile.
 - [H] The missing alternator strut (Chapter 5): the *second* dial, at CD 4.
+
+## 8.6 The quantum and the dial
+
+§8.2 showed the cost *turns on* at CD 3. Two further facts — one theorem,
+one design — make it a resistivity in something close to the practical
+sense: the cost comes in **atoms**, and the atoms can be **dialed**.
+
+- **Strut quantization [P].** Run the associator over the entire eight-point
+  basis lattice — all 8³ = 512 ordered triples — and the magnitude histogram
+  has exactly two bars: `0 ↦ 344`, `4 ↦ 168` (`strut_quantized_on_basis`).
+  Nothing in between; and every nonzero associator is ±2 times a *single*
+  imaginary axis, never lightlike (`assocBasis_nonzero_null_free` — in the
+  (4,4) signature a nonzero vector can still have vanishing norm, which
+  would make "magnitude" a lie; here it never happens). In English:
+  **resistivity has an atom.** The strut 4 is the quantum in which
+  re-association cost is paid, and the 168 full-strength events are the 28
+  non-associative imaginary triples in six orderings each — the Fano-plane
+  count of Chapter 4, now with a census.
+- **The dial is the fibre [H].** An atom does not forbid fractions: the
+  chirplet operator `rightSpine · c` is a *family* in the parameter `c`,
+  interpolating between the wavelet step (`c = 0`, coarse channel only) and
+  the full-chirplet step (`c = 4`, interface bookkeeping paid in full
+  struts). The fractions `c ∈ {1,2,3}` are not associator magnitudes — the
+  previous bullet refutes that reading on the lattice — they are *choices
+  of how much of the priced channel to pay for*. Confirm: observables
+  (compression, reconnection cost in the reduced model, Chapter 10) vary
+  monotonically with `c`; refute: `c = 1, 2, 3` runs are indistinguishable
+  from `c = 0` or `c = 4` in every observable — the strut is quantized in
+  behavior as well as on the basis, and the dial collapses to a switch.
+- **What the dial is for: an error budget.** §6.5 certified the closure
+  half of a numerical step (`∇·B = 0` by stream function) as *provably
+  free*; the dial has nothing to tune there. The multiplicative half —
+  advection, the Lorentz coupling, the only channels through which the
+  associativity defect can enter — is where `c` acts: an effective slip
+  η_eff = (c/4) · strut-unit, tunable *and dimensional*, because the atom
+  gives the dial its units. The relation is photoelectric: continuous
+  intensities, quantized action. In English, the discipline this section
+  buys: **a toy is one fibre; an instrument is the family plus the proofs
+  that bind its fibres.** At each setting of `c`, what was skipped has a
+  name (the unpaid detail), the name has a unit (the strut), and the unit
+  has a theorem (§8.6 bullet 1) and an exact-discount certificate (§8.4, the
+  same mold in which loose coupling is certified in the cost calculus).
+
+*Level: "resistivity" here inherits §8.3's **[H]**; quantization is **[P]**;
+the fibre-dial is **[H]** pending Chapter 10's behavioral test.*
 
 ## Sources
 
 - `Friction.lean`, `LogicalTemperature.lean`, `SubdivisionClosure.lean` (§10),
-  `AMM.lean` (§9).
-- Notes 045–050, 053 (§7), 054 (anchor E).
+  `AMM.lean` (§9), `Stencil.lean` (the free half of the error budget),
+  `HyperbolicChirplet.lean` (the chirplet family `rightSpine · c`).
+- Notes 045–050, 053 (§7), 054 (anchor E), 056–058 (Rees fibres, quantization,
+  the fidelity dial).

@@ -51,7 +51,8 @@ Part I, used in Part III for external-code claims).*
 | 4.3.2 | 4.3 | `(xy)y = x(yy)` | [P] | `right_alternative` | n/a | |
 | 4.3.3 | 4.3 | `[a,b,c] = −[b,a,c]` | [P] | `associator_antisymm_left` | n/a | |
 | 4.3.4 | 4.3 | `strut_weight = \|[e₁,e₂,e₄]\| = 4` | [P] | `strut_weight_eq_four` | n/a | |
-| 4.4.1 | 4.4 | The associator reduces to a sign (1-dim range) — the "handedness is one-dimensional" | [C] | present: §4.4 confirm/refute (imaginary-part property) | picture→analogy | |
+| 4.4.1 | 4.4 | The associator is purely imaginary (e₀ vanishes) — first step of "handedness is a sign" | [P] | `associator_e0_vanishes` | literal | |
+| 4.4.3 | 4.4 | On the basis: nonzero associators are ±2·one imaginary axis, magnitude quantized to 4; a *single* signed direction for all triples remains [C] (`signCocycle` quotients the axis; its coherence [P] on basis) | [P]/[C] | `assocBasis_nonzero_null_free`, `strut_quantized_on_basis`, `pentagon_cocycle_basis`; present: §4.4 | literal (lattice) / picture (single direction) | |
 | 4.4.2 | 4.4 | The determinant is the unique (up to scale) alternating trilinear form on ℝ³ | [std] | classical linear algebra | literal | |
 | 4.5.1 | 4.5 | The associator is the CD analog of the G₂ 3-form / oriented volume | [H] | present (4.5) | analogy | |
 | 4.5.2 | 4.5 | The "handedness turns on" reading = resistivity | [H] | present: §4.5 confirm/refute | picture | |
@@ -60,7 +61,7 @@ Part I, used in Part III for external-code claims).*
 
 | ID | § | Claim | Tag | Basis | Level | Verdict |
 |---|---|---|---|---|---|---|
-| 5.2.1 | 5.2 | Alternativity = polarization of the re-association field | [H] | §5.2 level line; depends on 4.4.1 [C] | analogy (apt) | |
+| 5.2.1 | 5.2 | Alternativity = polarization of the re-association field | [H] | §5.2 level line; depends on 4.4.3 [C] (single signed direction) | analogy (apt) | |
 | 5.3.1 | 5.3 | CD 3→4 = depolarization (sign → vector) | [H] | present: §5.3 confirm/refute | analogy (apt) | |
 | 5.4.1 | 5.4 | Γ has no alternator strut; if alternativity is physical, Γ is missing a second strut | [H] | present (5.4) | analogy | |
 
@@ -72,9 +73,12 @@ Part I, used in Part III for external-code claims).*
 | 6.2.2 | 6.2 | dcStep is path-independent | [P] | `dcStep_le_path_to_rightComb`, `contracts_to_steps_of_dcStep` | n/a | |
 | 6.3.1 | 6.3 | 196 trees (sizes ≤6); size-6 census = 132 routes | [V] | `metric_sweep.py` | n/a | |
 | 6.4.1 | 6.4 | The pentagon coherence is what makes flux path-independent | [H] | present: §6.4 confirm/refute | analogy (apt) | |
-| 6.4.2 | 6.4 | The pentagon cocycle identity holds for the sign cocycle | [C] | present: §6.4 (decide over basis triples) | literal-if-proven | |
-| 6.4.3 | 6.4 | Associator e₀ component vanishes (imaginary-part property) | [C] | present: §4.4 / §6.4 | literal-if-proven | |
+| 6.4.2 | 6.4 | The pentagon cocycle identity holds for the sign cocycle | [P] | `pentagon_cocycle_basis` (basis quadruples; general elements not claimed) | literal (basis scope) | |
+| 6.4.3 | 6.4 | Associator e₀ component vanishes (imaginary-part property) | [P] | `associator_e0_vanishes` | literal | |
 | 6.5.1 | 6.1/6.2 | `dcStep` is the conserved flux (frozen-in analog) | [H] | present: §6.2 level line | analogy (apt) | |
+| 6.5.2 | 6.5 | Discrete div(curl ψ) = 0 for every field, grid, and value group (ψ-form closure is exact) | [P] | `Stencil.div_curl_eq_zero`, `div_curl` | literal | |
+| 6.5.3 | 6.5 | The identity's content is the commutativity of mixed central differences | [P] | `Stencil.dx_dy` | literal | |
+| 6.5.4 | 6.5 | Closure certificate survives non-associative values; associator defects enter a step only through multiplicative channels | [P]+[H] | `Stencil.div_curl` over `AddCommGroup` (proven); localization to MHD dynamics is prose-level | analogy (apt) → literal-if-modeled | |
 
 ### Chapter 7 — The cut
 
@@ -94,9 +98,12 @@ Part I, used in Part III for external-code claims).*
 |---|---|---|---|---|---|---|
 | 8.2.1 | 8.2 | Γ = per-flip weight; two-regime collapse | [P] | `weightedCost_assoc_regime`, `weightedCost_nonassoc_regime` | n/a | |
 | 8.2.2 | 8.2 | Edge-Lipschitz: cost changes ≤ Γ per flip | [P] | `weightedCost_edge_lipschitz` | n/a | |
-| 8.3.1 | 8.3 | Γ = resistivity (ideal CD≤2, resistive CD≥3) | [H] | present: §8.3 confirm/refute | analogy → literal-if-6.4.2 | |
+| 8.3.1 | 8.3 | Γ = resistivity (ideal CD≤2, resistive CD≥3) | [H] | present: §8.3 confirm/refute | analogy → literal-if-6.4.2/6.5.2 | |
 | 8.4.1 | 8.4 | Loose coupling is exactly linear in load (Hooke), over ℚ | [P] | `boundary_retreat_linear_in_load` | analogy | |
 | 8.4.2 | 8.4 | The rescue envelope is bounded by the coupling | [P] | `rescue_envelope_bounded_by_coupling` | n/a | |
+| 8.6.1 | 8.6 | Basis associator magnitudes are quantized: histogram {0↦344, 4↦168}; nonzero ⟹ ±2·one imaginary axis, null-cone free | [P] | `strut_quantized_on_basis`, `assocBasis_nonzero_null_free`, `assocBasis_sign_split` | literal | |
+| 8.6.2 | 8.6 | Resistivity has an atom: strut 4 is the unit in which reconnection cost is paid | [P]→[H] | quantization [P] (8.6.1); the identification inherits 8.3.1 | analogy (apt) | |
+| 8.6.3 | 8.6 | The chirplet family `rightSpine · c` is a fidelity dial with η_eff = (c/4)·strut-unit; c ∈ {1,2,3} are operator choices, not associator magnitudes | [H] | present: §8.6 confirm/refute (Ch 10 behavior test) | analogy (apt) | |
 
 ### Chapter 9 — Reduced lattice
 
