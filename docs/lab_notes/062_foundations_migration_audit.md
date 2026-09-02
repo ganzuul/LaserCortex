@@ -218,6 +218,13 @@ the repo's only Lean test now actually runs in CI), and the root module.
      mirror (`_cost.py` `class NodeCost`, `_logic_types.py`) is alive. The
      flagship mirror-inversion case; pairs with the terminology-debt row
      (059 §5): when the 7-Skeleton is renamed, its spine comes back too.
+     **Status 2026-09-02: RESCUED** as `foundations/LogicTypes.lean`
+     (enum only) + `foundations/Cost.lean` (table, Φ-family, contraction
+     theorems) — and the rescue *corrected* it: the collapse is
+     **8 geometries, not 7** (the archived list omitted Free/Boolean,
+     `rightDiv = 0` — the raw-size row that `Φ_eq_size_classical`'
+     hypotheses actually single out; the `7 = 7 := rfl` count was
+     vacuous). Errata appended to notes 006/007.
    - **(b) Develin–Sturmfels tropical package** — `TropicalTamariLattice`
      + `TropicalCovector`: `RegularSubdivision`, `quantizedHeight*`,
      `frictionCells1D*`, `develin_sturmfels_quantized_correspondence`,

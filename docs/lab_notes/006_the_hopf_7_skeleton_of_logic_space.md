@@ -13,7 +13,7 @@
 The 15 named `LogicType` variants map to exactly 7 distinct `NodeCost` configurations:
 
 | Point | Named logics | cdStep | Distinguishing feature |
-|-------|-------------|--------|----------------------|
+| ------- | ------------- | -------- | ---------------------- |
 | **P₀** | Classical, ManyValued, Relevance, Infinitary, Modal | 0/1/3/3/3 | rightDiv=1, no special flags — the "null" configuration |
 | **P₁** | Fuzzy | 1 | satCap=5 — bounded truth |
 | **P₂** | Paraconsistent, Temporal | 4/1 | leftWeight=2, coupling=1, denom=8 |
@@ -43,7 +43,7 @@ The split-octonion algebra with (4,4) signature has basis {e₀, e₁, e₂, e�
 The 7 distinct NodeCost points map naturally onto e₁⋯e₇, with e₀ being the universal bias:
 
 | Octonion axis | NodeCost signature | Logic interpretation |
-|--------------|-------------------|--------------------|
+| -------------- | ------------------- | -------------------- |
 | e₀ (identity) | bias = 1 | Universal: every logic pays this |
 | e₁ | rightDiv = 1 | Classical compression — default time-bias |
 | e₂ | satCap = 5 | Fuzzy saturation — bounded truth |
@@ -58,7 +58,7 @@ The 7 distinct NodeCost points map naturally onto e₁⋯e₇, with e₀ being t
 The Cayley-Dickson ladder follows the Hopf fibration pattern:
 
 | Dimension | Algebra | Hopf map | Property lost | cdStep |
-|-----------|---------|----------|--------------|--------|
+| ----------- | --------- | ---------- | -------------- | -------- |
 | 1 | ℝ | S⁰ → S⁰ | — | 0 |
 | 2 | ℂ | S³ → S² | Order | 1 |
 | 4 | ℍ | S⁷ → S⁴ | Commutativity | 2 |
@@ -101,3 +101,41 @@ From `SplitOctonionLogic.lean`, Domain 0:
 3. **The missing 8th field**: `denom` is 10 for most logics but 8 for Paraconsistent/Temporal. This is a third distinct value in an otherwise binary split. Is this a third octonion sector or a perturbation?
 
 4. **sedenion extension**: cdStep 4 (Paraconsistent, Free) corresponds to dimension 16 — sedenions — where even more zero-divisors appear. Do the 7 points split further at this level?
+
+---
+
+## 2026-09-02 Erratum — rescue of the formal spine (062 §5.7(a))
+
+The theorems this note cites (`Cost.nodeParam_bias_one`,
+`SplitOctonionLogic.distinctNodeCost_enumeration`, the Φ-family) were
+deleted from the live tree on July 6–7 while the Python mirror
+(`infra/_cortex/_cost.py`) survived — see 062 §4 "mirror inversion".
+They are restored at `LaserCortex/foundations/Cost.lean` (carrier: the
+live `foundations/Tamari.EMLTree`), and the restoration found a genuine
+counting error:
+
+- **The table collapses to 8 distinct rows, not 7.** The archived
+  `distinctNodeCosts` list omitted **Free/Boolean**
+  (`leftWeight = 1, rightDiv = 0, bias = 1`, no flags). The archived
+  pairwise theorem only proved the seven *listed* rows mutually
+  distinct; no lemma proved exhaustiveness, and
+  `distinctNodeCost_count : 7 = 7 := rfl` was vacuous scaffolding.
+  The restored `Cost.nodeParam_collapse` proves
+  `((allLogics.map nodeParam).eraseDups).length = 8` by `decide`.
+- **The omitted row is the meaningful one.** `rightDiv = 0` means no
+  compression (`b / (0+1) = b`): Free/Boolean is the **raw-size
+  geometry** — in fact the only table row satisfying the hypotheses of
+  `Φ_eq_size_classical` (which needs `rightDiv = 0`), so the theorem
+  historically nicknamed "classical" is the Free/Boolean row's theorem,
+  not Classical's (Classical has `rightDiv = 1`, compressing the right
+  spine). The naming invites exactly the omission that happened.
+- **The Hopf pun survives, rephrased.** Seven *feature axes*
+  (rightDiv=1, satCap, maxSem, mirror, coupling@8, coupling@10,
+  rightDiv=2) + bias = e₀ remains true as a description of the
+  coordinate structure. But "15 logics → exactly 7 distinct
+  configurations" must be read as **8 configurations living on 7
+  feature axes plus one unflagged point**. Open question 4 above is
+  upgraded accordingly: the unflagged point is where Φ = tree size
+  literally, i.e. the cost geometry with no distortion channel at all.
+
+Note 007's "7 distinct NodeCost points" inherits this correction.

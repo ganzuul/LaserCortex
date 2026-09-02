@@ -12,6 +12,8 @@ import LaserCortex.Stencil
 import LaserCortex.Coherence
 import LaserCortex.PhysicsAPI
 import LaserCortex.foundations.Chu
+import LaserCortex.foundations.LogicTypes
+import LaserCortex.foundations.Cost
 import LaserCortex.CayleyDickson
 import LaserCortex.HyperbolicChirplet
 import LaserCortex.Test.Sanity.OctonionNormTest

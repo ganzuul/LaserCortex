@@ -34,7 +34,7 @@ The morphism `toSO : NodeCost → SplitOctonion` maps each of the 8 cost
 parameters to a split-octonion component:
 
 | NodeCost field | Maps to | Range | Proof |
-|--------------|---------|-------|-------|
+| -------------- | --------- | ------- | ------- |
 | `bias` | e₀ | 1 (invariant) | `nodeParam_bias_one` |
 | `leftWeight` | e₁ | 0 or 1 | `engine_bias_is_one` (Gap F) |
 | `rightDiv` | e₂ | ℤ (compression formula) | `engineToSO_formula` (Gap A) |
@@ -155,7 +155,7 @@ that had no engine-state connection. The new bridge theorems (`Gap F` in
 formula, all 8 fields are now bridged:
 
 | Field | Theorem | Type |
-|-------|---------|------|
+| ------- | --------- | ------ |
 | leftWeight | `engine_mirror_implies_leftWeight_zero` | state-dependent (mirror ↔ debt>0) |
 | rightDiv | `engineToSO_formula` | formula (compression) |
 | mirror | `engine_mirror_iff_debt_nonzero` | state-dependent (mirror ↔ debt>0) |
@@ -259,3 +259,9 @@ audit's Gap D (normalizeAcross) targets.
 - `LaserCortex/LogicMonad.lean` — normalizeAcross (Gap D placeholder)
 - `docs/GLM-5-2_on_LogicM.md` — the audit that defined gaps A-F
 - `lab_notes/006_the_hopf_7_skeleton_of_logic_space.md` — the 7-Skeleton discovery
+
+Correction 2026-09-02: the count is **8** distinct NodeCost
+rows (Free/Boolean, the raw-size geometry, was omitted — the pairwise
+lemma lacked exhaustiveness); see 006 erratum. The carrier morphism
+statement itself is unaffected: 8 distinct rows still ⟹ distinct
+images under an injective carrier.
