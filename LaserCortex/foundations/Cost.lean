@@ -33,7 +33,8 @@ nodeParam_fuzzy, Φ, Φ_Leaf, Φ_Node, Φ_of_nc, Φ_eq_Φ_of_nc,
 Φ_eq_size_classical, Φ_contracts_one_eq_classical, Φ_contracts_to_eq_classical,
 Φ_spacetime_node, Φ_intuitionistic_eq_height, Φ_fuzzy_le_satCap,
 distinctNodeCost_enumeration, nodeParam_collapse, only_spacetime_is_mirrored,
-bias_invariant, denom_invariant_except_paraconsistent]
+bias_invariant, denom_invariant_except_paraconsistent,
+toSO, bool_if_inj, toSO_injective]
 
 ## Cross-refs
 
@@ -56,6 +57,7 @@ left spine only.
 #lean4-theorem #invariant #proof-bound #rescued
 -/
 
+import LaserCortex.foundations.Algebra
 import LaserCortex.foundations.LogicTypes
 import LaserCortex.foundations.Tamari
 
@@ -406,5 +408,58 @@ theorem bias_invariant (L : LogicTypes.LogicType) : (nodeParam L).bias = 1 :=
 theorem denom_invariant_except_paraconsistent (L : LogicTypes.LogicType) :
     (nodeParam L).denom = 10 ∨ (nodeParam L).denom = 8 := by
   cases L <;> simp [nodeParam]
+
+-- ============================================================================
+-- Carrier morphism: NodeCost ↪ SplitOctonion (note 007, rescued)
+-- ============================================================================
+
+/-- The carrier morphism `toSO` (note 007, from `SplitOctonionCost.lean`,
+    deleted `a8e3c57`): the 8 cost parameters become the 8 algebra
+    components — bias ↦ e₀, leftWeight ↦ e₁, rightDiv ↦ e₂, denom ↦ e₃,
+    satCap ↦ e₄, coupling ↦ e₅, mirror ↦ e₆, maxSem ↦ e₇ (fields cast to ℤ;
+    booleans as 0/1). The component assignment order follows the archived
+    file, which differs from note 007's table in e₄/e₅ — the algebraic
+    claim (injective embedding of cost geometry) is order-independent. -/
+def toSO (c : NodeCost) : SplitOctonion :=
+  { e0 := c.bias,
+    e1 := c.leftWeight,
+    e2 := c.rightDiv,
+    e3 := c.denom,
+    e4 := c.satCap,
+    e5 := c.coupling,
+    e6 := if c.mirror then 1 else 0,
+    e7 := if c.maxSem then 1 else 0 }
+
+/-- A 0/1 ℤ-embedding of `Bool` is injective (used for the mirror/maxSem
+    components of the carrier morphism). -/
+theorem bool_if_inj {b₁ b₂ : Bool}
+    (h : (if b₁ then (1 : ℤ) else 0) = if b₂ then 1 else 0) : b₁ = b₂ := by
+  cases b₁ <;> cases b₂ <;> simp_all (config := {decide := true})
+
+/-- `toSO` is injective: cost geometry embeds faithfully in the algebra,
+    so the corrected **8** distinct table rows are 8 distinct split-octonion
+    points (this is what makes the 006/007 erratum a theorem, not prose). -/
+theorem toSO_injective (c₁ c₂ : NodeCost) (h : toSO c₁ = toSO c₂) : c₁ = c₂ := by
+  cases c₁ with
+  | mk lw1 rd1 b1 m1 co1 d1 ms1 sc1 =>
+    cases c₂ with
+    | mk lw2 rd2 b2 m2 co2 d2 ms2 sc2 =>
+      have hb : b1 = b2 := by
+        simpa [toSO, Int.natCast_inj] using congr_arg SplitOctonion.e0 h
+      have hlw : lw1 = lw2 := by
+        simpa [toSO, Int.natCast_inj] using congr_arg SplitOctonion.e1 h
+      have hrd : rd1 = rd2 := by
+        simpa [toSO, Int.natCast_inj] using congr_arg SplitOctonion.e2 h
+      have hd : d1 = d2 := by
+        simpa [toSO, Int.natCast_inj] using congr_arg SplitOctonion.e3 h
+      have hsc : sc1 = sc2 := by
+        simpa [toSO, Int.natCast_inj] using congr_arg SplitOctonion.e4 h
+      have hco : co1 = co2 := by
+        simpa [toSO, Int.natCast_inj] using congr_arg SplitOctonion.e5 h
+      have hm : m1 = m2 :=
+        bool_if_inj (by simpa [toSO] using congr_arg SplitOctonion.e6 h)
+      have hms : ms1 = ms2 :=
+        bool_if_inj (by simpa [toSO] using congr_arg SplitOctonion.e7 h)
+      simp [NodeCost.mk.injEq, hb, hlw, hrd, hd, hco, hsc, hm, hms]
 
 end Cost
