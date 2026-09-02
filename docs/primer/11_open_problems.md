@@ -43,6 +43,7 @@ associator (+4); the distinguished fibre (e₁,e₂,e₄) has norm −4.
 | — | alternativity; associator antisymmetric | `left_alternative`, `right_alternative`, `associator_antisymm_left` | **[P]** |
 | — | `strut_weight = 4` | `strut_weight_eq_four` | **[P]** |
 | — | discrete div∘curl certificate (closure free for ψ-form fields, any grid, any `AddCommGroup` values) | `Stencil.dx_dy`, `Stencil.div_curl_eq_zero`, `div_curl` | **[P]** |
+| — | zero-divisor cone: for nonzero lattice elements, zero divisor ⟺ Q₄₄-null; the unit is never a zero divisor; conjugate cancellation (alternativity at work) | `isZeroDivisor_iff_octonion_norm_eq_zero`, `not_isZeroDivisor_split_one`, `conj_mul_assoc_left` | **[P]** (note 060) |
 | 11.1.1 | imaginary-part property: associator e₀ component vanishes | `associator_e0_vanishes` | **[P]** |
 | 11.1.2 | pentagon cocycle identity on basis elements (δ²=0 for the sign cocycle) | `pentagon_cocycle_basis` | **[P]** |
 | 11.1.3 | strut quantization: basis associator spectrum is {0, 4}; 1,2,3 un-realized; null-cone free | `strut_quantized_on_basis`, `assocBasis_norm_eq_zero_or_four`, `assocBasis_nonzero_null_free`, `assocBasis_sign_split` | **[P]** |
