@@ -11,6 +11,9 @@ import LaserCortex.TemporalParadox
 import LaserCortex.Stencil
 import LaserCortex.Coherence
 import LaserCortex.PhysicsAPI
+import LaserCortex.foundations.Chu
 import LaserCortex.CayleyDickson
 import LaserCortex.HyperbolicChirplet
 import LaserCortex.Test.Sanity.OctonionNormTest
+-- import LaserCortex.Entanglement   -- back in when its pairing proofs are
+-- re-derived against current Algebra: lab note 062 §5.1

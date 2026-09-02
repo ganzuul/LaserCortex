@@ -39,6 +39,7 @@ while F3 is worked on), **`Test/Sanity/OctonionNormTest`** (newly wired —
 the repo's only Lean test now actually runs in CI), and the root module.
 
 **ARCHIVED this unit** (`git mv` → `_archive/`):
+
 - `SplitQuaternionClifford.lean` — fully superseded: every declaration
   (`SplitQuat`, `split_quat_*`, `antipode_sq*`, `Cl11/Q11/Q22`, `ε0/ε1`,
   `embed`, `norm_mul`, …) exists in `foundations/Algebra`'s SplitQuat /
@@ -52,6 +53,7 @@ the repo's only Lean test now actually runs in CI), and the root module.
   recovery path).
 
 **REPAIRED this unit (3)**:
+
 - `CayleyDickson.lean` (green): (i) a parse-breaking **stray docstring**
   (a `cdMul` explanation copy-pasted above `gamma`, orphaned before
   another docstring — the signature of an aborted edit); (ii)
@@ -63,6 +65,7 @@ the repo's only Lean test now actually runs in CI), and the root module.
 - `Entanglement.lean` partial (see §5 — not repaired to green).
 
 **BIT-ROTTED ORPHANS (owner decisions, §5)**:
+
 - `Entanglement.lean` — see §5.1.
 - `BornTest.lean` — one rewrite failure at :76 (`antipode` semantics
   drift; file last touched June 28, pre-dating the antipode/pairing
@@ -85,6 +88,7 @@ the repo's only Lean test now actually runs in CI), and the root module.
 ## 2. Duplicate-declaration map (the "didn't all move over" evidence)
 
 30 duplicate *simple* names across files. The load-bearing groups:
+
 - **SQC ↔ Algebra** (16): the split-quaternion family — fully migrated;
   SQC archived. (`octonion_norm_mul`'s near-twins `norm_mul`,
   `splitQuat_norm_mul` all live in Algebra now — and note the incident
