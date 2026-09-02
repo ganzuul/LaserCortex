@@ -22,3 +22,11 @@ signCocycle (Coherence.rotBridge) the holonomy character of that double cover?
 Follow-on: does the split-form automorphism group G2 (max compact SO(4),
 pi_1 = Z/2) act transitively on each unit shell {Q = ±1}? If so, the
 lightcone-census timelike/spacelike dichotomy becomes an orbit statement.
+
+Cone door (tier 2, lab note 060 §6): do the 24 isotropic ±1-coefficient
+lattice vectors (calibration_results.md) arrange into fragments of the two
+rulings (maximal totally-null 4-planes) of the (4,4) quadric, with D4
+triality permuting the vector and half-spin roles? Door, not claim: the
+physical reading (rulings as species) needs its own falsification before
+any ledger row. [std anchors: Springer–Veldkamp; Lounesto, Octonions and
+Triality]

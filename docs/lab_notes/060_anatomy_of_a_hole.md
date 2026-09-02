@@ -146,11 +146,24 @@ The cone itself is trivial; the shadows it casts are not:
 
 ## 6. Pointers into the F-series
 
-- **F3 (dial theorems)**: the dial prices multiplicative channels (F1
-  remark); the cone theorem adds: the wavelet limit and full-chirplet
-  straddling are statements *across* a non-invertible locus — intermediate
-  fibres `c ∈ {1,2,3}` must be formulated so no division by a null
-  direction is ever needed. Formalize or drop in F3.
+- **F3 (dial theorems)**: *amended 2026-09-01, owner review* — the scalar
+  dial **never divides**: `c` multiplies the detail channel, and the
+  monotonicity/discount claims are `looseCost`-shape inequalities (precedent
+  [P], same file). The earlier formulation of this bullet conflated a design
+  constraint with the structure. Division becomes real only for an
+  **internalized dial** (fibre values as algebra elements `s` with
+  `Q₄₄(s) = c`), and tier 1 of that is now formalized as **F3′**
+  (`foundations/Algebra.lean`, §"F3′", [P] — see 058 §6): on the cone the
+  adjugate *changes operation* to an annihilator
+  (`null_annihilated_by_conj`); null content is **primitive for
+  factorization** (`norm_eq_zero_of_mul_eq_zero` — the interface event is
+  atomic in the multiplicative accounting, it cannot be bookkept away by
+  subdividing); invertible factors neither create nor destroy nullity
+  (`norm_mul_eq_zero_iff`); and every fibre is inhabited
+  (`exists_octonion_norm_eq`, Lagrange) — **amplitude is free, defect is
+  quantized** (057's {0,4} is untouched by this: different sets). Tier 2
+  (maximal null planes, rulings, triality) stays a *door*: logged in
+  `research_questions.md`, not a claim.
 - **F4 (particles)**: a "compact associator charge" must be measured
   against the composable form Q₄₄ — shadow-nulls ((5,3)) are disqualified
   as horizon data by [P]. Conservation claims get their stage: the ray

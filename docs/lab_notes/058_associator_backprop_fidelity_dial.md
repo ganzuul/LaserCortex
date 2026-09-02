@@ -161,6 +161,11 @@ available.
 * **F3 — `c`-dial theorems:** monotonicity of `chirpletDetail_c` / reconnection cost in
   `c`; exact-discount identity at the endpoints {0, 4}; `looseCost`-shape bounds. Also
   the right place to revisit the `chirpRate` stub (057 §3.2).
+* **F3′ — primitive interface & inhabited fibres (tier-1 of the 060 §6
+  internalization question): DONE 2026-09-01**, `foundations/Algebra.lean`
+  §"F3′": `null_annihilated_by_conj`, `norm_eq_zero_of_mul_eq_zero`,
+  `norm_ne_zero_mul`, `norm_mul_eq_zero_iff`, `exists_octonion_norm_eq` —
+  see §6. F3 itself remains open.
 * **F4 — particle candidate:** definition + conservation of compact associator charge
   (gated on F2; do not start early).
 * **F5 — local-`c` elasticity window** (deferred; owner's narrowness expectation is the
@@ -273,6 +278,40 @@ axioms — same footprint as the 057 spectrum).
    (`path_rcomb`), not assumed from topology. 019's "1-skeleton = Tamari
    lattice" gets partial vindication: our `Path` is exactly the rotation
    graph, and every tree reaches the same normal form.
+
+---
+
+**2026-09-01 — F3′ proven** (`foundations/Algebra.lean`, appended after the
+CD section so it can consume `octonion_norm_mul`; build green, downstream
+`Coherence`/`Stencil`/`HyperbolicChirplet` re-verified; primeness and
+propagation lemmas need only `propext, Quot.sound` — no `Classical`, no
+`native_decide`).
+
+1. **What was proven.** (i) `null_annihilated_by_conj`: on the cone the
+   adjugate becomes an annihilator — "division by a null direction" is a
+   change of operation, not an undefined one. (ii)
+   `norm_eq_zero_of_mul_eq_zero` (**primitive interface**): null content
+   cannot be refined away by factoring; an interface (quench-collapse) step
+   never decomposes into non-null substeps. (iii) `norm_ne_zero_mul` /
+   `norm_mul_eq_zero_iff`: non-nullness is a multiplicative submonoid and
+   invertible factors leave nullity untouched. (iv)
+   `exists_octonion_norm_eq` (**free amplitude**): `Q₄₄` surjects onto ℤ
+   (Lagrange four-squares for the time-like block, space-like block for
+   negatives). Together: *amplitude is free, defect is quantized* — the
+   slogan reconciling F3′ with 057's {0,4}.
+2. **What it said back to the plan.** The 060 §6 warning ("the dial must
+   never divide by a null direction") conflated the scalar dial (which never
+   divides — `c` multiplies) with an internalized one; the amendment is in
+   060 §6. The tractability the owner probed: F3′ shows the *entry* to
+   internalization is corollary-cheap (all four statements ride on the cone
+   section already in the file). What remains genuinely hard is tier 2 —
+   the rulings/triality geometry of the cone — which is classical
+   mathematics on the shelf (Springer–Veldkamp, Lounesto), logged as a door
+   in `research_questions.md`, and where the health-check alarm should be
+   loudest: usable as geometry only, not as a route to any famous claim.
+3. **Process note.** `octonion_norm_mul` was already in the file (CD
+   section); F3′ is positioned after it. The cone theorem itself never
+   needed the Hurwitz law; F3′ needs it exactly once (primeness).
 
 ---
 

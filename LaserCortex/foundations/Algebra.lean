@@ -325,16 +325,16 @@ theorem split_conj_split_oct_mul (x : SplitOctonion) :
   ext <;> simp [split_conj, split_oct_mul, octonion_norm] <;> ring
 
 theorem split_oct_mul_zero (x : SplitOctonion) : split_oct_mul x 0 = 0 := by
-  ext <;> simp [split_oct_mul, split_zero] <;> ring
+  ext <;> simp [split_oct_mul, split_zero]
 
 theorem zero_split_oct_mul (x : SplitOctonion) : split_oct_mul 0 x = 0 := by
-  ext <;> simp [split_oct_mul, split_zero] <;> ring
+  ext <;> simp [split_oct_mul, split_zero]
 
 theorem split_one_split_oct_mul (x : SplitOctonion) : split_oct_mul split_one x = x := by
-  ext <;> simp [split_oct_mul, split_one] <;> ring
+  ext <;> simp [split_oct_mul, split_one]
 
 theorem split_oct_mul_split_one (x : SplitOctonion) : split_oct_mul x split_one = x := by
-  ext <;> simp [split_oct_mul, split_one] <;> ring
+  ext <;> simp [split_oct_mul, split_one]
 
 /-- **Conjugate cancellation**: `(x̄·x)·y = x̄·(x·y)` and the right-handed
 variant. The exact step where alternativity earns its keep: the associator is
@@ -1465,3 +1465,91 @@ theorem fiveThreeNorm_non_composition :
   have := h ⟨1,1,0,0,0,0,0,0⟩ ⟨0,0,0,0,1,0,0,0⟩
   dsimp [fiveThreeNorm, split_oct_mul] at this
   norm_num at this
+
+-- ============================================================================
+-- F3′: the primitive interface and inhabited fibres (lab note 060, tier 1)
+-- (positioned after `octonion_norm_mul` in the CD section, which it consumes)
+-- ============================================================================
+
+/-- **Adjugate-on-cone = annihilator.** On the null cone, division by `x`
+does not merely go undefined — the operation *changes kind*: multiplying by
+the conjugate lands in the kernel, with a nonzero witness. (This is the
+witness branch of the cone theorem, named.) -/
+theorem null_annihilated_by_conj {x : SplitOctonion} (hx : x ≠ 0)
+    (hq : octonion_norm x = 0) :
+    split_oct_mul x (split_conj x) = 0 ∧ split_conj x ≠ 0 := by
+  constructor
+  · rw [split_oct_mul_split_conj, hq]
+    exact rfl
+  · exact split_conj_ne_zero hx
+
+/-- **Primitive interface (norm-primeness).** A product is null only if a
+factor is: `Q(yz) = Q(y)·Q(z)` and ℤ has no zero divisors. An interface
+(quench-collapse) step therefore never factors entirely into non-null
+substeps — its null content is *primitive for factorization*, not an
+artifact of how the step is decomposed. -/
+theorem norm_eq_zero_of_mul_eq_zero {y z : SplitOctonion}
+    (h : octonion_norm (split_oct_mul y z) = 0) :
+    octonion_norm y = 0 ∨ octonion_norm z = 0 := by
+  rw [octonion_norm_mul] at h
+  exact Int.eq_zero_or_eq_zero_of_mul_eq_zero h
+
+/-- **Non-nullness is a multiplicative submonoid:** invertible steps compose
+into invertible steps. -/
+theorem norm_ne_zero_mul {y z : SplitOctonion} (hy : octonion_norm y ≠ 0)
+    (hz : octonion_norm z ≠ 0) : octonion_norm (split_oct_mul y z) ≠ 0 := by
+  rw [octonion_norm_mul]
+  exact Int.mul_ne_zero hy hz
+
+/-- **Null content propagates through invertible factors:** multiplying by a
+non-null element neither creates nor destroys interface content. -/
+theorem norm_mul_eq_zero_iff {y z : SplitOctonion} (hy : octonion_norm y ≠ 0) :
+    octonion_norm (split_oct_mul y z) = 0 ↔ octonion_norm z = 0 := by
+  constructor
+  · intro h
+    obtain h' | hz := norm_eq_zero_of_mul_eq_zero h
+    · exact absurd h' hy
+    · exact hz
+  · intro hz
+    rw [octonion_norm_mul, hz, mul_zero]
+
+private theorem octonion_norm_timeBlock (a b d e : ℤ) :
+    octonion_norm ⟨a, b, d, e, 0, 0, 0, 0⟩ = a * a + b * b + d * d + e * e := by
+  simp [octonion_norm]
+
+private theorem octonion_norm_spaceBlock (a b d e : ℤ) :
+    octonion_norm ⟨0, 0, 0, 0, a, b, d, e⟩
+      = -(a * a + b * b + d * d + e * e) := by
+  simp only [octonion_norm]
+  ring
+
+/-- **Inhabited fibres (Lagrange four-squares [std], packaged).** Every
+integer is `Q₄₄(x)` for some lattice point: the time-like block is a sum of
+four squares (hits every `c ≥ 0`), the space-like block negates it. Read
+against 057 this is the clean separation the internalized dial needs:
+**amplitude is free, defect is quantized** — the norm surjects onto ℤ
+while the basis-associator spectrum stays {0, 4}. Internalised fibre
+values always have lattice representatives, and none of them buys a
+fraction of a strut *defect*. The only fibre without nonnull
+representatives is `Q₄₄⁻¹(0)`, which by the cone theorem is exactly the
+zero divisors — the horizon itself. -/
+theorem exists_octonion_norm_eq (c : ℤ) :
+    ∃ x : SplitOctonion, octonion_norm x = c := by
+  by_cases hc : 0 ≤ c
+  · obtain ⟨a, b, d, e, h4⟩ := Nat.sum_four_squares c.toNat
+    simp only [pow_two] at h4
+    have h5 : ((a * a + b * b + d * d + e * e : ℕ) : ℤ) = c := by
+      rw [h4]
+      exact Int.toNat_of_nonneg hc
+    refine ⟨⟨(a : ℤ), (b : ℤ), (d : ℤ), (e : ℤ), 0, 0, 0, 0⟩, ?_⟩
+    rw [octonion_norm_timeBlock]
+    norm_cast
+  · obtain ⟨a, b, d, e, h4⟩ := Nat.sum_four_squares (Int.toNat (-c))
+    have hn : 0 ≤ -c := by omega
+    simp only [pow_two] at h4
+    have h5 : -((a * a + b * b + d * d + e * e : ℕ) : ℤ) = c := by
+      rw [h4, Int.toNat_of_nonneg hn]
+      omega
+    refine ⟨⟨0, 0, 0, 0, (a : ℤ), (b : ℤ), (d : ℤ), (e : ℤ)⟩, ?_⟩
+    rw [octonion_norm_spaceBlock]
+    norm_cast
