@@ -313,6 +313,20 @@ propagation lemmas need only `propext, Quot.sound` — no `Classical`, no
    section); F3′ is positioned after it. The cone theorem itself never
    needed the Hurwitz law; F3′ needs it exactly once (primeness).
 
+**2026-09-02 — Physics API v0.1 landed** (`LaserCortex/PhysicsAPI.lean`,
+root-imported, builds 4.0 s; `commit_gap` axioms: `propext` alone). The
+transactional reading of F3′ (owner: *"atomic in the sense of atomic
+transactions?"*) crystallized into a four-sector façade — Ledger
+(`octonion_norm` as monoid homomorphism; commits = zero divisors;
+`commit_indivisible`, `commit_gap`, `undo_smooth`, `amplitude_free`),
+Fields (`makeField` as the sole B-constructor, `divFree`), Bookkeeping
+(F2 serializability trio), Settings (`FidelitySettings`, levers named,
+constraints deliberately *not* declared). Rule: nothing [H] gets a name —
+F3's obligations are the docstrings (graduation checklist in 061 §6). The
+full design rationale, the commit-policy three-levers analysis, the
+Sweet–Parker echo [H], and the "atomic" three-way name protection (040)
+are in **lab note 061**.
+
 ---
 
 ## References
