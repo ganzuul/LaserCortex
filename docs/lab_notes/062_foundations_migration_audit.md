@@ -168,8 +168,10 @@ the repo's only Lean test now actually runs in CI), and the root module.
    needs a re-derivation pass, not a patch). **Decision: repair (one
    focused session against the current Algebra) or archive (its claims
    are re-expressible in `Chu`/`Hopf` terms?).** Until then it is out
-   of the default build (root import commented-out note in
-   `LaserCortex.lean` — actually removed; restore the line when green).
+   of the default build; `LaserCortex.lean` carries its import as a
+   commented line as the restore path. (Pulling `Entanglement` out had
+   orphaned `foundations/Chu` — its only importer — so `Chu` is now
+   wired into the root directly.)
 2. **`BornTest.lean`**: rewrite gap at :76; the
    `born_test_calibration_ladder_plan` Phase B already anticipates a
    rewrite. **Decision: fold into that plan rather than repair in place.**
