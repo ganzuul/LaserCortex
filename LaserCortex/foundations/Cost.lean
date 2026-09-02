@@ -1,56 +1,66 @@
 /-
-# Module: Cost (rescued spine)
+# Module: Cost (anonymous cost geometry — foundations layer)
 
 ## Intent
 
-The NodeCost cost geometry over EML trees: `NodeCost` parameters, the
-`nodeParam` table for all 15 named logics, the recursive cost functional
-Φ, and the classical / mirrored / max-semantics / saturation behaviour
-theorems. Restored from `Cost.lean` (deleted `a8e3c57`, 2026-07-06) and
-`SplitOctonionLogic.lean` (deleted `e212301`, 2026-07-07) per the
-archaeology triage 062 §5.7(a) — the formal spine that notes 006/007 cite
-(`nodeParam_bias_one`, `bias_invariant`, `distinctNodeCost_enumeration`)
-while only the Python mirror (`infra/_cortex/_cost.py`) survived.
+The geometry of recursive cost on EML trees, WITHOUT any named logics:
+the `NodeCost` parameter structure, its application semantics (amplify /
+compress / couple / mirror / max / saturate), the generic cost functional
+`Φ_of_nc`, the parameter-condition theorems (raw-size, height, left-spine,
+saturation, contraction-invariance), and the carrier morphism
+`toSO : NodeCost → SplitOctonion` with its injectivity.
 
-Re-homed onto the LIVE carrier `LaserCortex.foundations.Tamari.EMLTree`
-(ctor-identical to the old `EMLRegistry.EMLTree`), and carrying two
-corrections over the archived text:
+Layering (owner ruling, 2026-09-02): the 15 named logics and the
+`nodeParam` table are an INTERPRETATION layer, not foundations — the
+Hopf 7-Skeleton (note 006) was originally meant to be an ANONYMOUS
+derivation of realizable cost geometries from pentagonator constraints,
+and the logic names were a reading aid for a hard-to-interpret result.
+Names can be renamed, re-derived, or replaced by a characterization
+theorem without touching this file. The named layer lives at
+`LaserCortex/LogicTable.lean` (research layer) and reuses the qualified
+namespace `Cost` so the historical doc citations
+(`Cost.nodeParam_bias_one`, …) keep resolving.
 
-1. The collapse is 15 logics → **8** distinct cost geometries, not 7.
-   The archived `distinctNodeCosts` list omitted the Free/Boolean row
-   (`rightDiv = 0`), while `apply` divides by `rightDiv + 1` ∈ {1, 2}; the
-   archived `distinctNodeCost_count : 7 = 7 := rfl` was vacuous scaffolding.
-   `Cost.nodeParam_collapse` below proves the true count by `decide`.
-2. `Φ` takes the Tamari tree directly; contraction lemmas reuse the live
-   `contracts_one` / `contracts_to` / `*_size_eq` from `foundations/Tamari`.
+Provenance: rescued per archaeology triage 062 §5.7(a) from `Cost.lean`
+(deleted `a8e3c57`, 2026-07-06), `SplitOctonionLogic.lean` (deleted
+`e212301`, 2026-07-07) and `SplitOctonionCost.lean`'s carrier (deleted
+`a8e3c57`); the Python mirror `infra/_cortex/_cost.py` never died — the
+restoration corrected it, see `LogicTable.lean`.
+
+Correction carried: `apply` divides by `rightDiv + 1`, so rows differing
+only there are distinct geometries — the archived "7 distinct points"
+count omitted the raw-size row (`rightDiv = 0, leftWeight = 1`); the true
+collapse of the archived table is **8** (proved in `LogicTable`).
 
 ## Contracts
 
-[NodeCost, NodeCost.applyUncapped, NodeCost.apply, nodeParam,
-nodeParam_bias_one, nodeParam_leftWeight_ge_one_of_not_mirror,
-nodeParam_mirror_iff_spacetime, nodeParam_spacetime, nodeParam_intuitionistic,
-nodeParam_fuzzy, Φ, Φ_Leaf, Φ_Node, Φ_of_nc, Φ_eq_Φ_of_nc,
-Φ_eq_size_classical, Φ_contracts_one_eq_classical, Φ_contracts_to_eq_classical,
-Φ_spacetime_node, Φ_intuitionistic_eq_height, Φ_fuzzy_le_satCap,
-distinctNodeCost_enumeration, nodeParam_collapse, only_spacetime_is_mirrored,
-bias_invariant, denom_invariant_except_paraconsistent,
-toSO, bool_if_inj, toSO_injective]
+[NodeCost, NodeCost.applyUncapped, NodeCost.apply,
+NodeCost.applyUncapped_not_mirror, NodeCost.applyUncapped_mirror,
+NodeCost.applyUncapped_maxSem, NodeCost.apply_not_mirror,
+NodeCost.apply_mirror, NodeCost.apply_maxSem, NodeCost.apply_le_satCap,
+Φ_of_nc, Φ_of_nc_Leaf, Φ_of_nc_Node,
+Φ_of_nc_eq_size, Φ_of_nc_contracts_one_eq, Φ_of_nc_contracts_to_eq,
+Φ_of_nc_mirror_left_spine, Φ_of_nc_maxSem_eq_height, Φ_of_nc_le_satCap,
+toSO, bool_if_inj, toSO_injective
+(nodeParam, the LogicType enum, Φ under named logics, the collapse count
+and all named-logic statements live in `LaserCortex/LogicTable.lean`.)]
 
 ## Cross-refs
 
-`LaserCortex.foundations.LogicTypes` (the 15-case enum),
-`LaserCortex.foundations.Tamari` (carrier + contraction), notes 006/007
-(7-Skeleton reading corrected to 8 geometries — see 062 §5.7(a)),
-`TDD_SPLIT_OCTONION_LOGIC.md`
+`LaserCortex.foundations.Tamari` (carrier + contraction),
+`LaserCortex.foundations.Algebra` (SplitOctonion),
+`LaserCortex.LogicTable` (the named interpretation), notes 006/007
+(006 erratum 2026-09-02), 062 §5.7(a)
 
 ## Invariants
 
-`(nodeParam L).bias = 1` for all 15 logics (amplitude-free commitment);
-mirror = false except Spacetime; classical-depth logics
-(rightDiv = 0, coupling = 0, ¬mirror, leftWeight = 1, ¬maxSem, satCap = 0)
-measure raw tree size and are contraction-invariant; Intuitionistic Φ is
-proof DEPTH (height), Fuzzy Φ saturates at satCap, Spacetime follows the
-left spine only.
+Parameter-condition theorems, not name-condition: a NodeCost with
+rightDiv = 0, coupling = 0, ¬mirror, leftWeight = 1, bias = 1,
+¬maxSem, satCap = 0 measures raw tree SIZE and is contraction-invariant;
+maxSem = true (bias 1, no cap) measures HEIGHT; mirror with leftWeight =
+rightDiv = coupling = 0 sees only the LEFT spine; satCap > 0 caps cost at
+satCap; toSO embeds the 8-parameter space into the split-octonions
+injectively (bias ↦ e₀ — the 0/1-Bool components e₆/e₇ via bool_if_inj).
 
 ## Tags
 
@@ -58,15 +68,12 @@ left spine only.
 -/
 
 import LaserCortex.foundations.Algebra
-import LaserCortex.foundations.LogicTypes
 import LaserCortex.foundations.Tamari
 
 namespace Cost
 
-open LogicTypes
-
 /-- Node cost parameters for a logic type.
-    Interprets the EML operator eml(x,y) = exp(x) - ln(y) in discrete ℕ
+    Interprets the EML operator eml(x, y) = exp(x) - ln(y) in discrete ℕ
     arithmetic: leftWeight amplifies the left subtree cost (exp-like),
     rightDiv compresses the right subtree cost (ln-like), bias adds the
     distinguished constant 1 from the EML grammar.
@@ -77,8 +84,8 @@ open LogicTypes
     symmetric cross-sector (non-distributivity) penalty.
 
     Depth-2 extensions: maxSem = true gives proof-depth semantics
-    max(a,b) + bias (Intuitionistic); satCap > 0 caps the result (Fuzzy
-    saturation); satCap = 0 means no cap. -/
+    max(a, b) + bias; satCap > 0 caps the result (saturation);
+    satCap = 0 means no cap. -/
 structure NodeCost where
   leftWeight : Nat
   rightDiv : Nat
@@ -106,106 +113,11 @@ def NodeCost.applyUncapped (c : NodeCost) (a b : Nat) : Nat :=
 
     Depth-1 (sum mode): mirror = false gives
       bias + leftWeight·a + b/(rightDiv+1) + coupling·a·b/max(1,denom);
-      mirror = true swaps a ↔ b roles.
-    Depth-2: maxSem gives max(a,b) + bias; satCap > 0 caps at satCap. -/
+      mirror = true swaps the a ↔ b roles.
+    Depth-2: maxSem gives max(a, b) + bias; satCap > 0 caps at satCap. -/
 def NodeCost.apply (c : NodeCost) (a b : Nat) : Nat :=
   let uncapped := c.applyUncapped a b
   if c.satCap = 0 then uncapped else min c.satCap uncapped
-
-/-- Node cost parameters for each logic type: each named logic is a point
-    in the friction-parameter space, i.e. its own rule for combining
-    subtree costs. This is the table the Python `_cost.py::node_param`
-    mirrors. -/
-def nodeParam (L : LogicTypes.LogicType) : NodeCost :=
-  match L with
-  | .Classical      => { leftWeight := 1, rightDiv := 1, bias := 1 }
-  | .Fuzzy          => { leftWeight := 1, rightDiv := 2, bias := 1, satCap := 5 }
-  | .ManyValued     => { leftWeight := 1, rightDiv := 1, bias := 1 }
-  | .Paraconsistent =>
-    { leftWeight := 2, rightDiv := 1, bias := 1, coupling := 1, denom := 8 }
-  | .Temporal       =>
-    { leftWeight := 2, rightDiv := 1, bias := 1, coupling := 1, denom := 8 }
-  | .Deontic        => { leftWeight := 1, rightDiv := 2, bias := 1 }
-  | .Epistemic      => { leftWeight := 1, rightDiv := 2, bias := 1 }
-  | .Quantum        =>
-    { leftWeight := 1, rightDiv := 1, bias := 1, coupling := 1, denom := 10 }
-  | .Intuitionistic => { leftWeight := 1, rightDiv := 0, bias := 1, maxSem := true }
-  | .Relevance      => { leftWeight := 1, rightDiv := 1, bias := 1 }
-  | .Free           => { leftWeight := 1, rightDiv := 0, bias := 1 }
-  | .Infinitary     => { leftWeight := 1, rightDiv := 1, bias := 1 }
-  | .Modal          => { leftWeight := 1, rightDiv := 1, bias := 1 }
-  | .Spacetime      => { leftWeight := 0, rightDiv := 0, bias := 1, mirror := true }
-  | .Boolean        => { leftWeight := 1, rightDiv := 0, bias := 1 }
-
--- ============================================================================
--- Node parameter lemmas
--- ============================================================================
-
-/-- Every named logic pays exactly one atom of bias: the commitment unit
-    is amplitude-free across the whole table (061 §2). -/
-theorem nodeParam_bias_one (L : LogicTypes.LogicType) : (nodeParam L).bias = 1 := by
-  cases L <;> rfl
-
-/-- Unmirrored logics always amplify the left subtree (leftWeight ≥ 1);
-    mirrored logics may go silent on the commutator channel. -/
-theorem nodeParam_leftWeight_ge_one_of_not_mirror (L : LogicTypes.LogicType)
-    (h : ¬(nodeParam L).mirror) : 1 ≤ (nodeParam L).leftWeight := by
-  cases L <;> simp [nodeParam] at h ⊢ <;> decide
-
-/-- Only Spacetime is mirrored. -/
-theorem nodeParam_mirror_iff_spacetime (L : LogicTypes.LogicType) :
-    (nodeParam L).mirror = true ↔ L = .Spacetime := by
-  cases L <;> simp [nodeParam]
-
-/-- Spacetime is mirrored with leftWeight = 0, rightDiv = 0. -/
-theorem nodeParam_spacetime : nodeParam .Spacetime =
-    { leftWeight := 0, rightDiv := 0, bias := 1, mirror := true,
-      coupling := 0, denom := 10 } := by
-  rfl
-
-/-- Intuitionistic uses maxSem with bias = 1. -/
-theorem nodeParam_intuitionistic : nodeParam .Intuitionistic =
-    { leftWeight := 1, rightDiv := 0, bias := 1, maxSem := true } := by
-  rfl
-
-/-- Fuzzy has satCap = 5. -/
-theorem nodeParam_fuzzy : nodeParam .Fuzzy =
-    { leftWeight := 1, rightDiv := 2, bias := 1, satCap := 5 } := by
-  rfl
-
--- ============================================================================
--- Φ: the recursive cost functional on Tamari trees
--- ============================================================================
-
-/-- Cross-impact cost of an EML tree under a named logic. -/
-def Φ (L : LogicTypes.LogicType) : EMLTree → Nat
-  | .Leaf => 0
-  | .Node l r => (nodeParam L).apply (Φ L l) (Φ L r)
-
-theorem Φ_Leaf (L : LogicTypes.LogicType) : Φ L .Leaf = 0 := rfl
-
-theorem Φ_Node (L : LogicTypes.LogicType) (l r : EMLTree) :
-    Φ L (.Node l r) = (nodeParam L).apply (Φ L l) (Φ L r) := rfl
-
-/-- Same recursion under an arbitrary point of parameter space rather than a
-    named logic: what the archived SplitOctonionLogic tests used to probe
-    the 8-dimensional cost space off the 15 landmarks. -/
-def Φ_of_nc (nc : NodeCost) : EMLTree → Nat
-  | .Leaf => 0
-  | .Node l r => nc.apply (Φ_of_nc nc l) (Φ_of_nc nc r)
-
-theorem Φ_of_nc_Leaf (nc : NodeCost) : Φ_of_nc nc .Leaf = 0 := rfl
-
-theorem Φ_of_nc_Node (nc : NodeCost) (l r : EMLTree) :
-    Φ_of_nc nc (.Node l r) = nc.apply (Φ_of_nc nc l) (Φ_of_nc nc r) := rfl
-
-/-- The two Φ definitions agree on named logics. -/
-theorem Φ_eq_Φ_of_nc (L : LogicTypes.LogicType) (t : EMLTree) :
-    Φ L t = Φ_of_nc (nodeParam L) t := by
-  induction t with
-  | Leaf => rfl
-  | Node l r ih_l ih_r =>
-    rw [Φ_Node, Φ_of_nc_Node, ih_l, ih_r]
 
 -- ============================================================================
 -- apply-mode helpers
@@ -263,151 +175,100 @@ theorem NodeCost.apply_le_satCap (c : NodeCost) (a b : Nat) (h : c.satCap > 0) :
   exact min_le_left _ _
 
 -- ============================================================================
--- Classical-depth logics: Φ measures raw tree size, contraction-invariant
--- (rotation size-preservation is the live `contracts_one_size_eq` /
--- `contracts_to_size_eq` from foundations/Tamari)
+-- Φ_of_nc: the generic recursive cost functional on Tamari trees
 -- ============================================================================
 
-/-- For logics with rightDiv = 0, coupling = 0, mirror = false,
-    leftWeight = 1, maxSem = false, satCap = 0 (the Free/Boolean row):
-    Φ is exactly the node count of the tree. -/
-theorem Φ_eq_size_classical (L : LogicTypes.LogicType) (t : EMLTree)
-    (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
-    (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
-    (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0) :
-    Φ L t = t.size := by
-  induction t with
-  | Leaf => simp [Φ, EMLTree.size]
-  | Node l r ih_l ih_r =>
-    rw [Φ_Node, NodeCost.apply_not_mirror _ _ _ hMS hM hSC]
-    simp only [hC, Nat.zero_mul, Nat.add_zero, Nat.zero_div]
-    rw [nodeParam_bias_one L, hW, hD, ih_l, ih_r, EMLTree.size]
-    simp [Nat.succ_eq_add_one]
+/-- Cross-impact cost of an EML tree under an arbitrary point of the
+    parameter space. The named-logic functional is a special case
+    (`LogicTable.Φ`); the theorems below are all stated for conditions on
+    the parameters, never for a name. -/
+def Φ_of_nc (nc : NodeCost) : EMLTree → Nat
+  | .Leaf => 0
+  | .Node l r => nc.apply (Φ_of_nc nc l) (Φ_of_nc nc r)
 
-/-- Cost is preserved by a single Tamari rotation for classical-depth
-    logics (both sides just count nodes). -/
-theorem Φ_contracts_one_eq_classical (L : LogicTypes.LogicType) {s t : EMLTree}
-    (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
-    (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
-    (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0)
-    (h : contracts_one s t) : Φ L s = Φ L t := by
-  have hΦs : Φ L s = s.size := Φ_eq_size_classical L s hD hC hM hW hMS hSC
-  have hΦt : Φ L t = t.size := Φ_eq_size_classical L t hD hC hM hW hMS hSC
+theorem Φ_of_nc_Leaf (nc : NodeCost) : Φ_of_nc nc .Leaf = 0 := rfl
+
+theorem Φ_of_nc_Node (nc : NodeCost) (l r : EMLTree) :
+    Φ_of_nc nc (.Node l r) = nc.apply (Φ_of_nc nc l) (Φ_of_nc nc r) := rfl
+
+-- ============================================================================
+-- Raw-size geometry: contraction-invariant, Φ = node count
+-- ============================================================================
+
+/-- A NodeCost with rightDiv = 0 (no compression), coupling = 0 (no
+    cross-sector penalty), mirror = false, leftWeight = 1 (no
+    amplification), bias = 1, maxSem = false, satCap = 0 measures exactly
+    the node count of the tree: the geometry of RAW SIZE — no distortion
+    channel open. (The archived table's Free/Boolean row is a named
+    instance of this; the theorem itself is anonymous.) -/
+theorem Φ_of_nc_eq_size (nc : NodeCost) (t : EMLTree)
+    (hD : nc.rightDiv = 0) (hC : nc.coupling = 0) (hM : ¬nc.mirror)
+    (hW : nc.leftWeight = 1) (hB : nc.bias = 1) (hMS : ¬nc.maxSem)
+    (hSC : nc.satCap = 0) : Φ_of_nc nc t = t.size := by
+  induction t with
+  | Leaf => simp [Φ_of_nc, EMLTree.size]
+  | Node l r ih_l ih_r =>
+    rw [Φ_of_nc_Node, NodeCost.apply_not_mirror _ _ _ hMS hM hSC]
+    simp only [hC, Nat.zero_mul, Nat.add_zero, Nat.zero_div]
+    rw [hW, hB, hD, ih_l, ih_r, EMLTree.size]
+    simp [Nat.one_mul, Nat.succ_eq_add_one]
+
+/-- Raw-size geometries are invariant under a single Tamari rotation. -/
+theorem Φ_of_nc_contracts_one_eq (nc : NodeCost) {s t : EMLTree}
+    (hD : nc.rightDiv = 0) (hC : nc.coupling = 0) (hM : ¬nc.mirror)
+    (hW : nc.leftWeight = 1) (hB : nc.bias = 1) (hMS : ¬nc.maxSem)
+    (hSC : nc.satCap = 0) (h : contracts_one s t) :
+    Φ_of_nc nc s = Φ_of_nc nc t := by
+  have hΦs : Φ_of_nc nc s = s.size := Φ_of_nc_eq_size nc s hD hC hM hW hB hMS hSC
+  have hΦt : Φ_of_nc nc t = t.size := Φ_of_nc_eq_size nc t hD hC hM hW hB hMS hSC
   rw [hΦs, hΦt, contracts_one_size_eq h]
 
-/-- Cost is preserved by multi-step contraction paths. -/
-theorem Φ_contracts_to_eq_classical (L : LogicTypes.LogicType) {s t : EMLTree}
-    (hD : (nodeParam L).rightDiv = 0) (hC : (nodeParam L).coupling = 0)
-    (hM : ¬(nodeParam L).mirror) (hW : (nodeParam L).leftWeight = 1)
-    (hMS : ¬(nodeParam L).maxSem) (hSC : (nodeParam L).satCap = 0)
-    (h : contracts_to s t) : Φ L s = Φ L t := by
-  have hΦs : Φ L s = s.size := Φ_eq_size_classical L s hD hC hM hW hMS hSC
-  have hΦt : Φ L t = t.size := Φ_eq_size_classical L t hD hC hM hW hMS hSC
+/-- …and under arbitrary contraction paths. -/
+theorem Φ_of_nc_contracts_to_eq (nc : NodeCost) {s t : EMLTree}
+    (hD : nc.rightDiv = 0) (hC : nc.coupling = 0) (hM : ¬nc.mirror)
+    (hW : nc.leftWeight = 1) (hB : nc.bias = 1) (hMS : ¬nc.maxSem)
+    (hSC : nc.satCap = 0) (h : contracts_to s t) :
+    Φ_of_nc nc s = Φ_of_nc nc t := by
+  have hΦs : Φ_of_nc nc s = s.size := Φ_of_nc_eq_size nc s hD hC hM hW hB hMS hSC
+  have hΦt : Φ_of_nc nc t = t.size := Φ_of_nc_eq_size nc t hD hC hM hW hB hMS hSC
   rw [hΦs, hΦt, contracts_to_size_eq h]
 
 -- ============================================================================
--- Per-logic behaviour: mirror, max-semantics, saturation
+-- Other parameter-condition regimes
 -- ============================================================================
 
-/-- Spacetime cost at any node is 1 + cost of the LEFT child: mirrored
-    semantics see only the time axis (the right spine is invisible). -/
-theorem Φ_spacetime_node (l r : EMLTree) :
-    Φ .Spacetime (.Node l r) = 1 + Φ .Spacetime l := by
-  have hMS : ¬(nodeParam .Spacetime).maxSem := by decide
-  have hSC : (nodeParam .Spacetime).satCap = 0 := by decide
-  rw [Φ_Node, NodeCost.apply_mirror _ _ _ hMS rfl hSC]
-  rw [nodeParam_bias_one]
-  simp only [nodeParam, Nat.zero_mul, Nat.add_zero, Nat.zero_div,
-    Nat.div_one]
+/-- The mirrored silent geometry (mirror = true, leftWeight = rightDiv =
+    coupling = 0, bias = 1) sees only the left spine: the right subtree is
+    invisible to the cost. -/
+theorem Φ_of_nc_mirror_left_spine (nc : NodeCost) (l r : EMLTree)
+    (hMS : ¬nc.maxSem) (hMi : nc.mirror = true) (hSC : nc.satCap = 0)
+    (hB : nc.bias = 1) (hW : nc.leftWeight = 0) (hD : nc.rightDiv = 0)
+    (hC : nc.coupling = 0) :
+    Φ_of_nc nc (.Node l r) = 1 + Φ_of_nc nc l := by
+  rw [Φ_of_nc_Node, NodeCost.apply_mirror _ _ _ hMS hMi hSC, hB, hW, hD, hC]
+  simp only [Nat.mul_zero, Nat.zero_mul, Nat.add_zero, Nat.div_one,
+    Nat.zero_div]
 
-/-- Intuitionistic Φ equals tree height: proof cost is DEPTH, not size. -/
-theorem Φ_intuitionistic_eq_height (t : EMLTree) :
-    Φ .Intuitionistic t = t.height := by
+/-- maxSem with bias 1 and no cap measures proof DEPTH (tree height),
+    not proof size. -/
+theorem Φ_of_nc_maxSem_eq_height (nc : NodeCost) (t : EMLTree)
+    (hMS : nc.maxSem = true) (hB : nc.bias = 1) (hSC : nc.satCap = 0) :
+    Φ_of_nc nc t = t.height := by
   induction t with
-  | Leaf => simp [Φ, EMLTree.height]
+  | Leaf => simp [Φ_of_nc, EMLTree.height]
   | Node l r ih_l ih_r =>
-    rw [Φ_Node]
-    have hMS : (nodeParam .Intuitionistic).maxSem = true := by rfl
-    have hSC : (nodeParam .Intuitionistic).satCap = 0 := by rfl
-    rw [NodeCost.apply_maxSem _ _ _ hMS hSC, nodeParam_bias_one, ih_l, ih_r]
+    rw [Φ_of_nc_Node, NodeCost.apply_maxSem _ _ _ hMS hSC, hB, ih_l, ih_r]
     simp [EMLTree.height]
     omega
 
-/-- Fuzzy Φ is bounded by the saturation cap: truth saturates at 1, and in
-    ℕ-arithmetic that is a hard ceiling at satCap. -/
-theorem Φ_fuzzy_le_satCap (t : EMLTree) :
-    Φ .Fuzzy t ≤ (nodeParam .Fuzzy).satCap := by
+/-- Any satCap > 0 puts a hard ceiling on the cost functional. -/
+theorem Φ_of_nc_le_satCap (nc : NodeCost) (t : EMLTree)
+    (h : nc.satCap > 0) : Φ_of_nc nc t ≤ nc.satCap := by
   induction t with
-  | Leaf => decide
+  | Leaf => exact Nat.zero_le _
   | Node l r ih_l ih_r =>
-    rw [Φ_Node]
-    exact NodeCost.apply_le_satCap (nodeParam .Fuzzy) (Φ .Fuzzy l) (Φ .Fuzzy r)
-      (by decide)
-
--- ============================================================================
--- The collapse: 15 named logics, 8 cost geometries
--- ============================================================================
-
-/-- The eight distinct NodeCost rows among the 15 named logics, with their
-    member groups: Classical {Classical, ManyValued, Relevance, Infinitary,
-    Modal}, Fuzzy, Para {Paraconsistent, Temporal}, Quantum,
-    Intuitionistic, Spacetime, Deontic {Deontic, Epistemic},
-    Free {Free, Boolean}. -/
-def distinctNodeCosts : List NodeCost :=
-  [ nodeParam .Classical, nodeParam .Fuzzy, nodeParam .Paraconsistent,
-    nodeParam .Quantum, nodeParam .Intuitionistic, nodeParam .Spacetime,
-    nodeParam .Deontic, nodeParam .Free ]
-
-/-- All 15 logics, as a list, for counting. -/
-def allLogics : List LogicTypes.LogicType :=
-  [ .Fuzzy, .ManyValued, .Paraconsistent, .Temporal, .Deontic, .Epistemic,
-    .Quantum, .Intuitionistic, .Relevance, .Free, .Infinitary, .Modal,
-    .Spacetime, .Classical, .Boolean ]
-
-/-- THE COLLAPSE (corrected): the nodeParam table has exactly **8** distinct
-    rows over the 15 named logics. The archived claim was 7; the missing
-    geometry is the Free/Boolean row (rightDiv = 0 ≠ 1 of the Classical
-    group, and `apply` divides by rightDiv + 1, so the rows differ
-    already on trees whose right subtree costs 1). Note 006's "7-skeleton"
-    pun survives as prose about the Hopf cells, but the cost-geometry
-    count is 8. -/
-theorem nodeParam_collapse :
-    ((allLogics.map nodeParam).eraseDups).length = 8 ∧
-    (distinctNodeCosts.eraseDups).length = 8 := by
-  constructor <;> decide
-
-/-- The canonical partition, as equalities of table rows. -/
-theorem distinctNodeCost_enumeration :
-    (nodeParam .Classical = nodeParam .ManyValued ∧
-     nodeParam .Classical = nodeParam .Relevance ∧
-     nodeParam .Classical = nodeParam .Infinitary ∧
-     nodeParam .Classical = nodeParam .Modal) ∧
-    (nodeParam .Fuzzy).satCap = 5 ∧
-    nodeParam .Paraconsistent = nodeParam .Temporal ∧
-    (nodeParam .Quantum).coupling = 1 ∧ (nodeParam .Quantum).denom = 10 ∧
-    (nodeParam .Intuitionistic).maxSem = true ∧
-    (nodeParam .Spacetime).mirror = true ∧
-    (nodeParam .Spacetime).leftWeight = 0 ∧
-    nodeParam .Deontic = nodeParam .Epistemic ∧
-    (nodeParam .Deontic).rightDiv = 2 ∧
-    nodeParam .Free = nodeParam .Boolean ∧
-    (nodeParam .Free).rightDiv = 0 := by
-  simp [nodeParam]
-
-/-- Spacetime is the ONLY mirrored named logic. -/
-theorem only_spacetime_is_mirrored (L : LogicTypes.LogicType)
-    (h : (nodeParam L).mirror = true) : L = .Spacetime := by
-  cases L <;> simp [nodeParam] at h ⊢
-
-/-- The bias is invariant across all named logics: one atom per commit,
-    whatever the logic. -/
-theorem bias_invariant (L : LogicTypes.LogicType) : (nodeParam L).bias = 1 :=
-  nodeParam_bias_one L
-
-/-- The denom is 10 everywhere except the Paraconsistent/Temporal pair (8). -/
-theorem denom_invariant_except_paraconsistent (L : LogicTypes.LogicType) :
-    (nodeParam L).denom = 10 ∨ (nodeParam L).denom = 8 := by
-  cases L <;> simp [nodeParam]
+    rw [Φ_of_nc_Node]
+    exact NodeCost.apply_le_satCap nc _ _ h
 
 -- ============================================================================
 -- Carrier morphism: NodeCost ↪ SplitOctonion (note 007, rescued)
@@ -419,7 +280,12 @@ theorem denom_invariant_except_paraconsistent (L : LogicTypes.LogicType) :
     satCap ↦ e₄, coupling ↦ e₅, mirror ↦ e₆, maxSem ↦ e₇ (fields cast to ℤ;
     booleans as 0/1). The component assignment order follows the archived
     file, which differs from note 007's table in e₄/e₅ — the algebraic
-    claim (injective embedding of cost geometry) is order-independent. -/
+    claim (injective embedding of cost geometry) is order-independent.
+
+    Anonymous by construction: this embeds the PARAMETER SPACE, not a
+    named-logic list; which points of it are realized is the interpretation
+    layer's question (`LogicTable`), and which points are FORCED by the
+    pentagonator constraints is the open derivation (research_questions). -/
 def toSO (c : NodeCost) : SplitOctonion :=
   { e0 := c.bias,
     e1 := c.leftWeight,
@@ -436,9 +302,10 @@ theorem bool_if_inj {b₁ b₂ : Bool}
     (h : (if b₁ then (1 : ℤ) else 0) = if b₂ then 1 else 0) : b₁ = b₂ := by
   cases b₁ <;> cases b₂ <;> simp_all (config := {decide := true})
 
-/-- `toSO` is injective: cost geometry embeds faithfully in the algebra,
-    so the corrected **8** distinct table rows are 8 distinct split-octonion
-    points (this is what makes the 006/007 erratum a theorem, not prose). -/
+/-- `toSO` is injective: cost geometry embeds faithfully in the algebra.
+    Distinct parameter points (hence the 8 table geometries of `LogicTable`,
+    whatever they are eventually named or derived to be) are distinct
+    split-octonion points. -/
 theorem toSO_injective (c₁ c₂ : NodeCost) (h : toSO c₁ = toSO c₂) : c₁ = c₂ := by
   cases c₁ with
   | mk lw1 rd1 b1 m1 co1 d1 ms1 sc1 =>

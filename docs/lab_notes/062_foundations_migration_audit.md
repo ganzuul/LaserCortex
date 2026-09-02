@@ -218,15 +218,25 @@ the repo's only Lean test now actually runs in CI), and the root module.
      mirror (`_cost.py` `class NodeCost`, `_logic_types.py`) is alive. The
      flagship mirror-inversion case; pairs with the terminology-debt row
      (059 §5): when the 7-Skeleton is renamed, its spine comes back too.
-     **Status 2026-09-02: RESCUED** as `foundations/LogicTypes.lean`
-     (enum only) + `foundations/Cost.lean` (table, Φ-family, contraction
-     theorems) — and the rescue *corrected* it: the collapse is
+     **Status 2026-09-02: RESCUED, then relayered after owner review.**
+     First pass put the named enum + table into `foundations/` — wrong
+     layer: the 15 names are a *reading aid* for what was meant to be an
+     anonymous derivation of realizable cost geometries from pentagonator
+     constraints (the raw result being hard to interpret at the time).
+     Final home: anonymous geometry in `foundations/Cost.lean` (NodeCost,
+     Φ_of_nc, regime theorems, carrier `toSO` + injectivity); named layer
+     in `LaserCortex/LogicTypes.lean` (enum) + `LaserCortex/LogicTable.lean`
+     (`nodeParam`, named corollaries, collapse, `eight_points_distinct`) —
+     both keep namespace `Cost` so historical `Cost.<name>` citations
+     resolve. If the derivation programme replaces the table, only
+     LogicTable changes; foundations does not. The rescue *corrected*
+     the content too: the collapse is
      **8 geometries, not 7** (the archived list omitted Free/Boolean,
      `rightDiv = 0` — the raw-size row that `Φ_eq_size_classical`'
      hypotheses actually single out; the `7 = 7 := rfl` count was
      vacuous). Errata appended to notes 006/007.
    - **(b) Develin–Sturmfels tropical package** — `TropicalTamariLattice`
-     + `TropicalCovector`: `RegularSubdivision`, `quantizedHeight*`,
+     - `TropicalCovector`: `RegularSubdivision`, `quantizedHeight*`,
      `frictionCells1D*`, `develin_sturmfels_quantized_correspondence`,
      `tubeCoord*`. Cited by notes 019/**021 ("forward proven")**/022,
      `TropicalTamariLattice_Gaps.md`, `tube_map_covector_design.md`.
@@ -275,6 +285,17 @@ the repo's only Lean test now actually runs in CI), and the root module.
 5. **Stale [P] is worse than missing [P]**: when a file cited as [P]
    stops building (or was never built), the claim's tag must move
    (owner call §5.3).
+6. **Foundations hosts anonymous structure, not interpretation**: named
+   readings (logic tables, physical labels, enumerations of
+   "observations") live in the research layer even when their *content*
+   is stable, so a future derivation can supersede the reading without
+   reopening the core (owner ruling, 2026-09-02, during §5.7(a) rescue).
+7. **Restored ≠ revived**: when archaeology brings code back, re-audit
+   the claims it carried. The rescue of (a) found the archived "7
+   distinct configurations" was scaffolded by a vacuous `7 = 7 := rfl`
+   and an enumeration lemma without an exhaustiveness clause — the true
+   count was 8. Dead code can be *wrong* code; git proves existence,
+   not truth.
 
 ## 7. Status of claims in this note
 

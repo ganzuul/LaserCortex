@@ -30,3 +30,21 @@ triality permuting the vector and half-spin roles? Door, not claim: the
 physical reading (rulings as species) needs its own falsification before
 any ledger row. [std anchors: Springer–Veldkamp; Lounesto, Octonions and
 Triality]
+
+Derivation door (owner framing, 2026-09-02, during the 062 §5.7(a)
+rescue): the 8 cost geometries of `Cost.nodeParam` (LogicTable.lean) are
+OBSERVED fixed points of the parameter space; the original intent behind
+the Hopf 7-Skeleton (note 006) was an ANONYMOUS derivation — which
+NodeCost rows are FORCED (realizable/stable) by the pentagonator
+coherence constraints (`Coherence.rotBridge`/`pentagonLoop` machinery,
+F2's skeleton data) without naming any logic first? Candidate sharp
+form: constraints on `nc` such that Φ_of_nc is contraction-invariant
+across ALL bracketings (not just one-sided paths) — does that cut the
+8-parameter space down to the raw-size line (rightDiv = 0, leftWeight =
+1, coupling = 0, ¬mirror, ¬maxSem, satCap = 0, bias = 1) plus isolated
+flag points? Falsifiable: exhibit a geometry stable under the coherence
+constraints that is NOT one of the 8 table rows (then the table is not
+exhaustive-as-physics), or derive exactly 8 (then the table becomes a
+corollary and the names become labels, which is what they are).
+Note 006's hard-to-interpret results at the time were consistent with
+the derivation existing but the INTERPRETATION layer being premature.

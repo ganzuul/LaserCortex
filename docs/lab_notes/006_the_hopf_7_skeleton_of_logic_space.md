@@ -110,8 +110,12 @@ The theorems this note cites (`Cost.nodeParam_bias_one`,
 `SplitOctonionLogic.distinctNodeCost_enumeration`, the Φ-family) were
 deleted from the live tree on July 6–7 while the Python mirror
 (`infra/_cortex/_cost.py`) survived — see 062 §4 "mirror inversion".
-They are restored at `LaserCortex/foundations/Cost.lean` (carrier: the
-live `foundations/Tamari.EMLTree`), and the restoration found a genuine
+They are restored in two layers (owner ruling: named interpretations do
+not live in foundations — the skeleton was always meant to be an
+*anonymous* derivation from pentagonator constraints): the anonymous
+geometry at `LaserCortex/foundations/Cost.lean` and the named reading at
+`LaserCortex/LogicTypes.lean` + `LaserCortex/LogicTable.lean` (carrier:
+the live `foundations/Tamari.EMLTree`). The restoration found a genuine
 counting error:
 
 - **The table collapses to 8 distinct rows, not 7.** The archived
