@@ -28,15 +28,10 @@ entanglement requires all three CD layers: SO (e₁,e₂), SQ (e₄), and C (e�
 is in the pure SO sector that only becomes accessible through the associator).
 -/
 import LaserCortex.foundations.Algebra
-import LaserCortex.SplitQuaternionClifford
-import LaserCortex.CayleyDickson
 import LaserCortex.Hopf
 import LaserCortex.foundations.Chu
 
 open Algebra
-open SplitQuaternionClifford
-open CayleyDickson
-open Hopf
 open Chu
 
 set_option linter.unusedVariables false
@@ -145,42 +140,33 @@ def isAnnihilationElement (x : SplitOctonion) : Prop :=
 
 /-- Basis vectors e₁, e₂, e₃, e₅, e₆, e₇ are antipode-odd. -/
 theorem e1_is_annihilation : isAnnihilationElement e1_vec := by
-  unfold isAnnihilationElement
-  apply SplitOctonion.ext_components <;> simp [antipode, e1_vec]
+  unfold isAnnihilationElement; native_decide
 
 theorem e2_is_annihilation : isAnnihilationElement e2_vec := by
-  unfold isAnnihilationElement
-  apply SplitOctonion.ext_components <;> simp [antipode, e2_vec]
+  unfold isAnnihilationElement; native_decide
 
 theorem e3_is_annihilation : isAnnihilationElement e3_vec := by
-  unfold isAnnihilationElement
-  apply SplitOctonion.ext_components <;> simp [antipode, e3_vec]
+  unfold isAnnihilationElement; native_decide
 
 theorem e5_is_annihilation : isAnnihilationElement e5_vec := by
-  unfold isAnnihilationElement
-  apply SplitOctonion.ext_components <;> simp [antipode, e5_vec]
+  unfold isAnnihilationElement; native_decide
 
 theorem e6_is_annihilation : isAnnihilationElement e6_vec := by
-  unfold isAnnihilationElement
-  apply SplitOctonion.ext_components <;> simp [antipode, e6_vec]
+  unfold isAnnihilationElement; native_decide
 
 theorem e7_is_annihilation : isAnnihilationElement e7_vec := by
-  unfold isAnnihilationElement
-  apply SplitOctonion.ext_components <;> simp [antipode, e7_vec]
+  unfold isAnnihilationElement; native_decide
 
 /-- e₀ is NOT an annihilation element (fixed by antipode). -/
 theorem e0_not_annihilation : ¬ isAnnihilationElement e0_vec := by
-  unfold isAnnihilationElement
-  intro h
-  have h0 : (antipode e0_vec).e0 = (-e0_vec).e0 := by rw [h]
-  simp [antipode, e0_vec] at h0
+  unfold isAnnihilationElement; native_decide
 
 /-- e₄ is NOT an annihilation element (fixed by antipode). -/
 theorem e4_not_annihilation : ¬ isAnnihilationElement e4_vec := by
   unfold isAnnihilationElement
   intro h
   have h0 : (antipode e4_vec).e4 = (-e4_vec).e4 := by rw [h]
-  simp [antipode, e4_vec] at h0
+  simp [antipode, split_neg, e4_vec] at h0
 
 /-- The annihilation subspace is closed under addition: the sum of two
     antipode-odd elements is antipode-odd. -/

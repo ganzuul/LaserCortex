@@ -30,9 +30,8 @@ the institutional closure algebra.
 -/
 
 import Mathlib.Data.Int.Basic
-import LaserCortex.SplitQuaternionClifford
+import LaserCortex.foundations.Algebra
 
-open SplitQuaternionClifford
 
 namespace BornTest
 

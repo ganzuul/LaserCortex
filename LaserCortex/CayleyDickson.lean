@@ -77,6 +77,10 @@ theorem split_complex_mul_comm (x y : SplitComplex) : x * y = y * x := by
 /-- The norm on ℂ': N(a + bω) = a² - b². -/
 def split_complex_norm (x : SplitComplex) : ℤ := x.a * x.a - x.b * x.b
 
+/-- The lost migration lemmas: notation ↔ explicit ops (see lab note 062). -/
+lemma add_eq_sca (a b : SplitComplex) : a + b = split_complex_add a b := rfl
+lemma mul_eq_scm (a b : SplitComplex) : a * b = split_complex_mul a b := rfl
+
 /-- Embedding of SplitComplex into SO: (a,b) ↦ a·e₀ + b·e₄. -/
 def emb (x : SplitComplex) : SplitOctonion :=
   { e0 := x.a, e1 := 0, e2 := 0, e3 := 0,
@@ -141,8 +145,7 @@ instance : Neg Quaternionℤ := ⟨quat_neg⟩
 instance : Mul Quaternionℤ := ⟨quat_mul⟩
 
 -- Helper lemmas: `x * y` uses the Mul instance; these expose the underlying def.
-lemma mul_eq_scm (x y : SplitComplex) : x * y = split_complex_mul x y := rfl
-lemma add_eq_sca (x y : SplitComplex) : x + y = split_complex_add x y := rfl
+-- (`add_eq_sca` / `mul_eq_scm` for SplitComplex live above `emb`, before use.)
 lemma quat_mul_eq_qm (x y : Quaternionℤ) : x * y = quat_mul x y := rfl
 
 @[ext]
@@ -165,10 +168,6 @@ def quat_norm (x : Quaternionℤ) : ℤ :=
 -- ============================================================================
 -- SECTION 3: CD Doubling — Split-quaternions → Split-octonions
 -- ============================================================================
-
-/-- Cayley-Dickson multiplication: (a,b)(c,d) = (ac - γ·d̄·b, d̄·a + b·c),
-    where γ = -1 for the compact case (all squares = -1) and γ = +1 for the
-    split case.  We instantiate with γ = +1 for the split case. -/
 
 /-- CD pairing γ = +1 for split case (ω² = +1). -/
 def gamma : ℤ := 1

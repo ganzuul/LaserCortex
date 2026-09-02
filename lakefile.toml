@@ -1,13 +1,9 @@
 name = "LaserCortex"
 version = "0.1.0"
-defaultTargets = ["lasercortex"]
+defaultTargets = ["LaserCortex"]
 
 [[lean_lib]]
 name = "LaserCortex"
-
-[[lean_exe]]
-name = "lasercortex"
-root = "Main"
 
 [[require]]
 name = "checkdecls"

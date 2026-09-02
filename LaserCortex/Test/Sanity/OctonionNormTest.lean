@@ -1,7 +1,6 @@
 import Mathlib
 import LaserCortex.foundations.Algebra
 
-open LaserCortex
 
 -- Quick sanity check: is N(xy) = N(x)N(y) plausibly true?
 -- Test on the famous e1 * e4 (associator-generating product)
