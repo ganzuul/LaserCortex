@@ -289,6 +289,200 @@ def Q44 : QuadraticForm ℤ (Fin 8 → ℤ) :=
 theorem octonion_norm_eq_Q44 (x : SplitOctonion) : octonion_norm x = Q44 ![x.e0, x.e1, x.e2, x.e3, x.e4, x.e5, x.e6, x.e7] := by
   simp [Q44, octonion_norm, QuadraticMap.proj_apply]
 
+-- (Norm compositionality `octonion_norm_mul` — `Q(xy) = Q(x)·Q(y)` — was
+--  ALREADY proven in the Cayley–Dickson section at the bottom of this file; a
+--  duplicate declaration added here was caught by the compiler's
+--  already-declared error and removed. The cone theorem below does not depend
+--  on it: the cancellation argument uses only the conjugate identities — the
+--  zero-divisor = null-cone equivalence turns out to need less than the full
+--  Hurwitz law.)
+
+/-- Standard octonion conjugation: negate all seven imaginary components.
+Distinct from `antipode` (the grade involution fixing e₀ and e₄, whose
+pairing form is the (5,3) one). -/
+def split_conj (x : SplitOctonion) : SplitOctonion :=
+  ⟨x.e0, -x.e1, -x.e2, -x.e3, -x.e4, -x.e5, -x.e6, -x.e7⟩
+
+/-- simp normal form for the lattice zero. -/
+@[simp] theorem zero_eq_split_zero : (0 : SplitOctonion) = split_zero := rfl
+
+theorem split_conj_zero : split_conj 0 = 0 := rfl
+
+theorem split_conj_involutive (x : SplitOctonion) : split_conj (split_conj x) = x := by
+  ext <;> simp [split_conj]
+
+theorem split_conj_ne_zero {x : SplitOctonion} (h : x ≠ 0) : split_conj x ≠ 0 := by
+  intro hc
+  exact h <| by rw [← split_conj_involutive x, hc, split_conj_zero]
+
+/-- `x·x̄ = x̄·x = Q(x)·1`: the conjugate is the adjugate. -/
+theorem split_oct_mul_split_conj (x : SplitOctonion) :
+    split_oct_mul x (split_conj x) = ⟨octonion_norm x, 0, 0, 0, 0, 0, 0, 0⟩ := by
+  ext <;> simp [split_conj, split_oct_mul, octonion_norm] <;> ring
+
+theorem split_conj_split_oct_mul (x : SplitOctonion) :
+    split_oct_mul (split_conj x) x = ⟨octonion_norm x, 0, 0, 0, 0, 0, 0, 0⟩ := by
+  ext <;> simp [split_conj, split_oct_mul, octonion_norm] <;> ring
+
+theorem split_oct_mul_zero (x : SplitOctonion) : split_oct_mul x 0 = 0 := by
+  ext <;> simp [split_oct_mul, split_zero] <;> ring
+
+theorem zero_split_oct_mul (x : SplitOctonion) : split_oct_mul 0 x = 0 := by
+  ext <;> simp [split_oct_mul, split_zero] <;> ring
+
+theorem split_one_split_oct_mul (x : SplitOctonion) : split_oct_mul split_one x = x := by
+  ext <;> simp [split_oct_mul, split_one] <;> ring
+
+theorem split_oct_mul_split_one (x : SplitOctonion) : split_oct_mul x split_one = x := by
+  ext <;> simp [split_oct_mul, split_one] <;> ring
+
+/-- **Conjugate cancellation**: `(x̄·x)·y = x̄·(x·y)` and the right-handed
+variant. The exact step where alternativity earns its keep: the associator is
+alternating [P], `x̄ = 2x.e0·1 − x`, and scalar multiples of `1` associate —
+so the conjugate cancels like a true inverse. -/
+theorem conj_mul_assoc_left (x y : SplitOctonion) :
+    split_oct_mul (split_conj x) (split_oct_mul x y)
+      = split_oct_mul (split_oct_mul (split_conj x) x) y := by
+  ext <;> simp [split_conj, split_oct_mul] <;> ring
+
+theorem mul_assoc_conj_right (x y : SplitOctonion) :
+    split_oct_mul (split_oct_mul y x) (split_conj x)
+      = split_oct_mul y (split_oct_mul x (split_conj x)) := by
+  ext <;> simp [split_conj, split_oct_mul] <;> ring
+
+theorem split_sub_self (x : SplitOctonion) : split_sub x x = 0 := by
+  ext <;> simp [split_sub, split_zero]
+
+/-- The same cancellation in `associator_tensor` form: `[x̄, x, y] = 0` and
+`[y, x, x̄] = 0` — documentation of where alternativity enters. -/
+theorem associator_conj_left (x y : SplitOctonion) :
+    associator_tensor (split_conj x) x y = 0 := by
+  show split_sub (split_oct_mul (split_oct_mul (split_conj x) x) y)
+      (split_oct_mul (split_conj x) (split_oct_mul x y)) = 0
+  rw [conj_mul_assoc_left x y, split_sub_self]
+
+theorem associator_conj_right (x y : SplitOctonion) :
+    associator_tensor y x (split_conj x) = 0 := by
+  show split_sub (split_oct_mul (split_oct_mul y x) (split_conj x))
+      (split_oct_mul y (split_oct_mul x (split_conj x))) = 0
+  rw [mul_assoc_conj_right x y, split_sub_self]
+
+/-- Product by a scalar along `e₀` row-wise: the components are `r · y.eᵢ`
+(both left and right, after `ring` normalization). -/
+private theorem scalar_mul_row (r : ℤ) (y : SplitOctonion) :
+    split_oct_mul ⟨r, 0, 0, 0, 0, 0, 0, 0⟩ y
+      = ⟨r * y.e0, r * y.e1, r * y.e2, r * y.e3,
+         r * y.e4, r * y.e5, r * y.e6, r * y.e7⟩ := by
+  ext <;> simp [split_oct_mul] <;> ring
+
+private theorem row_scalar_mul (r : ℤ) (y : SplitOctonion) :
+    split_oct_mul y ⟨r, 0, 0, 0, 0, 0, 0, 0⟩
+      = ⟨r * y.e0, r * y.e1, r * y.e2, r * y.e3,
+         r * y.e4, r * y.e5, r * y.e6, r * y.e7⟩ := by
+  ext <;> simp [split_oct_mul] <;> ring
+
+/-- If a scalar multiple of `y` vanishes and `y ≠ 0`, the scalar is zero
+(ℤ⁸ is torsion-free — componentwise `Int` case splits). Row-form core. -/
+private theorem eq_zero_of_row_eq_zero (r : ℤ) (y : SplitOctonion)
+    (h : (⟨r * y.e0, r * y.e1, r * y.e2, r * y.e3,
+          r * y.e4, r * y.e5, r * y.e6, r * y.e7⟩ : SplitOctonion) = 0)
+    (hy : y ≠ 0) : r = 0 := by
+  have e0 : r * y.e0 = 0 := congrArg SplitOctonion.e0 h
+  have e1 : r * y.e1 = 0 := congrArg SplitOctonion.e1 h
+  have e2 : r * y.e2 = 0 := congrArg SplitOctonion.e2 h
+  have e3 : r * y.e3 = 0 := congrArg SplitOctonion.e3 h
+  have e4 : r * y.e4 = 0 := congrArg SplitOctonion.e4 h
+  have e5 : r * y.e5 = 0 := congrArg SplitOctonion.e5 h
+  have e6 : r * y.e6 = 0 := congrArg SplitOctonion.e6 h
+  have e7 : r * y.e7 = 0 := congrArg SplitOctonion.e7 h
+  by_cases hr : r = 0
+  · exact hr
+  · exfalso
+    apply hy
+    apply SplitOctonion.ext_components
+    · rcases Int.eq_zero_or_eq_zero_of_mul_eq_zero e0 with h | h
+      · exact absurd h hr
+      · exact h
+    · rcases Int.eq_zero_or_eq_zero_of_mul_eq_zero e1 with h | h
+      · exact absurd h hr
+      · exact h
+    · rcases Int.eq_zero_or_eq_zero_of_mul_eq_zero e2 with h | h
+      · exact absurd h hr
+      · exact h
+    · rcases Int.eq_zero_or_eq_zero_of_mul_eq_zero e3 with h | h
+      · exact absurd h hr
+      · exact h
+    · rcases Int.eq_zero_or_eq_zero_of_mul_eq_zero e4 with h | h
+      · exact absurd h hr
+      · exact h
+    · rcases Int.eq_zero_or_eq_zero_of_mul_eq_zero e5 with h | h
+      · exact absurd h hr
+      · exact h
+    · rcases Int.eq_zero_or_eq_zero_of_mul_eq_zero e6 with h | h
+      · exact absurd h hr
+      · exact h
+    · rcases Int.eq_zero_or_eq_zero_of_mul_eq_zero e7 with h | h
+      · exact absurd h hr
+      · exact h
+
+private theorem eq_zero_of_scalar_mul_eq_zero (r : ℤ) (y : SplitOctonion)
+    (h : split_oct_mul ⟨r, 0, 0, 0, 0, 0, 0, 0⟩ y = 0) (hy : y ≠ 0) : r = 0 := by
+  rw [scalar_mul_row] at h
+  exact eq_zero_of_row_eq_zero r y h hy
+
+private theorem eq_zero_of_mul_scalar_eq_zero (r : ℤ) (y : SplitOctonion)
+    (h : split_oct_mul y ⟨r, 0, 0, 0, 0, 0, 0, 0⟩ = 0) (hy : y ≠ 0) : r = 0 := by
+  rw [row_scalar_mul] at h
+  exact eq_zero_of_row_eq_zero r y h hy
+
+/-- A nonzero element is a **zero divisor** iff it annihilates some nonzero
+element from one side or the other. -/
+def isZeroDivisor (x : SplitOctonion) : Prop :=
+  x ≠ 0 ∧ ∃ y, y ≠ 0 ∧
+    (split_oct_mul x y = 0 ∨ split_oct_mul y x = 0)
+
+/-- **Zero-divisor cone theorem.** A nonzero lattice element is a zero
+divisor **iff it lies on the (4,4) null cone** `Q₄₄ = 0`. This makes "the
+horizon is the null cone" a theorem: invertibility is exactly non-nullness
+(`x⁻¹ = x̄ / Q(x)`), and the quench-collapse interface channels
+(`lab_protocol`) are precisely the non-invertible directions. The proof is
+exactly the composition algebra argument: `x̄` cancels by conjugate
+cancellation (alternativity), so a non-null left factor is injective; and
+null `x` annihilates its own nonzero conjugate. -/
+theorem isZeroDivisor_iff_octonion_norm_eq_zero {x : SplitOctonion} (hx : x ≠ 0) :
+    isZeroDivisor x ↔ octonion_norm x = 0 := by
+  constructor
+  · rintro ⟨_, y, hy, hxy | hyx⟩
+    · have key : split_oct_mul ⟨octonion_norm x, 0, 0, 0, 0, 0, 0, 0⟩ y = 0 := by
+        rw [← split_conj_split_oct_mul x, ← conj_mul_assoc_left x y, hxy,
+          split_oct_mul_zero]
+      exact eq_zero_of_scalar_mul_eq_zero _ y key hy
+    · have key : split_oct_mul y ⟨octonion_norm x, 0, 0, 0, 0, 0, 0, 0⟩ = 0 := by
+        rw [← split_oct_mul_split_conj x, ← mul_assoc_conj_right x y, hyx,
+          zero_split_oct_mul]
+      exact eq_zero_of_mul_scalar_eq_zero _ y key hy
+  · intro hq
+    exact ⟨hx, split_conj x, split_conj_ne_zero hx, .inl <| by
+      rw [split_oct_mul_split_conj, hq]
+      exact rfl⟩
+
+/-- The unit is never a zero divisor: `IdentityZeroDivisor`
+(`ParadoxAxioms`/`Hopf` — the liar-paradox structure) cannot be instantiated
+by the algebra's identity (`Q₄₄(1) = 1`). The paradox lives on the logic
+tree, not in the composition algebra. -/
+theorem not_isZeroDivisor_split_one : ¬ isZeroDivisor split_one := by
+  rintro ⟨_, y, hy, h | h⟩
+  · rw [split_one_split_oct_mul] at h
+    exact hy h
+  · rw [split_oct_mul_split_one] at h
+    exact hy h
+
+/-- The `lab_protocol` null-cone witness is a zero divisor, checked by
+`decide` through the cone theorem: `e₀ + e₄` is null (`Q = 1 − 1 = 0`)
+since `e₄² = +1`, hence annihilates `e₀ − e₄ = (e₀ + e₄)̄`. -/
+example : isZeroDivisor (e0_vec + e4_vec) :=
+  (isZeroDivisor_iff_octonion_norm_eq_zero (by decide)).2 (by decide)
+
 -- ============================================================================
 -- Strut weight
 -- ============================================================================
