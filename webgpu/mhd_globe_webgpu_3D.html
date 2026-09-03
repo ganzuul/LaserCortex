@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05d</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05e</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -733,45 +733,7 @@ async function init() {
   dispatch1("init_drive");
   for (let b = 0; b < 20; b++) step();   // diagnostic burst: multi-step compute check
   console.log("[LaserCortex] burst t=" + simTime.toFixed(3));
-  // data->renderer round-trip: render to an offscreen texture, read back on
-  // CPU, checksum; then step 20 more and do it again. If the checksums
-  // differ, the computed data IS reaching the renderer (definitive answer).
-  const texSz = 32;
-  const offTex = device.createTexture({ size: [texSz, texSz], format: fmt,
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
-  const chkBuf = device.createBuffer({ size: texSz * texSz * 4,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
-  const cam0 = updateCamera();
-  const ru0 = new ArrayBuffer(128);
-  const g0 = new Float32Array(ru0);
-  g0[0]=cam0.eye[0]; g0[1]=cam0.eye[1]; g0[2]=cam0.eye[2]; g0[3]=1;
-  g0[4]=cam0.fwd[0]; g0[5]=cam0.fwd[1]; g0[6]=cam0.fwd[2]; g0[7]=1;
-  g0[8]=cam0.right[0]; g0[9]=cam0.right[1]; g0[10]=cam0.right[2]; g0[11]=1;
-  g0[12]=cam0.up[0]; g0[13]=cam0.up[1]; g0[14]=cam0.up[2]; g0[15]=1;
-  g0[16]=Math.tan(0.45); g0[17]=1; g0[18]=0.30; g0[19]=15; g0[20]=-0.02;
-  g0[21]=6/0.9; g0[22]=0; g0[23]=winR0; g0[24]=winZ0; g0[25]=winSigma;
-  g0[26]=exposure; g0[27]=2.2; g0[28]=0; g0[29]=rDome; g0[30]=axisIdx; g0[31]=mirror?1:0;
-  async function checksumRender(tag) {
-    device.queue.writeBuffer(ruBuf, 0, ru0);
-    const enc = device.createCommandEncoder();
-    const pass = enc.beginRenderPass({ colorAttachments: [{ view: offTex.createView(),
-      clearValue: { r: 0, g: 0, b: 0, a: 1 }, loadOp: "clear", storeOp: "store" }] });
-    pass.setPipeline(rPipeline); pass.setBindGroup(0, cBindGroup); pass.draw(3); pass.end();
-    enc.copyTextureToBuffer({ texture: offTex }, { buffer: chkBuf, bytesPerRow: 256 },
-      [texSz, texSz]);
-    device.queue.submit([enc.finish()]);
-    await chkBuf.mapAsync(GPUMapMode.READ);
-    const arr = new Uint8Array(chkBuf.getMappedRange().slice(0));
-    chkBuf.unmap();
-    let s2 = 0;
-    for (let i = 0; i < arr.length; i++) s2 = (s2 + arr[i] * (i % 251 + 1)) % 2147483647;
-    console.log("[LaserCortex] render-checksum " + tag + " = " + s2);
-  }
-  await checksumRender("pre");      // current (burst-20) field
-  for (let b = 0; b < 20; b++) step();
-  console.log("[LaserCortex] burst2 t=" + simTime.toFixed(3));
-  await checksumRender("post");     // after 20 MORE steps
-    requestAnimationFrame(loop);
+  requestAnimationFrame(loop);
 }
 
 function dispatch1(ep) {
