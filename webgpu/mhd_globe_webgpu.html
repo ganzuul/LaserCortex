@@ -60,7 +60,7 @@
     <label style="font-size:0.75rem">window r0 <input type="range" id="wr0S" min="-2.5" max="2.5" step="0.05" value="0" style="width:90px"></label>
     <label style="font-size:0.75rem">window z0 <input type="range" id="wz0S" min="-2.5" max="2.5" step="0.05" value="0" style="width:90px"></label>
     <label style="font-size:0.75rem">window σ <input type="range" id="wsigmaS" min="0.4" max="1.8" step="0.05" value="1.0" style="width:80px"></label>
-    <label style="font-size:0.75rem">dome radius <input type="range" id="domeS" min="1.2" max="2.8" step="0.05" value="1.9" style="width:80px"></label>
+    <label style="font-size:0.75rem">dome radius <input type="range" id="domeS" min="0.55" max="2.8" step="0.05" value="1.9" style="width:80px"></label>
     <label style="font-size:0.75rem">line levels <input type="range" id="levelsS" min="3" max="10" step="1" value="6" style="width:70px"></label>
     <label style="font-size:0.75rem">glow lift <input type="range" id="liftS" min="0" max="0.6" step="0.01" value="0.05" style="width:70px"></label>
     <label style="font-size:0.75rem">exposure EV <input type="range" id="expS" min="-2.0" max="3.0" step="0.1" value="0.0" style="width:70px"></label>
@@ -411,6 +411,7 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
     let tmax = length(ru.eye.xyz) + 2.6;
     var marchEnd = tmax;
     if (tDome > 0.0) { marchEnd = min(marchEnd, tDome - 0.012); }
+    else { marchEnd = 0.0; }   // ray misses the glass ball: nothing inside
     for (var s = 0; s < steps; s = s + 1) {
         let t = (f32(s) + 0.5) / f32(steps) * tmax;
         if (t > marchEnd) { break; }
@@ -421,6 +422,7 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
         let rr = rrOf(p);
         let ax = axOf(p);
         let rho2 = rr * rr + ax * ax;
+        if (rho2 > ru.rDome * ru.rDome) { break; }   // the domain IS the ball
         let win = exp(-rho2 / 2.645);
         let psiv = psiAt(rr, ax);
         let jv = jAt(rr, ax);
@@ -447,7 +449,8 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
         let q = ro + rd * ti;
         let rr = rrOf(q);
         let ax = axOf(q);
-        if (rr > ru.rDome) { ok = false; }
+        let rho = sqrt(rr * rr + ax * ax);
+        if (rho > ru.rDome) { ok = false; }
         u4[k] = (psiAt(rr, ax) - ru.levelMin) * ru.levelInv;
         ok4[k] = ok;
     }
