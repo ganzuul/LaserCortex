@@ -1,86 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LaserCortex — MHD Plasma Globe (WebGPU)</title>
-<style>
-  :root{--bg:#05070d;--card:#0f1420;--border:#1e293b;--accent:#38bdf8;--text:#e5eefb;--muted:#8aa;--ok:#22c55e;--warn:#eab308;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
-  .bar{width:100%;max-width:960px;padding:12px 20px 8px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);gap:10px;}
-  .bar h1{font-size:1.15rem;margin:0;color:var(--accent);}
-  .bar .sub{font-size:0.78rem;color:var(--muted);}
-  .wrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 0;width:100%;max-width:960px;}
-  canvas{width:min(88vw,700px);height:min(88vw,700px);border-radius:10px;background:#000;border:1px solid var(--border);touch-action:none;cursor:grab;}
-  canvas:active{cursor:grabbing;}
-  .panel{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:min(88vw,700px);}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
-  .card .t{font-size:0.66rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);}
-  .card .v{font-size:1.05rem;font-weight:700;font-family:monospace;color:var(--ok);}
-  .card .v.warn{color:var(--warn);}
-  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:min(88vw,700px);}
-  button{background:#1e293b;color:var(--text);border:1px solid #334155;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:0.82rem;}
-  button.primary{background:#0284c7;border-color:#38bdf8;}
-  select,input[type=range]{background:#0f172a;color:var(--text);border:1px solid var(--border);padding:5px 8px;border-radius:6px;font-size:0.8rem;}
-  .hint{font-size:0.75rem;color:var(--muted);max-width:700px;line-height:1.5;}
-  .hint b{color:var(--accent);}
-  #gpuStatus{display:none;color:var(--warn);font-size:0.8rem;max-width:700px;}
-</style>
-</head>
-<body>
-<div class="bar">
-  <div><h1>LaserCortex MHD Plasma Globe</h1>
-    <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 2025-09-04c</span>
-</div>
-<div class="wrap">
-  <canvas id="view" width="700" height="700"></canvas>
-  <div class="panel">
-    <div class="card"><div class="t">sim time t</div><div class="v" id="mTime">0.000</div></div>
-    <div class="card"><div class="t">max |j| (current)</div><div class="v" id="mJ">0.00</div></div>
-    <div class="card" style="grid-column: span 2;"><div class="t">interrogation</div><div class="v" style="font-size:0.8rem" id="mDiag">—</div></div>
-    <div class="card"><div class="t">E_mag</div><div class="v" id="mEm">0.000</div></div>
-    <div class="card"><div class="t">E_kin</div><div class="v" id="mEk">0.000</div></div>
-  </div>
-  <div class="controls">
-    <button id="playBtn" class="primary">Pause</button>
-    <button id="stepBtn">Step</button>
-    <button id="resetBtn">Reset</button>
-    <label style="font-size:0.75rem">steps/frame
-      <select id="speedSel"><option>1</option><option selected>4</option><option>10</option><option>30</option></select>
-    </label>
-    <label style="font-size:0.75rem">AC drive amp
-      <input type="range" id="driveSlider" min="0" max="2.0" step="0.05" value="1.2" style="width:120px">
-    </label>
-    <label style="font-size:0.75rem">AC period (sim t)
-      <select id="driveTsel"><option>0.25</option><option selected>0.5</option><option>1</option><option>2</option><option>4</option></select>
-    </label>
-  </div>
-  <div class="controls">
-    <label style="font-size:0.75rem">window r0 <input type="range" id="wr0S" min="-2.5" max="2.5" step="0.05" value="0" style="width:90px"></label>
-    <label style="font-size:0.75rem">window z0 <input type="range" id="wz0S" min="-2.5" max="2.5" step="0.05" value="0" style="width:90px"></label>
-    <label style="font-size:0.75rem">window σ <input type="range" id="wsigmaS" min="0.4" max="3.0" step="0.05" value="3.0" style="width:80px"></label>
-    <label style="font-size:0.75rem">dome radius <input type="range" id="domeS" min="0.55" max="2.8" step="0.05" value="1.9" style="width:80px"></label>
-    <label style="font-size:0.75rem">line levels <input type="range" id="levelsS" min="3" max="10" step="1" value="6" style="width:70px"></label>
-    <label style="font-size:0.75rem">exposure EV <input type="range" id="expS" min="-2.0" max="3.0" step="0.1" value="0.0" style="width:70px"></label>
-    <label style="font-size:0.75rem">seed noise <input type="range" id="noiseS" min="0" max="0.12" step="0.005" value="0.03" style="width:70px"></label>
-    <label style="font-size:0.75rem">axis
-      <select id="axisSel"><option value="0">X</option><option value="1" selected>Y</option><option value="2">Z</option></select>
-    </label>
-    <label style="font-size:0.75rem"><input type="checkbox" id="mirrorCb"> mirror</label>
-    <label style="font-size:0.75rem"><input type="checkbox" id="spinCb"> spin</label>
-  </div>
-  <div class="hint">
-    <b>Drag</b> orbit · <b>scroll</b> zoom. Gold filaments = magnetic flux surfaces (ψ bands);
-    the globe's glow = |j| current density; the motion is AC-driven reduced-MHD
-    (flux freezing + current response). Raise steps/frame for extended observation.
-    The solver mirrors the validated Python mirror (reduced_mhd.py / mhd_globe_dipole.py):
-    stencil brackets + Jacobi Poisson (∇²φ = -ω), RK2, ψ-form (div-free by construction).
-  </div>
-  <div id="gpuStatus"></div>
-</div>
 
-<script type="module">
 const N = 64;           // radial (r) and axial (z) resolution
 const NK = 32;          // azimuthal (phi) planes  -- Cost3D contract: 64x64x32, J=40
 const TOT = N * N * NK;
@@ -265,7 +183,7 @@ fn br3(ax : f32, ay : f32, az : f32, bx : f32, by : f32, bz : f32) -> f32 {
     return (ax * by - ay * bx) + (ay * bz - az * by) + (az * bx - ax * bz);
 }
 
-@compute @workgroup_size(8,8,4)
+@compute @workgroup_size(8,8,8)
 fn init_drive(@builtin(global_invocation_id) id : vec3<u32>) {
     if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
     let i = id.x; let j = id.y; let k = id.z;
@@ -279,13 +197,13 @@ fn init_drive(@builtin(global_invocation_id) id : vec3<u32>) {
         * (1.0 + 0.3 * sin(ph));
 }
 
-@compute @workgroup_size(8,8,4)
+@compute @workgroup_size(8,8,8)
 fn lapj(@builtin(global_invocation_id) id : vec3<u32>) {
     if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
     jbuf[ix(id.x,id.y,id.z)] = -lap3Psi(id.x, id.y, id.z, cu.which);
 }
 
-@compute @workgroup_size(8,8,4)
+@compute @workgroup_size(8,8,8)
 fn poisson_a2b(@builtin(global_invocation_id) id : vec3<u32>) {
     if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
     let i = id.x; let j = id.y; let k = id.z;
@@ -296,7 +214,7 @@ fn poisson_a2b(@builtin(global_invocation_id) id : vec3<u32>) {
              + phi_a[ix(i,j,(k+1u)%q)] + phi_a[ix(i,j,(k+q-1u)%q)];
     phi_b[ix(i,j,k)] = (taps + omv * DEL2) / 6.0;
 }
-@compute @workgroup_size(8,8,4)
+@compute @workgroup_size(8,8,8)
 fn poisson_b2a(@builtin(global_invocation_id) id : vec3<u32>) {
     if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
     let i = id.x; let j = id.y; let k = id.z;
@@ -308,7 +226,7 @@ fn poisson_b2a(@builtin(global_invocation_id) id : vec3<u32>) {
     phi_a[ix(i,j,k)] = (taps + omv * DEL2) / 6.0;
 }
 
-@compute @workgroup_size(8,8,4)
+@compute @workgroup_size(8,8,8)
 fn mid_rhs(@builtin(global_invocation_id) id : vec3<u32>) {
     if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
     let i = id.x; let j = id.y; let k = id.z;
@@ -327,7 +245,7 @@ fn mid_rhs(@builtin(global_invocation_id) id : vec3<u32>) {
     om_b[ix(i,j,k)]  = om_a[ix(i,j,k)]  + 0.5 * cu.dt * dom;
 }
 
-@compute @workgroup_size(8,8,4)
+@compute @workgroup_size(8,8,8)
 fn adv_rhs(@builtin(global_invocation_id) id : vec3<u32>) {
     if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
     let i = id.x; let j = id.y; let k = id.z;
@@ -922,6 +840,3 @@ document.getElementById("axisSel").onchange = (e) => { axisIdx = parseInt(e.targ
 document.getElementById("mirrorCb").onchange = (e) => { mirror = e.target.checked; };
 
 init().catch((e) => fatal("init failed: " + e));
-</script>
-</body>
-</html>
