@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub">stencil solver · ψ-form · AC-driven dipole · extended observation</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 2025-09-03d</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -50,7 +50,7 @@
       <select id="speedSel"><option>1</option><option selected>4</option><option>10</option><option>30</option></select>
     </label>
     <label style="font-size:0.75rem">AC drive amp
-      <input type="range" id="driveSlider" min="0" max="2.0" step="0.05" value="0.8" style="width:120px">
+      <input type="range" id="driveSlider" min="0" max="2.0" step="0.05" value="1.2" style="width:120px">
     </label>
     <label style="font-size:0.75rem">AC period (sim t)
       <select id="driveTsel"><option>0.25</option><option selected>0.5</option><option>1</option><option>2</option><option>4</option></select>
@@ -59,7 +59,7 @@
   <div class="controls">
     <label style="font-size:0.75rem">window r0 <input type="range" id="wr0S" min="-2.5" max="2.5" step="0.05" value="0" style="width:90px"></label>
     <label style="font-size:0.75rem">window z0 <input type="range" id="wz0S" min="-2.5" max="2.5" step="0.05" value="0" style="width:90px"></label>
-    <label style="font-size:0.75rem">window σ <input type="range" id="wsigmaS" min="0.4" max="1.8" step="0.05" value="1.0" style="width:80px"></label>
+    <label style="font-size:0.75rem">window σ <input type="range" id="wsigmaS" min="0.4" max="3.0" step="0.05" value="3.0" style="width:80px"></label>
     <label style="font-size:0.75rem">dome radius <input type="range" id="domeS" min="0.55" max="2.8" step="0.05" value="1.9" style="width:80px"></label>
     <label style="font-size:0.75rem">line levels <input type="range" id="levelsS" min="3" max="10" step="1" value="6" style="width:70px"></label>
     <label style="font-size:0.75rem">glow lift <input type="range" id="liftS" min="0" max="0.6" step="0.01" value="0.05" style="width:70px"></label>
@@ -423,7 +423,8 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
         let ax = axOf(p);
         let rho2 = rr * rr + ax * ax;
         if (rho2 > ru.rDome * ru.rDome) { break; }   // the domain IS the ball
-        let win = exp(-rho2 / 2.645);
+        // boundary-only fade: full glow inside, soft rolloff at the glass
+        let win = clamp((ru.rDome * ru.rDome - rho2) / (ru.rDome * 0.3), 0.0, 1.0);
         let psiv = psiAt(rr, ax);
         let jv = jAt(rr, ax);
         let u = (psiv - ru.levelMin) * ru.levelInv;
@@ -485,10 +486,10 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
         // haze from all angles + fresnel rim; scatters a hint of the interior
         let pd = ro + rd * tDome;
         let nd = normalize(pd);
-        let rim = pow(1.0 - abs(dot(nd, -rd)), 3.0) * 0.55;
+        let rim = pow(1.0 - abs(dot(nd, -rd)), 3.0) * 0.11;
         composite = composite
             + vec3<f32>(0.42, 0.58, 0.92) * rim
-            + vec3<f32>(0.16, 0.22, 0.34) * 0.05;
+            + vec3<f32>(0.16, 0.22, 0.34) * 0.01;
     }
     // ACES filmic tone map + display gamma 2.2 (reference implementation)
     let cAces = vec3<f32>(
@@ -510,8 +511,9 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
 let device, ctx, cModule, rPipeline, layout, pipelineLayout;
 let cBufs = {}, rbBufs = {}, computePipes = {};
 let cuBuf, ruBuf, cBindGroup;
-let simTime = 0, running = true, driveAmp = 0.8, driveT = 0.5, stepsPerFrame = 4;
-let winR0 = 0.0, winZ0 = 0.0, winSigma = 1.0;
+const BUILD = "2025-09-03d";   // visible build tag: hard-refresh must show this in the badge
+let simTime = 0, running = true, driveAmp = 1.2, driveT = 0.5, stepsPerFrame = 4;
+let winR0 = 0.0, winZ0 = 0.0, winSigma = 3.0;
 let kLevels = 6, glowLift = 0.03, exposure = 0.0, rDome = 1.9, noiseAmp = 0.03;
 let axisIdx = 1, mirror = false;
 let yaw = 0.8, pitch = 0.35, dist = 3.2, autoRotate = false;   // turntable OFF by default
@@ -774,7 +776,9 @@ async function loop(now) {
     if (!announced) {
       announced = true;
       console.log("[LaserCortex] RUNNING t=" + simTime.toFixed(3)
-        + " maxJ=" + maxJ.toExponential(2));
+        + " maxJ=" + maxJ.toExponential(2)
+        + " render{exposure=" + exposure + " jExp=" + jExp.toFixed(2)
+        + " wSigma=" + winSigma + " rDome=" + rDome + " lift=" + glowLift + "}");
     }
   } catch (e) { fatal("step failed: " + e); return; }
 
