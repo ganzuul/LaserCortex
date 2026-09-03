@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 2025-09-03d</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 2025-09-04a</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -343,10 +343,11 @@ fn bilin_psi(sel : f32, u : f32, v : f32) -> f32 {
     let x1 = min(x0 + 1u, n - 1u); let y1 = min(y0 + 1u, n - 1u);
     let tx = fx - f32(x0); let ty = fy - f32(y0);
     let useA = sel < 0.5;
-    let v00 = select(psi_b[y0 * u32(NX) + x0], psi_a[y0 * u32(NX) + x0], useA);
-    let v10 = select(psi_b[y0 * u32(NX) + x1], psi_a[y0 * u32(NX) + x1], useA);
-    let v01 = select(psi_b[y1 * u32(NX) + x0], psi_a[y1 * u32(NX) + x0], useA);
-    let v11 = select(psi_b[y1 * u32(NX) + x1], psi_a[y1 * u32(NX) + x1], useA);
+    // buffer is R-major (psi[i*N+j]: row = radial R index, col = axial Z index)
+    let v00 = select(psi_b[x0 * u32(NX) + y0], psi_a[x0 * u32(NX) + y0], useA);
+    let v10 = select(psi_b[x1 * u32(NX) + y0], psi_a[x1 * u32(NX) + y0], useA);
+    let v01 = select(psi_b[x0 * u32(NX) + y1], psi_a[x0 * u32(NX) + y1], useA);
+    let v11 = select(psi_b[x1 * u32(NX) + y1], psi_a[x1 * u32(NX) + y1], useA);
     return mix(mix(v00, v10, tx), mix(v01, v11, tx), ty);
 }
 fn jAt(r : f32, z : f32) -> f32 {
@@ -356,8 +357,8 @@ fn jAt(r : f32, z : f32) -> f32 {
     let x0 = u32(floor(fx)); let y0 = u32(floor(fy));
     let x1 = min(x0 + 1u, n - 1u); let y1 = min(y0 + 1u, n - 1u);
     let tx = fx - f32(x0); let ty = fy - f32(y0);
-    let v00 = jbuf[y0 * u32(NX) + x0]; let v10 = jbuf[y0 * u32(NX) + x1];
-    let v01 = jbuf[y1 * u32(NX) + x0]; let v11 = jbuf[y1 * u32(NX) + x1];
+    let v00 = jbuf[x0 * u32(NX) + y0]; let v10 = jbuf[x1 * u32(NX) + y0];
+    let v01 = jbuf[x0 * u32(NX) + y1]; let v11 = jbuf[x1 * u32(NX) + y1];
     return abs(mix(mix(v00, v10, tx), mix(v01, v11, tx), ty)) * winEnv(r, z);
 }
 
@@ -399,18 +400,20 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
     }
     let cD = dot(ro, ro) - ru.rDome * ru.rDome;
     let discD = b * b - cD;
-    var tDome = -1.0;
+    var tDome = -1.0;      // entry hit (the visible glass surface)
+    var tDome1 = -1.0;     // exit hit (bounds the interior march)
     if (discD > 0.0) {
         let sq = sqrt(discD);
         let t0 = -b - sq; let t1 = -b + sq;
         if (t0 > 0.0) { tDome = t0; } else if (t1 > 0.0) { tDome = t1; }
+        if (t1 > 0.0) { tDome1 = t1; }
     }
     var accStream = vec3<f32>(0.0);
     var accLine = 0.0;
     let steps = 96;
     let tmax = length(ru.eye.xyz) + 2.6;
     var marchEnd = tmax;
-    if (tDome > 0.0) { marchEnd = min(marchEnd, tDome - 0.012); }
+    if (tDome1 > 0.0) { marchEnd = min(marchEnd, tDome1 - 0.012); }
     else { marchEnd = 0.0; }   // ray misses the glass ball: nothing inside
     for (var s = 0; s < steps; s = s + 1) {
         let t = (f32(s) + 0.5) / f32(steps) * tmax;
@@ -422,7 +425,8 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
         let rr = rrOf(p);
         let ax = axOf(p);
         let rho2 = rr * rr + ax * ax;
-        if (rho2 > ru.rDome * ru.rDome) { break; }   // the domain IS the ball
+        // no break here: samples outside the ball are zeroed by the boundary
+        // `win` fade; the march is bounded by marchEnd (dome entry) anyway.
         // boundary-only fade: full glow inside, soft rolloff at the glass
         let win = clamp((ru.rDome * ru.rDome - rho2) / (ru.rDome * 0.3), 0.0, 1.0);
         let psiv = psiAt(rr, ax);
@@ -430,7 +434,7 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
         let u = (psiv - ru.levelMin) * ru.levelInv;
         let jn = clamp(jv / max(ru.jmax, 1e-9), 0.0, 20.0);
         let jt = jn / (jn + 1.0);
-        accStream += heatColor(jt * 1.15) * jt * jt * win * (1.0 - t / tmax * 0.30);
+        accStream += heatColor(jt * 1.15) * jt * jt * jt * win * (1.0 - t / tmax * 0.30) * 0.04;
     }
     // PASS 2: width-less AA field lines on 4 meridian planes, clipped at dome
     var u4 = array<f32, 4>(0.0, 0.0, 0.0, 0.0);
@@ -529,7 +533,7 @@ function initField(psi, om) {
       const R = (i / N) * 2 * Math.PI - Math.PI;
       const rho2 = R * R + Z * Z, a = 0.5, sig = 1.6;
       let v = (R * R) / Math.pow(rho2 + a * a, 1.5) * Math.exp(-rho2 / (2 * sig * sig));
-      v += 0.2 * Math.exp(-rho2 / (2 * 0.81)) * Math.sin(2 * R);
+      v += 0.35 * Math.exp(-rho2 / (2 * 0.81)) * Math.sin(2 * R);
       psi[i * N + j] = v;
       om[i * N + j] = 0;
     }
@@ -732,8 +736,10 @@ async function meters() {
   const ph = new Float32Array(rbBufs.ph.getMappedRange().slice(0));
   rbBufs.j.unmap(); rbBufs.p.unmap(); rbBufs.ph.unmap();
   let maxJ = 0, em = 0, ek = 0, pMin = Infinity, pMax = -Infinity;
+  const absJ = new Float32Array(TOT);
   for (let i = 0; i < TOT; i++) {
     const a = Math.abs(j[i]); if (a > maxJ) maxJ = a;
+    absJ[i] = a;
     if (p[i] < pMin) pMin = p[i];
     if (p[i] > pMax) pMax = p[i];
   }
@@ -759,6 +765,7 @@ async function meters() {
     "j-peak (r,z): (" + jr.toFixed(2) + ", " + jz.toFixed(2) + ")  \u03a6=" + (pMax - pMin).toFixed(3);
   document.getElementById("mEm").innerText = em.toFixed(4);
   document.getElementById("mEk").innerText = ek.toFixed(4);
+  meters.absJ = absJ;
   return maxJ;
 }
 
@@ -772,7 +779,11 @@ async function loop(now) {
     writeCu(0, simTime, phiSol);
     dispatch1("lapj");
     maxJ = await meters();
-    jExp = jExp * 0.93 + maxJ * 0.07;   // eye-like exposure adaptation
+    // eye-like exposure: EMA of the 95th-percentile |j| (robust scale;
+    // the peak is often an occluded single cell, not what the eye sees)
+    const jj = Array.from(meters.absJ || [], Math.abs).sort((a, b) => a - b);
+    const j95 = jj.length ? jj[Math.floor(jj.length * 0.95)] : maxJ;
+    jExp = jExp * 0.93 + j95 * 0.07;
     if (!announced) {
       announced = true;
       console.log("[LaserCortex] RUNNING t=" + simTime.toFixed(3)
@@ -790,7 +801,7 @@ async function loop(now) {
   f[8]=cam.right[0]; f[9]=cam.right[1]; f[10]=cam.right[2]; f[11]=1;
   f[12]=cam.up[0]; f[13]=cam.up[1]; f[14]=cam.up[2]; f[15]=1;
   f[16]=Math.tan(0.45); f[17]=canvas.width/canvas.height;
-  f[18]=0.45; f[19]=jExp;
+  f[18]=0.30; f[19]=jExp;
   f[20]=levelMin; f[21]=levelInv; f[22]=0;
   f[23]=winR0; f[24]=winZ0; f[25]=winSigma;
   f[26]=exposure; f[27]=2.2; f[28]=glowLift; f[29]=rDome; f[30]=axisIdx; f[31]=mirror?1:0;
