@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05g</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05h</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -110,7 +110,9 @@ function browserHint() {
 
 const WGSL = `
 struct CUniforms {
-    dims    : vec3<u32>,
+    nx      : u32,
+    ny      : u32,
+    nz      : u32,
     dt      : f32,
     time    : f32,
     driveAmp: f32,
@@ -162,79 +164,79 @@ const DEL2  : f32 = 0.009638285185425472;
 const DELP  : f32 = 0.19634954084936207;     // 2*pi/32
 const DELP2 : f32 = 0.038553140741701886;
 
-fn ix(i : u32, j : u32, k : u32) -> u32 { return (k * cu.dims.y + j) * cu.dims.x + i; }
+fn ix(i : u32, j : u32, k : u32) -> u32 { return (k * cu.ny + j) * cu.nx + i; }
 
 // ---- 3-D stencil helpers (storage arrays cannot be function parameters, so
 //      these read the module-scope buffers via scalar selects; sel: 0 = _a,
 //      1 = _b; phi is selected by cu.phiSrc) ----
 fn dxPsi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.x; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
+    let n = cu.nx; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
     let a = select(psi_b[ix(xm,j,k)], psi_a[ix(xm,j,k)], sel == 0u);
     let b = select(psi_b[ix(xp,j,k)], psi_a[ix(xp,j,k)], sel == 0u);
     return (b - a) / (2.0 * DEL);
 }
 fn dyPsi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.y; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
+    let n = cu.ny; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
     let a = select(psi_b[ix(i,ym,k)], psi_a[ix(i,ym,k)], sel == 0u);
     let b = select(psi_b[ix(i,yp,k)], psi_a[ix(i,yp,k)], sel == 0u);
     return (b - a) / (2.0 * DEL);
 }
 fn dzPsi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.z; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
+    let n = cu.nz; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
     let a = select(psi_b[ix(i,j,km)], psi_a[ix(i,j,km)], sel == 0u);
     let b = select(psi_b[ix(i,j,kp)], psi_a[ix(i,j,kp)], sel == 0u);
     return (b - a) / (2.0 * DELP);
 }
 fn dxOm(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.x; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
+    let n = cu.nx; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
     let a = select(om_b[ix(xm,j,k)], om_a[ix(xm,j,k)], sel == 0u);
     let b = select(om_b[ix(xp,j,k)], om_a[ix(xp,j,k)], sel == 0u);
     return (b - a) / (2.0 * DEL);
 }
 fn dyOm(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.y; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
+    let n = cu.ny; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
     let a = select(om_b[ix(i,ym,k)], om_a[ix(i,ym,k)], sel == 0u);
     let b = select(om_b[ix(i,yp,k)], om_a[ix(i,yp,k)], sel == 0u);
     return (b - a) / (2.0 * DEL);
 }
 fn dzOm(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.z; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
+    let n = cu.nz; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
     let a = select(om_b[ix(i,j,km)], om_a[ix(i,j,km)], sel == 0u);
     let b = select(om_b[ix(i,j,kp)], om_a[ix(i,j,kp)], sel == 0u);
     return (b - a) / (2.0 * DELP);
 }
 fn dxPh(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.x; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
+    let n = cu.nx; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
     let a = select(phi_b[ix(xm,j,k)], phi_a[ix(xm,j,k)], sel == 0u);
     let b = select(phi_b[ix(xp,j,k)], phi_a[ix(xp,j,k)], sel == 0u);
     return (b - a) / (2.0 * DEL);
 }
 fn dyPh(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.y; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
+    let n = cu.ny; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
     let a = select(phi_b[ix(i,ym,k)], phi_a[ix(i,ym,k)], sel == 0u);
     let b = select(phi_b[ix(i,yp,k)], phi_a[ix(i,yp,k)], sel == 0u);
     return (b - a) / (2.0 * DEL);
 }
 fn dzPh(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.z; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
+    let n = cu.nz; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
     let a = select(phi_b[ix(i,j,km)], phi_a[ix(i,j,km)], sel == 0u);
     let b = select(phi_b[ix(i,j,kp)], phi_a[ix(i,j,kp)], sel == 0u);
     return (b - a) / (2.0 * DELP);
 }
 fn dxJ(i : u32, j : u32, k : u32) -> f32 {
-    let n = cu.dims.x; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
+    let n = cu.nx; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
     return (jbuf[ix(xp,j,k)] - jbuf[ix(xm,j,k)]) / (2.0 * DEL);
 }
 fn dyJ(i : u32, j : u32, k : u32) -> f32 {
-    let n = cu.dims.y; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
+    let n = cu.ny; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
     return (jbuf[ix(i,yp,k)] - jbuf[ix(i,ym,k)]) / (2.0 * DEL);
 }
 fn dzJ(i : u32, j : u32, k : u32) -> f32 {
-    let n = cu.dims.z; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
+    let n = cu.nz; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
     return (jbuf[ix(i,j,kp)] - jbuf[ix(i,j,km)]) / (2.0 * DELP);
 }
 fn lap3Psi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.x; let m = cu.dims.y; let q = cu.dims.z;
+    let n = cu.nx; let m = cu.ny; let q = cu.nz;
     let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
     let ym = (j + m - 1u) % m; let yp = (j + 1u) % m;
     let km = (k + q - 1u) % q; let kp = (k + 1u) % q;
@@ -248,7 +250,7 @@ fn lap3Psi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     return s / DEL2;
 }
 fn lap3Om(i : u32, j : u32, k : u32, sel : u32) -> f32 {
-    let n = cu.dims.x; let m = cu.dims.y; let q = cu.dims.z;
+    let n = cu.nx; let m = cu.ny; let q = cu.nz;
     let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
     let ym = (j + m - 1u) % m; let yp = (j + 1u) % m;
     let km = (k + q - 1u) % q; let kp = (k + 1u) % q;
@@ -267,7 +269,7 @@ fn br3(ax : f32, ay : f32, az : f32, bx : f32, by : f32, bz : f32) -> f32 {
 
 @compute @workgroup_size(8,8,4)
 fn init_drive(@builtin(global_invocation_id) id : vec3<u32>) {
-    if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
+    if (id.x >= cu.nx || id.y >= cu.ny || id.z >= cu.nz) { return; }
     let i = id.x; let j = id.y; let k = id.z;
     let r = 2.0 * PI * (f32(i)) / NXF - PI;
     let zz = 2.0 * PI * (f32(j)) / NYF - PI;
@@ -281,15 +283,15 @@ fn init_drive(@builtin(global_invocation_id) id : vec3<u32>) {
 
 @compute @workgroup_size(8,8,4)
 fn lapj(@builtin(global_invocation_id) id : vec3<u32>) {
-    if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
+    if (id.x >= cu.nx || id.y >= cu.ny || id.z >= cu.nz) { return; }
     jbuf[ix(id.x,id.y,id.z)] = -lap3Psi(id.x, id.y, id.z, cu.which);
 }
 
 @compute @workgroup_size(8,8,4)
 fn poisson_a2b(@builtin(global_invocation_id) id : vec3<u32>) {
-    if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
+    if (id.x >= cu.nx || id.y >= cu.ny || id.z >= cu.nz) { return; }
     let i = id.x; let j = id.y; let k = id.z;
-    let n = cu.dims.x; let m = cu.dims.y; let q = cu.dims.z;
+    let n = cu.nx; let m = cu.ny; let q = cu.nz;
     let omv = select(om_b[ix(i,j,k)], om_a[ix(i,j,k)], cu.which == 0u);
     let taps = phi_a[ix((i+1u)%n,j,k)] + phi_a[ix((i+n-1u)%n,j,k)]
              + phi_a[ix(i,(j+1u)%m,k)] + phi_a[ix(i,(j+m-1u)%m,k)]
@@ -298,9 +300,9 @@ fn poisson_a2b(@builtin(global_invocation_id) id : vec3<u32>) {
 }
 @compute @workgroup_size(8,8,4)
 fn poisson_b2a(@builtin(global_invocation_id) id : vec3<u32>) {
-    if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
+    if (id.x >= cu.nx || id.y >= cu.ny || id.z >= cu.nz) { return; }
     let i = id.x; let j = id.y; let k = id.z;
-    let n = cu.dims.x; let m = cu.dims.y; let q = cu.dims.z;
+    let n = cu.nx; let m = cu.ny; let q = cu.nz;
     let omv = select(om_b[ix(i,j,k)], om_a[ix(i,j,k)], cu.which == 0u);
     let taps = phi_b[ix((i+1u)%n,j,k)] + phi_b[ix((i+n-1u)%n,j,k)]
              + phi_b[ix(i,(j+1u)%m,k)] + phi_b[ix(i,(j+m-1u)%m,k)]
@@ -310,7 +312,7 @@ fn poisson_b2a(@builtin(global_invocation_id) id : vec3<u32>) {
 
 @compute @workgroup_size(8,8,4)
 fn mid_rhs(@builtin(global_invocation_id) id : vec3<u32>) {
-    if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
+    if (id.x >= cu.nx || id.y >= cu.ny || id.z >= cu.nz) { return; }
     let i = id.x; let j = id.y; let k = id.z;
     let ps = cu.phiSrc;
     let pdx = dxPh(i,j,k,ps); let pdy = dyPh(i,j,k,ps); let pdz = dzPh(i,j,k,ps);
@@ -329,7 +331,7 @@ fn mid_rhs(@builtin(global_invocation_id) id : vec3<u32>) {
 
 @compute @workgroup_size(8,8,4)
 fn adv_rhs(@builtin(global_invocation_id) id : vec3<u32>) {
-    if (id.x >= cu.dims.x || id.y >= cu.dims.y || id.z >= cu.dims.z) { return; }
+    if (id.x >= cu.nx || id.y >= cu.ny || id.z >= cu.nz) { return; }
     let i = id.x; let j = id.y; let k = id.z;
     let ps = cu.phiSrc;
     let pdx = dxPh(i,j,k,ps); let pdy = dyPh(i,j,k,ps); let pdz = dzPh(i,j,k,ps);
@@ -738,6 +740,10 @@ async function init() {
 }
 
 function dispatch1(ep) {
+  if (!dispatch1.logged) { dispatch1.logged = true;
+    console.log("[LaserCortex] pipes: " + Object.keys(computePipes).map(k =>
+      k + ":" + (computePipes[k] === computePipes.lapj ? "SAME-as-lapj" : "distinct")).join(" "));
+  }
   const enc = device.createCommandEncoder();
   const pass = enc.beginComputePass();
   pass.setPipeline(computePipes[ep]);
@@ -756,8 +762,8 @@ function writeCu(which, t, phiSrc) {
   const d = new ArrayBuffer(48);
   const u = new Uint32Array(d), f = new Float32Array(d);
   u[0] = N; u[1] = N; u[2] = NK;
-  f[4] = 2e-3; f[5] = t; f[6] = driveAmp; f[7] = driveT;
-  u[8] = which; u[9] = 40; u[10] = (phiSrc === "a") ? 0 : 1;
+  f[3] = 2e-3; f[4] = t; f[5] = driveAmp; f[6] = driveT;
+  u[7] = which; u[8] = 40; u[9] = (phiSrc === "a") ? 0 : 1;
   device.queue.writeBuffer(cuBuf, 0, d);
 }
 
@@ -835,6 +841,14 @@ async function meters() {
         ek += 0.5*(ux*ux+uy*uy+uz*uz)/TOT;
       }
   levelMin = pMin; levelInv = kLevels / Math.max(pMax - pMin, 1e-6);
+  if (psiInit0) {
+    let dMax = 0;
+    for (let i = 0; i < TOT; i++) {
+      const d = Math.abs(p[i] - psiInit0[i]);
+      if (d > dMax) dMax = d;
+    }
+    meters.dMax = dMax;
+  }
   // instrument: where is the current peak (r,z)? plus flux range (X-point stats)
   let pi = 0, pj = 0;
   for (let i = 0; i < TOT; i++) if (Math.abs(j[i]) > Math.abs(j[pi])) pi = i;
