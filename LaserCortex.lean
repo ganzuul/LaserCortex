@@ -9,6 +9,7 @@ import LaserCortex.Hopf
 import LaserCortex.AMM
 import LaserCortex.TemporalParadox
 import LaserCortex.Stencil
+import LaserCortex.PlasmaBall
 import LaserCortex.Coherence
 import LaserCortex.PhysicsAPI
 import LaserCortex.foundations.Chu

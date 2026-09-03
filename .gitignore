@@ -159,3 +159,12 @@ LaserCortex/unified_spacetime_engine_explicit.lean
 DEPENDENCY_GRAPH.json
 MASTER_RECON_PHONEBOOK.md
 .mcp.json
+
+# webgpu lab: generated media + scratch
+webgpu/*.mp4
+webgpu/*.gif
+webgpu/.prof.*
+webgpu/.m.js
+webgpu/.dbg.log
+webgpu/.headless.log
+webgpu/.module.js
