@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05f</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05g</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -577,7 +577,7 @@ let yaw = 0.8, pitch = 0.35, dist = 3.2, autoRotate = false;   // turntable OFF 
 let last = performance.now();
 let phiSol = "a";
 let levelMin = 0, levelInv = 30, jExp = 16.0;
-let announced = false, frameNo = 0;
+let announced = false, frameNo = 0, psiInit0 = null;
 
 function initField(psi, om) {
   for (let k = 0; k < NK; k++) {
@@ -723,6 +723,7 @@ async function init() {
   const phi0 = new Float32Array(TOT);
   for (let j = 0; j < N; j++)
     for (let i = 0; i < N; i++) phi0[i * N + j] = phi0f(i, j);
+  psiInit0 = new Float32Array(psi);   // self-test reference
   device.queue.writeBuffer(cBufs.psi_a, 0, psi);
   device.queue.writeBuffer(cBufs.psi_b, 0, psi);
   device.queue.writeBuffer(cBufs.om_a, 0, om);
@@ -863,7 +864,9 @@ async function loop(now) {
     maxJ = await meters();
     frameNo++;
     if (frameNo % 5 === 0 || !announced)
-      console.log("[LaserCortex] t=" + simTime.toFixed(3) + " frame=" + frameNo);
+      console.log("[LaserCortex] t=" + simTime.toFixed(3) + " frame=" + frameNo
+        + " maxJ=" + maxJ.toExponential(2)
+        + " dPsiInit=" + (meters.dMax !== undefined ? meters.dMax.toExponential(2) : "?"));
     // eye-like exposure: EMA of the 95th-percentile |j| (robust scale;
     // the peak is often an occluded single cell, not what the eye sees)
     const jj = Array.from(meters.absJ || [], Math.abs).sort((a, b) => a - b);
@@ -922,6 +925,7 @@ document.getElementById("resetBtn").onclick = () => {
   const phi0 = new Float32Array(TOT);
   for (let j = 0; j < N; j++)
     for (let i = 0; i < N; i++) phi0[i * N + j] = phi0f(i, j);
+  psiInit0 = new Float32Array(psi);   // self-test reference
   device.queue.writeBuffer(cBufs.psi_a, 0, psi);
   device.queue.writeBuffer(cBufs.psi_b, 0, psi);
   device.queue.writeBuffer(cBufs.om_a, 0, om);
