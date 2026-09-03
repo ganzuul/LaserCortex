@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 2025-09-04a</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 2025-09-04b</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -426,7 +426,7 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
         let ax = axOf(p);
         let rho2 = rr * rr + ax * ax;
         // no break here: samples outside the ball are zeroed by the boundary
-        // `win` fade; the march is bounded by marchEnd (dome entry) anyway.
+        // win fade; the march is bounded by marchEnd (dome exit) anyway.
         // boundary-only fade: full glow inside, soft rolloff at the glass
         let win = clamp((ru.rDome * ru.rDome - rho2) / (ru.rDome * 0.3), 0.0, 1.0);
         let psiv = psiAt(rr, ax);
