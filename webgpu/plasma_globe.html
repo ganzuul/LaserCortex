@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LaserCortex — Plasma Globe (3D ray-marched filaments)</title>
+  <style>
+    :root { --bg:#05070d; --card:#0f1420; --border:#1e293b; --accent:#38bdf8; --text:#e5eefb; --muted:#8aa; --success:#22c55e; --warn:#eab308; }
+    body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",monospace; display:flex; flex-direction:column; align-items:center; min-height:100vh; }
+    .bar { width:100%; max-width:900px; padding:14px 20px 10px; display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--border); }
+    .bar h1 { font-size:1.2rem; margin:0; color:var(--accent); font-weight:700; letter-spacing:-0.5px; }
+    .bar .sub { font-size:0.8rem; color:var(--muted); }
+    .badge { font-size:0.72rem; color:var(--success); background:rgba(34,197,94,.1); padding:3px 8px; border-radius:4px; border:1px solid rgba(34,197,94,.25); }
+    .wrap { position:relative; width:100%; max-width:900px; display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 0; }
+    canvas { width:min(90vw,760px); height:min(90vw,760px); border-radius:10px; background:#000; border:1px solid var(--border); touch-action:none; cursor:grab; }
+    canvas:active { cursor:grabbing; }
+    .hint { font-size:0.78rem; color:var(--muted); max-width:760px; line-height:1.5; text-align:center; }
+    .hint b { color:var(--accent); }
+    #gpuStatus { display:none; color:var(--warn); font-size:0.8rem; max-width:760px; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <div><h1>LaserCortex Plasma Globe</h1><span class="sub">3D ray-marched glowing filaments</span></div>
+    <span class="badge">✓ visual demo — no certified MHD solve</span>
+  </div>
+
+  <div class="wrap">
+    <canvas id="view" width="760" height="760"></canvas>
+    <div class="hint">
+      <b>Drag</b> to orbit · <b>scroll</b> to zoom · auto-rotates when idle.
+      Glowing <b>streamer filaments</b> run from the core electrode to the glass shell,
+      following radial field-like curves with a slow living wiggle (branching tips).
+      The sphere here is a clean <b>S²</b> — the null-cone/rulings of the `(4,4)` frame,
+      shown as light. This is a <i>kinematic rendering demo</i>, not a MHD solve; the
+      filaments are analytic streamers, not a certified field computation.
+      <b>Geometry certified in <code>LaserCortex/PlasmaBall.lean</code></b>:
+      roots lie on S² (<code>root_on_sphere</code>), a filament is a unit direction
+      scaled from electrode r₀ to wall R (<code>scaled_on_sphere_of_unit</code>,
+      <code>normalized_unit</code>).
+    </div>
+    <div id="gpuStatus"></div>
+  </div>
+
+  <script type="module">
+    const canvas = document.getElementById("view");
+    const ctxCtx = canvas;
+
+    function fatal(msg) {
+      console.error("[PlasmaGlobe] " + msg);
+      const s = document.getElementById("gpuStatus");
+      s.style.display = "block";
+      s.textContent = msg;
+      canvas.getContext("2d").fillStyle = "#111827";
+      canvas.getContext("2d").fillRect(0, 0, canvas.width, canvas.height);
+      canvas.getContext("2d").fillStyle = "#eab308";
+      canvas.getContext("2d").font = "bold 12px monospace";
+      canvas.getContext("2d").fillText("WEBGPU UNAVAILABLE", 14, canvas.height / 2);
+    }
+
+    function browserHint() {
+      if (/Firefox\//.test(navigator.userAgent)) {
+        return "Firefox: WebGPU on by default since v141 (needs explicit API + working Vulkan; check about:support). Provide the device via navigator.gpu.";
+      }
+      return "Chromium: check chrome://gpu and launch flags: --use-gl=angle --use-angle=vulkan --ignore-gpu-blocklist, optionally --enable-unsafe-webgpu.";
+    }
+
+    const WGSL = `// Plasma globe: full-screen triangle + volumetric ray-march of emissive filaments.
+struct U {
+    eye   : vec4<f32>,
+    fwd   : vec4<f32>,
+    right : vec4<f32>,
+    up    : vec4<f32>,
+    tanHalf : f32, time : f32, R : f32, K : f32,
+    aspect  : f32, rInner : f32, glowW : f32, kink : f32,
+}
+@group(0) @binding(0) var<uniform> u : U;
+
+fn seg_dist(p : vec3<f32>, a : vec3<f32>, b : vec3<f32>) -> f32 {
+    let ab = b - a;
+    let denom = dot(ab, ab);
+    let t = clamp(dot(p - a, ab) / max(denom, 1e-8), 0.0, 1.0);
+    return length(p - (a + ab * t));
+}
+
+fn filament_emission(p : vec3<f32>) -> vec3<f32> {
+    var e = vec3<f32>(0.0);
+    let r = length(p);
+    if (r > u.R * 1.04) { return e; }
+    let nf = u32(u.K);
+    for (var i = 0u; i < nf; i = i + 1u) {
+        let fi = f32(i);
+        // Golden-angle spiral root on the sphere (even coverage).
+        let tphi = fi * 2.39996323;
+        let tth  = acos(1.0 - 2.0 * (fi + 0.5) / u.K);
+        let d = vec3<f32>(sin(tth) * cos(tphi), sin(tth) * sin(tphi), cos(tth));
+        // Living wiggle: perturb the surface tip and the midpoint over time.
+        let wa = u.time * 1.1 + fi * 1.7;
+        let wb = u.time * 0.8 + fi * 2.3;
+        let wc = u.time * 0.6 + fi * 0.9;
+        let tip = normalize(d + 0.16 * vec3<f32>(sin(wa), cos(wb), sin(wc)));
+        let tipB = normalize(d + 0.30 * vec3<f32>(cos(wc), sin(wa), cos(wb)));
+        let p0  = d * (u.rInner * 0.9);
+        let mid = normalize(d + 0.5 * (tip - d)) * (u.R * 0.55);
+        let p1  = tip * u.R;
+        let p2  = tipB * u.R;
+        // Streamer spine (2 segments) + a short branch off the midpoint.
+        let dd = min(seg_dist(p, p0, mid), min(seg_dist(p, mid, p1), seg_dist(p, mid, p2)));
+        // Narrow luminous core, hotter near the electrode, cooler/violet at the wall.
+        let core = exp(-(dd * dd) / (u.glowW * u.glowW * u.R * u.R));
+        let cool = clamp(r / u.R * 1.6, 0.0, 1.0);
+        let col = mix(vec3<f32>(1.0, 0.75, 0.35), vec3<f32>(0.55, 0.35, 0.95), cool);
+        e += col * core * (0.35 + 1.4 * (1.0 - r / u.R));
+    }
+    // Central electrode incandescence.
+    e += vec3<f32>(1.0, 0.92, 0.7) * exp(-(r * r) / (2.0 * u.rInner * u.rInner * 0.35)) * 1.6;
+    // Glass wall: crisp rim + faint inner glow at the surface.
+    let shell = exp(-(abs(r - u.R) * abs(r - u.R)) / (2.0 * 0.025 * u.R * u.R));
+    e += vec3<f32>(0.5, 0.65, 0.9) * shell * (0.35 + 0.4 * u.kink);
+    return e;
+}
+
+struct VSOut {
+    @builtin(position) pos : vec4<f32>,
+    @location(0) uv : vec2<f32>,
+}
+
+@vertex
+fn vs(@builtin(vertex_index) vi : u32) -> VSOut {
+    var p = array<vec2<f32>, 3>(vec2<f32>(-1.0, -1.0), vec2<f32>(3.0, -1.0), vec2<f32>(-1.0, 3.0));
+    return VSOut(vec4<f32>(p[vi], 0.0, 1.0), p[vi]);
+}
+
+@fragment
+fn fs(in : VSOut) -> @location(0) vec4<f32> {
+    let ndc = in.uv;
+    // Camera ray.
+    let rd = normalize(u.fwd.xyz
+        + u.right.xyz * ndc.x * u.tanHalf * u.aspect
+        + u.up.xyz    * ndc.y * u.tanHalf);
+    let ro = u.eye.xyz;
+    // Volume march over the globe.
+    var acc = vec3<f32>(0.0);
+    var A = 0.0;
+    let steps = 48;
+    let tmax = 3.2 * u.R;
+    for (var s = 0; s < steps; s = s + 1) {
+        let t = (f32(s) + 0.5) / f32(steps) * tmax;
+        let p = ro + rd * t;
+        let em = filament_emission(p);
+        let lm = dot(em, vec3<f32>(0.333));
+        if (lm > 0.0) {
+            let alpha = 1.0 - exp(-lm * 0.8);
+            acc += (1.0 - A) * em * alpha;
+            A += (1.0 - A) * alpha;
+        }
+    }
+    // Tone-map additive glow over a dark background.
+    let col = 1.0 - exp(-acc);
+    // Faint starfield/backdrop (deterministic, subtle).
+    let bg = vec3<f32>(0.012, 0.016, 0.028);
+    let out = bg + col * 0.9;
+    return vec4<f32>(out, 1.0);
+}`;
+
+    let device, context, pipeline, uniformBuffer, format;
+    let yaw = 0.7, pitch = 0.35, dist = 3.1, autoRotate = true;
+    let last = performance.now();
+
+    async function init() {
+      if (!navigator.gpu) {
+        fatal("navigator.gpu missing — this browser has no WebGPU. " + browserHint());
+        return;
+      }
+      const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
+      if (!adapter) { fatal("requestAdapter() returned null. " + browserHint()); return; }
+      device = await adapter.requestDevice();
+      device.lost.then((info) => fatal("GPU device lost: " + info.reason));
+
+      format = navigator.gpu.getPreferredCanvasFormat();
+      context = canvas.getContext("webgpu");
+      context.configure({ device, format });
+
+      const shaderModule = device.createShaderModule({ code: WGSL });
+      const comp = await shaderModule.getCompilationInfo();
+      const errs = comp.messages.filter((m) => m.type === "error");
+      if (errs.length) { fatal("WGSL compile failed: " + errs.map((m) => m.message).join("; ")); return; }
+
+      const bgl = device.createBindGroupLayout({
+        entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, buffer: { type: "uniform" } }],
+      });
+      pipeline = device.createRenderPipeline({
+        layout: device.createPipelineLayout({ bindGroupLayouts: [bgl] }),
+        vertex: { module: shaderModule, entryPoint: "vs" },
+        fragment: { module: shaderModule, entryPoint: "fs", targets: [{ format }] },
+        primitive: { topology: "triangle-list" },
+      });
+      uniformBuffer = device.createBuffer({ size: 96, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+      requestAnimationFrame(render);
+    }
+
+    function updateCamera() {
+      const target = [0, 0, 0];
+      const cp = Math.cos(pitch), sp = Math.sin(pitch);
+      const sy = Math.sin(yaw), cy = Math.cos(yaw);
+      const eye = [dist * cp * sy, dist * sp, dist * cp * cy];
+      const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+      const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+      const norm = (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+      const fwd = norm(sub(target, eye));
+      const right = norm(cross(fwd, [0, 1, 0]));
+      const up = cross(right, fwd);
+      return { eye, fwd, right, up };
+    }
+
+    function render(now) {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (autoRotate) yaw += dt * 0.25;
+      const t = now / 1000;
+
+      const cam = updateCamera();
+      const data = new ArrayBuffer(96);
+      const f = new Float32Array(data);
+      f[0] = cam.eye[0]; f[1] = cam.eye[1]; f[2] = cam.eye[2]; f[3] = 1;
+      f[4] = cam.fwd[0]; f[5] = cam.fwd[1]; f[6] = cam.fwd[2]; f[7] = 1;
+      f[8] = cam.right[0]; f[9] = cam.right[1]; f[10] = cam.right[2]; f[11] = 1;
+      f[12] = cam.up[0]; f[13] = cam.up[1]; f[14] = cam.up[2]; f[15] = 1;
+      f[16] = Math.tan((50 * Math.PI / 180) / 2); // tanHalf
+      f[17] = t; f[18] = 1.0; f[19] = 26;         // R, K
+      f[20] = canvas.width / canvas.height;       // aspect
+      f[21] = 0.12; f[22] = 0.02; f[23] = 1.0;    // rInner, glowW, kink
+      device.queue.writeBuffer(uniformBuffer, 0, data);
+
+      const enc = device.createCommandEncoder();
+      const pass = enc.beginRenderPass({
+        colorAttachments: [{
+          view: context.getCurrentTexture().createView(),
+          clearValue: { r: 0.012, g: 0.016, b: 0.028, a: 1 },
+          loadOp: "clear", storeOp: "store",
+        }],
+      });
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
+      }));
+      pass.draw(3);
+      pass.end();
+      device.queue.submit([enc.finish()]);
+      requestAnimationFrame(render);
+    }
+
+    // Orbit / zoom controls
+    let dragging = false, px = 0, py = 0;
+    canvas.addEventListener("pointerdown", (e) => {
+      dragging = true; autoRotate = false;
+      px = e.clientX; py = e.clientY;
+      canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      yaw += (e.clientX - px) * 0.008;
+      pitch += (e.clientY - py) * 0.008;
+      pitch = Math.max(-1.4, Math.min(1.4, pitch));
+      px = e.clientX; py = e.clientY;
+    });
+    canvas.addEventListener("pointerup", () => { dragging = false; });
+    canvas.addEventListener("pointercancel", () => { dragging = false; });
+    canvas.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      dist = Math.max(1.8, Math.min(6.0, dist + e.deltaY * 0.002));
+      autoRotate = false;
+    }, { passive: false });
+
+    init().catch((e) => fatal("init failed: " + e));
+  </script>
+</body>
+</html>
