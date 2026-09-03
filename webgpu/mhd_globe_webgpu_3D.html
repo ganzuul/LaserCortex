@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 2025-09-04c</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05a</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -577,7 +577,7 @@ let yaw = 0.8, pitch = 0.35, dist = 3.2, autoRotate = false;   // turntable OFF 
 let last = performance.now();
 let phiSol = "a";
 let levelMin = 0, levelInv = 30, jExp = 16.0;
-let announced = false;
+let announced = false, frameNo = 0;
 
 function initField(psi, om) {
   for (let k = 0; k < NK; k++) {
@@ -635,6 +635,7 @@ async function init() {
   if (!adapter) { fatal("requestAdapter() returned null. " + browserHint()); return; }
   device = await adapter.requestDevice();
   device.lost.then((info) => fatal("GPU device lost: " + info.reason));
+  device.onuncapturederror = (ev) => console.log("[LaserCortex] GPU uncaptured error: " + ev.message);
 
   const fmt = navigator.gpu.getPreferredCanvasFormat();
 
@@ -720,6 +721,8 @@ async function init() {
   device.queue.writeBuffer(cBufs.phi_b, 0, phi0);
   phiSol = "a";
   dispatch1("init_drive");
+  for (let b = 0; b < 20; b++) step();   // diagnostic burst: multi-step compute check
+  console.log("[LaserCortex] burst t=" + simTime.toFixed(3));
   requestAnimationFrame(loop);
 }
 
@@ -844,6 +847,9 @@ async function loop(now) {
     writeCu(0, simTime, phiSol);
     dispatch1("lapj");
     maxJ = await meters();
+    frameNo++;
+    if (frameNo % 5 === 0 || !announced)
+      console.log("[LaserCortex] t=" + simTime.toFixed(3) + " frame=" + frameNo);
     // eye-like exposure: EMA of the 95th-percentile |j| (robust scale;
     // the peak is often an occluded single cell, not what the eye sees)
     const jj = Array.from(meters.absJ || [], Math.abs).sort((a, b) => a - b);

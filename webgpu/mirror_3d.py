@@ -11,21 +11,21 @@ def dx(f): return (rollx(f,-1)-rollx(f,1))/(2*(2*np.pi/N))
 def dy(f): return (rolly(f,-1)-rolly(f,1))/(2*(2*np.pi/N))
 def dz(f): return (rollz(f,-1)-rollz(f,1))/(2*(2*np.pi/NK))
 def lap(f): return (rollx(f,-1)+rollx(f,1)+rolly(f,-1)+rolly(f,1)+rollz(f,-1)+rollz(f,1)-6*f)/DX2
-def br3(a,b): return (dx(a)*dy(b)-dy(a)*dx(b)) + (dy(a)*dz(b)-dz(a)*dy(b)) + (dz(a)*dx(b)-dx(a)*dz(b))
+def br3(ax_,ay,az,bx,by,bz): return (ax_*by-ay*bx) + (ay*bz-az*by) + (az*bx-ax_*bz)
 # init (same as the page: dipole + perturb + 3D-blurred noise; omega from phi0)
 i_ = np.arange(N)[:,None,None]; j_ = np.arange(N)[None,:,None]; k_ = np.arange(NK)[None,None,:]
 R = i_/N*2*np.pi-np.pi; Z = j_/N*2*np.pi-np.pi; PH = k_/NK*2*np.pi-np.pi
 rho2 = R*R+Z*Z
-psi = 1.0*(R*R)/(rho2+0.25)**1.5*np.exp(-rho2/(2*1.6**2))
-psi += 0.35*np.exp(-rho2/(2*0.81))*np.sin(2*R)*np.ones_like(PH)
+psi = (1.0*(R*R)/(rho2+0.25)**1.5*np.exp(-rho2/(2*1.6**2)))*np.ones_like(PH)
+psi += (0.35*np.exp(-rho2/(2*0.81))*np.sin(2*R))*np.ones_like(PH)
 phi0 = 0.4*np.sin(R)*np.sin(Z)*np.ones_like(PH)
 om = -lap(phi0)
 rng = np.random.default_rng(7)
-raw = rng.uniform(-1,1,(NK,N,N)); bl = np.zeros_like(raw)
+raw = rng.uniform(-1,1,(N,N,NK)); bl = np.zeros_like(raw)
 for dk in (-1,0,1):
     for dy_ in (-1,0,1):
         for dx_ in (-1,0,1):
-            bl += np.roll(np.roll(np.roll(raw, dk, 0), dx_, 2), dy_, 1)
+            bl += np.roll(np.roll(np.roll(raw, dx_, 0), dy_, 1), dk, 2)
 bl /= 27
 psi += 0.03*bl
 phi = phi0.copy(); phi2 = phi0.copy()
