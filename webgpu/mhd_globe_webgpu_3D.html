@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05c</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05d</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -641,9 +641,10 @@ async function init() {
     if (st) { st.style.display = "block"; st.textContent = msg; }
   });
   device.onuncapturederror = (ev) => {
-    console.log("[LaserCortex] GPU uncaptured error: " + ev.message);
+    const em = (ev.error && ev.error.message) ? ev.error.message : "unknown";
+    console.log("[LaserCortex] GPU uncaptured error: " + em);
     const st = document.getElementById("gpuStatus");
-    if (st) { st.style.display = "block"; st.textContent = "GPU error: " + ev.message; }
+    if (st) { st.style.display = "block"; st.textContent = "GPU error: " + em; }
   };
 
   const fmt = navigator.gpu.getPreferredCanvasFormat();
@@ -796,7 +797,7 @@ function writeCu(which, t, phiSrc) {
 
 function poissonSolve(omWhich, t) {
   writeCu(omWhich, t, phiSol);
-  for (let k = 0; k < 60; k++) {
+  for (let k = 0; k < 40; k++) {
     dispatch1(phiSol === "a" ? "poisson_a2b" : "poisson_b2a");
     phiSol = phiSol === "a" ? "b" : "a";
   }
@@ -887,6 +888,7 @@ async function meters() {
 async function loop(now) {
   const dtMs = Math.min(0.05, (now - last) / 1000);
   last = now;
+  device.pushErrorScope("validation");
   if (autoRotate) yaw += dtMs * 0.25;
   let maxJ = 0;
   try {
@@ -935,6 +937,9 @@ async function loop(now) {
   pass.draw(3);
   pass.end();
   device.queue.submit([enc.finish()]);
+  device.popErrorScope().then((err) => {
+    if (err) console.log("[LaserCortex] frame validation error: " + err.message);
+  });
   requestAnimationFrame(loop);
 }
 
