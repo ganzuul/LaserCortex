@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05e</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05f</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -741,7 +741,10 @@ function dispatch1(ep) {
   const pass = enc.beginComputePass();
   pass.setPipeline(computePipes[ep]);
   pass.setBindGroup(0, cBindGroup);
-  pass.dispatchWorkgroups(N / 8, N / 8, NK / 8);
+  // coverage: grid 64x64x32; workgroup 8x8x4 threads -> (8, 8, 8) workgroups.
+    // (8,8,4) was the bug: it covered only phi < 16 planes — half the domain
+    // never advanced nor got its current (frozen frame, half the glow).
+    pass.dispatchWorkgroups(N / 8, N / 8, NK / 4);
   pass.end();
   device.queue.submit([enc.finish()]);
 }
