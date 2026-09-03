@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 2025-09-04b</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 2025-09-04c</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -62,7 +62,6 @@
     <label style="font-size:0.75rem">window σ <input type="range" id="wsigmaS" min="0.4" max="3.0" step="0.05" value="3.0" style="width:80px"></label>
     <label style="font-size:0.75rem">dome radius <input type="range" id="domeS" min="0.55" max="2.8" step="0.05" value="1.9" style="width:80px"></label>
     <label style="font-size:0.75rem">line levels <input type="range" id="levelsS" min="3" max="10" step="1" value="6" style="width:70px"></label>
-    <label style="font-size:0.75rem">glow lift <input type="range" id="liftS" min="0" max="0.6" step="0.01" value="0.05" style="width:70px"></label>
     <label style="font-size:0.75rem">exposure EV <input type="range" id="expS" min="-2.0" max="3.0" step="0.1" value="0.0" style="width:70px"></label>
     <label style="font-size:0.75rem">seed noise <input type="range" id="noiseS" min="0" max="0.12" step="0.005" value="0.03" style="width:70px"></label>
     <label style="font-size:0.75rem">axis
@@ -470,8 +469,7 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
     // reference display chain: log-ish gather -> EV exposure -> ACES filmic
     // (Narkowicz 2015, the standard WebGPU tonemap) -> display gamma 2.2
     let streamer = 1.0 - exp(-accStream * exp2(ru.exposure));
-    let lifted = streamer + ru.glowLift * (1.0 - streamer) * 0.6;
-    var composite = lifted + vec3<f32>(1.0, 0.80, 0.15) * accLine * 1.2;
+    var composite = streamer + vec3<f32>(1.0, 0.80, 0.15) * accLine * 1.2;
     if (tG > 0.0) {
         let ph = ro + rd * tG;
         let nrm = normalize(ph);
@@ -518,7 +516,7 @@ let cuBuf, ruBuf, cBindGroup;
 const BUILD = "2025-09-03d";   // visible build tag: hard-refresh must show this in the badge
 let simTime = 0, running = true, driveAmp = 1.2, driveT = 0.5, stepsPerFrame = 4;
 let winR0 = 0.0, winZ0 = 0.0, winSigma = 3.0;
-let kLevels = 6, glowLift = 0.03, exposure = 0.0, rDome = 1.9, noiseAmp = 0.03;
+let kLevels = 6, exposure = 0.0, rDome = 1.9, noiseAmp = 0.03;
 let axisIdx = 1, mirror = false;
 let yaw = 0.8, pitch = 0.35, dist = 3.2, autoRotate = false;   // turntable OFF by default
 let last = performance.now();
@@ -789,7 +787,7 @@ async function loop(now) {
       console.log("[LaserCortex] RUNNING t=" + simTime.toFixed(3)
         + " maxJ=" + maxJ.toExponential(2)
         + " render{exposure=" + exposure + " jExp=" + jExp.toFixed(2)
-        + " wSigma=" + winSigma + " rDome=" + rDome + " lift=" + glowLift + "}");
+        + " wSigma=" + winSigma + " rDome=" + rDome + "}");
     }
   } catch (e) { fatal("step failed: " + e); return; }
 
@@ -804,7 +802,7 @@ async function loop(now) {
   f[18]=0.30; f[19]=jExp;
   f[20]=levelMin; f[21]=levelInv; f[22]=0;
   f[23]=winR0; f[24]=winZ0; f[25]=winSigma;
-  f[26]=exposure; f[27]=2.2; f[28]=glowLift; f[29]=rDome; f[30]=axisIdx; f[31]=mirror?1:0;
+  f[26]=exposure; f[27]=2.2; f[28]=0; f[29]=rDome; f[30]=axisIdx; f[31]=mirror?1:0;
   device.queue.writeBuffer(ruBuf, 0, ru);
 
   const enc = device.createCommandEncoder();
@@ -849,7 +847,6 @@ document.getElementById("wr0S").oninput = (e) => { winR0 = parseFloat(e.target.v
 document.getElementById("wz0S").oninput = (e) => { winZ0 = parseFloat(e.target.value); };
 document.getElementById("wsigmaS").oninput = (e) => { winSigma = parseFloat(e.target.value); };
 document.getElementById("levelsS").oninput = (e) => { kLevels = parseInt(e.target.value, 10); };
-document.getElementById("liftS").oninput = (e) => { glowLift = parseFloat(e.target.value); };
 document.getElementById("domeS").oninput = (e) => { rDome = parseFloat(e.target.value); };
 document.getElementById("noiseS").oninput = (e) => { noiseAmp = parseFloat(e.target.value); };
 document.getElementById("spinCb").onchange = (e) => { autoRotate = e.target.checked; };

@@ -63,7 +63,7 @@ accStream=np.zeros(SZ); A=np.zeros(SZ[:2])
 print("DEBUG tG:", float(tG.max()), float(tG[tG>0].mean()) if (tG>0).any() else 0.0, "hits:", int((tG>0).sum()))
 print("DEBUG tDome:", float(tDome.max()), "hits:", int((tDome>0).sum()), "marchEnd.max:", float(marchEnd.max()))
 jmax=float(np.percentile(np.abs(j),95))
-wSigma=3.0; rDome=1.9; exposure=0.0; lift=0.03
+wSigma=3.0; rDome=1.9; exposure=0.0; lift=0.0
 steps=96
 for s in range(steps):
     t=(s+0.5)/steps*tmax

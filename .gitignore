@@ -168,3 +168,5 @@ webgpu/.m.js
 webgpu/.dbg.log
 webgpu/.headless.log
 webgpu/.module.js
+webgpu/*.png
+!webgpu/mhd_globe_still.png
