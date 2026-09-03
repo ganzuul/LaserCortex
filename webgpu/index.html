@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LaserCortex — Conservative ψ-form Toy (Ideal, c = 0)</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #121826;
+      --border: #1e293b;
+      --accent: #38bdf8;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --success: #22c55e;
+      --warn: #eab308;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .header {
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 512px 1fr;
+      gap: 24px;
+      width: 100%;
+      max-width: 900px;
+    }
+    .viewport-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      width: 480px;
+      height: 480px;
+      image-rendering: pixelated;
+      border-radius: 4px;
+      background: #000;
+      border: 1px solid var(--border);
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .metric-card {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .metric-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .metric-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-family: monospace;
+      color: var(--success);
+    }
+    .metric-value.warn {
+      color: var(--warn);
+    }
+    .control-row {
+      display: flex;
+      gap: 8px;
+    }
+    button {
+      background: #1e293b;
+      color: var(--text);
+      border: 1px solid #334155;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    button:hover {
+      background: #334155;
+      border-color: var(--accent);
+    }
+    button.primary {
+      background: #0284c7;
+      border-color: #38bdf8;
+    }
+    button.primary:hover {
+      background: #0369a1;
+    }
+    select, input[type="range"] {
+      width: 100%;
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .cert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--success);
+      background: rgba(34, 197, 94, 0.1);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <span class="title">LaserCortex ψ-form Toy</span>
+      <span class="subtitle"> — conservative ideal transport (c = 0; reconnection not priced)</span>
+    </div>
+    <div class="cert-badge">
+      <span>✓ Certified: div∘curl ≡ 0 · Σψ conserved by flux form</span>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="viewport-card">
+      <canvas id="viewCanvas" width="128" height="128"></canvas>
+      <div id="gpuStatus" style="margin-top: 8px; font-size: 0.78rem; color: var(--warn); display: none; white-space: normal;"></div>
+      <div style="margin-top: 10px; font-size: 0.8rem; color: var(--muted);" id="renderModeText">
+        Displaying: Current Density J_z = (∇ × B)_z = −laplacian₂ψ
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="metric-card">
+        <div class="metric-title">Certificate F1 — Divergence Invariant (max |∇·B|)</div>
+        <div class="metric-value" id="divMetric">0.00e+00</div>
+        <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">
+          Re-issued every tick: B = curl ψ is always divergence-free to op-rounding.
+        </div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-card">
+          <div class="metric-title">Total Flux Drift ΔΣψ (since reset)</div>
+          <div class="metric-value" id="fluxMetric">0.00e+00</div>
+          <div style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">
+            Should read ~op-rounding: flux form conserves Σψ by theorem.
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">L2 Drift ΔΣψ² (scheme report card)</div>
+          <div class="metric-value" id="l2Metric">0.000 %</div>
+          <div style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">
+            Donor-cell truncation is the toy's only "leak" — metered, not hidden.
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">Max |J_z| — current-sheet steepening</div>
+        <div class="metric-value" id="jzMetric">0.00e+00</div>
+        <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">
+          Grid-scale X-point collapse would cost strut charge at c = 4 [H];
+          at c = 0 the ideal run must NOT reconnect. Watch for runaway growth.
+        </div>
+      </div>
+
+      <div>
+        <label class="metric-title" for="fieldSelect">Visualization Layer</label>
+        <select id="fieldSelect">
+          <option value="current">Current Density J_z = (∇×B)_z = −laplacian₂ψ</option>
+          <option value="psi">Streamfunction ψ (Magnetic Flux Surfaces)</option>
+          <option value="b_mag">Magnetic Field Intensity |B|</option>
+          <option value="div_error">Divergence Error |∇·B| (Visual Certificate)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="metric-title" for="configSelect">Initial Topology</label>
+        <select id="configSelect">
+          <option value="orszag_tang">Orszag–Tang Vortex System</option>
+          <option value="magnetic_island">Magnetic Island + Sheet Steepening (ideal)</option>
+          <option value="random">High-Frequency White Noise</option>
+        </select>
+      </div>
+
+      <div class="control-row">
+        <button id="playBtn" class="primary">Pause</button>
+        <button id="stepBtn">Step (1 Tick)</button>
+        <button id="resetBtn">Reset Grid</button>
+      </div>
+
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <span class="metric-title">Timestep dt (CFL: dt·max|u| ≤ 1)</span>
+          <span id="dtVal" style="font-size: 0.8rem; color: var(--accent);">0.005</span>
+        </div>
+        <input type="range" id="dtSlider" min="0.000" max="0.020" step="0.001" value="0.005">
+      </div>
+
+      <div style="font-size: 0.75rem; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--border); padding-top: 12px;">
+        <strong>Theoretical Grounding:</strong><br>
+        Fields are parameterized by streamfunction ψ over periodic indices on <code>ZMod 128 × ZMod 128</code>.
+        B = curl ψ is exactly divergence-free by <code>Stencil.div_curl_eq_zero</code>; J_z reads
+        −laplacian₂ψ by <code>Stencil.curl_curl_eq_neg_laplacian2</code>; advection is a conservative
+        flux form, so Σψ is conserved by <code>Stencil.fluxDiv_sum_eq_zero</code> for any flux pair.
+        No dissipation term: L2 drift on screen is the scheme's own truncation error.<br>
+        <strong>Drag on the canvas to edit ψ</strong> (the potential — never B directly); Alt-drag subtracts.
+      </div>
+    </div>
+  </div>
+
+  <script type="text/wgsl" id="mhdShaders">
+/* embed:begin (generated from shaders/mhd_stencil.wgsl by scripts/embed_wgsl.py — do not edit here) */
+// mhd_stencil.wgsl — 2D Discrete MHD WebGPU Compute Kernels
+// ==========================================================
+// Implements the discrete calculus stencils certified in LaserCortex/Stencil.lean:
+//
+// 1. compute_b_field:   B = curl(ψ z_hat) = (dy(ψ), -dx(ψ))
+// 2. compute_div_b:     div(B) = dx(B_x) + dy(B_y)
+//                       [Provably 0 by Stencil.div_curl_eq_zero — F1]
+// 3. compute_current:   J_z = dx(B_y) - dy(B_x)
+//                       [= -laplacian₂ψ by Stencil.curl_curl_eq_neg_laplacian2]
+// 4. advect_psi:        Conservative flux-form transport of ψ along u = B
+//                       [Σψ conserved by Stencil.fluxDiv_sum_eq_zero; scheme
+//                        details live in the flux pair and cannot break it]
+
+struct SimUniforms {
+    dims: vec2<u32>,        // Grid resolution (Nx, Ny)
+    dt: f32,                // Simulation timestep (CFL: dt · max|u| ≤ 1)
+    dissipation: f32,       // Reserved; ideal toy ships zero. The flux-form
+};                          // scheme has no dissipation knob (see advect_psi).
+
+@group(0) @binding(0) var<uniform> uniforms: SimUniforms;
+@group(0) @binding(1) var<storage, read> psi_in: array<f32>;
+@group(0) @binding(2) var<storage, read_write> b_field: array<vec2<f32>>;
+@group(0) @binding(3) var<storage, read_write> div_b_out: array<f32>;
+@group(0) @binding(4) var<storage, read_write> current_out: array<f32>;
+@group(0) @binding(5) var<storage, read_write> psi_out: array<f32>;
+
+// Periodic boundary indexing mirroring ZMod Nx × ZMod Ny in Stencil.lean
+fn get_flat_index(x: i32, y: i32) -> u32 {
+    let nx = i32(uniforms.dims.x);
+    let ny = i32(uniforms.dims.y);
+    let px = (x % nx + nx) % nx;
+    let py = (y % ny + ny) % ny;
+    return u32(py) * uniforms.dims.x + u32(px);
+}
+
+// ----------------------------------------------------------------------------
+// Kernel 1: B = curl(ψ)
+// ----------------------------------------------------------------------------
+@compute @workgroup_size(16, 16)
+fn compute_b_field(@builtin(global_invocation_id) id: vec3<u32>) {
+    if (id.x >= uniforms.dims.x || id.y >= uniforms.dims.y) {
+        return;
+    }
+
+    let x = i32(id.x);
+    let y = i32(id.y);
+
+    // dx(f) = f(x+1, y) - f(x-1, y)
+    let psi_xp1 = psi_in[get_flat_index(x + 1, y)];
+    let psi_xm1 = psi_in[get_flat_index(x - 1, y)];
+    let dx_psi = psi_xp1 - psi_xm1;
+
+    // dy(f) = f(x, y+1) - f(x, y-1)
+    let psi_yp1 = psi_in[get_flat_index(x, y + 1)];
+    let psi_ym1 = psi_in[get_flat_index(x, y - 1)];
+    let dy_psi = psi_yp1 - psi_ym1;
+
+    // B_x = dy(ψ), B_y = -dx(ψ) (Unnormalized, exactly matching Stencil.lean)
+    let idx = id.y * uniforms.dims.x + id.x;
+    b_field[idx] = vec2<f32>(dy_psi, -dx_psi);
+}
+
+// ----------------------------------------------------------------------------
+// Kernel 2: ∇·B (Divergence Verification Kernel)
+// ----------------------------------------------------------------------------
+@compute @workgroup_size(16, 16)
+fn compute_div_b(@builtin(global_invocation_id) id: vec3<u32>) {
+    if (id.x >= uniforms.dims.x || id.y >= uniforms.dims.y) {
+        return;
+    }
+
+    let x = i32(id.x);
+    let y = i32(id.y);
+
+    // dx(B_x) = B_x(x+1, y) - B_x(x-1, y)
+    let bx_xp1 = b_field[get_flat_index(x + 1, y)].x;
+    let bx_xm1 = b_field[get_flat_index(x - 1, y)].x;
+    let dx_bx = bx_xp1 - bx_xm1;
+
+    // dy(B_y) = B_y(x, y+1) - B_y(x, y-1)
+    let by_yp1 = b_field[get_flat_index(x, y + 1)].y;
+    let by_ym1 = b_field[get_flat_index(x, y - 1)].y;
+    let dy_by = by_yp1 - by_ym1;
+
+    // div(B) = dx(B_x) + dy(B_y)
+    let idx = id.y * uniforms.dims.x + id.x;
+    div_b_out[idx] = dx_bx + dy_by;
+}
+
+// ----------------------------------------------------------------------------
+// Kernel 3: Current Density J_z = (curl B)_z = -laplacian₂ψ
+// ----------------------------------------------------------------------------
+// Composes the two central differences: dx(By) with By = -dx(ψ) reaches taps
+// at index distance 2, so J_z = -(dx∘dx + dy∘dy)ψ is minus the spacing-two
+// five-point Laplacian — certified by Stencil.curl_curl_eq_neg_laplacian2.
+// It is NOT the near-neighbour -∇²ψ: labels below say what the theorem says.
+@compute @workgroup_size(16, 16)
+fn compute_current(@builtin(global_invocation_id) id: vec3<u32>) {
+    if (id.x >= uniforms.dims.x || id.y >= uniforms.dims.y) {
+        return;
+    }
+
+    let x = i32(id.x);
+    let y = i32(id.y);
+
+    // dx(B_y) = B_y(x+1, y) - B_y(x-1, y)
+    let by_xp1 = b_field[get_flat_index(x + 1, y)].y;
+    let by_xm1 = b_field[get_flat_index(x - 1, y)].y;
+    let dx_by = by_xp1 - by_xm1;
+
+    // dy(B_x) = B_x(x, y+1) - B_x(x, y-1)
+    let bx_yp1 = b_field[get_flat_index(x, y + 1)].x;
+    let bx_ym1 = b_field[get_flat_index(x, y - 1)].x;
+    let dy_bx = bx_yp1 - bx_ym1;
+
+    // J_z = dx(B_y) - dy(B_x)
+    let idx = id.y * uniforms.dims.x + id.x;
+    current_out[idx] = dx_by - dy_bx;
+}
+
+// ----------------------------------------------------------------------------
+// Kernel 4: Conservative flux-form advection of ψ along u = B (toy transport)
+// ----------------------------------------------------------------------------
+// Donor-cell (upwind) flux form over the periodic grid. Each cell changes by
+// net edge inflow only, so total flux Σψ is conserved to rounding of the
+// individual ops for ANY flux pair — mirror of Stencil.fluxDiv_sum_eq_zero.
+// There is no dissipation term: any L2 decay the scheme shows is its own
+// (visible, metered) truncation error, never a hidden knob. Stable under the
+// CFL bound dt · max|u| ≤ 1.
+//
+//   ψ' = ψ + Fx(x-1,y) - Fx(x,y) + Fy(x,y-1) - Fy(x,y)
+//   Fx(i,j) = dt·(max(vx,0)·ψ(i,j) + min(vx,0)·ψ(i+1,j))   vx = B_x at (i,j)
+//   Fy(i,j) = dt·(max(vy,0)·ψ(i,j) + min(vy,0)·ψ(i,j+1))   vy = B_y at (i,j)
+@compute @workgroup_size(16, 16)
+fn advect_psi(@builtin(global_invocation_id) id: vec3<u32>) {
+    if (id.x >= uniforms.dims.x || id.y >= uniforms.dims.y) {
+        return;
+    }
+
+    let x = i32(id.x);
+    let y = i32(id.y);
+    let idx = id.y * uniforms.dims.x + id.x;
+    let dt = uniforms.dt;
+
+    // Own and neighbouring ψ values (periodic wrapping mirrors ZMod).
+    let psi_c = psi_in[idx];
+    let psi_xm1 = psi_in[get_flat_index(x - 1, y)];
+    let psi_xp1 = psi_in[get_flat_index(x + 1, y)];
+    let psi_ym1 = psi_in[get_flat_index(x, y - 1)];
+    let psi_yp1 = psi_in[get_flat_index(x, y + 1)];
+
+    // Cell-centred velocity u = B at this cell and at the upwind neighbours
+    // (left neighbour for the x-edge, bottom neighbour for the y-edge).
+    let v_c = b_field[idx];
+    let vx_xm1 = b_field[get_flat_index(x - 1, y)].x;
+    let vy_ym1 = b_field[get_flat_index(x, y - 1)].y;
+
+    // Edge fluxes. fx_in crosses the left edge (i-1 -> i), fx_out the right
+    // edge (i -> i+1); fy_in crosses the bottom edge (j-1 -> j), fy_out the
+    // top edge (j -> j+1). Donor is the upwind cell in each case.
+    let fx_in  = dt * (max(vx_xm1, 0.0) * psi_xm1 + min(vx_xm1, 0.0) * psi_c);
+    let fx_out = dt * (max(v_c.x, 0.0) * psi_c + min(v_c.x, 0.0) * psi_xp1);
+    let fy_in  = dt * (max(vy_ym1, 0.0) * psi_ym1 + min(vy_ym1, 0.0) * psi_c);
+    let fy_out = dt * (max(v_c.y, 0.0) * psi_c + min(v_c.y, 0.0) * psi_yp1);
+
+    psi_out[idx] = psi_c + (fx_in - fx_out) + (fy_in - fy_out);
+}
+/* embed:end */
+  </script>
+
+  <script type="module">
+    const NX = 128;
+    const NY = 128;
+    const TOTAL_CELLS = NX * NY;
+
+    let device, pipelineB, pipelineDiv, pipelineCurrent, pipelineAdvect;
+    let uniformsBuffer, psiBufferA, psiBufferB, bFieldBuffer, divBuffer, currentBuffer;
+    let readbackDivBuffer, readbackCurrentBuffer, readbackPsiBuffer, readbackVisualBuffer;
+    let bindGroupA, bindGroupB;
+    let isRunning = true;
+    let pingPong = false;
+    let currentField = "current";
+    let dt = 0.005;
+
+    // CPU mirror + meter baselines (drag edits ψ here, meters drift from here).
+    let psiCpu = new Float32Array(TOTAL_CELLS);
+    let baselineSum = 0;
+    let baselineL2 = 0;
+
+    const canvas = document.getElementById("viewCanvas");
+    const ctx = canvas.getContext("2d");
+    const imgData = ctx.createImageData(NX, NY);
+
+    // A black rectangle must never be the error message: every fatal path
+    // paints a visible state and says why in #gpuStatus.
+    function fatal(msg) {
+      console.error("[LaserCortex] " + msg);
+      const el = document.getElementById("gpuStatus");
+      el.style.display = "block";
+      el.textContent = msg;
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(0, 0, NX, NY);
+      ctx.fillStyle = "#eab308";
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("NO GPU FRAME", 8, 60);
+      ctx.font = "9px monospace";
+      ctx.fillText("see message below", 8, 74);
+    }
+
+    async function initWebGPU() {
+      if (!navigator.gpu) {
+        fatal("navigator.gpu missing — this browser has no WebGPU. "
+          + "Chromium: check chrome://gpu and launch flags.");
+        return;
+      }
+      const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
+      if (!adapter) {
+        fatal("requestAdapter() returned null — Chromium has no usable WebGPU "
+          + "backend. Check chrome://gpu; on Linux try: --use-gl=angle "
+          + "--use-angle=vulkan --ignore-gpu-blocklist, optionally "
+          + "--enable-unsafe-webgpu for the SwiftShader fallback.");
+        return;
+      }
+      device = await adapter.requestDevice();
+      device.lost.then((info) => fatal("GPU device lost: " + info.reason));
+
+      // WGSL ships embedded in this page: file:// pages cannot fetch()
+      // (origin 'null' CORS block). shaders/mhd_stencil.wgsl is the
+      // authoring source; regenerate the embed after editing it:
+      //   python3 ../scripts/embed_wgsl.py
+      const shaderCode = document.getElementById("mhdShaders").textContent;
+      const shaderModule = device.createShaderModule({ code: shaderCode });
+      const comp = await shaderModule.getCompilationInfo();
+      const errs = comp.messages.filter((m) => m.type === "error");
+      if (errs.length) {
+        fatal("WGSL compile failed: " + errs.map((m) => m.message).join("; "));
+        return;
+      }
+
+      // Create Compute Pipelines
+      pipelineB = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: shaderModule, entryPoint: "compute_b_field" }
+      });
+      pipelineDiv = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: shaderModule, entryPoint: "compute_div_b" }
+      });
+      pipelineCurrent = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: shaderModule, entryPoint: "compute_current" }
+      });
+      pipelineAdvect = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: shaderModule, entryPoint: "advect_psi" }
+      });
+
+      // Buffer Setup
+      const byteSizeF32 = TOTAL_CELLS * 4;
+      const byteSizeVec2 = TOTAL_CELLS * 8;
+
+      uniformsBuffer = device.createBuffer({
+        size: 16, // vec2<u32> (8) + f32 (4) + f32 (4)
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+      });
+
+      psiBufferA = device.createBuffer({
+        size: byteSizeF32,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
+      });
+      psiBufferB = device.createBuffer({
+        size: byteSizeF32,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
+      });
+      bFieldBuffer = device.createBuffer({
+        size: byteSizeVec2,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+      });
+      divBuffer = device.createBuffer({
+        size: byteSizeF32,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+      });
+      currentBuffer = device.createBuffer({
+        size: byteSizeF32,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+      });
+
+      readbackDivBuffer = device.createBuffer({
+        size: byteSizeF32,
+        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+      });
+      readbackCurrentBuffer = device.createBuffer({
+        size: byteSizeF32,
+        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+      });
+      readbackPsiBuffer = device.createBuffer({
+        size: byteSizeF32,
+        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+      });
+      readbackVisualBuffer = device.createBuffer({
+        size: byteSizeVec2, // Max size needed for vec2 or f32
+        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+      });
+
+      // Bind groups (A -> B, and B -> A)
+      bindGroupA = device.createBindGroup({
+        layout: pipelineB.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: uniformsBuffer } },
+          { binding: 1, resource: { buffer: psiBufferA } },
+          { binding: 2, resource: { buffer: bFieldBuffer } },
+          { binding: 3, resource: { buffer: divBuffer } },
+          { binding: 4, resource: { buffer: currentBuffer } },
+          { binding: 5, resource: { buffer: psiBufferB } },
+        ]
+      });
+
+      bindGroupB = device.createBindGroup({
+        layout: pipelineB.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: uniformsBuffer } },
+          { binding: 1, resource: { buffer: psiBufferB } },
+          { binding: 2, resource: { buffer: bFieldBuffer } },
+          { binding: 3, resource: { buffer: divBuffer } },
+          { binding: 4, resource: { buffer: currentBuffer } },
+          { binding: 5, resource: { buffer: psiBufferA } },
+        ]
+      });
+
+      initGrid("orszag_tang");
+      requestAnimationFrame(renderLoop);
+    }
+
+    function computeBaselines(psi) {
+      let s = 0, l2 = 0;
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        const v = psi[i];
+        s += v;
+        l2 += v * v;
+      }
+      baselineSum = s;
+      baselineL2 = l2;
+    }
+
+    function initGrid(type) {
+      const psi = new Float32Array(TOTAL_CELLS);
+      for (let y = 0; y < NY; y++) {
+        for (let x = 0; x < NX; x++) {
+          const idx = y * NX + x;
+          const u = (x / NX) * 2.0 * Math.PI;
+          const v = (y / NY) * 2.0 * Math.PI;
+          if (type === "orszag_tang") {
+            psi[idx] = 2.0 * Math.cos(u) + Math.cos(2.0 * v);
+          } else if (type === "magnetic_island") {
+            psi[idx] = Math.cos(u) + 0.3 * Math.cos(2.0 * u) * Math.sin(v);
+          } else {
+            psi[idx] = (Math.random() - 0.5) * 2.0;
+          }
+        }
+      }
+      psiCpu.set(psi);
+      computeBaselines(psiCpu);
+      device.queue.writeBuffer(psiBufferA, 0, psi);
+      device.queue.writeBuffer(psiBufferB, 0, psi);
+    }
+
+    function updateUniforms() {
+      const uData = new ArrayBuffer(16);
+      const u32View = new Uint32Array(uData);
+      const f32View = new Float32Array(uData);
+      u32View[0] = NX;
+      u32View[1] = NY;
+      f32View[2] = dt;
+      f32View[3] = 0.0; // ideal toy: no dissipation (flux-form scheme has no knob)
+      device.queue.writeBuffer(uniformsBuffer, 0, uData);
+    }
+
+    function activePsiBuffer() {
+      return pingPong ? psiBufferB : psiBufferA;
+    }
+
+    async function dispatchComputeStep() {
+      updateUniforms();
+      const currentBindGroup = pingPong ? bindGroupB : bindGroupA;
+
+      const encoder = device.createCommandEncoder();
+      const pass = encoder.beginComputePass();
+
+      // 1. B = curl(ψ)
+      pass.setPipeline(pipelineB);
+      pass.setBindGroup(0, currentBindGroup);
+      pass.dispatchWorkgroups(NX / 16, NY / 16);
+
+      // 2. div(B) — certificate readout
+      pass.setPipeline(pipelineDiv);
+      pass.setBindGroup(0, currentBindGroup);
+      pass.dispatchWorkgroups(NX / 16, NY / 16);
+
+      // 3. J_z = -laplacian₂ψ
+      pass.setPipeline(pipelineCurrent);
+      pass.setBindGroup(0, currentBindGroup);
+      pass.dispatchWorkgroups(NX / 16, NY / 16);
+
+      // 4. Conservative flux-form advection (only while playing)
+      if (isRunning) {
+        pass.setPipeline(pipelineAdvect);
+        pass.setBindGroup(0, currentBindGroup);
+        pass.dispatchWorkgroups(NX / 16, NY / 16);
+        pingPong = !pingPong;
+      }
+      pass.end();
+
+      // Readbacks for the meters (div, current, active ψ) + the visual layer.
+      encoder.copyBufferToBuffer(divBuffer, 0, readbackDivBuffer, 0, TOTAL_CELLS * 4);
+      encoder.copyBufferToBuffer(currentBuffer, 0, readbackCurrentBuffer, 0, TOTAL_CELLS * 4);
+      encoder.copyBufferToBuffer(activePsiBuffer(), 0, readbackPsiBuffer, 0, TOTAL_CELLS * 4);
+
+      let sourceVisualBuffer = currentBuffer;
+      let visualByteSize = TOTAL_CELLS * 4;
+      if (currentField === "psi") {
+        sourceVisualBuffer = activePsiBuffer();
+      } else if (currentField === "b_mag") {
+        sourceVisualBuffer = bFieldBuffer;
+        visualByteSize = TOTAL_CELLS * 8;
+      } else if (currentField === "div_error") {
+        sourceVisualBuffer = divBuffer;
+      }
+      encoder.copyBufferToBuffer(sourceVisualBuffer, 0, readbackVisualBuffer, 0, visualByteSize);
+
+      device.queue.submit([encoder.finish()]);
+
+      // Read everything back and update the meters.
+      await Promise.all([
+        readbackDivBuffer.mapAsync(GPUMapMode.READ),
+        readbackCurrentBuffer.mapAsync(GPUMapMode.READ),
+        readbackPsiBuffer.mapAsync(GPUMapMode.READ),
+        readbackVisualBuffer.mapAsync(GPUMapMode.READ)
+      ]);
+
+      const divData = new Float32Array(readbackDivBuffer.getMappedRange().slice(0));
+      const curData = new Float32Array(readbackCurrentBuffer.getMappedRange().slice(0));
+      const psiData = new Float32Array(readbackPsiBuffer.getMappedRange().slice(0));
+      const visData = new Float32Array(readbackVisualBuffer.getMappedRange().slice(0));
+      readbackDivBuffer.unmap();
+      readbackCurrentBuffer.unmap();
+      readbackPsiBuffer.unmap();
+      readbackVisualBuffer.unmap();
+
+      // Keep the CPU mirror in sync with the GPU state (drag edits from here).
+      psiCpu.set(psiData);
+
+      // Meter 1: max |∇·B| — the F1 certificate number.
+      let maxDiv = 0;
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        const val = Math.abs(divData[i]);
+        if (val > maxDiv) maxDiv = val;
+      }
+      document.getElementById("divMetric").innerText = maxDiv.toExponential(2);
+
+      // Meter 2: total-flux drift (should be op-rounding only).
+      let curSum = 0, curL2 = 0, maxJz = 0;
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        curSum += psiData[i];
+        const p = psiData[i];
+        curL2 += p * p;
+        const j = Math.abs(curData[i]);
+        if (j > maxJz) maxJz = j;
+      }
+      document.getElementById("fluxMetric").innerText =
+        (curSum - baselineSum).toExponential(2);
+      const l2Drift = baselineL2 !== 0 ? ((curL2 - baselineL2) / baselineL2) * 100 : 0;
+      const l2El = document.getElementById("l2Metric");
+      l2El.innerText = l2Drift.toFixed(3) + " %";
+      l2El.className = l2Drift < -0.5 ? "metric-value warn" : "metric-value";
+      document.getElementById("jzMetric").innerText = maxJz.toExponential(2);
+
+      // Draw canvas from the mapped visual buffer.
+      drawVisual(visData, psiData, divData, curData);
+    }
+
+    function drawVisual(visData, psiData, divData, curData) {
+      const d = imgData.data;
+      if (currentField === "b_mag") {
+        for (let i = 0; i < TOTAL_CELLS; i++) {
+          const bx = visData[i * 2];
+          const by = visData[i * 2 + 1];
+          const mag = Math.sqrt(bx * bx + by * by);
+          const val = Math.min(255, Math.floor(mag * 40));
+          const idx = i * 4;
+          d[idx] = val;
+          d[idx + 1] = Math.floor(val * 0.8);
+          d[idx + 2] = 255 - val;
+          d[idx + 3] = 255;
+        }
+      } else if (currentField === "current") {
+        for (let i = 0; i < TOTAL_CELLS; i++) {
+          const jz = curData[i];
+          const idx = i * 4;
+          if (jz > 0) {
+            d[idx] = 0;
+            d[idx + 1] = Math.min(255, Math.floor(jz * 30));
+            d[idx + 2] = Math.min(255, Math.floor(jz * 40));
+          } else {
+            d[idx] = Math.min(255, Math.floor(-jz * 40));
+            d[idx + 1] = 0;
+            d[idx + 2] = Math.min(255, Math.floor(-jz * 20));
+          }
+          d[idx + 3] = 255;
+        }
+      } else if (currentField === "div_error") {
+        // Visual certificate: |∇·B| is uniform ~1e-7; amplify hard to see it.
+        for (let i = 0; i < TOTAL_CELLS; i++) {
+          const val = Math.min(255, Math.floor(Math.abs(divData[i]) * 1e6));
+          const idx = i * 4;
+          d[idx] = val;
+          d[idx + 1] = val;
+          d[idx + 2] = val;
+          d[idx + 3] = 255;
+        }
+      } else { // psi (and fallback)
+        for (let i = 0; i < TOTAL_CELLS; i++) {
+          const val = (psiData[i] + 3.0) * 42.0;
+          const c = Math.max(0, Math.min(255, Math.floor(val)));
+          const idx = i * 4;
+          d[idx] = c;
+          d[idx + 1] = c;
+          d[idx + 2] = c;
+          d[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    async function renderLoop() {
+      try {
+        await dispatchComputeStep();
+      } catch (e) {
+        fatal("GPU step failed: " + e);
+        return; // stop the loop rather than spamming
+      }
+      requestAnimationFrame(renderLoop);
+    }
+
+    // --- Drag-to-edit-ψ: edit the potential, never B directly (memo §4) ---
+    const EDIT_RADIUS = 6;
+    const EDIT_AMP = 1.6;
+    let editing = false;
+    let editNeg = false;
+
+    function paintStroke(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = Math.floor(((e.clientX - rect.left) / rect.width) * NX);
+      const cy = Math.floor(((e.clientY - rect.top) / rect.height) * NY);
+      if (cx < 0 || cx >= NX || cy < 0 || cy >= NY) return;
+      const sign = editNeg ? -1 : 1;
+      for (let dy = -EDIT_RADIUS; dy <= EDIT_RADIUS; dy++) {
+        for (let dx = -EDIT_RADIUS; dx <= EDIT_RADIUS; dx++) {
+          const r2 = dx * dx + dy * dy;
+          if (r2 > EDIT_RADIUS * EDIT_RADIUS) continue;
+          const ix = (cx + dx + NX) % NX;
+          const iy = (cy + dy + NY) % NY;
+          const idx = iy * NX + ix;
+          const w = 1 - Math.sqrt(r2) / EDIT_RADIUS;
+          psiCpu[idx] += sign * EDIT_AMP * w * w;
+        }
+      }
+      // Upload edited ψ to both ping-pong buffers so the next read is identical.
+      device.queue.writeBuffer(psiBufferA, 0, psiCpu);
+      device.queue.writeBuffer(psiBufferB, 0, psiCpu);
+      computeBaselines(psiCpu); // edits are external forcing: meters drift from here
+    }
+
+    canvas.addEventListener("pointerdown", (e) => {
+      editing = true;
+      editNeg = e.altKey || e.shiftKey;
+      canvas.setPointerCapture(e.pointerId);
+      paintStroke(e);
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      if (editing) paintStroke(e);
+    });
+    canvas.addEventListener("pointerup", () => { editing = false; });
+    canvas.addEventListener("pointercancel", () => { editing = false; });
+
+    // UI event listeners
+    document.getElementById("playBtn").onclick = (e) => {
+      isRunning = !isRunning;
+      e.target.innerText = isRunning ? "Pause" : "Resume";
+    };
+    document.getElementById("stepBtn").onclick = () => {
+      dispatchComputeStep().catch((err) => console.error("step failed:", err));
+    };
+    document.getElementById("resetBtn").onclick = () => {
+      initGrid(document.getElementById("configSelect").value);
+    };
+    document.getElementById("configSelect").onchange = (e) => {
+      initGrid(e.target.value);
+    };
+    document.getElementById("fieldSelect").onchange = (e) => {
+      currentField = e.target.value;
+      const textMap = {
+        current: "Current Density J_z = (∇ × B)_z = −laplacian₂ψ",
+        psi: "Streamfunction ψ (Magnetic Flux Surfaces)",
+        b_mag: "Magnetic Field Intensity |B|",
+        div_error: "Divergence Error |∇·B| (Visual Certificate)"
+      };
+      document.getElementById("renderModeText").innerText = "Displaying: " + textMap[currentField];
+    };
+    document.getElementById("dtSlider").oninput = (e) => {
+      dt = parseFloat(e.target.value);
+      document.getElementById("dtVal").innerText = dt.toFixed(3);
+    };
+
+    initWebGPU().catch((e) => fatal("init failed: " + e));
+  </script>
+</body>
+</html>
