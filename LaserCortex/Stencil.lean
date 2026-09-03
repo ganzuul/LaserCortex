@@ -29,6 +29,8 @@ Design notes:
   `SplitOctonion`-valued grids additively.
 -/
 
+open scoped BigOperators
+
 namespace Stencil
 
 /-- Values on a periodic `Nx × Ny` grid. -/
@@ -111,5 +113,124 @@ the index group `ZMod Nx × ZMod Ny` is abelian, and that is exactly what
    part (`D ∘ C`) and the priced part (the nonlinear channel);
    the dial tunes only the priced part.
 -/
+
+/-!
+## Certificates 2 and 3: the current kernel and conservative transport
+
+F1 (`div_curl_eq_zero` above) certifies the curl/div pair. Two further
+identities certify the remaining shipped kernels:
+
+* `curl_curl_eq_neg_laplacian2` — the current-density composition read by
+  `compute_current` (`webgpu/shaders/mhd_stencil.wgsl`) and
+  `current_density` (`webgpu/reference_mhd.py`): for `B = curl ψ`,
+  `dx B.y − dy B.x` is minus the **wide (spacing-two) Laplacian** of ψ.
+  Composing two central differences of step 1 reaches taps at index distance
+  2, so this is not the near-neighbour `-∇²ψ` of the common label — the
+  certificate makes the kernel's exact content a theorem.  Like F1 it needs
+  only addition, negation, and commuting index shifts, so it holds for every
+  grid and every `AddCommGroup` of values.
+* `fluxDiv_sum_eq_zero` — the discrete half of the §11.3-4 ledger row
+  ("flux conservation as a divergence theorem").  A flux-form update
+  `ψ' = ψ + fluxDiv` over a periodic grid conserves the total `∑ ψ` for
+  *any* flux pair: over the cycle each edge flux is counted once as inflow
+  and once as outflow, so the sum telescopes.  The advection scheme (upwind,
+  donor cell, limiters, …) lives entirely inside the choice of `Fx`, `Fy`
+  and cannot break conservation.  Unlike F1 this statement needs finite
+  grids (`[NeZero Nx] [NeZero Ny]`): a global sum over the grid requires the
+  index group to be finite. -/
+
+/-- **Spacing-two five-point Laplacian** as a composition: two central
+differences along `x` plus two along `y`.  Each composition widens the
+stencil by one, so the taps sit at index distance 2 — i.e. this is
+`f(i+2) + f(i−2) + f(j+2) + f(j−2) − 4f` — which is what the current kernel
+computes, not the near-neighbour Laplacian. -/
+def laplacian2 (f : GridF Nx Ny R) (i : ZMod Nx) (j : ZMod Ny) : R :=
+  dx (dx f) i j + dy (dy f) i j
+
+/-- **Current certificate**: `J_z = dx B.y − dy B.x` for the stream-function
+field `B = curl ψ` is `-laplacian₂ ψ` pointwise — the exact content of the
+shipped `compute_current` / `current_density` kernels. -/
+theorem curl_curl_eq_neg_laplacian2 (f : GridF Nx Ny R) (i : ZMod Nx)
+    (j : ZMod Ny) :
+    dx (curlY f) i j - dy (curlX f) i j = -laplacian2 f i j := by
+  simp only [curlX, curlY, laplacian2, dx, dy, neg_sub]
+  abel
+
+/-- Net x-inflow into cell `(i,j)`: right-edge flux of the left neighbour in,
+own right-edge flux out (`Fx i j` crosses the edge `(i,j) → (i+1,j)`). -/
+def fluxDivX (Fx : GridF Nx Ny R) (i : ZMod Nx) (j : ZMod Ny) : R :=
+  Fx (i - 1) j - Fx i j
+
+/-- Net y-inflow into cell `(i,j)`: top-edge flux of the bottom neighbour in,
+own top-edge flux out (`Fy i j` crosses the edge `(i,j) → (i,j+1)`). -/
+def fluxDivY (Fy : GridF Nx Ny R) (i : ZMod Nx) (j : ZMod Ny) : R :=
+  Fy i (j - 1) - Fy i j
+
+/-- Net inflow across all four edges of cell `(i,j)`: the conservative
+update increment `ψ' = ψ + fluxDiv`. -/
+def fluxDiv (Fx : GridF Nx Ny R) (Fy : GridF Nx Ny R) (i : ZMod Nx)
+    (j : ZMod Ny) : R :=
+  fluxDivX Fx i j + fluxDivY Fy i j
+
+/-- x-edge fluxes telescope along every row: the net x-inflow summed over a
+row of the periodic grid is zero, for any flux field. -/
+lemma fluxDivX_sum_eq_zero [NeZero Nx] (Fx : GridF Nx Ny R) (j : ZMod Ny) :
+    (∑ i : ZMod Nx, fluxDivX Fx i j) = 0 := by
+  unfold fluxDivX
+  rw [Finset.sum_sub_distrib]
+  have hswap : (∑ i : ZMod Nx, Fx (i - 1) j) = ∑ i : ZMod Nx, Fx i j := by
+    calc
+      (∑ i : ZMod Nx, Fx (i - 1) j)
+          = ∑ i : ZMod Nx, Fx (Equiv.addRight (-1 : ZMod Nx) i) j := by
+            apply Finset.sum_congr rfl
+            intro i hi
+            apply congrArg (fun t : ZMod Nx => Fx t j)
+            rw [sub_eq_add_neg, Equiv.coe_addRight]
+      _ = ∑ i : ZMod Nx, Fx i j := by
+            exact Equiv.sum_comp (Equiv.addRight (-1 : ZMod Nx))
+              (fun i : ZMod Nx => Fx i j)
+  rw [sub_eq_zero]
+  exact hswap
+
+/-- y-edge fluxes telescope along every column: the net y-inflow summed over
+a column of the periodic grid is zero, for any flux field. -/
+lemma fluxDivY_sum_eq_zero [NeZero Ny] (Fy : GridF Nx Ny R) (i : ZMod Nx) :
+    (∑ j : ZMod Ny, fluxDivY Fy i j) = 0 := by
+  unfold fluxDivY
+  rw [Finset.sum_sub_distrib]
+  have hswap : (∑ j : ZMod Ny, Fy i (j - 1)) = ∑ j : ZMod Ny, Fy i j := by
+    calc
+      (∑ j : ZMod Ny, Fy i (j - 1))
+          = ∑ j : ZMod Ny, Fy i (Equiv.addRight (-1 : ZMod Ny) j) := by
+            apply Finset.sum_congr rfl
+            intro j hj
+            apply congrArg (fun t : ZMod Ny => Fy i t)
+            rw [sub_eq_add_neg, Equiv.coe_addRight]
+      _ = ∑ j : ZMod Ny, Fy i j := by
+            exact Equiv.sum_comp (Equiv.addRight (-1 : ZMod Ny))
+              (fun j : ZMod Ny => Fy i j)
+  rw [sub_eq_zero]
+  exact hswap
+
+/-- **Transport conservation**: any flux-form update conserves total flux —
+`∑ ψ' = ∑ ψ` for `ψ' = ψ + fluxDiv` — over any finite periodic grid, for any
+flux pair.  The certificate behind the conservative `advect_psi` kernel
+(`webgpu/shaders/mhd_stencil.wgsl`). -/
+theorem fluxDiv_sum_eq_zero [NeZero Nx] [NeZero Ny]
+    (Fx : GridF Nx Ny R) (Fy : GridF Nx Ny R) :
+    (∑ i : ZMod Nx, ∑ j : ZMod Ny, fluxDiv Fx Fy i j) = 0 := by
+  simp only [fluxDiv]
+  simp_rw [Finset.sum_add_distrib]
+  have hx : (∑ i : ZMod Nx, ∑ j : ZMod Ny, fluxDivX Fx i j) = 0 := by
+    rw [Finset.sum_comm]
+    apply Finset.sum_eq_zero
+    intro j _hj
+    exact fluxDivX_sum_eq_zero Fx j
+  have hy : (∑ i : ZMod Nx, ∑ j : ZMod Ny, fluxDivY Fy i j) = 0 := by
+    apply Finset.sum_eq_zero
+    intro i _hi
+    exact fluxDivY_sum_eq_zero Fy i
+  rw [hx, hy]
+  simp
 
 end Stencil
