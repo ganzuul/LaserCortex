@@ -11,6 +11,7 @@ import LaserCortex.TemporalParadox
 import LaserCortex.Stencil
 import LaserCortex.PlasmaBall
 import LaserCortex.Stencil3
+import LaserCortex.Cost3D
 import LaserCortex.Coherence
 import LaserCortex.PhysicsAPI
 import LaserCortex.foundations.Chu
