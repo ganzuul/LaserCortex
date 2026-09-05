@@ -4,17 +4,19 @@ import LaserCortex.Stencil3
 /-!
 # Cost3D — performance estimates for the 3-D (azimuthal) solver
 
-Lean-first answer to "is 64²×32 feasible, and what is the reduction lever if
+Lean-first answer to "is 128²×64 feasible, and what is the reduction lever if
 not?" Before any GPU code, the per-step cost is a *counted* quantity with
 verified scaling laws.
 
-## What 64×64×32 is relative to
+## What 128×128×64 is relative to (shipped config)
 
-- The current page: 128×128 = 16,384 cells in the (r, z) meridional plane.
-- The 3-D proposal: 64 radial × 64 axial × **32 azimuthal (φ) planes** =
-  131,072 cells — **exactly 8×** the working set (per-axis doubling cubes the
-  count; this is `stepOps_double_all` below, the 3-D naive floor).
-- 32 φ-planes resolve azimuthal filaments up to kφ = 15 (Nyquist) — streamers
+- The 2-D page: 128×128 = 16,384 cells in the (r, z) meridional plane.
+- Shipped 3-D: 128 radial × 128 axial × **64 azimuthal (φ) planes** =
+  1,048,576 cells — **exactly 8×** the prior 64×64×32 contract (per-axis
+  doubling cubes the count; this is `stepOps_double_all` below, the 3-D
+  naive floor). The 64×64×32 config stays the exact half-step fallback
+  in K (`stepOps_linear_in_K`).
+- 64 φ-planes resolve azimuthal filaments up to kφ = 31 (Nyquist) — streamers
   are low-kφ, so this is deliberately loose resolution in φ.
 
 ## The counted model
@@ -78,11 +80,13 @@ theorem stepOps_mono (N₁ N₂ M₁ M₂ K₁ K₂ J₁ J₂ : ℕ) (hN : N₁ 
 `#eval` is a computation in the kernel: these integers are the certified
 counts, not hand-waved figures. -/
 
--- the planned configuration: 64×64×32 with J = 40 Jacobi sweeps
-#eval stepOps 64 64 32 40
+-- the shipped configuration: 128×128×64 with J = 40 Jacobi sweeps
+#eval stepOps 128 128 64 40
 -- the reduction ladder (exact halves by the linear-in-K theorem)
-#eval stepOps 64 64 16 40
-#eval stepOps 64 64 8 40
+#eval stepOps 128 128 32 40
+#eval stepOps 128 128 16 40
+-- the prior 64×64×32 contract, for scale
+#eval stepOps 64 64 32 40
 -- and the 2-D reference (the current page: 128×128, J = 60), for scale
 #eval 128 * 128 * Stencil3.cellOps 60   -- the current 2-D page (128×128, J=60)
 

@@ -31,7 +31,7 @@
 <div class="bar">
   <div><h1>LaserCortex MHD Plasma Globe</h1>
     <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2025-09-05h</span>
+  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2026-09-05i</span>
 </div>
 <div class="wrap">
   <canvas id="view" width="700" height="700"></canvas>
@@ -41,6 +41,7 @@
     <div class="card" style="grid-column: span 2;"><div class="t">interrogation</div><div class="v" style="font-size:0.8rem" id="mDiag">—</div></div>
     <div class="card"><div class="t">E_mag</div><div class="v" id="mEm">0.000</div></div>
     <div class="card"><div class="t">E_kin</div><div class="v" id="mEk">0.000</div></div>
+    <div class="card" style="grid-column: span 2;"><div class="t">φ-modes k=0..16 (streamer watch)</div><div class="v" style="font-size:0.8rem" id="mModes">—</div></div>
   </div>
   <div class="controls">
     <button id="playBtn" class="primary">Pause</button>
@@ -69,9 +70,14 @@
     </label>
     <label style="font-size:0.75rem"><input type="checkbox" id="mirrorCb"> mirror</label>
     <label style="font-size:0.75rem"><input type="checkbox" id="spinCb"> spin</label>
+    <label style="font-size:0.75rem">yellow lines
+      <select id="lineModeSel"><option value="0">Field lines (ψ contours)</option><option value="1">Streamer watch (non-axisymmetry)</option></select>
+    </label>
   </div>
   <div class="hint">
-    <b>Drag</b> orbit · <b>scroll</b> zoom. Gold filaments = magnetic flux surfaces (ψ bands);
+    <b>Drag</b> orbit · <b>scroll</b> zoom. Gold filaments = magnetic flux surfaces (ψ bands) —
+    or flip the yellow-lines selector to Streamer watch, which brightness-encodes
+    non-axisymmetry onto the same lines (soundness: Schedule3D.nonaxi_sound);
     the globe's glow = |j| current density; the motion is AC-driven reduced-MHD
     (flux freezing + current response). Raise steps/frame for extended observation.
     The solver mirrors the validated Python mirror (reduced_mhd.py / mhd_globe_dipole.py):
@@ -81,8 +87,8 @@
 </div>
 
 <script type="module">
-const N = 64;           // radial (r) and axial (z) resolution
-const NK = 32;          // azimuthal (phi) planes  -- Cost3D contract: 64x64x32, J=40
+const N = 128;          // radial (r) and axial (z) resolution (Schedule3D: 128x128x64 shipped)
+const NK = 64;          // azimuthal (phi) planes — kφ ≤ 31 at Nyquist (was 32/15)
 const TOT = N * N * NK;
 const DX = (2 * Math.PI) / N;
 const DX2 = DX * DX;
@@ -156,13 +162,13 @@ struct RUniforms {
 @group(0) @binding(9)  var<storage, read_write> drivef : array<f32>;
 
 const PI   : f32 = 3.141592653589793;
-const NXF  : f32 = 64.0;
-const NYF  : f32 = 64.0;
-const NZF  : f32 = 32.0;
-const DEL   : f32 = 0.09817477042468103;    // 2*pi/64
-const DEL2  : f32 = 0.009638285185425472;
-const DELP  : f32 = 0.19634954084936207;     // 2*pi/32
-const DELP2 : f32 = 0.038553140741701886;
+// Resolution-parameterized spacing (uniform-driven): the old NXF/NYF/NZF
+// and DEL consts are gone, so grid resolution is a real knob (JS N/NK →
+// cu.nx/cu.ny/cu.nz). Every kernel and the render sampler derive spacing
+// from these; cf. Schedule3D traffic bounds for why the knob matters.
+fn del() -> f32 { return 2.0 * PI / f32(cu.nx); }
+fn delp() -> f32 { return 2.0 * PI / f32(cu.nz); }
+fn del2() -> f32 { let d = del(); return d * d; }
 
 fn ix(i : u32, j : u32, k : u32) -> u32 { return (k * cu.ny + j) * cu.nx + i; }
 
@@ -173,68 +179,59 @@ fn dxPsi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.nx; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
     let a = select(psi_b[ix(xm,j,k)], psi_a[ix(xm,j,k)], sel == 0u);
     let b = select(psi_b[ix(xp,j,k)], psi_a[ix(xp,j,k)], sel == 0u);
-    return (b - a) / (2.0 * DEL);
+    return (b - a) / (2.0 * del());
 }
 fn dyPsi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.ny; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
     let a = select(psi_b[ix(i,ym,k)], psi_a[ix(i,ym,k)], sel == 0u);
     let b = select(psi_b[ix(i,yp,k)], psi_a[ix(i,yp,k)], sel == 0u);
-    return (b - a) / (2.0 * DEL);
+    return (b - a) / (2.0 * del());
 }
 fn dzPsi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.nz; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
     let a = select(psi_b[ix(i,j,km)], psi_a[ix(i,j,km)], sel == 0u);
     let b = select(psi_b[ix(i,j,kp)], psi_a[ix(i,j,kp)], sel == 0u);
-    return (b - a) / (2.0 * DELP);
+    return (b - a) / (2.0 * delp());
 }
 fn dxOm(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.nx; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
     let a = select(om_b[ix(xm,j,k)], om_a[ix(xm,j,k)], sel == 0u);
     let b = select(om_b[ix(xp,j,k)], om_a[ix(xp,j,k)], sel == 0u);
-    return (b - a) / (2.0 * DEL);
+    return (b - a) / (2.0 * del());
 }
 fn dyOm(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.ny; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
     let a = select(om_b[ix(i,ym,k)], om_a[ix(i,ym,k)], sel == 0u);
     let b = select(om_b[ix(i,yp,k)], om_a[ix(i,yp,k)], sel == 0u);
-    return (b - a) / (2.0 * DEL);
+    return (b - a) / (2.0 * del());
 }
 fn dzOm(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.nz; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
     let a = select(om_b[ix(i,j,km)], om_a[ix(i,j,km)], sel == 0u);
     let b = select(om_b[ix(i,j,kp)], om_a[ix(i,j,kp)], sel == 0u);
-    return (b - a) / (2.0 * DELP);
+    return (b - a) / (2.0 * delp());
 }
 fn dxPh(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.nx; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
     let a = select(phi_b[ix(xm,j,k)], phi_a[ix(xm,j,k)], sel == 0u);
     let b = select(phi_b[ix(xp,j,k)], phi_a[ix(xp,j,k)], sel == 0u);
-    return (b - a) / (2.0 * DEL);
+    return (b - a) / (2.0 * del());
 }
 fn dyPh(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.ny; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
     let a = select(phi_b[ix(i,ym,k)], phi_a[ix(i,ym,k)], sel == 0u);
     let b = select(phi_b[ix(i,yp,k)], phi_a[ix(i,yp,k)], sel == 0u);
-    return (b - a) / (2.0 * DEL);
+    return (b - a) / (2.0 * del());
 }
 fn dzPh(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.nz; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
     let a = select(phi_b[ix(i,j,km)], phi_a[ix(i,j,km)], sel == 0u);
     let b = select(phi_b[ix(i,j,kp)], phi_a[ix(i,j,kp)], sel == 0u);
-    return (b - a) / (2.0 * DELP);
+    return (b - a) / (2.0 * delp());
 }
-fn dxJ(i : u32, j : u32, k : u32) -> f32 {
-    let n = cu.nx; let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
-    return (jbuf[ix(xp,j,k)] - jbuf[ix(xm,j,k)]) / (2.0 * DEL);
-}
-fn dyJ(i : u32, j : u32, k : u32) -> f32 {
-    let n = cu.ny; let ym = (j + n - 1u) % n; let yp = (j + 1u) % n;
-    return (jbuf[ix(i,yp,k)] - jbuf[ix(i,ym,k)]) / (2.0 * DEL);
-}
-fn dzJ(i : u32, j : u32, k : u32) -> f32 {
-    let n = cu.nz; let km = (k + n - 1u) % n; let kp = (k + 1u) % n;
-    return (jbuf[ix(i,j,kp)] - jbuf[ix(i,j,km)]) / (2.0 * DELP);
-}
+// (dxJ/dyJ/dzJ removed: rhs kernels recompute j from ψ taps via j_of_psi,
+// Schedule3D fusedDxJ/DyJ/DzJ — no jbuf round-trip. lapj kernel stays for
+// the paused-mode meter refresh in loop().)
 fn lap3Psi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.nx; let m = cu.ny; let q = cu.nz;
     let xm = (i + n - 1u) % n; let xp = (i + 1u) % n;
@@ -247,7 +244,7 @@ fn lap3Psi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
           + select(psi_b[ix(i,j,kp)], psi_a[ix(i,j,kp)], sel == 0u)
           + select(psi_b[ix(i,j,km)], psi_a[ix(i,j,km)], sel == 0u)
           - 6.0 * select(psi_b[ix(i,j,k)], psi_a[ix(i,j,k)], sel == 0u);
-    return s / DEL2;
+    return s / del2();
 }
 fn lap3Om(i : u32, j : u32, k : u32, sel : u32) -> f32 {
     let n = cu.nx; let m = cu.ny; let q = cu.nz;
@@ -261,19 +258,26 @@ fn lap3Om(i : u32, j : u32, k : u32, sel : u32) -> f32 {
           + select(om_b[ix(i,j,kp)], om_a[ix(i,j,kp)], sel == 0u)
           + select(om_b[ix(i,j,km)], om_a[ix(i,j,km)], sel == 0u)
           - 6.0 * select(om_b[ix(i,j,k)], om_a[ix(i,j,k)], sel == 0u);
-    return s / DEL2;
+    return s / del2();
 }
 fn br3(ax : f32, ay : f32, az : f32, bx : f32, by : f32, bz : f32) -> f32 {
     return (ax * by - ay * bx) + (ay * bz - az * by) + (az * bx - ax * bz);
+}
+// j at a cell recomputed from ψ taps (Schedule3D fusedDxJ/DyJ/DzJ: same
+// taps, same order as lapj ⇒ bit-identical; the 1/del2() scaling is a
+// uniform factor both paths carry). Lets rhs kernels skip the jbuf
+// round-trip while still writing jbuf[center] for meters/render.
+fn j_of_psi(i : u32, j : u32, k : u32, sel : u32) -> f32 {
+    return -lap3Psi(i, j, k, sel);
 }
 
 @compute @workgroup_size(8,8,4)
 fn init_drive(@builtin(global_invocation_id) id : vec3<u32>) {
     if (id.x >= cu.nx || id.y >= cu.ny || id.z >= cu.nz) { return; }
     let i = id.x; let j = id.y; let k = id.z;
-    let r = 2.0 * PI * (f32(i)) / NXF - PI;
-    let zz = 2.0 * PI * (f32(j)) / NYF - PI;
-    let ph = 2.0 * PI * (f32(k)) / NZF - PI;
+    let r = 2.0 * PI * (f32(i)) / f32(cu.nx) - PI;
+    let zz = 2.0 * PI * (f32(j)) / f32(cu.ny) - PI;
+    let ph = 2.0 * PI * (f32(k)) / f32(cu.nz) - PI;
     let rho2 = r * r + zz * zz;
     // AC flux drive: electrode dipole shape, mildly phi-modulated so the
     // azimuthal structure is forced, not pure axisymmetry
@@ -296,7 +300,7 @@ fn poisson_a2b(@builtin(global_invocation_id) id : vec3<u32>) {
     let taps = phi_a[ix((i+1u)%n,j,k)] + phi_a[ix((i+n-1u)%n,j,k)]
              + phi_a[ix(i,(j+1u)%m,k)] + phi_a[ix(i,(j+m-1u)%m,k)]
              + phi_a[ix(i,j,(k+1u)%q)] + phi_a[ix(i,j,(k+q-1u)%q)];
-    phi_b[ix(i,j,k)] = (taps + omv * DEL2) / 6.0;
+    phi_b[ix(i,j,k)] = (taps + omv * del2()) / 6.0;
 }
 @compute @workgroup_size(8,8,4)
 fn poisson_b2a(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -307,7 +311,7 @@ fn poisson_b2a(@builtin(global_invocation_id) id : vec3<u32>) {
     let taps = phi_b[ix((i+1u)%n,j,k)] + phi_b[ix((i+n-1u)%n,j,k)]
              + phi_b[ix(i,(j+1u)%m,k)] + phi_b[ix(i,(j+m-1u)%m,k)]
              + phi_b[ix(i,j,(k+1u)%q)] + phi_b[ix(i,j,(k+q-1u)%q)];
-    phi_a[ix(i,j,k)] = (taps + omv * DEL2) / 6.0;
+    phi_a[ix(i,j,k)] = (taps + omv * del2()) / 6.0;
 }
 
 @compute @workgroup_size(8,8,4)
@@ -318,7 +322,14 @@ fn mid_rhs(@builtin(global_invocation_id) id : vec3<u32>) {
     let pdx = dxPh(i,j,k,ps); let pdy = dyPh(i,j,k,ps); let pdz = dzPh(i,j,k,ps);
     let sdx = dxPsi(i,j,k,0u); let sdy = dyPsi(i,j,k,0u); let sdz = dzPsi(i,j,k,0u);
     let wdx = dxOm(i,j,k,0u); let wdy = dyOm(i,j,k,0u); let wdz = dzOm(i,j,k,0u);
-    let jdx = dxJ(i,j,k); let jdy = dyJ(i,j,k); let jdz = dzJ(i,j,k);
+    // Fused j-gradient (Schedule3D.fusedDxJ/DyJ/DzJ): j at neighbor cells
+    // recomputed from ψ taps — no jbuf round-trip. jbuf[center] is still
+    // written below for meters/render.
+    let nnx = cu.nx; let nny = cu.ny; let nnz = cu.nz;
+    let jdx = (j_of_psi((i+1u)%nnx,j,k,0u) - j_of_psi((i+nnx-1u)%nnx,j,k,0u)) / (2.0 * del());
+    let jdy = (j_of_psi(i,(j+1u)%nny,k,0u) - j_of_psi(i,(j+nny-1u)%nny,k,0u)) / (2.0 * del());
+    let jdz = (j_of_psi(i,j,(k+1u)%nnz,0u) - j_of_psi(i,j,(k+nnz-1u)%nnz,0u)) / (2.0 * delp());
+    jbuf[ix(i,j,k)] = j_of_psi(i, j, k, 0u);
     let bpp = br3(pdx,pdy,pdz, sdx,sdy,sdz);
     let bpo = br3(pdx,pdy,pdz, wdx,wdy,wdz);
     let bpj = br3(sdx,sdy,sdz, jdx,jdy,jdz);
@@ -337,7 +348,12 @@ fn adv_rhs(@builtin(global_invocation_id) id : vec3<u32>) {
     let pdx = dxPh(i,j,k,ps); let pdy = dyPh(i,j,k,ps); let pdz = dzPh(i,j,k,ps);
     let sdx = dxPsi(i,j,k,1u); let sdy = dyPsi(i,j,k,1u); let sdz = dzPsi(i,j,k,1u);
     let wdx = dxOm(i,j,k,1u); let wdy = dyOm(i,j,k,1u); let wdz = dzOm(i,j,k,1u);
-    let jdx = dxJ(i,j,k); let jdy = dyJ(i,j,k); let jdz = dzJ(i,j,k);
+    // Fused j-gradient at midpoint buffers (sel 1u), same legality.
+    let nnx = cu.nx; let nny = cu.ny; let nnz = cu.nz;
+    let jdx = (j_of_psi((i+1u)%nnx,j,k,1u) - j_of_psi((i+nnx-1u)%nnx,j,k,1u)) / (2.0 * del());
+    let jdy = (j_of_psi(i,(j+1u)%nny,k,1u) - j_of_psi(i,(j+nny-1u)%nny,k,1u)) / (2.0 * del());
+    let jdz = (j_of_psi(i,j,(k+1u)%nnz,1u) - j_of_psi(i,j,(k+nnz-1u)%nnz,1u)) / (2.0 * delp());
+    jbuf[ix(i,j,k)] = j_of_psi(i, j, k, 1u);
     let bpp = br3(pdx,pdy,pdz, sdx,sdy,sdz);
     let bpo = br3(pdx,pdy,pdz, wdx,wdy,wdz);
     let bpj = br3(sdx,sdy,sdz, jdx,jdy,jdz);
@@ -382,20 +398,20 @@ fn phiOf(p : vec3<f32>) -> f32 {
 // meridional window, phi period-wrapped. Buffer layout (k*64+j)*64+i (3D).
 fn psiAt3(r : f32, z : f32, ph : f32) -> f32 {
     let useA = ru.which < 0.5;
-    let fx = clamp((r + PI) / (2.0 * PI), 0.0, 1.0) * 63.0;
-    let fy = clamp((z + PI) / (2.0 * PI), 0.0, 1.0) * 63.0;
-    let fp = (ph + PI) / (2.0 * PI) * 32.0;
-    let x0 = u32(floor(fx)); let y0 = u32(floor(fy)); let p0 = u32(floor(fp)) % 32u;
-    let x1 = min(x0 + 1u, 63u); let y1 = min(y0 + 1u, 63u); let p1 = (p0 + 1u) % 32u;
+    let fx = clamp((r + PI) / (2.0 * PI), 0.0, 1.0) * (f32(cu.nx) - 1.0);
+    let fy = clamp((z + PI) / (2.0 * PI), 0.0, 1.0) * (f32(cu.nx) - 1.0);
+    let fp = (ph + PI) / (2.0 * PI) * f32(cu.nz);
+    let x0 = u32(floor(fx)); let y0 = u32(floor(fy)); let p0 = u32(floor(fp)) % cu.nz;
+    let x1 = min(x0 + 1u, (cu.nx - 1u)); let y1 = min(y0 + 1u, (cu.nx - 1u)); let p1 = (p0 + 1u) % cu.nz;
     let tx = fx - f32(x0); let ty = fy - f32(y0); let tp = fp - floor(fp);
-    let v00 = select(psi_b[(p0 * 64u + y0) * 64u + x0], psi_a[(p0 * 64u + y0) * 64u + x0], useA);
-    let v01 = select(psi_b[(p1 * 64u + y0) * 64u + x0], psi_a[(p1 * 64u + y0) * 64u + x0], useA);
-    let v10 = select(psi_b[(p0 * 64u + y1) * 64u + x0], psi_a[(p0 * 64u + y1) * 64u + x0], useA);
-    let v11 = select(psi_b[(p1 * 64u + y1) * 64u + x0], psi_a[(p1 * 64u + y1) * 64u + x0], useA);
-    let v20 = select(psi_b[(p0 * 64u + y0) * 64u + x1], psi_a[(p0 * 64u + y0) * 64u + x1], useA);
-    let v21 = select(psi_b[(p1 * 64u + y0) * 64u + x1], psi_a[(p1 * 64u + y0) * 64u + x1], useA);
-    let v30 = select(psi_b[(p0 * 64u + y1) * 64u + x1], psi_a[(p0 * 64u + y1) * 64u + x1], useA);
-    let v31 = select(psi_b[(p1 * 64u + y1) * 64u + x1], psi_a[(p1 * 64u + y1) * 64u + x1], useA);
+    let v00 = select(psi_b[(p0 * cu.nx + y0) * cu.nx + x0], psi_a[(p0 * cu.nx + y0) * cu.nx + x0], useA);
+    let v01 = select(psi_b[(p1 * cu.nx + y0) * cu.nx + x0], psi_a[(p1 * cu.nx + y0) * cu.nx + x0], useA);
+    let v10 = select(psi_b[(p0 * cu.nx + y1) * cu.nx + x0], psi_a[(p0 * cu.nx + y1) * cu.nx + x0], useA);
+    let v11 = select(psi_b[(p1 * cu.nx + y1) * cu.nx + x0], psi_a[(p1 * cu.nx + y1) * cu.nx + x0], useA);
+    let v20 = select(psi_b[(p0 * cu.nx + y0) * cu.nx + x1], psi_a[(p0 * cu.nx + y0) * cu.nx + x1], useA);
+    let v21 = select(psi_b[(p1 * cu.nx + y0) * cu.nx + x1], psi_a[(p1 * cu.nx + y0) * cu.nx + x1], useA);
+    let v30 = select(psi_b[(p0 * cu.nx + y1) * cu.nx + x1], psi_a[(p0 * cu.nx + y1) * cu.nx + x1], useA);
+    let v31 = select(psi_b[(p1 * cu.nx + y1) * cu.nx + x1], psi_a[(p1 * cu.nx + y1) * cu.nx + x1], useA);
     let b0 = mix(v00, v10, ty); let b1 = mix(v01, v11, ty);
     let b2 = mix(v20, v30, ty); let b3 = mix(v21, v31, ty);
     let c0 = mix(b0, b2, tx); let c1 = mix(b1, b3, tx);
@@ -403,20 +419,32 @@ fn psiAt3(r : f32, z : f32, ph : f32) -> f32 {
 }
 // trilinear |j| with the same layout (phi wrapped)
 fn jAt3(r : f32, z : f32, ph : f32) -> f32 {
-    let fx = clamp((r + PI) / (2.0 * PI), 0.0, 1.0) * 63.0;
-    let fy = clamp((z + PI) / (2.0 * PI), 0.0, 1.0) * 63.0;
-    let fp = (ph + PI) / (2.0 * PI) * 32.0;
-    let x0 = u32(floor(fx)); let y0 = u32(floor(fy)); let p0 = u32(floor(fp)) % 32u;
-    let x1 = min(x0 + 1u, 63u); let y1 = min(y0 + 1u, 63u); let p1 = (p0 + 1u) % 32u;
+    let fx = clamp((r + PI) / (2.0 * PI), 0.0, 1.0) * (f32(cu.nx) - 1.0);
+    let fy = clamp((z + PI) / (2.0 * PI), 0.0, 1.0) * (f32(cu.nx) - 1.0);
+    let fp = (ph + PI) / (2.0 * PI) * f32(cu.nz);
+    let x0 = u32(floor(fx)); let y0 = u32(floor(fy)); let p0 = u32(floor(fp)) % cu.nz;
+    let x1 = min(x0 + 1u, (cu.nx - 1u)); let y1 = min(y0 + 1u, (cu.nx - 1u)); let p1 = (p0 + 1u) % cu.nz;
     let tx = fx - f32(x0); let ty = fy - f32(y0); let tp = fp - floor(fp);
-    let v00 = jbuf[(p0 * 64u + y0) * 64u + x0]; let v01 = jbuf[(p1 * 64u + y0) * 64u + x0];
-    let v10 = jbuf[(p0 * 64u + y1) * 64u + x0]; let v11 = jbuf[(p1 * 64u + y1) * 64u + x0];
-    let v20 = jbuf[(p0 * 64u + y0) * 64u + x1]; let v21 = jbuf[(p1 * 64u + y0) * 64u + x1];
-    let v30 = jbuf[(p0 * 64u + y1) * 64u + x1]; let v31 = jbuf[(p1 * 64u + y1) * 64u + x1];
+    let v00 = jbuf[(p0 * cu.nx + y0) * cu.nx + x0]; let v01 = jbuf[(p1 * cu.nx + y0) * cu.nx + x0];
+    let v10 = jbuf[(p0 * cu.nx + y1) * cu.nx + x0]; let v11 = jbuf[(p1 * cu.nx + y1) * cu.nx + x0];
+    let v20 = jbuf[(p0 * cu.nx + y0) * cu.nx + x1]; let v21 = jbuf[(p1 * cu.nx + y0) * cu.nx + x1];
+    let v30 = jbuf[(p0 * cu.nx + y1) * cu.nx + x1]; let v31 = jbuf[(p1 * cu.nx + y1) * cu.nx + x1];
     let b0 = mix(v00, v10, ty); let b1 = mix(v01, v11, ty);
     let b2 = mix(v20, v30, ty); let b3 = mix(v21, v31, ty);
     let c0 = mix(b0, b2, tx); let c1 = mix(b1, b3, tx);
     return abs(mix(c0, c1, tp));
+}
+// nearest-sample |j| for the streamer diagnostic: one tap, no trilinear.
+// The tint needs a cheap local probe, not a smooth field; indices mirror
+// jAt3 with nearest rounding (phi station wraps via % cu.nz).
+fn jAt3nearest(r : f32, z : f32, ph : f32) -> f32 {
+    let fx = clamp((r + PI) / (2.0 * PI), 0.0, 1.0) * (f32(cu.nx) - 1.0);
+    let fy = clamp((z + PI) / (2.0 * PI), 0.0, 1.0) * (f32(cu.nx) - 1.0);
+    let fp = (ph + PI) / (2.0 * PI) * f32(cu.nz);
+    let xc = min(u32(fx + 0.5), (cu.nx - 1u));
+    let yc = min(u32(fy + 0.5), (cu.nx - 1u));
+    let pc = u32(floor(fp + 0.5)) % cu.nz;
+    return abs(jbuf[(pc * cu.nx + yc) * cu.nx + xc]);
 }
 fn heatColor(t : f32) -> vec3<f32> {
     let c = clamp(t, 0.0, 1.0);
@@ -495,6 +523,7 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
     // PASS 2: width-less AA field lines on 4 meridian planes, clipped at dome
     var u4 = array<f32, 4>(0.0, 0.0, 0.0, 0.0);
     var ok4 = array<bool, 4>(false, false, false, false);
+    var m4 = array<f32, 4>(0.0, 0.0, 0.0, 0.0);
     for (var k = 0u; k < 4u; k = k + 1u) {
         let phi = f32(k) * PI / 4.0;
         let nx = -sin(phi);
@@ -514,19 +543,40 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
         if (rho > ru.rDome) { ok = false; }
         u4[k] = (psiAt3(rr, ax, f32(k) * PI / 4.0) - ru.levelMin) * ru.levelInv;
         ok4[k] = ok;
+        m4[k] = 0.0;
+        if (ru.which > 0.5 && ok) {
+            // streamer diagnostic: opposite-plane |j| difference, normalized.
+            // Axisymmetric columns read exactly 0 here; nonzero is genuine
+            // kφ content at the line sample (NK even ⇒ no wrap ambiguity).
+            let ja = jAt3nearest(rr, ax, phi);
+            let jb = jAt3nearest(rr, ax, phi + PI);
+            m4[k] = abs(ja - jb) / (abs(ja) + abs(jb) + 1e-6);
+        }
     }
+    var accStr = 0.0;
     for (var k = 0u; k < 4u; k = k + 1u) {
         let u = u4[k];
         let dU = max(abs(dpdx(u)), abs(dpdy(u))) + 1e-5;
         let du = abs(fract(u + 0.5) - 0.5);
         let distPx = du / dU;
         let line = 1.0 - smoothstep(0.45, 1.4, distPx);
-        if (ok4[k]) { accLine = max(accLine, line); }
+        if (ok4[k]) { accLine = max(accLine, line); accStr = max(accStr, line * m4[k]); }
     }
     // reference display chain: log-ish gather -> EV exposure -> ACES filmic
     // (Narkowicz 2015, the standard WebGPU tonemap) -> display gamma 2.2
     let streamer = 1.0 - exp(-accStream * exp2(ru.exposure));
-    var composite = streamer + vec3<f32>(1.0, 0.80, 0.15) * accLine * 1.2;
+    // Yellow lines: gold flux contours by default; in streamer-watch mode
+    // (ru.which) brightness-encoded by non-axisymmetry — lines through
+    // axisymmetric columns dim to a skeleton, lines through kφ-broken
+    // columns go white-hot. Same lines, diagnostic encoding.
+    var lineCol = vec3<f32>(1.0, 0.80, 0.15);
+    var lineGain = 1.2;
+    if (ru.which > 0.5) {
+        let frac = clamp(accStr / max(accLine, 1e-5), 0.0, 1.0);
+        lineCol = mix(vec3<f32>(1.0, 0.80, 0.15), vec3<f32>(1.0, 0.97, 0.92), frac);
+        lineGain = 1.2 * (0.25 + 1.75 * frac);
+    }
+    var composite = streamer + lineCol * accLine * lineGain;
     if (tG > 0.0) {
         let ph = ro + rd * tG;
         let nrm = normalize(ph);
@@ -574,7 +624,17 @@ const BUILD = "2025-09-03d";   // visible build tag: hard-refresh must show this
 let simTime = 0, running = true, driveAmp = 1.2, driveT = 0.5, stepsPerFrame = 4;
 let winR0 = 0.0, winZ0 = 0.0, winSigma = 3.0;
 let kLevels = 6, exposure = 0.0, rDome = 1.9, noiseAmp = 0.03;
-let axisIdx = 1, mirror = false;
+let axisIdx = 1, mirror = false, lineMode = 0;
+let burstN = 20;   // init-burst steps (default 20; ?burst=N overrides for headless iteration)
+// Deep-linkable diagnostic view: ?linemode=1 opens directly in streamer watch.
+try {
+  if (new URLSearchParams(location.search).get("linemode") === "1") {
+    lineMode = 1;
+    document.getElementById("lineModeSel").value = "1";
+  }
+  const qb = parseInt(new URLSearchParams(location.search).get("burst"), 10);
+  if (Number.isFinite(qb) && qb >= 0) burstN = qb;
+} catch (e) {}
 let yaw = 0.8, pitch = 0.35, dist = 3.2, autoRotate = false;   // turntable OFF by default
 let last = performance.now();
 let phiSol = "a";
@@ -662,7 +722,7 @@ async function init() {
   const V = GPUShaderStage;
   layout = device.createBindGroupLayout({
     entries: [
-      { binding: 0, visibility: V.COMPUTE, buffer: { type: "uniform", minBindingSize: 48 } },
+      { binding: 0, visibility: V.COMPUTE | V.FRAGMENT, buffer: { type: "uniform", minBindingSize: 48 } },
       { binding: 1, visibility: V.FRAGMENT, buffer: { type: "uniform", minBindingSize: 128 } },
       { binding: 2, visibility: V.COMPUTE | V.FRAGMENT, buffer: { type: "storage", minBindingSize: 4 } },
       { binding: 3, visibility: V.COMPUTE | V.FRAGMENT, buffer: { type: "storage", minBindingSize: 4 } },
@@ -734,7 +794,7 @@ async function init() {
   device.queue.writeBuffer(cBufs.phi_b, 0, phi0);
   phiSol = "a";
   dispatch1("init_drive");
-  for (let b = 0; b < 20; b++) step();   // diagnostic burst: multi-step compute check
+  for (let b = 0; b < burstN; b++) step();   // diagnostic burst: multi-step compute check
   console.log("[LaserCortex] burst t=" + simTime.toFixed(3));
   requestAnimationFrame(loop);
 }
@@ -778,13 +838,11 @@ function poissonSolve(omWhich, t) {
 function step() {
   // stage 1: k1 at (ψ_a, ω_a) computed inline by mid_rhs
   writeCu(0, simTime, phiSol);
-  dispatch1("lapj");            // jbuf = j(ψ_a)
   poissonSolve(0, simTime);     // φ(ω_a); phiSol updated
   writeCu(0, simTime, phiSol);  // phiSrc = φ solution buffer
-  dispatch1("mid_rhs");         // ψ_b, ω_b = midpoint
+  dispatch1("mid_rhs");         // ψ_b, ω_b = midpoint (j fused in-kernel)
   // stage 2: k2 at midpoint computed inline by adv_rhs
   writeCu(1, simTime + 1e-3, phiSol);
-  dispatch1("lapj");            // jbuf = j(ψ_b)
   poissonSolve(1, simTime + 1e-3);
   writeCu(1, simTime + 1e-3, phiSol);
   dispatch1("adv_rhs");         // ψ_a, ω_a += dt·k2
@@ -818,7 +876,12 @@ async function meters() {
   const p = new Float32Array(rbBufs.p.getMappedRange().slice(0));
   const ph = new Float32Array(rbBufs.ph.getMappedRange().slice(0));
   rbBufs.j.unmap(); rbBufs.p.unmap(); rbBufs.ph.unmap();
-  let maxJ = 0, em = 0, ek = 0, pMin = Infinity, pMax = -Infinity;
+  let maxJ = 0, pMin = Infinity, pMax = -Infinity;
+  // Em/Ek triple loop is O(cells) in JS — gate to every 5th frame at 1M
+  // cells; maxJ/psi-range stay per-frame (cheap single pass each).
+  meters.emTick = (meters.emTick || 0) + 1;
+  const doEmEk = meters.emTick % 5 === 1;
+  if (doEmEk) { meters.em = 0; meters.ek = 0; }
   const absJ = new Float32Array(TOT);
   for (let i = 0; i < TOT; i++) {
     const a = Math.abs(j[i]); if (a > maxJ) maxJ = a;
@@ -826,6 +889,7 @@ async function meters() {
     if (p[i] < pMin) pMin = p[i];
     if (p[i] > pMax) pMax = p[i];
   }
+  if (doEmEk) {
   for (let k = 0; k < NK; k++)
     for (let j2 = 0; j2 < N; j2++)
       for (let i = 0; i < N; i++) {
@@ -837,9 +901,12 @@ async function meters() {
         const ux = (ph[(k*N+j2)*N+ip]-ph[(k*N+j2)*N+im])/(2*DX);
         const uy = (ph[(k*N+jp)*N+i]-ph[(k*N+jm)*N+i])/(2*DX);
         const uz = (ph[(kp*N+j2)*N+i]-ph[(km*N+j2)*N+i])/(2*DXP);
-        em += 0.5*(bx*bx+by*by+bz*bz)/TOT;
-        ek += 0.5*(ux*ux+uy*uy+uz*uz)/TOT;
+        meters.em += 0.5*(bx*bx+by*by+bz*bz)/TOT;
+        meters.ek += 0.5*(ux*ux+uy*uy+uz*uz)/TOT;
       }
+  document.getElementById("mEm").innerText = meters.em.toFixed(4);
+  document.getElementById("mEk").innerText = meters.ek.toFixed(4);
+  }
   levelMin = pMin; levelInv = kLevels / Math.max(pMax - pMin, 1e-6);
   if (psiInit0) {
     let dMax = 0;
@@ -859,9 +926,68 @@ async function meters() {
   document.getElementById("mJ").innerText = maxJ.toExponential(2);
   document.getElementById("mDiag").innerText =
     "j-peak (r,z): (" + jr.toFixed(2) + ", " + jz.toFixed(2) + ")  \u03a6=" + (pMax - pMin).toFixed(3);
-  document.getElementById("mEm").innerText = em.toFixed(4);
-  document.getElementById("mEk").innerText = ek.toFixed(4);
+  // (mEm/mEk update inside the gated Em/Ek block above)
   meters.absJ = absJ;
+  // φ-mode spectrum (streamer watch): full-φ DFT of |j| on stride-4
+  // columns (Schedule3D.diagOpsHost counts this: ≤0.5% of a step).
+  // Gated to every 10th meters() call; (x,y) subsampling cannot alias φ
+  // modes, it only thins the spatial average. Same quantity (|j|) as the
+  // glow and tint layers, so all three readings agree by construction.
+  meters.modeTick = (meters.modeTick || 0) + 1;
+  // First frame populates the meter immediately, then every 10th frame.
+  if (meters.modeTick % 10 === 0 || meters.modeTick === 1) {
+    const NM = NK / 2;
+    let tw = meters.twiddles;
+    if (!tw || tw.nk !== NK) {
+      tw = { nk: NK, cos: [], sin: [] };
+      for (let m = 0; m <= NM; m++) {
+        const rc = [], rs = [];
+        for (let k = 0; k < NK; k++) {
+          const a = (2 * Math.PI * m * k) / NK;
+          rc.push(Math.cos(a)); rs.push(Math.sin(a));
+        }
+        tw.cos.push(rc); tw.sin.push(rs);
+      }
+      meters.twiddles = tw;
+    }
+    const E = new Float64Array(NM + 1);
+    let sumJ2 = 0;
+    for (let jj2 = 0; jj2 < N; jj2 += 4)
+      for (let ii = 0; ii < N; ii += 4) {
+        for (let m = 0; m <= NM; m++) {
+          let re = 0, im = 0;
+          const rc = tw.cos[m], rs = tw.sin[m];
+          for (let k = 0; k < NK; k++) {
+            const v = absJ[(k * N + jj2) * N + ii];
+            re += v * rc[k]; im -= v * rs[k];
+            if (m === 0) sumJ2 += v * v;
+          }
+          E[m] += re * re + im * im;
+        }
+      }
+    // Parseval self-check: Σ|j|² vs (E0 + E_N/2 + 2·Σmid)/NK over the sample.
+    let espec = E[0] + E[NM];
+    for (let m = 1; m < NM; m++) espec += 2 * E[m];
+    espec /= NK;
+    const pvErr = sumJ2 > 0 ? Math.abs(espec - sumJ2) / sumJ2 : 0;
+    let eTot = 0;
+    for (let m = 0; m <= NM; m++) eTot += (m === 0 || m === NM) ? E[m] : 2 * E[m];
+    const nonaxi = eTot > 0 ? 1 - E[0] / eTot : 0;
+    let topM = 0, topE = -1;
+    for (let m = 1; m <= NM; m++) {
+      const ee = m === NM ? E[m] : 2 * E[m];
+      if (ee > topE) { topE = ee; topM = m; }
+    }
+    const e1frac = eTot > 0 && NM >= 1 ? (2 * E[1]) / eTot : 0;
+    document.getElementById("mModes").innerText =
+      "kφ>0: " + (100 * nonaxi).toFixed(1) + "% · top k=" + topM +
+      " · k=1: " + (100 * e1frac).toFixed(1) + "% · Parseval err " + pvErr.toExponential(1);
+    if (!meters.pvLogged || pvErr > 1e-6) {
+      console.log("[LaserCortex] φ-spectrum: nonaxi=" + (100*nonaxi).toFixed(1) +
+        "% top-k=" + topM + " k1=" + (100*e1frac).toFixed(1) + "% Parseval-rel-err=" + pvErr.toExponential(2));
+      meters.pvLogged = true;
+    }
+  }
   return maxJ;
 }
 
@@ -904,7 +1030,7 @@ async function loop(now) {
   f[12]=cam.up[0]; f[13]=cam.up[1]; f[14]=cam.up[2]; f[15]=1;
   f[16]=Math.tan(0.45); f[17]=canvas.width/canvas.height;
   f[18]=0.30; f[19]=jExp;
-  f[20]=levelMin; f[21]=levelInv; f[22]=0;
+  f[20]=levelMin; f[21]=levelInv; f[22]=lineMode;
   f[23]=winR0; f[24]=winZ0; f[25]=winSigma;
   f[26]=exposure; f[27]=2.2; f[28]=0; f[29]=rDome; f[30]=axisIdx; f[31]=mirror?1:0;
   device.queue.writeBuffer(ruBuf, 0, ru);
@@ -960,6 +1086,7 @@ document.getElementById("noiseS").oninput = (e) => { noiseAmp = parseFloat(e.tar
 document.getElementById("spinCb").onchange = (e) => { autoRotate = e.target.checked; };
 document.getElementById("expS").oninput = (e) => { exposure = parseFloat(e.target.value); };
 document.getElementById("axisSel").onchange = (e) => { axisIdx = parseInt(e.target.value, 10); };
+document.getElementById("lineModeSel").onchange = (e) => { lineMode = parseInt(e.target.value, 10); };
 document.getElementById("mirrorCb").onchange = (e) => { mirror = e.target.checked; };
 
 init().catch((e) => fatal("init failed: " + e));

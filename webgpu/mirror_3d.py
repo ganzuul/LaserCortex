@@ -1,5 +1,5 @@
 import numpy as np, math
-N, NK = 64, 32
+N, NK = 128, 64
 TOT = N*N*NK
 DX2 = (2*np.pi/N)**2; DXP2 = (2*np.pi/NK)**2
 # 3D arrays (k,j,i)
@@ -38,7 +38,7 @@ def pois(omsrc, phi_src, phi_dst):
         phi_src, phi_dst = phi_dst, phi_src
     return phi_src
 dt = 2e-3; t = 0.0
-for step_ in range(400):
+for step_ in range(60):
     j = -lap(psi)
     phi = pois(om, phi, phi2)
     pdx,pdy,pdz = dx(phi),dy(phi),dz(phi)
@@ -66,7 +66,7 @@ for step_ in range(400):
     phi2 = phi
     phi = phim
     t += dt
-    if step_ % 80 == 79:
+    if step_ % 15 == 14:
         j = -lap(psi)
         em = 0.5*np.mean(dx(psi)**2+dy(psi)**2+dz(psi)**2)
         print(f"t={t:5.2f} max|j|={np.max(np.abs(j)):7.2f} Em={em:.4f}", flush=True)
