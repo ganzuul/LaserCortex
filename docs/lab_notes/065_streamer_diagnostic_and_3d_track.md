@@ -84,6 +84,17 @@ Two layers, same quantity (|j|), agreeing by construction:
 
 ## Deliberately deferred
 
+* **Host bottleneck fix (post-065, same commit track): 1 FPS at 7% GPU**
+  turned out to be a starved device, not a slow kernel — node-measured
+  host costs at 1M cells: per-frame `Array.sort` of 1M floats ~140ms
+  (the single biggest cost), Em/Ek triple loop ~40–50ms, scans ~20ms,
+  vs strided-histogram p95 at ~0.1ms. Fix: full `meters()` (readbacks +
+  scans) every 5th frame, sort replaced by a 64-bin strided histogram
+  (verified <3% vs sorted reference), Em/Ek gate retired (every meters
+  call now = same wall cadence), DFT gate %10→%2 of meters calls
+  (same ~10-frame cadence). Render uses last values; slow meters
+  (levelMin, jExp, spectrum) move slowly anyway.
+
 * **Poisson-pair shared-memory fusion** (the actual lever: 80 of 82
   dispatches, ~95% of traffic). The halo-2 certificate is landed; the
   kernel (12×12×8 tile, two sweeps in-shared) waits on measurement

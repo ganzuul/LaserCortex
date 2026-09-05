@@ -1,120 +1,368 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LaserCortex — MHD Plasma Globe (WebGPU)</title>
-<style>
-  :root{--bg:#05070d;--card:#0f1420;--border:#1e293b;--accent:#38bdf8;--text:#e5eefb;--muted:#8aa;--ok:#22c55e;--warn:#eab308;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
-  .bar{width:100%;max-width:960px;padding:12px 20px 8px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);gap:10px;}
-  .bar h1{font-size:1.15rem;margin:0;color:var(--accent);}
-  .bar .sub{font-size:0.78rem;color:var(--muted);}
-  .wrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 0;width:100%;max-width:960px;}
-  canvas{width:min(88vw,700px);height:min(88vw,700px);border-radius:10px;background:#000;border:1px solid var(--border);touch-action:none;cursor:grab;}
-  canvas:active{cursor:grabbing;}
-  .panel{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:min(88vw,700px);}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
-  .card .t{font-size:0.66rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);}
-  .card .v{font-size:1.05rem;font-weight:700;font-family:monospace;color:var(--ok);}
-  .card .v.warn{color:var(--warn);}
-  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:min(88vw,700px);}
-  button{background:#1e293b;color:var(--text);border:1px solid #334155;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:0.82rem;}
-  button.primary{background:#0284c7;border-color:#38bdf8;}
-  select,input[type=range]{background:#0f172a;color:var(--text);border:1px solid var(--border);padding:5px 8px;border-radius:6px;font-size:0.8rem;}
-  .hint{font-size:0.75rem;color:var(--muted);max-width:700px;line-height:1.5;}
-  .hint b{color:var(--accent);}
-  #gpuStatus{display:none;color:var(--warn);font-size:0.8rem;max-width:700px;}
-</style>
-</head>
-<body>
-<div class="bar">
-  <div><h1>LaserCortex MHD Plasma Globe</h1>
-    <span class="sub">real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field · ray-marched</span></div>
-  <span class="sub" id="buildTag">stencil solver · ψ-form · AC-driven dipole · build 3d-2026-09-05i</span>
-</div>
-<div class="wrap">
-  <canvas id="view" width="700" height="700"></canvas>
-  <div class="panel">
-    <div class="card"><div class="t">sim time t</div><div class="v" id="mTime">0.000</div></div>
-    <div class="card"><div class="t">max |j| (current)</div><div class="v" id="mJ">0.00</div></div>
-    <div class="card" style="grid-column: span 2;"><div class="t">interrogation</div><div class="v" style="font-size:0.8rem" id="mDiag">—</div></div>
-    <div class="card"><div class="t">E_mag</div><div class="v" id="mEm">0.000</div></div>
-    <div class="card"><div class="t">E_kin</div><div class="v" id="mEk">0.000</div></div>
-    <div class="card" style="grid-column: span 2;"><div class="t">φ-modes k=0..16 (streamer watch)</div><div class="v" style="font-size:0.8rem" id="mModes">—</div></div>
-  </div>
-  <div class="controls">
-    <button id="playBtn" class="primary">Pause</button>
-    <button id="stepBtn">Step</button>
-    <button id="resetBtn">Reset</button>
-    <label style="font-size:0.75rem">steps/frame
-      <select id="speedSel"><option>1</option><option selected>4</option><option>10</option><option>30</option></select>
-    </label>
-    <label style="font-size:0.75rem">AC drive amp
-      <input type="range" id="driveSlider" min="0" max="2.0" step="0.05" value="1.2" style="width:120px">
-    </label>
-    <label style="font-size:0.75rem">AC period (sim t)
-      <select id="driveTsel"><option>0.25</option><option selected>0.5</option><option>1</option><option>2</option><option>4</option></select>
-    </label>
-  </div>
-  <div class="controls">
-    <label style="font-size:0.75rem">window r0 <input type="range" id="wr0S" min="-2.5" max="2.5" step="0.05" value="0" style="width:90px"></label>
-    <label style="font-size:0.75rem">window z0 <input type="range" id="wz0S" min="-2.5" max="2.5" step="0.05" value="0" style="width:90px"></label>
-    <label style="font-size:0.75rem">window σ <input type="range" id="wsigmaS" min="0.4" max="3.0" step="0.05" value="3.0" style="width:80px"></label>
-    <label style="font-size:0.75rem">dome radius <input type="range" id="domeS" min="0.55" max="2.8" step="0.05" value="1.9" style="width:80px"></label>
-    <label style="font-size:0.75rem">line levels <input type="range" id="levelsS" min="3" max="10" step="1" value="6" style="width:70px"></label>
-    <label style="font-size:0.75rem">exposure EV <input type="range" id="expS" min="-2.0" max="3.0" step="0.1" value="0.0" style="width:70px"></label>
-    <label style="font-size:0.75rem">seed noise <input type="range" id="noiseS" min="0" max="0.12" step="0.005" value="0.03" style="width:70px"></label>
-    <label style="font-size:0.75rem">axis
-      <select id="axisSel"><option value="0">X</option><option value="1" selected>Y</option><option value="2">Z</option></select>
-    </label>
-    <label style="font-size:0.75rem"><input type="checkbox" id="mirrorCb"> mirror</label>
-    <label style="font-size:0.75rem"><input type="checkbox" id="spinCb"> spin</label>
-    <label style="font-size:0.75rem">yellow lines
-      <select id="lineModeSel"><option value="0">Field lines (ψ contours)</option><option value="1">Streamer watch (non-axisymmetry)</option></select>
-    </label>
-  </div>
-  <div class="hint">
-    <b>Drag</b> orbit · <b>scroll</b> zoom. Gold filaments = magnetic flux surfaces (ψ bands) —
-    or flip the yellow-lines selector to Streamer watch, which brightness-encodes
-    non-axisymmetry onto the same lines (soundness: Schedule3D.nonaxi_sound);
-    the globe's glow = |j| current density; the motion is AC-driven reduced-MHD
-    (flux freezing + current response). Raise steps/frame for extended observation.
-    The solver mirrors the validated Python mirror (reduced_mhd.py / mhd_globe_dipole.py):
-    stencil brackets + Jacobi Poisson (∇²φ = -ω), RK2, ψ-form (div-free by construction).
-  </div>
-  <div id="gpuStatus"></div>
-</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LaserCortex — MHD Plasma Globe (WebGPU)</title>
+    <style>
+      :root {
+        --bg: #05070d;
+        --card: #0f1420;
+        --border: #1e293b;
+        --accent: #38bdf8;
+        --text: #e5eefb;
+        --muted: #8aa;
+        --ok: #22c55e;
+        --warn: #eab308;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .bar {
+        width: 100%;
+        max-width: 960px;
+        padding: 12px 20px 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        border-bottom: 1px solid var(--border);
+        gap: 10px;
+      }
+      .bar h1 {
+        font-size: 1.15rem;
+        margin: 0;
+        color: var(--accent);
+      }
+      .bar .sub {
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      .wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 0;
+        width: 100%;
+        max-width: 960px;
+      }
+      canvas {
+        width: min(88vw, 700px);
+        height: min(88vw, 700px);
+        border-radius: 10px;
+        background: #000;
+        border: 1px solid var(--border);
+        touch-action: none;
+        cursor: grab;
+      }
+      canvas:active {
+        cursor: grabbing;
+      }
+      .panel {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        width: min(88vw, 700px);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 10px;
+      }
+      .card .t {
+        font-size: 0.66rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+      .card .v {
+        font-size: 1.05rem;
+        font-weight: 700;
+        font-family: monospace;
+        color: var(--ok);
+      }
+      .card .v.warn {
+        color: var(--warn);
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        width: min(88vw, 700px);
+      }
+      button {
+        background: #1e293b;
+        color: var(--text);
+        border: 1px solid #334155;
+        padding: 7px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.82rem;
+      }
+      button.primary {
+        background: #0284c7;
+        border-color: #38bdf8;
+      }
+      select,
+      input[type="range"] {
+        background: #0f172a;
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 5px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+      }
+      .hint {
+        font-size: 0.75rem;
+        color: var(--muted);
+        max-width: 700px;
+        line-height: 1.5;
+      }
+      .hint b {
+        color: var(--accent);
+      }
+      #gpuStatus {
+        display: none;
+        color: var(--warn);
+        font-size: 0.8rem;
+        max-width: 700px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <div>
+        <h1>LaserCortex MHD Plasma Globe</h1>
+        <span class="sub"
+          >real-space reduced MHD (stencil + Jacobi) · 3-D axisymmetric field ·
+          ray-marched</span
+        >
+      </div>
+      <span class="sub" id="buildTag"
+        >stencil solver · ψ-form · AC-driven dipole · build 3d-2026-09-05i</span
+      >
+    </div>
+    <div class="wrap">
+      <canvas id="view" width="700" height="700"></canvas>
+      <div class="panel">
+        <div class="card">
+          <div class="t">sim time t</div>
+          <div class="v" id="mTime">0.000</div>
+        </div>
+        <div class="card">
+          <div class="t">max |j| (current)</div>
+          <div class="v" id="mJ">0.00</div>
+        </div>
+        <div class="card" style="grid-column: span 2">
+          <div class="t">interrogation</div>
+          <div class="v" style="font-size: 0.8rem" id="mDiag">—</div>
+        </div>
+        <div class="card">
+          <div class="t">E_mag</div>
+          <div class="v" id="mEm">0.000</div>
+        </div>
+        <div class="card">
+          <div class="t">E_kin</div>
+          <div class="v" id="mEk">0.000</div>
+        </div>
+        <div class="card" style="grid-column: span 2">
+          <div class="t">φ-modes k=0..16 (streamer watch)</div>
+          <div class="v" style="font-size: 0.8rem" id="mModes">—</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="playBtn" class="primary">Pause</button>
+        <button id="stepBtn">Step</button>
+        <button id="resetBtn">Reset</button>
+        <label style="font-size: 0.75rem"
+          >steps/frame
+          <select id="speedSel">
+            <option>1</option>
+            <option selected>4</option>
+            <option>10</option>
+            <option>30</option>
+          </select>
+        </label>
+        <label style="font-size: 0.75rem"
+          >AC drive amp
+          <input
+            type="range"
+            id="driveSlider"
+            min="0"
+            max="2.0"
+            step="0.05"
+            value="1.2"
+            style="width: 120px"
+          />
+        </label>
+        <label style="font-size: 0.75rem"
+          >AC period (sim t)
+          <select id="driveTsel">
+            <option>0.25</option>
+            <option selected>0.5</option>
+            <option>1</option>
+            <option>2</option>
+            <option>4</option>
+          </select>
+        </label>
+      </div>
+      <div class="controls">
+        <label style="font-size: 0.75rem"
+          >window r0
+          <input
+            type="range"
+            id="wr0S"
+            min="-2.5"
+            max="2.5"
+            step="0.05"
+            value="0"
+            style="width: 90px"
+        /></label>
+        <label style="font-size: 0.75rem"
+          >window z0
+          <input
+            type="range"
+            id="wz0S"
+            min="-2.5"
+            max="2.5"
+            step="0.05"
+            value="0"
+            style="width: 90px"
+        /></label>
+        <label style="font-size: 0.75rem"
+          >window σ
+          <input
+            type="range"
+            id="wsigmaS"
+            min="0.4"
+            max="3.0"
+            step="0.05"
+            value="3.0"
+            style="width: 80px"
+        /></label>
+        <label style="font-size: 0.75rem"
+          >dome radius
+          <input
+            type="range"
+            id="domeS"
+            min="0.55"
+            max="2.8"
+            step="0.05"
+            value="1.9"
+            style="width: 80px"
+        /></label>
+        <label style="font-size: 0.75rem"
+          >line levels
+          <input
+            type="range"
+            id="levelsS"
+            min="3"
+            max="10"
+            step="1"
+            value="6"
+            style="width: 70px"
+        /></label>
+        <label style="font-size: 0.75rem"
+          >exposure EV
+          <input
+            type="range"
+            id="expS"
+            min="-2.0"
+            max="3.0"
+            step="0.1"
+            value="0.0"
+            style="width: 70px"
+        /></label>
+        <label style="font-size: 0.75rem"
+          >seed noise
+          <input
+            type="range"
+            id="noiseS"
+            min="0"
+            max="0.12"
+            step="0.005"
+            value="0.03"
+            style="width: 70px"
+        /></label>
+        <label style="font-size: 0.75rem"
+          >axis
+          <select id="axisSel">
+            <option value="0">X</option>
+            <option value="1" selected>Y</option>
+            <option value="2">Z</option>
+          </select>
+        </label>
+        <label style="font-size: 0.75rem"
+          ><input type="checkbox" id="mirrorCb" /> mirror</label
+        >
+        <label style="font-size: 0.75rem"
+          ><input type="checkbox" id="spinCb" /> spin</label
+        >
+        <label style="font-size: 0.75rem"
+          >yellow lines
+          <select id="lineModeSel">
+            <option value="0">Field lines (ψ contours)</option>
+            <option value="1">Streamer watch (non-axisymmetry)</option>
+          </select>
+        </label>
+      </div>
+      <div class="hint">
+        <b>Drag</b> orbit · <b>scroll</b> zoom. Gold filaments = magnetic flux
+        surfaces (ψ bands) — or flip the yellow-lines selector to Streamer
+        watch, which brightness-encodes non-axisymmetry onto the same lines
+        (soundness: Schedule3D.nonaxi_sound); the globe's glow = |j| current
+        density; the motion is AC-driven reduced-MHD (flux freezing + current
+        response). Raise steps/frame for extended observation. The solver
+        mirrors the validated Python mirror (reduced_mhd.py /
+        mhd_globe_dipole.py): stencil brackets + Jacobi Poisson (∇²φ = -ω), RK2,
+        ψ-form (div-free by construction).
+      </div>
+      <div id="gpuStatus"></div>
+    </div>
 
-<script type="module">
-const N = 128;          // radial (r) and axial (z) resolution (Schedule3D: 128x128x64 shipped)
-const NK = 64;          // azimuthal (phi) planes — kφ ≤ 31 at Nyquist (was 32/15)
-const TOT = N * N * NK;
-const DX = (2 * Math.PI) / N;
-const DX2 = DX * DX;
-const DXP = (2 * Math.PI) / NK;
-const canvas = document.getElementById("view");
+    <script type="module">
+      const N = 128; // radial (r) and axial (z) resolution (Schedule3D: 128x128x64 shipped)
+      const NK = 64; // azimuthal (phi) planes — kφ ≤ 31 at Nyquist (was 32/15)
+      const TOT = N * N * NK;
+      const DX = (2 * Math.PI) / N;
+      const DX2 = DX * DX;
+      const DXP = (2 * Math.PI) / NK;
+      const canvas = document.getElementById("view");
 
-function fatal(msg) {
-  console.error("[LaserCortex] " + msg);
-  const s = document.getElementById("gpuStatus");
-  if (s) { s.style.display = "block"; s.textContent = msg; }
-  try {
-    const c = canvas.getContext("2d");
-    if (c) {
-      c.fillStyle = "#111827"; c.fillRect(0, 0, canvas.width, canvas.height);
-      c.fillStyle = "#eab308"; c.font = "bold 13px monospace";
-      c.fillText("WEBGPU UNAVAILABLE", 18, canvas.height / 2);
-    }
-  } catch (e) {}
-}
-function browserHint() {
-  if (/Firefox\//.test(navigator.userAgent))
-    return "Firefox: WebGPU on by default since v141 (needs Vulkan; check about:support).";
-  return "Chromium: check chrome://gpu and flags --use-gl=angle --use-angle=vulkan --ignore-gpu-blocklist, optionally --enable-unsafe-webgpu.";
-}
+      function fatal(msg) {
+        console.error("[LaserCortex] " + msg);
+        const s = document.getElementById("gpuStatus");
+        if (s) {
+          s.style.display = "block";
+          s.textContent = msg;
+        }
+        try {
+          const c = canvas.getContext("2d");
+          if (c) {
+            c.fillStyle = "#111827";
+            c.fillRect(0, 0, canvas.width, canvas.height);
+            c.fillStyle = "#eab308";
+            c.font = "bold 13px monospace";
+            c.fillText("WEBGPU UNAVAILABLE", 18, canvas.height / 2);
+          }
+        } catch (e) {}
+      }
+      function browserHint() {
+        if (/Firefox\//.test(navigator.userAgent))
+          return "Firefox: WebGPU on by default since v141 (needs Vulkan; check about:support).";
+        return "Chromium: check chrome://gpu and flags --use-gl=angle --use-angle=vulkan --ignore-gpu-blocklist, optionally --enable-unsafe-webgpu.";
+      }
 
-const WGSL = `
+      const WGSL = `
 struct CUniforms {
     nx      : u32,
     ny      : u32,
@@ -614,482 +862,858 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
 }
 `;
 
-// ------------------------------------------------------------------ //
-// JS orchestration                                                     //
-// ------------------------------------------------------------------ //
-let device, ctx, cModule, rPipeline, layout, pipelineLayout;
-let cBufs = {}, rbBufs = {}, computePipes = {};
-let cuBuf, ruBuf, cBindGroup;
-const BUILD = "2025-09-03d";   // visible build tag: hard-refresh must show this in the badge
-let simTime = 0, running = true, driveAmp = 1.2, driveT = 0.5, stepsPerFrame = 4;
-let winR0 = 0.0, winZ0 = 0.0, winSigma = 3.0;
-let kLevels = 6, exposure = 0.0, rDome = 1.9, noiseAmp = 0.03;
-let axisIdx = 1, mirror = false, lineMode = 0;
-let burstN = 20;   // init-burst steps (default 20; ?burst=N overrides for headless iteration)
-// Deep-linkable diagnostic view: ?linemode=1 opens directly in streamer watch.
-try {
-  if (new URLSearchParams(location.search).get("linemode") === "1") {
-    lineMode = 1;
-    document.getElementById("lineModeSel").value = "1";
-  }
-  const qb = parseInt(new URLSearchParams(location.search).get("burst"), 10);
-  if (Number.isFinite(qb) && qb >= 0) burstN = qb;
-} catch (e) {}
-let yaw = 0.8, pitch = 0.35, dist = 3.2, autoRotate = false;   // turntable OFF by default
-let last = performance.now();
-let phiSol = "a";
-let levelMin = 0, levelInv = 30, jExp = 16.0;
-let announced = false, frameNo = 0, psiInit0 = null;
-
-function initField(psi, om) {
-  for (let k = 0; k < NK; k++) {
-    for (let j = 0; j < N; j++) {
-      const Z = (j / N) * 2 * Math.PI - Math.PI;
-      for (let i = 0; i < N; i++) {
-        const R = (i / N) * 2 * Math.PI - Math.PI;
-        const rho2 = R * R + Z * Z, a = 0.5, sig = 1.6;
-        let v = (R * R) / Math.pow(rho2 + a * a, 1.5) * Math.exp(-rho2 / (2 * sig * sig));
-        v += 0.35 * Math.exp(-rho2 / (2 * 0.81)) * Math.sin(2 * R);
-        psi[(k * N + j) * N + i] = v;
-        om[(k * N + j) * N + i] = 0;
-      }
-    }
-  }
-  // meridional initial flow (same in every phi plane), then blurred 3D noise
-  const phi0 = (i, j) => {
-    const R = (i / N) * 2 * Math.PI - Math.PI;
-    const Z = (j / N) * 2 * Math.PI - Math.PI;
-    return 0.4 * Math.sin(R) * Math.sin(Z);
-  };
-  for (let j = 0; j < N; j++)
-    for (let i = 0; i < N; i++) {
-      const ip = (i + 1) % N, im = (i + N - 1) % N;
-      const jp = (j + 1) % N, jm = (j + N - 1) % N;
-      const lap = (phi0(ip, j) + phi0(im, j) + phi0(i, jp) + phi0(i, jm) - 4 * phi0(i, j)) / DX2;
-      for (let k = 0; k < NK; k++) om[(k * N + j) * N + i] = -lap;
-    }
-  // seed noise: low-frequency (3x3x3 box-blurred), so it perturbs the 3D
-  // structure without polluting the current with grid-scale spikes
-  if (noiseAmp > 0) {
-    const raw = new Float32Array(TOT);
-    for (let i = 0; i < TOT; i++) raw[i] = Math.random() * 2 - 1;
-    const bl = new Float32Array(TOT);
-    for (let k = 0; k < NK; k++)
-      for (let j = 0; j < N; j++)
-        for (let i = 0; i < N; i++) {
-          let s2 = 0;
-          for (let dk = -1; dk <= 1; dk++)
-            for (let dy = -1; dy <= 1; dy++)
-              for (let dx = -1; dx <= 1; dx++) {
-                const x = (i + dx + N) % N, y = (j + dy + N) % N, z = (k + dk + NK) % NK;
-                s2 += raw[(z * N + y) * N + x];
-              }
-          bl[(k * N + j) * N + i] = s2 / 27;
+      // ------------------------------------------------------------------ //
+      // JS orchestration                                                     //
+      // ------------------------------------------------------------------ //
+      let device, ctx, cModule, rPipeline, layout, pipelineLayout;
+      let cBufs = {},
+        rbBufs = {},
+        computePipes = {};
+      let cuBuf, ruBuf, cBindGroup;
+      const BUILD = "2025-09-03d"; // visible build tag: hard-refresh must show this in the badge
+      let simTime = 0,
+        running = true,
+        driveAmp = 1.2,
+        driveT = 0.5,
+        stepsPerFrame = 4;
+      let winR0 = 0.0,
+        winZ0 = 0.0,
+        winSigma = 3.0;
+      let kLevels = 6,
+        exposure = 0.0,
+        rDome = 1.9,
+        noiseAmp = 0.03;
+      let axisIdx = 1,
+        mirror = false,
+        lineMode = 0;
+      let burstN = 20; // init-burst steps (default 20; ?burst=N overrides for headless iteration)
+      // Deep-linkable diagnostic view: ?linemode=1 opens directly in streamer watch.
+      try {
+        if (new URLSearchParams(location.search).get("linemode") === "1") {
+          lineMode = 1;
+          document.getElementById("lineModeSel").value = "1";
         }
-    for (let i = 0; i < TOT; i++) psi[i] += noiseAmp * bl[i];
-  }
-  return phi0;
-}
+        const qb = parseInt(
+          new URLSearchParams(location.search).get("burst"),
+          10,
+        );
+        if (Number.isFinite(qb) && qb >= 0) burstN = qb;
+      } catch (e) {}
+      let yaw = 0.8,
+        pitch = 0.35,
+        dist = 3.2,
+        autoRotate = false; // turntable OFF by default
+      let last = performance.now();
+      let phiSol = "a";
+      let levelMin = 0,
+        levelInv = 30,
+        jExp = 16.0;
+      let announced = false,
+        frameNo = 0,
+        psiInit0 = null;
 
-async function init() {
-  if (!navigator.gpu) { fatal("navigator.gpu missing — " + browserHint()); return; }
-  const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
-  if (!adapter) { fatal("requestAdapter() returned null. " + browserHint()); return; }
-  device = await adapter.requestDevice();
-  device.lost.then((info) => {
-    const msg = "GPU device lost: " + info.reason + (info.message ? " — " + info.message : "");
-    console.log("[LaserCortex] " + msg);
-    const st = document.getElementById("gpuStatus");
-    if (st) { st.style.display = "block"; st.textContent = msg; }
-  });
-  device.onuncapturederror = (ev) => {
-    const em = (ev.error && ev.error.message) ? ev.error.message : "unknown";
-    console.log("[LaserCortex] GPU uncaptured error: " + em);
-    const st = document.getElementById("gpuStatus");
-    if (st) { st.style.display = "block"; st.textContent = "GPU error: " + em; }
-  };
-
-  const fmt = navigator.gpu.getPreferredCanvasFormat();
-
-  cModule = device.createShaderModule({ code: WGSL });
-  const info = await cModule.getCompilationInfo();
-  const errs = info.messages.filter((m) => m.type === "error");
-  if (errs.length) { fatal("WGSL compile failed: " + errs.map((m) => m.message).join("; ")); return; }
-
-  ctx = canvas.getContext("webgpu");
-  ctx.configure({ device, format: fmt });
-
-  const V = GPUShaderStage;
-  layout = device.createBindGroupLayout({
-    entries: [
-      { binding: 0, visibility: V.COMPUTE | V.FRAGMENT, buffer: { type: "uniform", minBindingSize: 48 } },
-      { binding: 1, visibility: V.FRAGMENT, buffer: { type: "uniform", minBindingSize: 128 } },
-      { binding: 2, visibility: V.COMPUTE | V.FRAGMENT, buffer: { type: "storage", minBindingSize: 4 } },
-      { binding: 3, visibility: V.COMPUTE | V.FRAGMENT, buffer: { type: "storage", minBindingSize: 4 } },
-      { binding: 4, visibility: V.COMPUTE, buffer: { type: "storage", minBindingSize: 4 } },
-      { binding: 5, visibility: V.COMPUTE, buffer: { type: "storage", minBindingSize: 4 } },
-      { binding: 6, visibility: V.COMPUTE, buffer: { type: "storage", minBindingSize: 4 } },
-      { binding: 7, visibility: V.COMPUTE, buffer: { type: "storage", minBindingSize: 4 } },
-      { binding: 8, visibility: V.COMPUTE | V.FRAGMENT, buffer: { type: "storage", minBindingSize: 4 } },
-      { binding: 9, visibility: V.COMPUTE, buffer: { type: "storage", minBindingSize: 4 } },
-    ],
-  });
-  pipelineLayout = device.createPipelineLayout({ bindGroupLayouts: [layout] });
-
-  const mk = (ep) => device.createComputePipeline({
-    layout: pipelineLayout,
-    compute: { module: cModule, entryPoint: ep },
-  });
-  for (const ep of ["init_drive", "lapj", "poisson_a2b", "poisson_b2a", "mid_rhs", "adv_rhs"])
-    computePipes[ep] = mk(ep);
-
-  rPipeline = device.createRenderPipeline({
-    layout: pipelineLayout,
-    vertex: { module: cModule, entryPoint: "vs" },
-    fragment: { module: cModule, entryPoint: "fs", targets: [{ format: fmt }] },
-    primitive: { topology: "triangle-list" },
-  });
-
-  const sz = TOT * 4;
-  const mkS = (extra) => device.createBuffer({ size: sz, usage: GPUBufferUsage.STORAGE | extra });
-  cBufs = {
-    psi_a: mkS(GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST),
-    psi_b: mkS(GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST),
-    om_a: mkS(GPUBufferUsage.COPY_DST), om_b: mkS(GPUBufferUsage.COPY_DST),
-    phi_a: mkS(GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST),
-    phi_b: mkS(GPUBufferUsage.COPY_DST),
-    jbuf: mkS(GPUBufferUsage.COPY_SRC),
-    drivef: mkS(0),
-  };
-  cuBuf = device.createBuffer({ size: 48, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-  ruBuf = device.createBuffer({ size: 128, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-
-  const seq = [cBufs.psi_a, cBufs.psi_b, cBufs.om_a, cBufs.om_b, cBufs.phi_a, cBufs.phi_b,
-               cBufs.jbuf, cBufs.drivef];
-  cBindGroup = device.createBindGroup({
-    layout,
-    entries: [
-      { binding: 0, resource: { buffer: cuBuf } },
-      { binding: 1, resource: { buffer: ruBuf } },
-      ...seq.map((b, k) => ({ binding: k + 2, resource: { buffer: b } })),
-    ],
-  });
-  rbBufs = {
-    j: device.createBuffer({ size: sz, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST }),
-    p: device.createBuffer({ size: sz, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST }),
-    ph: device.createBuffer({ size: sz, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST }),
-  };
-
-  const psi = new Float32Array(TOT), om = new Float32Array(TOT);
-  const phi0f = initField(psi, om);
-  const phi0 = new Float32Array(TOT);
-  for (let j = 0; j < N; j++)
-    for (let i = 0; i < N; i++) phi0[i * N + j] = phi0f(i, j);
-  psiInit0 = new Float32Array(psi);   // self-test reference
-  device.queue.writeBuffer(cBufs.psi_a, 0, psi);
-  device.queue.writeBuffer(cBufs.psi_b, 0, psi);
-  device.queue.writeBuffer(cBufs.om_a, 0, om);
-  device.queue.writeBuffer(cBufs.om_b, 0, om);
-  device.queue.writeBuffer(cBufs.phi_a, 0, phi0);
-  device.queue.writeBuffer(cBufs.phi_b, 0, phi0);
-  phiSol = "a";
-  dispatch1("init_drive");
-  for (let b = 0; b < burstN; b++) step();   // diagnostic burst: multi-step compute check
-  console.log("[LaserCortex] burst t=" + simTime.toFixed(3));
-  requestAnimationFrame(loop);
-}
-
-function dispatch1(ep) {
-  if (!dispatch1.logged) { dispatch1.logged = true;
-    console.log("[LaserCortex] pipes: " + Object.keys(computePipes).map(k =>
-      k + ":" + (computePipes[k] === computePipes.lapj ? "SAME-as-lapj" : "distinct")).join(" "));
-  }
-  const enc = device.createCommandEncoder();
-  const pass = enc.beginComputePass();
-  pass.setPipeline(computePipes[ep]);
-  pass.setBindGroup(0, cBindGroup);
-  // coverage: grid 64x64x32; workgroup 8x8x4 threads -> (8, 8, 8) workgroups.
-    // (8,8,4) was the bug: it covered only phi < 16 planes — half the domain
-    // never advanced nor got its current (frozen frame, half the glow).
-    pass.dispatchWorkgroups(N / 8, N / 8, NK / 4);
-  pass.end();
-  device.queue.submit([enc.finish()]);
-}
-
-function writeCu(which, t, phiSrc) {
-  // CUniforms: dims vec3<u32> (0-11, pad to 16), dt/t/driveAmp/driveT (16-31),
-  // which/njac/phiSrc as u32 (32-43); total 48
-  const d = new ArrayBuffer(48);
-  const u = new Uint32Array(d), f = new Float32Array(d);
-  u[0] = N; u[1] = N; u[2] = NK;
-  f[3] = 2e-3; f[4] = t; f[5] = driveAmp; f[6] = driveT;
-  u[7] = which; u[8] = 40; u[9] = (phiSrc === "a") ? 0 : 1;
-  device.queue.writeBuffer(cuBuf, 0, d);
-}
-
-function poissonSolve(omWhich, t) {
-  writeCu(omWhich, t, phiSol);
-  for (let k = 0; k < 40; k++) {
-    dispatch1(phiSol === "a" ? "poisson_a2b" : "poisson_b2a");
-    phiSol = phiSol === "a" ? "b" : "a";
-  }
-}
-
-function step() {
-  // stage 1: k1 at (ψ_a, ω_a) computed inline by mid_rhs
-  writeCu(0, simTime, phiSol);
-  poissonSolve(0, simTime);     // φ(ω_a); phiSol updated
-  writeCu(0, simTime, phiSol);  // phiSrc = φ solution buffer
-  dispatch1("mid_rhs");         // ψ_b, ω_b = midpoint (j fused in-kernel)
-  // stage 2: k2 at midpoint computed inline by adv_rhs
-  writeCu(1, simTime + 1e-3, phiSol);
-  poissonSolve(1, simTime + 1e-3);
-  writeCu(1, simTime + 1e-3, phiSol);
-  dispatch1("adv_rhs");         // ψ_a, ω_a += dt·k2
-  simTime += 2e-3;
-}
-
-function updateCamera() {
-  const target = [0, 0, 0];
-  const cp = Math.cos(pitch), sp = Math.sin(pitch);
-  const sy = Math.sin(yaw), cy = Math.cos(yaw);
-  const eye = [dist * cp * sy, dist * sp, dist * cp * cy];
-  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-  const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
-  const norm = (a) => { const l = Math.hypot(a[0],a[1],a[2])||1; return [a[0]/l,a[1]/l,a[2]/l]; };
-  const fwd = norm(sub(target, eye));
-  const right = norm(cross(fwd, [0,1,0]));
-  const up = cross(right, fwd);
-  return { eye, fwd, right, up };
-}
-
-async function meters() {
-  const enc = device.createCommandEncoder();
-  enc.copyBufferToBuffer(cBufs.jbuf, 0, rbBufs.j, 0, TOT * 4);
-  enc.copyBufferToBuffer(cBufs.psi_a, 0, rbBufs.p, 0, TOT * 4);
-  const phiBuf = phiSol === "a" ? cBufs.phi_a : cBufs.phi_b;
-  enc.copyBufferToBuffer(phiBuf, 0, rbBufs.ph, 0, TOT * 4);
-  device.queue.submit([enc.finish()]);
-  await Promise.all([rbBufs.j.mapAsync(GPUMapMode.READ), rbBufs.p.mapAsync(GPUMapMode.READ),
-                     rbBufs.ph.mapAsync(GPUMapMode.READ)]);
-  const j = new Float32Array(rbBufs.j.getMappedRange().slice(0));
-  const p = new Float32Array(rbBufs.p.getMappedRange().slice(0));
-  const ph = new Float32Array(rbBufs.ph.getMappedRange().slice(0));
-  rbBufs.j.unmap(); rbBufs.p.unmap(); rbBufs.ph.unmap();
-  let maxJ = 0, pMin = Infinity, pMax = -Infinity;
-  // Em/Ek triple loop is O(cells) in JS — gate to every 5th frame at 1M
-  // cells; maxJ/psi-range stay per-frame (cheap single pass each).
-  meters.emTick = (meters.emTick || 0) + 1;
-  const doEmEk = meters.emTick % 5 === 1;
-  if (doEmEk) { meters.em = 0; meters.ek = 0; }
-  const absJ = new Float32Array(TOT);
-  for (let i = 0; i < TOT; i++) {
-    const a = Math.abs(j[i]); if (a > maxJ) maxJ = a;
-    absJ[i] = a;
-    if (p[i] < pMin) pMin = p[i];
-    if (p[i] > pMax) pMax = p[i];
-  }
-  if (doEmEk) {
-  for (let k = 0; k < NK; k++)
-    for (let j2 = 0; j2 < N; j2++)
-      for (let i = 0; i < N; i++) {
-        const ip = (i+1)%N, im = (i+N-1)%N, jp = (j2+1)%N, jm = (j2+N-1)%N;
-        const kp = (k+1)%NK, km = (k+NK-1)%NK;
-        const bx = (p[(k*N+j2)*N+ip]-p[(k*N+j2)*N+im])/(2*DX);
-        const by = (p[(k*N+jp)*N+i]-p[(k*N+jm)*N+i])/(2*DX);
-        const bz = (p[(kp*N+j2)*N+i]-p[(km*N+j2)*N+i])/(2*DXP);
-        const ux = (ph[(k*N+j2)*N+ip]-ph[(k*N+j2)*N+im])/(2*DX);
-        const uy = (ph[(k*N+jp)*N+i]-ph[(k*N+jm)*N+i])/(2*DX);
-        const uz = (ph[(kp*N+j2)*N+i]-ph[(km*N+j2)*N+i])/(2*DXP);
-        meters.em += 0.5*(bx*bx+by*by+bz*bz)/TOT;
-        meters.ek += 0.5*(ux*ux+uy*uy+uz*uz)/TOT;
-      }
-  document.getElementById("mEm").innerText = meters.em.toFixed(4);
-  document.getElementById("mEk").innerText = meters.ek.toFixed(4);
-  }
-  levelMin = pMin; levelInv = kLevels / Math.max(pMax - pMin, 1e-6);
-  if (psiInit0) {
-    let dMax = 0;
-    for (let i = 0; i < TOT; i++) {
-      const d = Math.abs(p[i] - psiInit0[i]);
-      if (d > dMax) dMax = d;
-    }
-    meters.dMax = dMax;
-  }
-  // instrument: where is the current peak (r,z)? plus flux range (X-point stats)
-  let pi = 0, pj = 0;
-  for (let i = 0; i < TOT; i++) if (Math.abs(j[i]) > Math.abs(j[pi])) pi = i;
-  const pjz = Math.floor(pi / N), pix = pi % N;
-  const jr = (pix / N) * 2 * Math.PI - Math.PI;
-  const jz = (pjz / N) * 2 * Math.PI - Math.PI;
-  document.getElementById("mTime").innerText = simTime.toFixed(3);
-  document.getElementById("mJ").innerText = maxJ.toExponential(2);
-  document.getElementById("mDiag").innerText =
-    "j-peak (r,z): (" + jr.toFixed(2) + ", " + jz.toFixed(2) + ")  \u03a6=" + (pMax - pMin).toFixed(3);
-  // (mEm/mEk update inside the gated Em/Ek block above)
-  meters.absJ = absJ;
-  // φ-mode spectrum (streamer watch): full-φ DFT of |j| on stride-4
-  // columns (Schedule3D.diagOpsHost counts this: ≤0.5% of a step).
-  // Gated to every 10th meters() call; (x,y) subsampling cannot alias φ
-  // modes, it only thins the spatial average. Same quantity (|j|) as the
-  // glow and tint layers, so all three readings agree by construction.
-  meters.modeTick = (meters.modeTick || 0) + 1;
-  // First frame populates the meter immediately, then every 10th frame.
-  if (meters.modeTick % 10 === 0 || meters.modeTick === 1) {
-    const NM = NK / 2;
-    let tw = meters.twiddles;
-    if (!tw || tw.nk !== NK) {
-      tw = { nk: NK, cos: [], sin: [] };
-      for (let m = 0; m <= NM; m++) {
-        const rc = [], rs = [];
+      function initField(psi, om) {
         for (let k = 0; k < NK; k++) {
-          const a = (2 * Math.PI * m * k) / NK;
-          rc.push(Math.cos(a)); rs.push(Math.sin(a));
-        }
-        tw.cos.push(rc); tw.sin.push(rs);
-      }
-      meters.twiddles = tw;
-    }
-    const E = new Float64Array(NM + 1);
-    let sumJ2 = 0;
-    for (let jj2 = 0; jj2 < N; jj2 += 4)
-      for (let ii = 0; ii < N; ii += 4) {
-        for (let m = 0; m <= NM; m++) {
-          let re = 0, im = 0;
-          const rc = tw.cos[m], rs = tw.sin[m];
-          for (let k = 0; k < NK; k++) {
-            const v = absJ[(k * N + jj2) * N + ii];
-            re += v * rc[k]; im -= v * rs[k];
-            if (m === 0) sumJ2 += v * v;
+          for (let j = 0; j < N; j++) {
+            const Z = (j / N) * 2 * Math.PI - Math.PI;
+            for (let i = 0; i < N; i++) {
+              const R = (i / N) * 2 * Math.PI - Math.PI;
+              const rho2 = R * R + Z * Z,
+                a = 0.5,
+                sig = 1.6;
+              let v =
+                ((R * R) / Math.pow(rho2 + a * a, 1.5)) *
+                Math.exp(-rho2 / (2 * sig * sig));
+              v += 0.35 * Math.exp(-rho2 / (2 * 0.81)) * Math.sin(2 * R);
+              psi[(k * N + j) * N + i] = v;
+              om[(k * N + j) * N + i] = 0;
+            }
           }
-          E[m] += re * re + im * im;
+        }
+        // meridional initial flow (same in every phi plane), then blurred 3D noise
+        const phi0 = (i, j) => {
+          const R = (i / N) * 2 * Math.PI - Math.PI;
+          const Z = (j / N) * 2 * Math.PI - Math.PI;
+          return 0.4 * Math.sin(R) * Math.sin(Z);
+        };
+        for (let j = 0; j < N; j++)
+          for (let i = 0; i < N; i++) {
+            const ip = (i + 1) % N,
+              im = (i + N - 1) % N;
+            const jp = (j + 1) % N,
+              jm = (j + N - 1) % N;
+            const lap =
+              (phi0(ip, j) +
+                phi0(im, j) +
+                phi0(i, jp) +
+                phi0(i, jm) -
+                4 * phi0(i, j)) /
+              DX2;
+            for (let k = 0; k < NK; k++) om[(k * N + j) * N + i] = -lap;
+          }
+        // seed noise: low-frequency (3x3x3 box-blurred), so it perturbs the 3D
+        // structure without polluting the current with grid-scale spikes
+        if (noiseAmp > 0) {
+          const raw = new Float32Array(TOT);
+          for (let i = 0; i < TOT; i++) raw[i] = Math.random() * 2 - 1;
+          const bl = new Float32Array(TOT);
+          for (let k = 0; k < NK; k++)
+            for (let j = 0; j < N; j++)
+              for (let i = 0; i < N; i++) {
+                let s2 = 0;
+                for (let dk = -1; dk <= 1; dk++)
+                  for (let dy = -1; dy <= 1; dy++)
+                    for (let dx = -1; dx <= 1; dx++) {
+                      const x = (i + dx + N) % N,
+                        y = (j + dy + N) % N,
+                        z = (k + dk + NK) % NK;
+                      s2 += raw[(z * N + y) * N + x];
+                    }
+                bl[(k * N + j) * N + i] = s2 / 27;
+              }
+          for (let i = 0; i < TOT; i++) psi[i] += noiseAmp * bl[i];
+        }
+        return phi0;
+      }
+
+      async function init() {
+        if (!navigator.gpu) {
+          fatal("navigator.gpu missing — " + browserHint());
+          return;
+        }
+        const adapter = await navigator.gpu.requestAdapter({
+          powerPreference: "high-performance",
+        });
+        if (!adapter) {
+          fatal("requestAdapter() returned null. " + browserHint());
+          return;
+        }
+        device = await adapter.requestDevice();
+        device.lost.then((info) => {
+          const msg =
+            "GPU device lost: " +
+            info.reason +
+            (info.message ? " — " + info.message : "");
+          console.log("[LaserCortex] " + msg);
+          const st = document.getElementById("gpuStatus");
+          if (st) {
+            st.style.display = "block";
+            st.textContent = msg;
+          }
+        });
+        device.onuncapturederror = (ev) => {
+          const em =
+            ev.error && ev.error.message ? ev.error.message : "unknown";
+          console.log("[LaserCortex] GPU uncaptured error: " + em);
+          const st = document.getElementById("gpuStatus");
+          if (st) {
+            st.style.display = "block";
+            st.textContent = "GPU error: " + em;
+          }
+        };
+
+        const fmt = navigator.gpu.getPreferredCanvasFormat();
+
+        cModule = device.createShaderModule({ code: WGSL });
+        const info = await cModule.getCompilationInfo();
+        const errs = info.messages.filter((m) => m.type === "error");
+        if (errs.length) {
+          fatal(
+            "WGSL compile failed: " + errs.map((m) => m.message).join("; "),
+          );
+          return;
+        }
+
+        ctx = canvas.getContext("webgpu");
+        ctx.configure({ device, format: fmt });
+
+        const V = GPUShaderStage;
+        layout = device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: V.COMPUTE | V.FRAGMENT,
+              buffer: { type: "uniform", minBindingSize: 48 },
+            },
+            {
+              binding: 1,
+              visibility: V.FRAGMENT,
+              buffer: { type: "uniform", minBindingSize: 128 },
+            },
+            {
+              binding: 2,
+              visibility: V.COMPUTE | V.FRAGMENT,
+              buffer: { type: "storage", minBindingSize: 4 },
+            },
+            {
+              binding: 3,
+              visibility: V.COMPUTE | V.FRAGMENT,
+              buffer: { type: "storage", minBindingSize: 4 },
+            },
+            {
+              binding: 4,
+              visibility: V.COMPUTE,
+              buffer: { type: "storage", minBindingSize: 4 },
+            },
+            {
+              binding: 5,
+              visibility: V.COMPUTE,
+              buffer: { type: "storage", minBindingSize: 4 },
+            },
+            {
+              binding: 6,
+              visibility: V.COMPUTE,
+              buffer: { type: "storage", minBindingSize: 4 },
+            },
+            {
+              binding: 7,
+              visibility: V.COMPUTE,
+              buffer: { type: "storage", minBindingSize: 4 },
+            },
+            {
+              binding: 8,
+              visibility: V.COMPUTE | V.FRAGMENT,
+              buffer: { type: "storage", minBindingSize: 4 },
+            },
+            {
+              binding: 9,
+              visibility: V.COMPUTE,
+              buffer: { type: "storage", minBindingSize: 4 },
+            },
+          ],
+        });
+        pipelineLayout = device.createPipelineLayout({
+          bindGroupLayouts: [layout],
+        });
+
+        const mk = (ep) =>
+          device.createComputePipeline({
+            layout: pipelineLayout,
+            compute: { module: cModule, entryPoint: ep },
+          });
+        for (const ep of [
+          "init_drive",
+          "lapj",
+          "poisson_a2b",
+          "poisson_b2a",
+          "mid_rhs",
+          "adv_rhs",
+        ])
+          computePipes[ep] = mk(ep);
+
+        rPipeline = device.createRenderPipeline({
+          layout: pipelineLayout,
+          vertex: { module: cModule, entryPoint: "vs" },
+          fragment: {
+            module: cModule,
+            entryPoint: "fs",
+            targets: [{ format: fmt }],
+          },
+          primitive: { topology: "triangle-list" },
+        });
+
+        const sz = TOT * 4;
+        const mkS = (extra) =>
+          device.createBuffer({
+            size: sz,
+            usage: GPUBufferUsage.STORAGE | extra,
+          });
+        cBufs = {
+          psi_a: mkS(GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST),
+          psi_b: mkS(GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST),
+          om_a: mkS(GPUBufferUsage.COPY_DST),
+          om_b: mkS(GPUBufferUsage.COPY_DST),
+          phi_a: mkS(GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST),
+          phi_b: mkS(GPUBufferUsage.COPY_DST),
+          jbuf: mkS(GPUBufferUsage.COPY_SRC),
+          drivef: mkS(0),
+        };
+        cuBuf = device.createBuffer({
+          size: 48,
+          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+        ruBuf = device.createBuffer({
+          size: 128,
+          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+        const seq = [
+          cBufs.psi_a,
+          cBufs.psi_b,
+          cBufs.om_a,
+          cBufs.om_b,
+          cBufs.phi_a,
+          cBufs.phi_b,
+          cBufs.jbuf,
+          cBufs.drivef,
+        ];
+        cBindGroup = device.createBindGroup({
+          layout,
+          entries: [
+            { binding: 0, resource: { buffer: cuBuf } },
+            { binding: 1, resource: { buffer: ruBuf } },
+            ...seq.map((b, k) => ({ binding: k + 2, resource: { buffer: b } })),
+          ],
+        });
+        rbBufs = {
+          j: device.createBuffer({
+            size: sz,
+            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+          }),
+          p: device.createBuffer({
+            size: sz,
+            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+          }),
+          ph: device.createBuffer({
+            size: sz,
+            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+          }),
+        };
+
+        const psi = new Float32Array(TOT),
+          om = new Float32Array(TOT);
+        const phi0f = initField(psi, om);
+        const phi0 = new Float32Array(TOT);
+        for (let j = 0; j < N; j++)
+          for (let i = 0; i < N; i++) phi0[i * N + j] = phi0f(i, j);
+        psiInit0 = new Float32Array(psi); // self-test reference
+        device.queue.writeBuffer(cBufs.psi_a, 0, psi);
+        device.queue.writeBuffer(cBufs.psi_b, 0, psi);
+        device.queue.writeBuffer(cBufs.om_a, 0, om);
+        device.queue.writeBuffer(cBufs.om_b, 0, om);
+        device.queue.writeBuffer(cBufs.phi_a, 0, phi0);
+        device.queue.writeBuffer(cBufs.phi_b, 0, phi0);
+        phiSol = "a";
+        dispatch1("init_drive");
+        for (let b = 0; b < burstN; b++) step(); // diagnostic burst: multi-step compute check
+        console.log("[LaserCortex] burst t=" + simTime.toFixed(3));
+        requestAnimationFrame(loop);
+      }
+
+      function dispatch1(ep) {
+        if (!dispatch1.logged) {
+          dispatch1.logged = true;
+          console.log(
+            "[LaserCortex] pipes: " +
+              Object.keys(computePipes)
+                .map(
+                  (k) =>
+                    k +
+                    ":" +
+                    (computePipes[k] === computePipes.lapj
+                      ? "SAME-as-lapj"
+                      : "distinct"),
+                )
+                .join(" "),
+          );
+        }
+        const enc = device.createCommandEncoder();
+        const pass = enc.beginComputePass();
+        pass.setPipeline(computePipes[ep]);
+        pass.setBindGroup(0, cBindGroup);
+        // coverage: grid 64x64x32; workgroup 8x8x4 threads -> (8, 8, 8) workgroups.
+        // (8,8,4) was the bug: it covered only phi < 16 planes — half the domain
+        // never advanced nor got its current (frozen frame, half the glow).
+        pass.dispatchWorkgroups(N / 8, N / 8, NK / 4);
+        pass.end();
+        device.queue.submit([enc.finish()]);
+      }
+
+      function writeCu(which, t, phiSrc) {
+        // CUniforms: dims vec3<u32> (0-11, pad to 16), dt/t/driveAmp/driveT (16-31),
+        // which/njac/phiSrc as u32 (32-43); total 48
+        const d = new ArrayBuffer(48);
+        const u = new Uint32Array(d),
+          f = new Float32Array(d);
+        u[0] = N;
+        u[1] = N;
+        u[2] = NK;
+        f[3] = 2e-3;
+        f[4] = t;
+        f[5] = driveAmp;
+        f[6] = driveT;
+        u[7] = which;
+        u[8] = 40;
+        u[9] = phiSrc === "a" ? 0 : 1;
+        device.queue.writeBuffer(cuBuf, 0, d);
+      }
+
+      function poissonSolve(omWhich, t) {
+        writeCu(omWhich, t, phiSol);
+        for (let k = 0; k < 40; k++) {
+          dispatch1(phiSol === "a" ? "poisson_a2b" : "poisson_b2a");
+          phiSol = phiSol === "a" ? "b" : "a";
         }
       }
-    // Parseval self-check: Σ|j|² vs (E0 + E_N/2 + 2·Σmid)/NK over the sample.
-    let espec = E[0] + E[NM];
-    for (let m = 1; m < NM; m++) espec += 2 * E[m];
-    espec /= NK;
-    const pvErr = sumJ2 > 0 ? Math.abs(espec - sumJ2) / sumJ2 : 0;
-    let eTot = 0;
-    for (let m = 0; m <= NM; m++) eTot += (m === 0 || m === NM) ? E[m] : 2 * E[m];
-    const nonaxi = eTot > 0 ? 1 - E[0] / eTot : 0;
-    let topM = 0, topE = -1;
-    for (let m = 1; m <= NM; m++) {
-      const ee = m === NM ? E[m] : 2 * E[m];
-      if (ee > topE) { topE = ee; topM = m; }
-    }
-    const e1frac = eTot > 0 && NM >= 1 ? (2 * E[1]) / eTot : 0;
-    document.getElementById("mModes").innerText =
-      "kφ>0: " + (100 * nonaxi).toFixed(1) + "% · top k=" + topM +
-      " · k=1: " + (100 * e1frac).toFixed(1) + "% · Parseval err " + pvErr.toExponential(1);
-    if (!meters.pvLogged || pvErr > 1e-6) {
-      console.log("[LaserCortex] φ-spectrum: nonaxi=" + (100*nonaxi).toFixed(1) +
-        "% top-k=" + topM + " k1=" + (100*e1frac).toFixed(1) + "% Parseval-rel-err=" + pvErr.toExponential(2));
-      meters.pvLogged = true;
-    }
-  }
-  return maxJ;
-}
 
-async function loop(now) {
-  const dtMs = Math.min(0.05, (now - last) / 1000);
-  last = now;
-  device.pushErrorScope("validation");
-  if (autoRotate) yaw += dtMs * 0.25;
-  let maxJ = 0;
-  try {
-    if (running) for (let s = 0; s < stepsPerFrame; s++) step();
-    writeCu(0, simTime, phiSol);
-    dispatch1("lapj");
-    maxJ = await meters();
-    frameNo++;
-    if (frameNo % 5 === 0 || !announced)
-      console.log("[LaserCortex] t=" + simTime.toFixed(3) + " frame=" + frameNo
-        + " maxJ=" + maxJ.toExponential(2)
-        + " dPsiInit=" + (meters.dMax !== undefined ? meters.dMax.toExponential(2) : "?"));
-    // eye-like exposure: EMA of the 95th-percentile |j| (robust scale;
-    // the peak is often an occluded single cell, not what the eye sees)
-    const jj = Array.from(meters.absJ || [], Math.abs).sort((a, b) => a - b);
-    const j95 = jj.length ? jj[Math.floor(jj.length * 0.95)] : maxJ;
-    jExp = jExp * 0.93 + j95 * 0.07;
-    if (!announced) {
-      announced = true;
-      console.log("[LaserCortex] RUNNING t=" + simTime.toFixed(3)
-        + " maxJ=" + maxJ.toExponential(2)
-        + " render{exposure=" + exposure + " jExp=" + jExp.toFixed(2)
-        + " wSigma=" + winSigma + " rDome=" + rDome + "}");
-    }
-  } catch (e) { fatal("step failed: " + e); return; }
+      function step() {
+        // stage 1: k1 at (ψ_a, ω_a) computed inline by mid_rhs
+        writeCu(0, simTime, phiSol);
+        poissonSolve(0, simTime); // φ(ω_a); phiSol updated
+        writeCu(0, simTime, phiSol); // phiSrc = φ solution buffer
+        dispatch1("mid_rhs"); // ψ_b, ω_b = midpoint (j fused in-kernel)
+        // stage 2: k2 at midpoint computed inline by adv_rhs
+        writeCu(1, simTime + 1e-3, phiSol);
+        poissonSolve(1, simTime + 1e-3);
+        writeCu(1, simTime + 1e-3, phiSol);
+        dispatch1("adv_rhs"); // ψ_a, ω_a += dt·k2
+        simTime += 2e-3;
+      }
 
-  const cam = updateCamera();
-  const ru = new ArrayBuffer(128);
-  const f = new Float32Array(ru);
-  f[0]=cam.eye[0]; f[1]=cam.eye[1]; f[2]=cam.eye[2]; f[3]=1;
-  f[4]=cam.fwd[0]; f[5]=cam.fwd[1]; f[6]=cam.fwd[2]; f[7]=1;
-  f[8]=cam.right[0]; f[9]=cam.right[1]; f[10]=cam.right[2]; f[11]=1;
-  f[12]=cam.up[0]; f[13]=cam.up[1]; f[14]=cam.up[2]; f[15]=1;
-  f[16]=Math.tan(0.45); f[17]=canvas.width/canvas.height;
-  f[18]=0.30; f[19]=jExp;
-  f[20]=levelMin; f[21]=levelInv; f[22]=lineMode;
-  f[23]=winR0; f[24]=winZ0; f[25]=winSigma;
-  f[26]=exposure; f[27]=2.2; f[28]=0; f[29]=rDome; f[30]=axisIdx; f[31]=mirror?1:0;
-  device.queue.writeBuffer(ruBuf, 0, ru);
+      function updateCamera() {
+        const target = [0, 0, 0];
+        const cp = Math.cos(pitch),
+          sp = Math.sin(pitch);
+        const sy = Math.sin(yaw),
+          cy = Math.cos(yaw);
+        const eye = [dist * cp * sy, dist * sp, dist * cp * cy];
+        const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+        const cross = (a, b) => [
+          a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0],
+        ];
+        const norm = (a) => {
+          const l = Math.hypot(a[0], a[1], a[2]) || 1;
+          return [a[0] / l, a[1] / l, a[2] / l];
+        };
+        const fwd = norm(sub(target, eye));
+        const right = norm(cross(fwd, [0, 1, 0]));
+        const up = cross(right, fwd);
+        return { eye, fwd, right, up };
+      }
 
-  const enc = device.createCommandEncoder();
-  const pass = enc.beginRenderPass({
-    colorAttachments: [{ view: ctx.getCurrentTexture().createView(),
-      clearValue: { r: 0.012, g: 0.016, b: 0.028, a: 1 }, loadOp: "clear", storeOp: "store" }],
-  });
-  pass.setPipeline(rPipeline);
-  pass.setBindGroup(0, cBindGroup);
-  pass.draw(3);
-  pass.end();
-  device.queue.submit([enc.finish()]);
-  device.popErrorScope().then((err) => {
-    if (err) console.log("[LaserCortex] frame validation error: " + err.message);
-  });
-  requestAnimationFrame(loop);
-}
+      async function meters() {
+        const enc = device.createCommandEncoder();
+        enc.copyBufferToBuffer(cBufs.jbuf, 0, rbBufs.j, 0, TOT * 4);
+        enc.copyBufferToBuffer(cBufs.psi_a, 0, rbBufs.p, 0, TOT * 4);
+        const phiBuf = phiSol === "a" ? cBufs.phi_a : cBufs.phi_b;
+        enc.copyBufferToBuffer(phiBuf, 0, rbBufs.ph, 0, TOT * 4);
+        device.queue.submit([enc.finish()]);
+        await Promise.all([
+          rbBufs.j.mapAsync(GPUMapMode.READ),
+          rbBufs.p.mapAsync(GPUMapMode.READ),
+          rbBufs.ph.mapAsync(GPUMapMode.READ),
+        ]);
+        const j = new Float32Array(rbBufs.j.getMappedRange().slice(0));
+        const p = new Float32Array(rbBufs.p.getMappedRange().slice(0));
+        const ph = new Float32Array(rbBufs.ph.getMappedRange().slice(0));
+        rbBufs.j.unmap();
+        rbBufs.p.unmap();
+        rbBufs.ph.unmap();
+        let maxJ = 0,
+          pMin = Infinity,
+          pMax = -Infinity;
+        // (Em/Ek cadence: meters() itself runs every 5th frame — see loop —
+        // so the inner gate is retired; wall-clock cadence unchanged.)
+        const doEmEk = true;
+        if (doEmEk) {
+          meters.em = 0;
+          meters.ek = 0;
+        }
+        const absJ = new Float32Array(TOT);
+        for (let i = 0; i < TOT; i++) {
+          const a = Math.abs(j[i]);
+          if (a > maxJ) maxJ = a;
+          absJ[i] = a;
+          if (p[i] < pMin) pMin = p[i];
+          if (p[i] > pMax) pMax = p[i];
+        }
+        if (doEmEk) {
+          for (let k = 0; k < NK; k++)
+            for (let j2 = 0; j2 < N; j2++)
+              for (let i = 0; i < N; i++) {
+                const ip = (i + 1) % N,
+                  im = (i + N - 1) % N,
+                  jp = (j2 + 1) % N,
+                  jm = (j2 + N - 1) % N;
+                const kp = (k + 1) % NK,
+                  km = (k + NK - 1) % NK;
+                const bx =
+                  (p[(k * N + j2) * N + ip] - p[(k * N + j2) * N + im]) /
+                  (2 * DX);
+                const by =
+                  (p[(k * N + jp) * N + i] - p[(k * N + jm) * N + i]) /
+                  (2 * DX);
+                const bz =
+                  (p[(kp * N + j2) * N + i] - p[(km * N + j2) * N + i]) /
+                  (2 * DXP);
+                const ux =
+                  (ph[(k * N + j2) * N + ip] - ph[(k * N + j2) * N + im]) /
+                  (2 * DX);
+                const uy =
+                  (ph[(k * N + jp) * N + i] - ph[(k * N + jm) * N + i]) /
+                  (2 * DX);
+                const uz =
+                  (ph[(kp * N + j2) * N + i] - ph[(km * N + j2) * N + i]) /
+                  (2 * DXP);
+                meters.em += (0.5 * (bx * bx + by * by + bz * bz)) / TOT;
+                meters.ek += (0.5 * (ux * ux + uy * uy + uz * uz)) / TOT;
+              }
+          document.getElementById("mEm").innerText = meters.em.toFixed(4);
+          document.getElementById("mEk").innerText = meters.ek.toFixed(4);
+        }
+        levelMin = pMin;
+        levelInv = kLevels / Math.max(pMax - pMin, 1e-6);
+        if (psiInit0) {
+          let dMax = 0;
+          for (let i = 0; i < TOT; i++) {
+            const d = Math.abs(p[i] - psiInit0[i]);
+            if (d > dMax) dMax = d;
+          }
+          meters.dMax = dMax;
+        }
+        // instrument: where is the current peak (r,z)? plus flux range (X-point stats)
+        let pi = 0,
+          pj = 0;
+        for (let i = 0; i < TOT; i++)
+          if (Math.abs(j[i]) > Math.abs(j[pi])) pi = i;
+        const pjz = Math.floor(pi / N),
+          pix = pi % N;
+        const jr = (pix / N) * 2 * Math.PI - Math.PI;
+        const jz = (pjz / N) * 2 * Math.PI - Math.PI;
+        document.getElementById("mTime").innerText = simTime.toFixed(3);
+        document.getElementById("mJ").innerText = maxJ.toExponential(2);
+        document.getElementById("mDiag").innerText =
+          "j-peak (r,z): (" +
+          jr.toFixed(2) +
+          ", " +
+          jz.toFixed(2) +
+          ")  \u03a6=" +
+          (pMax - pMin).toFixed(3);
+        // (mEm/mEk update inside the gated Em/Ek block above)
+        meters.absJ = absJ;
+        // φ-mode spectrum (streamer watch): full-φ DFT of |j| on stride-4
+        // columns (Schedule3D.diagOpsHost counts this: ≤0.5% of a step).
+        // Gated to every 10th meters() call; (x,y) subsampling cannot alias φ
+        // modes, it only thins the spatial average. Same quantity (|j|) as the
+        // glow and tint layers, so all three readings agree by construction.
+        meters.modeTick = (meters.modeTick || 0) + 1;
+        // First frame populates the meter immediately, then every other meters()
+        // call (≈ every 10th frame — meters itself is gated, see loop).
+        if (meters.modeTick % 2 === 1 || meters.modeTick === 1) {
+          const NM = NK / 2;
+          let tw = meters.twiddles;
+          if (!tw || tw.nk !== NK) {
+            tw = { nk: NK, cos: [], sin: [] };
+            for (let m = 0; m <= NM; m++) {
+              const rc = [],
+                rs = [];
+              for (let k = 0; k < NK; k++) {
+                const a = (2 * Math.PI * m * k) / NK;
+                rc.push(Math.cos(a));
+                rs.push(Math.sin(a));
+              }
+              tw.cos.push(rc);
+              tw.sin.push(rs);
+            }
+            meters.twiddles = tw;
+          }
+          const E = new Float64Array(NM + 1);
+          let sumJ2 = 0;
+          for (let jj2 = 0; jj2 < N; jj2 += 4)
+            for (let ii = 0; ii < N; ii += 4) {
+              for (let m = 0; m <= NM; m++) {
+                let re = 0,
+                  im = 0;
+                const rc = tw.cos[m],
+                  rs = tw.sin[m];
+                for (let k = 0; k < NK; k++) {
+                  const v = absJ[(k * N + jj2) * N + ii];
+                  re += v * rc[k];
+                  im -= v * rs[k];
+                  if (m === 0) sumJ2 += v * v;
+                }
+                E[m] += re * re + im * im;
+              }
+            }
+          // Parseval self-check: Σ|j|² vs (E0 + E_N/2 + 2·Σmid)/NK over the sample.
+          let espec = E[0] + E[NM];
+          for (let m = 1; m < NM; m++) espec += 2 * E[m];
+          espec /= NK;
+          const pvErr = sumJ2 > 0 ? Math.abs(espec - sumJ2) / sumJ2 : 0;
+          let eTot = 0;
+          for (let m = 0; m <= NM; m++)
+            eTot += m === 0 || m === NM ? E[m] : 2 * E[m];
+          const nonaxi = eTot > 0 ? 1 - E[0] / eTot : 0;
+          let topM = 0,
+            topE = -1;
+          for (let m = 1; m <= NM; m++) {
+            const ee = m === NM ? E[m] : 2 * E[m];
+            if (ee > topE) {
+              topE = ee;
+              topM = m;
+            }
+          }
+          const e1frac = eTot > 0 && NM >= 1 ? (2 * E[1]) / eTot : 0;
+          document.getElementById("mModes").innerText =
+            "kφ>0: " +
+            (100 * nonaxi).toFixed(1) +
+            "% · top k=" +
+            topM +
+            " · k=1: " +
+            (100 * e1frac).toFixed(1) +
+            "% · Parseval err " +
+            pvErr.toExponential(1);
+          if (!meters.pvLogged || pvErr > 1e-6) {
+            console.log(
+              "[LaserCortex] φ-spectrum: nonaxi=" +
+                (100 * nonaxi).toFixed(1) +
+                "% top-k=" +
+                topM +
+                " k1=" +
+                (100 * e1frac).toFixed(1) +
+                "% Parseval-rel-err=" +
+                pvErr.toExponential(2),
+            );
+            meters.pvLogged = true;
+          }
+        }
+        return maxJ;
+      }
 
-let dragging = false, px = 0, py = 0;
-canvas.addEventListener("pointerdown", (e) => { dragging = true; px=e.clientX; py=e.clientY; canvas.setPointerCapture(e.pointerId); });
-canvas.addEventListener("pointermove", (e) => { if(!dragging) return; yaw += (e.clientX-px)*0.008; pitch = Math.max(-1.4, Math.min(1.4, pitch + (e.clientY-py)*0.008)); px=e.clientX; py=e.clientY; });
-canvas.addEventListener("pointerup", () => { dragging = false; });
-canvas.addEventListener("pointercancel", () => { dragging = false; });
-canvas.addEventListener("wheel", (e) => { e.preventDefault(); dist = Math.max(2.0, Math.min(6.5, dist + e.deltaY*0.002)); }, { passive: false });
-document.getElementById("playBtn").onclick = (e) => { running = !running; e.target.innerText = running ? "Pause" : "Resume"; };
-document.getElementById("stepBtn").onclick = () => { step(); };
-document.getElementById("resetBtn").onclick = () => {
-  const psi = new Float32Array(TOT), om = new Float32Array(TOT);
-  const phi0f = initField(psi, om);
-  const phi0 = new Float32Array(TOT);
-  for (let j = 0; j < N; j++)
-    for (let i = 0; i < N; i++) phi0[i * N + j] = phi0f(i, j);
-  psiInit0 = new Float32Array(psi);   // self-test reference
-  device.queue.writeBuffer(cBufs.psi_a, 0, psi);
-  device.queue.writeBuffer(cBufs.psi_b, 0, psi);
-  device.queue.writeBuffer(cBufs.om_a, 0, om);
-  device.queue.writeBuffer(cBufs.om_b, 0, om);
-  device.queue.writeBuffer(cBufs.phi_a, 0, phi0);
-  device.queue.writeBuffer(cBufs.phi_b, 0, phi0);
-  phiSol = "a"; simTime = 0;
-};
-document.getElementById("speedSel").onchange = (e) => { stepsPerFrame = parseInt(e.target.value, 10); };
-document.getElementById("driveSlider").oninput = (e) => { driveAmp = parseFloat(e.target.value); };
-document.getElementById("driveTsel").onchange = (e) => { driveT = parseFloat(e.target.value); };
-document.getElementById("wr0S").oninput = (e) => { winR0 = parseFloat(e.target.value); };
-document.getElementById("wz0S").oninput = (e) => { winZ0 = parseFloat(e.target.value); };
-document.getElementById("wsigmaS").oninput = (e) => { winSigma = parseFloat(e.target.value); };
-document.getElementById("levelsS").oninput = (e) => { kLevels = parseInt(e.target.value, 10); };
-document.getElementById("domeS").oninput = (e) => { rDome = parseFloat(e.target.value); };
-document.getElementById("noiseS").oninput = (e) => { noiseAmp = parseFloat(e.target.value); };
-document.getElementById("spinCb").onchange = (e) => { autoRotate = e.target.checked; };
-document.getElementById("expS").oninput = (e) => { exposure = parseFloat(e.target.value); };
-document.getElementById("axisSel").onchange = (e) => { axisIdx = parseInt(e.target.value, 10); };
-document.getElementById("lineModeSel").onchange = (e) => { lineMode = parseInt(e.target.value, 10); };
-document.getElementById("mirrorCb").onchange = (e) => { mirror = e.target.checked; };
+      async function loop(now) {
+        const dtMs = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        device.pushErrorScope("validation");
+        if (autoRotate) yaw += dtMs * 0.25;
+        let maxJ = meters.maxJ || 0;
+        try {
+          if (running) for (let s = 0; s < stepsPerFrame; s++) step();
+          frameNo++;
+          // Full metering (3×4 MB readbacks + O(cells) JS scans) runs every
+          // 5th frame: at 1M cells the host work owned the frame (~200ms+,
+          // dominated by a per-frame Array.sort of 1M floats) while the GPU
+          // idled at single-digit percent. Render uses last values.
+          if (frameNo % 5 === 1) {
+          writeCu(0, simTime, phiSol);
+          dispatch1("lapj");
+          maxJ = await meters();
+          meters.maxJ = maxJ;
+          console.log(
+            "[LaserCortex] t=" +
+              simTime.toFixed(3) +
+              " frame=" +
+              frameNo +
+              " maxJ=" +
+              maxJ.toExponential(2) +
+              " dPsiInit=" +
+              (meters.dMax !== undefined
+                ? meters.dMax.toExponential(2)
+                : "?"),
+          );
+          // eye-like exposure: 95th-percentile |j| via strided histogram —
+          // the old per-frame sort (O(n log n), ~140ms at 1M cells) was the
+          // single biggest host cost. Same robust scale (peak is often an
+          // occluded single cell, not what the eye sees), ~0.1ms.
+          const ab = meters.absJ;
+          let hmax = 0;
+          for (let hi = 0; hi < ab.length; hi += 16) {
+            const ha = ab[hi];
+            if (ha > hmax) hmax = ha;
+          }
+          let j95 = maxJ;
+          if (hmax > 0) {
+            const HB = 64;
+            const hist = meters.hist || (meters.hist = new Uint32Array(HB));
+            hist.fill(0);
+            for (let hi = 0; hi < ab.length; hi += 16) {
+              const bb = (ab[hi] / hmax) * HB;
+              hist[bb >= HB ? HB - 1 : (bb | 0)]++;
+            }
+            const total = Math.ceil(ab.length / 16);
+            let acc = 0;
+            for (let hb2 = 0; hb2 < HB; hb2++) {
+              acc += hist[hb2];
+              if (acc >= 0.95 * total) {
+                j95 = ((hb2 + 0.5) / HB) * hmax;
+                break;
+              }
+            }
+          }
+          jExp = jExp * 0.93 + j95 * 0.07;
+          if (!announced) {
+            announced = true;
+            console.log(
+              "[LaserCortex] RUNNING t=" +
+                simTime.toFixed(3) +
+                " maxJ=" +
+                maxJ.toExponential(2) +
+                " render{exposure=" +
+                exposure +
+                " jExp=" +
+                jExp.toFixed(2) +
+                " wSigma=" +
+                winSigma +
+                " rDome=" +
+                rDome +
+                "}",
+            );
+          }
+          }
+        } catch (e) {
+          fatal("step failed: " + e);
+          return;
+        }
 
-init().catch((e) => fatal("init failed: " + e));
-</script>
-</body>
+        const cam = updateCamera();
+        const ru = new ArrayBuffer(128);
+        const f = new Float32Array(ru);
+        f[0] = cam.eye[0];
+        f[1] = cam.eye[1];
+        f[2] = cam.eye[2];
+        f[3] = 1;
+        f[4] = cam.fwd[0];
+        f[5] = cam.fwd[1];
+        f[6] = cam.fwd[2];
+        f[7] = 1;
+        f[8] = cam.right[0];
+        f[9] = cam.right[1];
+        f[10] = cam.right[2];
+        f[11] = 1;
+        f[12] = cam.up[0];
+        f[13] = cam.up[1];
+        f[14] = cam.up[2];
+        f[15] = 1;
+        f[16] = Math.tan(0.45);
+        f[17] = canvas.width / canvas.height;
+        f[18] = 0.3;
+        f[19] = jExp;
+        f[20] = levelMin;
+        f[21] = levelInv;
+        f[22] = lineMode;
+        f[23] = winR0;
+        f[24] = winZ0;
+        f[25] = winSigma;
+        f[26] = exposure;
+        f[27] = 2.2;
+        f[28] = 0;
+        f[29] = rDome;
+        f[30] = axisIdx;
+        f[31] = mirror ? 1 : 0;
+        device.queue.writeBuffer(ruBuf, 0, ru);
+
+        const enc = device.createCommandEncoder();
+        const pass = enc.beginRenderPass({
+          colorAttachments: [
+            {
+              view: ctx.getCurrentTexture().createView(),
+              clearValue: { r: 0.012, g: 0.016, b: 0.028, a: 1 },
+              loadOp: "clear",
+              storeOp: "store",
+            },
+          ],
+        });
+        pass.setPipeline(rPipeline);
+        pass.setBindGroup(0, cBindGroup);
+        pass.draw(3);
+        pass.end();
+        device.queue.submit([enc.finish()]);
+        device.popErrorScope().then((err) => {
+          if (err)
+            console.log("[LaserCortex] frame validation error: " + err.message);
+        });
+        requestAnimationFrame(loop);
+      }
+
+      let dragging = false,
+        px = 0,
+        py = 0;
+      canvas.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        px = e.clientX;
+        py = e.clientY;
+        canvas.setPointerCapture(e.pointerId);
+      });
+      canvas.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        yaw += (e.clientX - px) * 0.008;
+        pitch = Math.max(-1.4, Math.min(1.4, pitch + (e.clientY - py) * 0.008));
+        px = e.clientX;
+        py = e.clientY;
+      });
+      canvas.addEventListener("pointerup", () => {
+        dragging = false;
+      });
+      canvas.addEventListener("pointercancel", () => {
+        dragging = false;
+      });
+      canvas.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+          dist = Math.max(2.0, Math.min(6.5, dist + e.deltaY * 0.002));
+        },
+        { passive: false },
+      );
+      document.getElementById("playBtn").onclick = (e) => {
+        running = !running;
+        e.target.innerText = running ? "Pause" : "Resume";
+      };
+      document.getElementById("stepBtn").onclick = () => {
+        step();
+      };
+      document.getElementById("resetBtn").onclick = () => {
+        const psi = new Float32Array(TOT),
+          om = new Float32Array(TOT);
+        const phi0f = initField(psi, om);
+        const phi0 = new Float32Array(TOT);
+        for (let j = 0; j < N; j++)
+          for (let i = 0; i < N; i++) phi0[i * N + j] = phi0f(i, j);
+        psiInit0 = new Float32Array(psi); // self-test reference
+        device.queue.writeBuffer(cBufs.psi_a, 0, psi);
+        device.queue.writeBuffer(cBufs.psi_b, 0, psi);
+        device.queue.writeBuffer(cBufs.om_a, 0, om);
+        device.queue.writeBuffer(cBufs.om_b, 0, om);
+        device.queue.writeBuffer(cBufs.phi_a, 0, phi0);
+        device.queue.writeBuffer(cBufs.phi_b, 0, phi0);
+        phiSol = "a";
+        simTime = 0;
+      };
+      document.getElementById("speedSel").onchange = (e) => {
+        stepsPerFrame = parseInt(e.target.value, 10);
+      };
+      document.getElementById("driveSlider").oninput = (e) => {
+        driveAmp = parseFloat(e.target.value);
+      };
+      document.getElementById("driveTsel").onchange = (e) => {
+        driveT = parseFloat(e.target.value);
+      };
+      document.getElementById("wr0S").oninput = (e) => {
+        winR0 = parseFloat(e.target.value);
+      };
+      document.getElementById("wz0S").oninput = (e) => {
+        winZ0 = parseFloat(e.target.value);
+      };
+      document.getElementById("wsigmaS").oninput = (e) => {
+        winSigma = parseFloat(e.target.value);
+      };
+      document.getElementById("levelsS").oninput = (e) => {
+        kLevels = parseInt(e.target.value, 10);
+      };
+      document.getElementById("domeS").oninput = (e) => {
+        rDome = parseFloat(e.target.value);
+      };
+      document.getElementById("noiseS").oninput = (e) => {
+        noiseAmp = parseFloat(e.target.value);
+      };
+      document.getElementById("spinCb").onchange = (e) => {
+        autoRotate = e.target.checked;
+      };
+      document.getElementById("expS").oninput = (e) => {
+        exposure = parseFloat(e.target.value);
+      };
+      document.getElementById("axisSel").onchange = (e) => {
+        axisIdx = parseInt(e.target.value, 10);
+      };
+      document.getElementById("lineModeSel").onchange = (e) => {
+        lineMode = parseInt(e.target.value, 10);
+      };
+      document.getElementById("mirrorCb").onchange = (e) => {
+        mirror = e.target.checked;
+      };
+
+      init().catch((e) => fatal("init failed: " + e));
+    </script>
+  </body>
 </html>
