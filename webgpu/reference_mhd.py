@@ -112,7 +112,7 @@ class DiscreteMHD2D:
         return ux.astype(np.float32), uy.astype(np.float32)
 
     @staticmethod
-    def cfl(ux: np.ndarray, uy: np.ndarray, dt: float) -> float:
+    def cfl(ux: np.ndarray, uy: np.ndarray, dt: float | np.floating) -> float:
         """CFL number in cell units: dt · max|u₀| (stability bound ≤ 1)."""
         return float(dt) * float(np.sqrt(np.max(ux * ux + uy * uy)))
 
@@ -120,7 +120,7 @@ class DiscreteMHD2D:
     # Conservative transport — mirror of WGSL advect_psi (donor cell)      #
     # ------------------------------------------------------------------ #
     def advect_flux_form(self, psi: np.ndarray, u0x: np.ndarray, u0y: np.ndarray,
-                         dt: float = 0.005) -> np.ndarray:
+                         dt: float | np.floating = 0.005) -> np.ndarray:
         """One conservative flux-form step: ψ' = ψ + fluxDiv(Fx, Fy).
 
         Donor-cell (upwind) fluxes along the prescribed flow u₀, float32
