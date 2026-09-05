@@ -208,7 +208,7 @@ def run_tokamak_toy():
     print("=" * 72)
     print("  Route A — 2.5-D axisymmetric tokamak toy (poloidal plane)")
     print("=" * 72)
-    nx, ny = 128, 128
+    nx, ny = 512, 512
     R0, minorA, btor0 = 3.0, 1.0, 1.0
     sim = DiscreteMHD2D(nx, ny)
 
@@ -293,7 +293,7 @@ def run_sanity_check():
     print("  Discrete MHD 2D — Stencil.lean / WGSL mirror verification")
     print("=" * 72)
 
-    nx, ny = 128, 128
+    nx, ny = 512, 512
     sim = DiscreteMHD2D(nx, ny)
 
     # 1. F1: divergence of curl is zero — scale-relative f32 bound.

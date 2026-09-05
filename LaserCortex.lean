@@ -9,6 +9,7 @@ import LaserCortex.Hopf
 import LaserCortex.AMM
 import LaserCortex.TemporalParadox
 import LaserCortex.Stencil
+import LaserCortex.Schedule
 import LaserCortex.PlasmaBall
 import LaserCortex.Stencil3
 import LaserCortex.Cost3D

@@ -174,7 +174,7 @@
 
     <div class="main-grid">
       <div class="viewport-card">
-        <canvas id="viewCanvas" width="128" height="128"></canvas>
+        <canvas id="viewCanvas" width="512" height="512"></canvas>
         <div
           id="gpuStatus"
           style="
@@ -370,9 +370,11 @@
         >
           <strong>Theoretical Grounding:</strong><br />
           Fields are parameterized by streamfunction ψ over periodic indices on
-          <code>ZMod 128 × ZMod 128</code>. B = curl ψ is exactly
+          <code>ZMod 512 × ZMod 512</code>. B = curl ψ is exactly
           divergence-free by <code>Stencil.div_curl_eq_zero</code>; J_z reads
           −laplacian₂ψ by <code>Stencil.curl_curl_eq_neg_laplacian2</code>;
+          the B→div→current trio runs as one fused dispatch, legal by
+          <code>Schedule.fused_div_eq / fused_cur_eq / fused_halo_footprint</code>;
           advection is a conservative flux form, so Σψ is conserved by
           <code>Stencil.fluxDiv_sum_eq_zero</code> for any flux pair. No
           dissipation term: L2 drift on screen is the scheme's own truncation
@@ -530,6 +532,67 @@ fn compute_current(@builtin(global_invocation_id) id: vec3<u32>) {
 }
 
 // ----------------------------------------------------------------------------
+// Kernel F: fused B + div(B) + J_z from one shared ψ tile per workgroup
+// ----------------------------------------------------------------------------
+// One dispatch replaces compute_b_field + compute_div_b + compute_current.
+// Legality: Schedule.fused_div_eq / fused_cur_eq (fused cell = sequential
+// composition, same op order ⇒ bit-identical f32); Schedule.fused_halo_footprint
+// (footprint = 4 corner taps + distance-2 cross ⇒ halo H = 2 suffices).
+// Each 16×16 workgroup cooperatively loads a 20×20 ψ tile (1600 B, cf.
+// Schedule.tile_shared_fit) into workgroup memory, barriers once, then every
+// tap reads shared memory: ~1.6 global loads/cell instead of 12.
+// B is still written out for the b_mag visual layer, but no pass reads it.
+var<workgroup> psiTile : array<array<f32, 20>, 20>;
+
+@compute @workgroup_size(16, 16)
+fn fused_b_div_current(@builtin(local_invocation_id) lid: vec3<u32>,
+    @builtin(workgroup_id) wid: vec3<u32>,
+    @builtin(global_invocation_id) gid: vec3<u32>) {
+    let nx = i32(uniforms.dims.x);
+    let ny = i32(uniforms.dims.y);
+    // Cooperative tile load, mapped from lid only (gid-independent) so every
+    // thread reaches the barrier even if dims ever stop being multiples of 16.
+    let x0 = i32(wid.x * 16u);
+    let y0 = i32(wid.y * 16u);
+    let tid = lid.y * 16u + lid.x;
+    for (var k = tid; k < 400u; k += 256u) {
+        let lx = i32(k % 20u);
+        let ly = i32(k / 20u);
+        let gx = (((x0 + lx - 2) % nx) + nx) % nx;
+        let gy = (((y0 + ly - 2) % ny) + ny) % ny;
+        psiTile[ly][lx] = psi_in[u32(gy) * uniforms.dims.x + u32(gx)];
+    }
+    workgroupBarrier();
+    if (gid.x >= uniforms.dims.x || gid.y >= uniforms.dims.y) {
+        return;
+    }
+    let lx = i32(lid.x) + 2;
+    let ly = i32(lid.y) + 2;
+    // B at center — same formulas as compute_b_field.
+    let bx_c = psiTile[ly + 1][lx] - psiTile[ly - 1][lx];
+    let by_c = -(psiTile[ly][lx + 1] - psiTile[ly][lx - 1]);
+    // B at the 4 neighbors, straight from the shared tile (same formulas
+    // as compute_b_field, evaluated at the neighbor cell).
+    let bx_e = psiTile[ly + 1][lx + 1] - psiTile[ly - 1][lx + 1];
+    let bx_w = psiTile[ly + 1][lx - 1] - psiTile[ly - 1][lx - 1];
+    let by_n = -(psiTile[ly + 1][lx + 1] - psiTile[ly + 1][lx - 1]);
+    let by_s = -(psiTile[ly - 1][lx + 1] - psiTile[ly - 1][lx - 1]);
+    // Current taps at distance 2, same op order as compute_b_field would
+    // produce for the neighbor B values (store/load through global memory
+    // is exact, so recomputing from the shared tile is bit-identical).
+    let by_e = -(psiTile[ly][lx + 2] - psiTile[ly][lx]);
+    let by_w = -(psiTile[ly][lx] - psiTile[ly][lx - 2]);
+    let bx_n = psiTile[ly + 2][lx] - psiTile[ly][lx];
+    let bx_s = psiTile[ly][lx] - psiTile[ly - 2][lx];
+    // div(B) = dx(Bx) + dy(By), current = dx(By) − dy(Bx): same op order
+    // as the unfused kernels, so every f32 rounding step is identical.
+    let idx = gid.y * uniforms.dims.x + gid.x;
+    b_field[idx] = vec2<f32>(bx_c, by_c);
+    div_b_out[idx] = (bx_e - bx_w) + (by_n - by_s);
+    current_out[idx] = (by_e - by_w) - (bx_n - bx_s);
+}
+
+// ----------------------------------------------------------------------------
 // Kernel 5: Toroidal field B_φ = B₀·R₀/R  (2.5-D axisymmetric tokamak toy)
 // ----------------------------------------------------------------------------
 // Axisymmetry (∂_φ = 0) reduces a tokamak to the poloidal (R, Z) plane plus
@@ -627,11 +690,11 @@ fn advect_psi(@builtin(global_invocation_id) id: vec3<u32>) {
     </script>
 
     <script type="module">
-      const NX = 128;
-      const NY = 128;
+      const NX = 512;
+      const NY = 512;
       const TOTAL_CELLS = NX * NY;
 
-      let device, pipelineB, pipelineDiv, pipelineCurrent, pipelineAdvect, pipelineBphi;
+      let device, pipelineFused, pipelineAdvect, pipelineBphi;
       let uniformsBuffer,
         psiBufferA,
         psiBufferB,
@@ -777,17 +840,12 @@ fn advect_psi(@builtin(global_invocation_id) id: vec3<u32>) {
           bindGroupLayouts: [bindGroupLayout],
         });
 
-        pipelineB = device.createComputePipeline({
+        // Fused B + div(B) + J_z: one dispatch replaces compute_b_field +
+        // compute_div_b + compute_current (Schedule.fused_div_eq /
+        // fused_cur_eq / fused_halo_footprint — same op order, bit-identical).
+        pipelineFused = device.createComputePipeline({
           layout: pipelineLayout,
-          compute: { module: shaderModule, entryPoint: "compute_b_field" },
-        });
-        pipelineDiv = device.createComputePipeline({
-          layout: pipelineLayout,
-          compute: { module: shaderModule, entryPoint: "compute_div_b" },
-        });
-        pipelineCurrent = device.createComputePipeline({
-          layout: pipelineLayout,
-          compute: { module: shaderModule, entryPoint: "compute_current" },
+          compute: { module: shaderModule, entryPoint: "fused_b_div_current" },
         });
         pipelineAdvect = device.createComputePipeline({
           layout: pipelineLayout,
@@ -970,8 +1028,17 @@ fn advect_psi(@builtin(global_invocation_id) id: vec3<u32>) {
         return m;
       }
 
+      // The CFL scan is O(N²) in JS — cache it; only flow parameters change it.
+      let cflCacheKey = null;
+      let cflCacheMaxU = 0;
+
       function updateUniforms() {
-        const maxU = flowSpeed(flowType, flowAmp);
+        const cflKey = flowType + ":" + flowAmp + ":" + domain;
+        if (cflKey !== cflCacheKey) {
+          cflCacheMaxU = flowSpeed(flowType, flowAmp);
+          cflCacheKey = cflKey;
+        }
+        const maxU = cflCacheMaxU;
         // Clamp to the CFL bound dt·max|u₀| ≤ 1 (in cell units); the slider
         // value keeps showing the user's requested dt.
         const effDt = maxU > 0 ? Math.min(dt, 1.0 / maxU) : dt;
@@ -1008,18 +1075,9 @@ fn advect_psi(@builtin(global_invocation_id) id: vec3<u32>) {
         const encoder = device.createCommandEncoder();
         const pass = encoder.beginComputePass();
 
-        // 1. B = curl(ψ)
-        pass.setPipeline(pipelineB);
-        pass.setBindGroup(0, currentBindGroup);
-        pass.dispatchWorkgroups(NX / 16, NY / 16);
-
-        // 2. div(B) — certificate readout
-        pass.setPipeline(pipelineDiv);
-        pass.setBindGroup(0, currentBindGroup);
-        pass.dispatchWorkgroups(NX / 16, NY / 16);
-
-        // 3. J_z = -laplacian₂ψ
-        pass.setPipeline(pipelineCurrent);
+        // 1. Fused B + div(B) + J_z from one 20x20 shared ψ tile
+        // (Schedule: fused dispatch, halo-2 exact).
+        pass.setPipeline(pipelineFused);
         pass.setBindGroup(0, currentBindGroup);
         pass.dispatchWorkgroups(NX / 16, NY / 16);
 

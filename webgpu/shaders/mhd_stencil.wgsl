@@ -143,6 +143,67 @@ fn compute_current(@builtin(global_invocation_id) id: vec3<u32>) {
 }
 
 // ----------------------------------------------------------------------------
+// Kernel F: fused B + div(B) + J_z from one shared ψ tile per workgroup
+// ----------------------------------------------------------------------------
+// One dispatch replaces compute_b_field + compute_div_b + compute_current.
+// Legality: Schedule.fused_div_eq / fused_cur_eq (fused cell = sequential
+// composition, same op order ⇒ bit-identical f32); Schedule.fused_halo_footprint
+// (footprint = 4 corner taps + distance-2 cross ⇒ halo H = 2 suffices).
+// Each 16×16 workgroup cooperatively loads a 20×20 ψ tile (1600 B, cf.
+// Schedule.tile_shared_fit) into workgroup memory, barriers once, then every
+// tap reads shared memory: ~1.6 global loads/cell instead of 12.
+// B is still written out for the b_mag visual layer, but no pass reads it.
+var<workgroup> psiTile : array<array<f32, 20>, 20>;
+
+@compute @workgroup_size(16, 16)
+fn fused_b_div_current(@builtin(local_invocation_id) lid: vec3<u32>,
+    @builtin(workgroup_id) wid: vec3<u32>,
+    @builtin(global_invocation_id) gid: vec3<u32>) {
+    let nx = i32(uniforms.dims.x);
+    let ny = i32(uniforms.dims.y);
+    // Cooperative tile load, mapped from lid only (gid-independent) so every
+    // thread reaches the barrier even if dims ever stop being multiples of 16.
+    let x0 = i32(wid.x * 16u);
+    let y0 = i32(wid.y * 16u);
+    let tid = lid.y * 16u + lid.x;
+    for (var k = tid; k < 400u; k += 256u) {
+        let lx = i32(k % 20u);
+        let ly = i32(k / 20u);
+        let gx = (((x0 + lx - 2) % nx) + nx) % nx;
+        let gy = (((y0 + ly - 2) % ny) + ny) % ny;
+        psiTile[ly][lx] = psi_in[u32(gy) * uniforms.dims.x + u32(gx)];
+    }
+    workgroupBarrier();
+    if (gid.x >= uniforms.dims.x || gid.y >= uniforms.dims.y) {
+        return;
+    }
+    let lx = i32(lid.x) + 2;
+    let ly = i32(lid.y) + 2;
+    // B at center — same formulas as compute_b_field.
+    let bx_c = psiTile[ly + 1][lx] - psiTile[ly - 1][lx];
+    let by_c = -(psiTile[ly][lx + 1] - psiTile[ly][lx - 1]);
+    // B at the 4 neighbors, straight from the shared tile (same formulas
+    // as compute_b_field, evaluated at the neighbor cell).
+    let bx_e = psiTile[ly + 1][lx + 1] - psiTile[ly - 1][lx + 1];
+    let bx_w = psiTile[ly + 1][lx - 1] - psiTile[ly - 1][lx - 1];
+    let by_n = -(psiTile[ly + 1][lx + 1] - psiTile[ly + 1][lx - 1]);
+    let by_s = -(psiTile[ly - 1][lx + 1] - psiTile[ly - 1][lx - 1]);
+    // Current taps at distance 2, same op order as compute_b_field would
+    // produce for the neighbor B values (store/load through global memory
+    // is exact, so recomputing from the shared tile is bit-identical).
+    let by_e = -(psiTile[ly][lx + 2] - psiTile[ly][lx]);
+    let by_w = -(psiTile[ly][lx] - psiTile[ly][lx - 2]);
+    let bx_n = psiTile[ly + 2][lx] - psiTile[ly][lx];
+    let bx_s = psiTile[ly][lx] - psiTile[ly - 2][lx];
+    // div(B) = dx(Bx) + dy(By), current = dx(By) − dy(Bx): same op order
+    // as the unfused kernels, so every f32 rounding step is identical.
+    let idx = gid.y * uniforms.dims.x + gid.x;
+    b_field[idx] = vec2<f32>(bx_c, by_c);
+    div_b_out[idx] = (bx_e - bx_w) + (by_n - by_s);
+    current_out[idx] = (by_e - by_w) - (bx_n - bx_s);
+}
+
+// ----------------------------------------------------------------------------
 // Kernel 5: Toroidal field B_φ = B₀·R₀/R  (2.5-D axisymmetric tokamak toy)
 // ----------------------------------------------------------------------------
 // Axisymmetry (∂_φ = 0) reduces a tokamak to the poloidal (R, Z) plane plus

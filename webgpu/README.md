@@ -7,9 +7,35 @@ part of a build; run from this directory.
 
 | File | Role |
 | --- | --- |
-| `reference_mhd.py` | Headless CPU oracle, float32 op-for-op with the WGSL kernels |
-| `shaders/mhd_stencil.wgsl` | The four compute kernels — **authoring source** |
+| `reference_mhd.py` | Headless CPU oracle, float32 op-for-op with the WGSL kernels (default N = 512) |
+| `shaders/mhd_stencil.wgsl` | The compute kernels — **authoring source** (incl. fused `fused_b_div_current`) |
 | `index.html` | Browser lab: meters, visual layers, drag-to-edit-ψ. Ships a *generated* inline copy of the WGSL (see below) |
+| `../LaserCortex/Schedule.lean` | Lean-first schedule legality: fusion/halo/substep theorems + cache-fit arithmetic |
+
+## Optimization (Lean-first, Phase 1)
+
+The spec (`Stencil.lean`) is fixed; the *schedule* is certified in
+`LaserCortex/Schedule.lean` and every shipped optimization is an instance
+of a theorem there:
+
+* **Fused B→div→current dispatch** (`fused_b_div_current`): one 16×16
+  workgroup loads a 20×20 ψ tile (1600 B ≤ 16384 B workgroup limit) into
+  `var<workgroup>` memory, barriers once, and computes B/div/J from shared
+  taps — ~1.6 global loads/cell instead of 12 (`Schedule.traffic_fused_le`,
+  ~7× at any tileable N). Same op order as the unfused kernels, so the
+  result is bit-identical (`Schedule.fused_div_eq/cur_eq` + a numpy
+  fused-vs-sequential parity check that reads exact `0.0`).
+* **Halo-2 exactness** (`Schedule.fused_halo_footprint`): the fused
+  footprint is 4 corner taps + the distance-2 cross, so H = 2 suffices —
+  the tile loader above is the smallest correct one.
+* **Resolution 512** (`Schedule.capacity_problem`): at 128² the ~448 KB
+  working set fits any L2, so tiling is cosmetic; at 512² the ~7 MB set
+  overflows any L2 ≤ 4 MB — the first resolution where cache reuse is a
+  real problem and the predictor bites.
+* **Substepping is physics-safe** (`Schedule.substeps_conserve`): any flux-
+  pair sequence preserves Σψ, so readback cadence stays a metering choice.
+* Host-side: the O(N²) JS CFL scan is cached (recomputed only when flow
+  parameters change); meters/readback stay on the Phase-3 list.
 
 The shader travels **inside** `index.html` because `file://` pages cannot
 `fetch()` anything (origin `null` is CORS-blocked by Chromium — the old
@@ -103,9 +129,9 @@ python3 reference_mhd.py
   Visualization Layer to ψ for a full-frame picture.
 * **Flat single-colour frames (all black / all grey / all blue) with a live
   flux meter** = every kernel is no-op'ing, typically an invalid bind group:
-  all four pipelines and both ping-pong bind groups must share ONE explicit
-  bind group layout covering bindings 0–5 (auto layouts differ per entry
-  point and silently invalidate a six-binding group).
+  all pipelines and both ping-pong bind groups must share ONE explicit
+  bind group layout covering bindings 0–6 (auto layouts differ per entry
+  point and silently invalidate a seven-binding group).
 
 ## Meter meaning
 
@@ -115,3 +141,8 @@ python3 reference_mhd.py
 | ΔΣψ | ~op-rounding of the flux form (certified conserved) |
 | ΔΣψ² | donor-cell truncation, visible as a small decay |
 | max \|J_z\| | growth ⇒ current-sheet steepening; runaway at grid scale is the would-be `c = 4` event |
+
+Raw J_z numbers are grid-unit quantities of the *unnormalized* stencil and
+scale as O(1/N²) — finer grids print smaller magnitudes by construction.
+Read structure (sheets, growth), not absolute amplitude; the auto-scaled
+visual layers already normalize per frame.
