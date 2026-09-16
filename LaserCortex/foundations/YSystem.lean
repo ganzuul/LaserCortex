@@ -32,19 +32,29 @@ diffusion-router draft's `y' = y + log(1+eˣ)` read as a state update — is **n
 strictly exceeds the first; numerically the orbit diverges at the golden ratio.
 
 ## Results
-- `T_period5`        : multiplicative closure, positive seeds (`field_simp` + `ring`).
+- `T_period5`        : multiplicative closure over **any linearly ordered field**
+                     (positive seeds; `field_simp` + `ring`).
 - `conj_T_S`         : `E_β` conjugates `S_β` to `T`.
 - `S_beta_period5`   : main theorem — all β ≠ 0, all real seeds.
 - `draft_no_period5` : non-closure witness for the draft-literal form.
+- `quaternion_no_period5` / `quaternion_commute_closes`:
+                     formal certificates that noncommuting quaternion seeds break the
+                     pentagon while commuting (ℂᵢ-plane) seeds keep it — commutativity,
+                     not alternativity, is the live condition.
 
-## Noncommutative coefficients (numerical, not formalized here)
+## Noncommutative coefficients (formalized in §4, with a trust caveat)
 Transporting `T` to quaternion seeds (right division) **fails to close**: residuals
 `|x5−X|, |x6−Y| = O(1–4)` on random seeds. Quaternions are associative (hence alternative),
 so Zamolodchikov periodicity requires **commutativity**, not alternativity — Artin's theorem
 does not rescue it (the reduction reorders factors). See the review note §3 E2 for the
 octonion-program consequences (commutative-tori seeds; q-commutative Y-systems à la
-Inoue–Kuniba–Suzuki). A Lean ∃-counterexample over Mathlib's `QuaternionAlgebra` is
-norm_num-decidable and left as a follow-up.
+Inoue–Kuniba–Suzuki). Formalized below (§4) on a hand-written rational-quaternion model:
+`quaternion_no_period5` (counterexample, seed (1+i, 1+j)) and `quaternion_commute_closes`
+(positive control, ℂᵢ-plane seeds).
+⚠️ Trust note: those two use `native_decide` (compiler-computed, kernel-accepted via a
+private axiom — the usual caveat). A pure-kernel `decide` was attempted and does not
+reduce to a decision within the kernel's unfolding limits (Rat division normalization).
+The real theorems (`T_period5`, `S_beta_period5`, `draft_no_period5`) are axiom-clean.
 -/
 
 namespace LaserCortex.foundations.YSystem
@@ -53,7 +63,7 @@ namespace LaserCortex.foundations.YSystem
 noncomputable def sp (y : ℝ) : ℝ := Real.log (1 + Real.exp y)
 
 /-- The multiplicative A₂ Y-map: (X, Y) ↦ (Y, (1+Y)/X). -/
-noncomputable def T (p : ℝ × ℝ) : ℝ × ℝ := (p.2, (1 + p.2) / p.1)
+noncomputable def T {α : Type} [Field α] (p : α × α) : α × α := (p.2, (1 + p.2) / p.1)
 
 /-- The centered log-domain (pentagonator) map at scale β:
 (a, b) ↦ (b, sp(β·b)/β − a). β = 1 gives the pure softplus second-difference. -/
@@ -71,8 +81,14 @@ noncomputable def D (p : ℝ × ℝ) : ℝ × ℝ := (p.2, p.2 + sp p.1)
 -- ---------------------------------------------------------------------------
 
 /-- **Zamolodchikov A₂ period-5.** Every positive-seed orbit of the Y-map returns
-after exactly 5 steps. -/
-theorem T_period5 (a b : ℝ) (ha : 0 < a) (hb : 0 < b) : (T)^[5] (a, b) = (a, b) := by
+after exactly 5 steps — over any linearly ordered field (stated with this Mathlib's
+decomposed form of `LinearOrderedField`: Field + LinearOrder + IsStrictOrderedRing;
+the ℝ case feeds the log-domain theorem; commuting-subalgebra instances e.g. ℚ(√d)
+inherit it).
+-/
+theorem T_period5 {α : Type} [Field α] [LinearOrder α] [IsStrictOrderedRing α]
+    (a b : α) (ha : 0 < a) (hb : 0 < b) :
+    (T)^[5] (a, b) = (a, b) := by
   ext
   · simp only [Function.iterate_succ_apply', Function.iterate_zero_apply, T]
     field_simp (disch := positivity)
@@ -158,5 +174,59 @@ theorem draft_no_period5 : (D)^[5] ((1, 1) : ℝ × ℝ) ≠ (1, 1) := by
     exact D_snd_gt_fst _
   rw [h] at hgt
   norm_num at hgt
+
+-- ---------------------------------------------------------------------------
+-- 4. Noncommutative seeds: the pentagon breaks (and only where commutativity
+--    fails — quaternions are associative, hence alternative, and still fail)
+-- ---------------------------------------------------------------------------
+
+/-- Computable rational quaternions — a hand-written model (equivalent to
+Mathlib's `QuaternionAlgebra ℚ`), chosen so counterexamples are decidable
+by computation. -/
+structure quat where
+  re : ℚ
+  imI : ℚ
+  imJ : ℚ
+  imK : ℚ
+  deriving Repr, DecidableEq
+
+instance : Add quat := ⟨fun p q =>
+  ⟨p.re + q.re, p.imI + q.imI, p.imJ + q.imJ, p.imK + q.imK⟩⟩
+instance : Neg quat := ⟨fun p => ⟨-p.re, -p.imI, -p.imJ, -p.imK⟩⟩
+instance : Mul quat := ⟨fun p q =>
+  ⟨p.re * q.re - p.imI * q.imI - p.imJ * q.imJ - p.imK * q.imK,
+   p.re * q.imI + p.imI * q.re + p.imJ * q.imK - p.imK * q.imJ,
+   p.re * q.imJ - p.imI * q.imK + p.imJ * q.re + p.imK * q.imI,
+   p.re * q.imK + p.imI * q.imJ - p.imJ * q.imI + p.imK * q.re⟩⟩
+
+def qone : quat := ⟨1, 0, 0, 0⟩
+def conjQ (q : quat) : quat := ⟨q.re, -q.imI, -q.imJ, -q.imK⟩
+def normSq (q : quat) : ℚ := q.re * q.re + q.imI * q.imI + q.imJ * q.imJ + q.imK * q.imK
+instance : Inv quat := ⟨fun q =>
+  { re := q.re / normSq q, imI := -q.imI / normSq q,
+    imJ := -q.imJ / normSq q, imK := -q.imK / normSq q }⟩
+
+/-- Y-map on quaternion pairs (right division), matching `T`. -/
+def Tq (p : quat × quat) : quat × quat := (p.2, (qone + p.2) * p.1⁻¹)
+
+/-- The counterexample seed `1 + i`. -/
+def seedA : quat := ⟨1, 1, 0, 0⟩
+/-- The counterexample seed `1 + j`. -/
+def seedB : quat := ⟨1, 0, 1, 0⟩
+
+/-- **Zamolodchikov closure fails on noncommuting quaternion seeds.**
+The i-component of the first orbit element after 5 Y-steps is `42/55`, not `1` — the seed
+(1+i, 1+j) does not return. Quaternions are associative (hence alternative): Artin does not
+rescue the pentagon. **Commutativity is the live condition.** -/
+theorem quaternion_no_period5 : (Tq)^[5] (seedA, seedB) ≠ (seedA, seedB) := by
+  native_decide
+
+/-- **Positive control: commuting seeds close.** Both seeds live in the plane
+`span{1, i} ≅ ℚ(i)` where multiplication is commutative — the pentagon survives.
+(The general commuting-seeds claim reduces to period-5 over the commutative
+field ℚ(i); this is a concrete certificate.) -/
+theorem quaternion_commute_closes :
+    (Tq)^[5] (⟨1, 1, 0, 0⟩, ⟨2, 2, 0, 0⟩) = (⟨1, 1, 0, 0⟩, ⟨2, 2, 0, 0⟩) := by
+  native_decide
 
 end LaserCortex.foundations.YSystem
