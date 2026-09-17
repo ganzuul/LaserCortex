@@ -1,0 +1,37 @@
+{
+ "args": {
+  "corpus": "wikitext",
+  "root": "/workspace",
+  "steps": 1500,
+  "bs": 16,
+  "lr": 0.0003,
+  "d": 384,
+  "layers": 4,
+  "theads": 8,
+  "Lmin": 512,
+  "Lmax": 2048,
+  "kmax": 40,
+  "gram_heads": 8,
+  "gram_target": 65536,
+  "eval_lengths": [
+   512,
+   2048
+  ],
+  "device": "cuda",
+  "out": "results_w4_t65536.json",
+  "ablate": "gram"
+ },
+ "params_M": 28.027058,
+ "eval": {
+  "512": {
+   "present": 0.0,
+   "absent": 1.0,
+   "mutated": 1.0
+  },
+  "2048": {
+   "present": 0.0,
+   "absent": 1.0,
+   "mutated": 1.0
+  }
+ }
+}
