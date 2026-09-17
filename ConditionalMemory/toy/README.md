@@ -81,6 +81,49 @@ H1 now holds at ~100M scale, 16× vocab, 128× key-table, 10.7× length
 extrapolation — 11/11 gram rows perfect; loss 1.6→0.000 by step ~500.
 Total rental cost for W1+W2: **~2 h ≈ $0.40**.
 
+## W3 — real text, real tokenizer (H2-baby) — rental 3090, 2026-09-17 (`rental_3090/results_w3_*.json`)
+
+WikiText-103, **GPT-2 tokenizer (vocab 50257)**, 47M trunk (6×d512×8h),
+V4.1-scale primes (t≈8.4M), 2000 steps, per-sample mixed families:
+a held-out fact sentence spliced into the stream (present), a never-seen
+fact (absent), or a seen fact with one interior token swapped (mutated).
+Query tail `SEP needle QMARK`; eval at L∈{512, 2048, 4096} (train ≤2048).
+Runner: `w3_realtext.py` + idempotent `w3_run.sh`; one arm ≈ 1400 s.
+
+| arm | present | absent | mutated | verdict |
+|---|---|---|---|---|
+| `gram` | .80 / .95 / **.99** | 1.00 / 1.00 / 1.00 | 1.00 / 1.00 / 1.00 | recall rises with L; **zero false presence at every cell** |
+| `kv` | **.06 / .02 / .01** | .95 / .97 / .98 | .91 / .98 / .98 | present-recall **collapse** — retreats to majority "absent" |
+| `gram_closed` | .70 / .28 / .16 | .27 / .79 / .81 | .43 / .73 / .94 | unstable in the *other* direction: 73% false-presence at 512 |
+
+Readings:
+1. **gram's asymmetry is the point**: the dangerous error (hallucinating
+   a memory that isn't there) costs *zero* on real English — the min-over-
+   interior-windows conjunction stays conservative under tokenization noise,
+   while the safe error (missing a recall) just needs steps. mutated=1.00
+   ⇒ one interior token swap breaks 3 order-3 windows ⇒ decisive rejection:
+   bag semantics keep contiguity through the window operator.
+2. **The two trunk-only arms fail in opposite, seed-dependent ways** (kv
+   conservative-collapse, closed liberal-hallucination) and both decay to
+   low-present as L grows. commit is pinned +0.000 in the closed log ⇒ its
+   forward is genuinely channel-blind ⇒ the closed≠kv gap is RNG/init
+   sensitivity, not leakage. Caveat for the next iteration: make closed a
+   *shared-init* clone of kv to isolate that variance cleanly. The control
+   still does its job: dead-channel capacity performs nowhere near gram ⇒
+   the win is the live channel, not parameter count.
+3. **CPU parity**: the gram arm also reached 1.00@all-L on pure CPU
+   (1000 steps, ~100 s, `results_cpu_parity.json`) — no CUDA anywhere in the
+   certified path; the ROCm/LUMI-G portability claim is demonstrated, not
+   asserted.
+
+Ops lessons (pod): chain waiters built as `bash -c` with a future command
+line that *contains the pattern their own `pgrep` hunts* → self-match, never
+exits (W4 silently unqueued for an hour); `nohup` ≠ detached — group
+signals from a kernel interrupt kill it; relaunch under **`setsid`**. `ps`/
+`pgrep`/`nvidia-smi` can wedge on a D-state proc here: after that, the
+Jupyter Contents API file-size poll is the only trustworthy liveness probe.
+
+
 ## Smoke result (RTX 2070 SUPER, 800 steps, 22 s/arm) — 2026-09-17
 
 | arm | acc @ L=96 | @512 | @2048 | commit rate |
