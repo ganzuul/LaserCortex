@@ -1,0 +1,39 @@
+{
+ "args": {
+  "steps": 1000,
+  "bs": 16,
+  "lr": 0.0003,
+  "d": 128,
+  "layers": 2,
+  "vocab": 4096,
+  "K": 8,
+  "Lmin": 48,
+  "Lmax": 96,
+  "max_len": 4200,
+  "theads": 4,
+  "gram_heads": 4,
+  "gram_target": 65536,
+  "eval_lengths": [
+   96,
+   256,
+   512
+  ],
+  "eval_bs": 32,
+  "seed": 0,
+  "ablations": [
+   "gram"
+  ],
+  "device": "cpu",
+  "out": "results_cpu_parity.json"
+ },
+ "results": {
+  "gram": {
+   "train_loss": 1.3411042232291948e-07,
+   "eval_acc_by_L": {
+    "96": 1.0,
+    "256": 1.0,
+    "512": 1.0
+   }
+  }
+ }
+}
