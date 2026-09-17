@@ -84,7 +84,38 @@ resource the addressing certs are designed for). Budget tier: 30–60k
 MI250X GPUh → EuroHPC "Access to Exascale Computers"/CSC call; PRACE/Finnish
 national as fallback routes.
 
+## Evidence status — 2026-09-17 evening (post W1–W4, all rental 3090, ~$1.10 total)
+
+| rung | artifact | verdict |
+|---|---|---|
+| S1 mechanism | `rental_3090/results_s1_*` (9 jsons, 3 arms × 3 seeds) | gram 1.00 @ all L∈{96…4096}; controls chance |
+| S1-LARGE (W2) | `results_large_*` (~100M trunk, 64k vocab, t≈8.4M) | gram 1.00 @ every seed × L up to 8192 (10.7× extrap) |
+| W1 cost model | `ple_bench_3090.json` | 0.035 µs/token gather FLAT 0.25→16GB; host-RAM table 0.26 µs/token; fp32 attention OOMs at 32k |
+| W3 real text (H2-baby) | `results_w3_*.json` (WikiText-103 × GPT-2 vocab) | gram {p .80→.99, **a 1.00, m 1.00**}; kv present-collapse .06→.01; closed arm unstable — trunk-only solutions vary wildly by init, gram's zero-false-presence is the only stable corner |
+| W4 modulus sweep | `results_w4_t*.json` | NULL as run (28M trunk never learned readout — scale cliff, not collision); re-derivation corrected the theory: collision floor is **three-phase** and ~4 orders lower than assumed — per-window spurious rate λ=L_seq/t, false-present ≈ λ^40 (absent, breaks t≲512) / λ^3 (mutated canary, t≲16k) / 0 (present, count≥2 guaranteed). V4.1-scale tables sit 3 orders above any failure ⇒ host-RAM budget can shrink drastically. v2 design recorded (toy/README). |
+| CPU parity | `results_cpu_parity.json` | gram arm 1.00 @ all L on pure CPU — the certified path is backend-agnostic (ROCm itself still un-run: claim it as shown on CPU, pending MI250X) |
+| Portability constraint | repo-wide | plain PyTorch, zero custom kernels, `cuda` device-strings → ROCm unchanged |
+
+**What this buys for the application**: W1+W3 together answer the committee's
+two real questions — *"is the big HBM actually the bottleneck?"* (measured
+cost, flat in table size; the OOM wall is attention's quadratic scores, not
+memory) and *"does the cert mean anything at the noise floor?"* (W3: on real
+English, collision-noise rejection is exact at t≈8.4M, and corrected theory
+now predicts WHERE it breaks, falsifiably, for t≈512–16k). The scale cliff
+(28M fails, 47M learns readout) is itself S3-relevant: readout learning is a
+capacity threshold we can now place between two measured points.
+
+**Remaining before "apply"**: (1) S2 pilot — hybrid GDN/Mamba-2 trunk
+400M–1B with frozen gram + delta tables and zero-shot fact injection;
+rental economics put it at 3–6k A100h ≈ **$5–18k cash vs $0 on a dev
+allocation** — the grant is a hard requirement, not an ambition; (2) first
+actual MI250X/ROCm run (trivial expected, but say "measured" not
+"should work"); (3) R3 de Bruijn-chaining theory work-package written in
+Lean; (4) human logistics (affiliation/eligibility, PI letter, timeline) —
+none of it code.
+
 ## Why this reads well to a GPU-allocation committee
+
 1. Every design decision is **pre-certified** (Lean) — the failure modes
    (key collisions, write interference, edit blast-radius) have proven bounds,
    not vibes; S2/S3 measure where the bounds bite in practice.
