@@ -124,6 +124,44 @@ signals from a kernel interrupt kill it; relaunch under **`setsid`**. `ps`/
 Jupyter Contents API file-size poll is the only trustworthy liveness probe.
 
 
+## W4 — table-modulus sweep (H3 probe) — rental 3090, 2026-09-17 (`rental_3090/results_w4_t*.json`)
+
+Gram arm at d384×4 (28M), 1500 steps, t ∈ {65 536, 1 048 583, 33 554 432}.
+
+**NULL RESULT as run — all three points are degenerate {p 0.00 / a 1.00 / m 1.00}.**
+Initial read (commit c52002d: "saturated table ⇒ channel carries no
+information") was **WRONG**; re-deriving from `membership_features` showed:
+counts are **per-sequence causal prefix counts** (~2 090 windows per sample),
+not corpus-wide bucket load. At t=65 536 the spurious-hit rate per needle
+window is ≈ 2090/65536 ≈ 3%, and the min-over-~40-windows conjunction makes
+false-present ≈ (0.03)^40 ≈ 0: **the channel was clean at every swept
+modulus.** The sweep failed for a different, humbler reason: the 28M trunk
+under 1500 steps never learned the readout at *any* modulus (train batch acc
+still oscillating 0.31–0.94 at the end; W3's 47M/2000-step arm was required —
+and even it was still climbing, 0.80@512). The flat {0,1,1} is the degenerate
+majority-"absent" trunk, not a collision effect. (The *observed*
+forget-don't-hallucinate shape of the degenerate solution still stands, but
+it is a property of an untrained trunk, not of the channel.)
+
+**Corrected theory — the collision floor is four orders lower than assumed,
+and it is three-phase.** With L≈2090 windows/sample and needle spans of
+K≈40 interior windows, spurious prefix hits are ~Poisson(λ), λ=L/t, and each
+family fails with a different exponent:
+
+| quantity | false-present needs | breaks at |
+|---|---|---|
+| present recall | some needle window at count <2 | **never** (splice+tail ⇒ count ≥ 2 at any t) |
+| mutated rejection | spurious hits at its 3 broken windows | (1−e^−λ)^3 ⇒ ~t ≲ 16k, collapse ≈ 2k |
+| absent rejection | spurious hits at **all** ~40 windows | (1−e^−λ)^40 ⇒ ~t ≲ 512 |
+
+So the V4.1-scale modulus (8.4M) sits ~3 orders above any failure; tables
+could be *far* smaller than the reference scale at no safety cost (cost is
+flat in table size anyway — W1). W4 v2 (if run): sweep t ∈ {2k, 4k, 8k,
+16k, 65k} at **W3 scale** (d512×6, 2000 steps) and watch mutated break
+first, then absent, present never — a measured phase boundary from the
+certificate, ≈ 2 h rental ≈ $0.40. Also recorded: a 28M-vs-47M **scale cliff**
+for readout learning (input to the S2 capacity-allocation story).
+
 ## Smoke result (RTX 2070 SUPER, 800 steps, 22 s/arm) — 2026-09-17
 
 | arm | acc @ L=96 | @512 | @2048 | commit rate |
