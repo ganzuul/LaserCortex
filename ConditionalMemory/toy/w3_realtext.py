@@ -37,20 +37,37 @@ def load_wikitext(which):
     from datasets import load_dataset
     from transformers import AutoTokenizer
     tk = AutoTokenizer.from_pretrained("gpt2")
-    ds = load_dataset("wikitext", "wikitext-103-raw-v1")
+    ds = load_dataset("Salesforce/wikitext", "wikitext-103-raw-v1")
 
-    def flat(name):
-        text = "\n".join(l for l in ds[name]["text"] if l.strip())
-        return tk(text, return_tensors="pt")["input_ids"][0]
+    def flat(split):
+        # stream rows in chunks: materializing the whole column or one 28M-
+        # char string blew up the 30GB host once (pod OOM-killed gram arm).
+        toks, buf = [], []
+        for row in ds[split]:
+            t = row["text"].strip()
+            if not t:
+                continue
+            buf.append(t)
+            if len(buf) >= 5000:
+                toks.append(torch.tensor(
+                    tk("\n".join(buf), add_special_tokens=False).input_ids,
+                    dtype=torch.int32))
+                buf = []
+        if buf:
+            toks.append(torch.tensor(
+                tk("\n".join(buf), add_special_tokens=False).input_ids,
+                dtype=torch.int32))
+        return torch.cat(toks)
 
     stream = flat(which)
     facts = []
-    for l in ds["validation"]["text"]:
-        s = l.strip()
+    for row in ds["validation"]:
+        s = row["text"].strip()
         if len(s) > 60 and not s.startswith(" ="):
-            ids = tk(s).input_ids
+            ids = tk(s, add_special_tokens=False).input_ids
             if 12 <= len(ids) <= 40:
                 facts.append(ids)
+    del ds
     return stream, facts, tk.vocab_size
 
 
@@ -78,7 +95,7 @@ def load_localmd(root, k=400):
 # ---------------------------------------------------------------------------
 class RealTask:
     def __init__(self, stream_ids, facts, kmax, device):
-        self.stream = stream_ids.to(torch.int64)
+        self.stream = stream_ids          # keep int32; cast per-batch
         self.device = device
         self.kmax = kmax
         n = len(facts)
@@ -95,7 +112,7 @@ class RealTask:
         st = torch.randint(0, self.stream.shape[0] - L - 1, (B,),
                            generator=gen)
         rows = st[:, None] + torch.arange(L)
-        ids = self.stream[rows].to(self.device)
+        ids = self.stream[rows].to(torch.int64).to(self.device)
         fi = torch.randint(0, self.lens.shape[0], (B,), generator=gen)
         K = self.lens[fi]                                   # (B,)
         needle = self.padded[fi][:, :int(K.max())]          # (B, <=kmax)
