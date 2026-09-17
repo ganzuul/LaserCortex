@@ -34,14 +34,40 @@ hypothesis certified below; full joint-injectivity is roadmap R5).
 R0: kernel incremental fold (per-term mod accumulation) ⇔ `gramKey`.
 R1: window locality — editing token at position p touches ≤ 2·(w−1) bucket
     keys per head; the delta-write cost bound for the write path.
-R2: needle no-false-negatives **requires an explicit padding convention**:
-    start-truncated substring windows do NOT match host windows at shared
-    positions (design finding from formalization — left-pad both sides with
-    a sentinel ∉ vocab, or key only anchored windows).
+R2: needle no-false-negatives need an explicit WINDOWING CONVENTION (sharpened
+    by executable-spec testing + DeepSeek-V4.1-Flash, MIT):
+    - naive standalone-needle (truncated) window inclusion: FALSE NEGATIVES;
+    - sentinel left-padding of BOTH sides: still unsound (needle head gets PAD,
+      host mid-sequence occurrence gets real left context — windows differ);
+    - production `engram_pad_token_id: 2` standardizes the TRUE sequence head
+      only; membership should test ANCHORED COMPLETE w-windows — sound but
+      merely NECESSARY (decoy witnessed: all windows present, not contiguous);
+    - sufficiency requires window CHAINING ⇒ falls out of R3's de Bruijn trails.
+    (Open: verify against the MIT `inference/` code whether pad ids actually
+     participate in gram windows at head positions.)
 R3: k-spectrum order reconstruction (2-gram edge bag + 3-gram composition ⇒
     de Bruijn–Eulerian trails; the "commutativity/associativity" claim).
 R5: full multi-head CRT joint injectivity below Π m_h (ℤ transfer,
     `IsCoprime.mul_dvd` + |a−b| < m₁m₂; next session).
+R6: mHC/Sinkhorn mixer certificates (DeepSeek-V4.1 `hc_mult: 4`,
+    `hc_sinkhorn_iters: 20`; sglang configs/deepseek_v4.py:109; qwen4exp
+    shares the machinery via model_config.py:250 `hc_mult`):
+    - Sinkhorn limit is doubly stochastic (row/col sums = 1) — checked
+      numerically in the executable spec; formal: convergence for strictly
+      positive matrices;
+    - Birkhoff–von Neumann: doubly stochastic = convex hull of permutations —
+      the commutative mixer over residual streams is a mixture of relabelings;
+    - permutation-equivariance of the Sinkhorn map (numeric in spec; formal
+      proof short: uniqueness of the DS scaling);
+    - spine tie: mHC mixes the hc_mult residual streams — the "residual" half
+      of "residuals + dictionary" gets its bag-algebra mixer from Sinkhorn,
+      the dictionary half from Engram, the commit rate from softplus
+      (production: `scoring_func: sqrtsoftplus`).
+R7: Engram-vs-PLE parameter mapping (V4.1: orders {2,3,4} × 8 heads × 16M
+    buckets @ layers [1,14], head_dim 256; qwen4exp: orders {2,3} × 8 heads ×
+    20M @ layer [1]) — slot arithmetic certified self-consistent by the
+    executable spec; formalize layout when the MIT reference code pins the
+    moduli/offset semantics.
 -/
 
 namespace LaserCortex.ConditionalMemory.GramDictionary
