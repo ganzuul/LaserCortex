@@ -1,0 +1,41 @@
+{
+ "args": {
+  "steps": 2500,
+  "bs": 32,
+  "lr": 0.0003,
+  "d": 768,
+  "layers": 8,
+  "vocab": 65536,
+  "K": 8,
+  "Lmin": 128,
+  "Lmax": 768,
+  "max_len": 8400,
+  "theads": 12,
+  "gram_heads": 8,
+  "gram_target": 8388617,
+  "eval_lengths": [
+   1024,
+   2048,
+   4096,
+   8192
+  ],
+  "eval_bs": 16,
+  "seed": 2,
+  "ablations": [
+   "gram"
+  ],
+  "device": "auto",
+  "out": "results_large_gram_seed2.json"
+ },
+ "results": {
+  "gram": {
+   "train_loss": 1.1175870007207322e-08,
+   "eval_acc_by_L": {
+    "1024": 1.0,
+    "2048": 1.0,
+    "4096": 1.0,
+    "8192": 1.0
+   }
+  }
+ }
+}

@@ -51,6 +51,13 @@ channel — fixed by zero-init embeddings) in `toy/rental_3090/` +
 toy/README.md. Both lessons are now S2 code-review checklist items.
 Rental budget: ~2–8 GPUh, any 24GB card. Also: real-tokenizer variant
 (Qwen3 tokenizer, wiki streams, 32k vocab) as S1.5.
+**S1-LARGE (W2) PASS (rental 3090, 2026-09-17, commit a2517f6+):** ~100M
+trunk, vocab 64k, V4.1-scale prime tables (~8.4M/table) — gram arm 1.00 at
+every seed × every L∈{1024,2048,4096,8192}; controls chance. **W1 cost model
+(`toy/ple_bench.py`, rental_3090/ple_bench_3090.json):** read path 0.036
+µs/token FLAT 0.25→16GB tables; pinned host-RAM tables 0.26 µs/token (7×
+HBM, still L-invariant); fp32 attention OOMs at 32k where the channel is
+linear — this is the S3 capacity-curve data at single-GPU scale.
 
 ### S2 — knowledge-injection scale (multi-GPU rental → LUMI-G dev allocation)
 Backbone: hybrid ~400M–1B (GDN or Mamba-2 trunk — the softplus commutator,
