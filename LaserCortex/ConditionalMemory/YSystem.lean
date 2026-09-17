@@ -57,7 +57,7 @@ reduce to a decision within the kernel's unfolding limits (Rat division normaliz
 The real theorems (`T_period5`, `S_beta_period5`, `draft_no_period5`) are axiom-clean.
 -/
 
-namespace LaserCortex.foundations.YSystem
+namespace LaserCortex.ConditionalMemory.YSystem
 
 /-- softplus. -/
 noncomputable def sp (y : ℝ) : ℝ := Real.log (1 + Real.exp y)
@@ -229,4 +229,4 @@ theorem quaternion_commute_closes :
     (Tq)^[5] (⟨1, 1, 0, 0⟩, ⟨2, 2, 0, 0⟩) = (⟨1, 1, 0, 0⟩, ⟨2, 2, 0, 0⟩) := by
   native_decide
 
-end LaserCortex.foundations.YSystem
+end LaserCortex.ConditionalMemory.YSystem

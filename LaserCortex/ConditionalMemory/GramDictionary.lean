@@ -44,7 +44,7 @@ R5: full multi-head CRT joint injectivity below Π m_h (ℤ transfer,
     `IsCoprime.mul_dvd` + |a−b| < m₁m₂; next session).
 -/
 
-namespace LaserCortex.foundations.GramDictionary
+namespace LaserCortex.ConditionalMemory.GramDictionary
 
 /-- Gram value, base V, window newest-first (`x` = current token, then
 leftward context), mirroring the kernel's distance-`j` weights `V^j`. -/
@@ -283,4 +283,4 @@ example : gramKey 248320 20000003 (windowAt 2 [5, 9, 13] 2)
 example : gramKey 248320 20000081 (windowAt 3 [5, 9, 13] 2)
     = (13 + 248320 * 9 + 248320 ^ 2 * 5) % 20000081 := by native_decide
 
-end LaserCortex.foundations.GramDictionary
+end LaserCortex.ConditionalMemory.GramDictionary
