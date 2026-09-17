@@ -1,0 +1,35 @@
+{
+ "gather_hbm_us_per_token": {
+  "65536": {
+   "us_per_token": 0.036,
+   "effective_GBs": 105.8,
+   "table_GB": 0.25
+  },
+  "1048576": {
+   "us_per_token": 0.035,
+   "effective_GBs": 109.5,
+   "table_GB": 4.0
+  },
+  "4194304": {
+   "us_per_token": 0.036,
+   "effective_GBs": 106.8,
+   "table_GB": 16.0
+  }
+ },
+ "sort_ns_per_key": {
+  "524288": 0.5,
+  "4194304": 0.4
+ },
+ "host_table_pinned": {
+  "bytes": 67108864,
+  "serial_us": 0.26,
+  "pipelined_us": 0.5
+ },
+ "attention_ms_per_token_layer": {
+  "2048": 0.0,
+  "4096": 0.001,
+  "8192": 0.002,
+  "16384": 0.002,
+  "32768": "OOM"
+ }
+}

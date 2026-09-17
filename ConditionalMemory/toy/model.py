@@ -137,21 +137,20 @@ class PleLM(nn.Module):
     KV-only; gram active; dead-channel capacity control (rate forced 0)."""
 
     def __init__(self, vocab=4096, d=128, layers=2, heads=4, max_len=4200,
-                 ablate="gram"):
+                 ablate="gram", gram_heads=4, gram_target=65536):
         super().__init__()
         assert ablate in ("kv", "gram", "gram_closed")
         self.ablate = ablate
         self.tok = nn.Embedding(vocab, d)
         self.pos = nn.Embedding(max_len, d)
-        # ZERO-init embeddings: tokens/positions never seen in training stay
-        # at 0 instead of N(0,1) init noise — an untrained position cannot
-        # out-scale the channel contribution at extrapolation lengths
-        # (rental-3090 S1 matrix: seed0 gram arm collapsed to majority-class
-        # at exactly L=1024 = untrained-position noise dominating the
-        # ~0.04-scale channel signal; other lengths survived by luck).
-        self.tok.weight.data.zero_()
+        # ZERO-init POSITION embeddings only: positions beyond the training
+        # horizon (eval L=8192 » train Lmax=768) are exactly the ones never
+        # seen, and their N(0,1) init noise can out-scale the small channel
+        # contribution (rental-3090 S1: seed0 gram collapsed at untrained
+        # positions). Token embeddings stay normally init'd (uniform draws
+        # cover the whole vocab during training, so they aren't extrapolated).
         self.pos.weight.data.zero_()
-        self.channel = GramChannel()
+        self.channel = GramChannel(heads=gram_heads, prime_target=gram_target)
         self.chan_proj = nn.Linear(self.channel.d_out, d)
         blk = nn.TransformerEncoderLayer(d, heads, 4 * d, batch_first=True,
                                          norm_first=True)

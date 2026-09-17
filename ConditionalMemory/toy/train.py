@@ -27,8 +27,9 @@ def evaluate(model, lengths, bs, K, vocab, device, steps=8):
     out = {}
     for L in lengths:
         accs = []
+        bs_eff = max(1, min(bs, 2**25 // (L * L)))   # cap fp32 attention
         for _ in range(steps):
-            ids, spans, labels = make_batch(bs, L, K, vocab, gen, device)
+            ids, spans, labels = make_batch(bs_eff, L, K, vocab, gen, device)
             with torch.no_grad():
                 logits = model(ids, spans)
             accs.append((logits.argmax(-1) == labels).float().mean().item())
@@ -40,7 +41,9 @@ def train_one(ablate, args, device):
     torch.manual_seed(args.seed)
     gen = torch.Generator().manual_seed(args.seed)
     model = PleLM(vocab=args.vocab, d=args.d, layers=args.layers,
-                  max_len=args.max_len, ablate=ablate).to(device)
+                  heads=args.theads, max_len=args.max_len, ablate=ablate,
+                  gram_heads=args.gram_heads,
+                  gram_target=args.gram_target).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
     t0 = time.time()
     for step in range(args.steps):
@@ -80,6 +83,10 @@ def main():
     ap.add_argument("--Lmin", type=int, default=48)
     ap.add_argument("--Lmax", type=int, default=128, help="train stream max")
     ap.add_argument("--max_len", type=int, default=4200)
+    ap.add_argument("--theads", type=int, default=4, help="trunk attention heads")
+    ap.add_argument("--gram-heads", type=int, default=4)
+    ap.add_argument("--gram-target", type=int, default=65536,
+                    help="prime table modulus target (~1e6 for V4.1-scale keys)")
     ap.add_argument("--eval-lengths", type=int, nargs="+",
                     default=[128, 512, 1024, 2048])
     ap.add_argument("--eval-bs", type=int, default=16)
