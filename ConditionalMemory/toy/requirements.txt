@@ -1,0 +1,2 @@
+# py - torch only; device-agnostic (CUDA & ROCm/LUMI-G), no custom kernels
+torch

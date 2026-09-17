@@ -15,6 +15,8 @@ before any engine code was written; the executable spec now mirrors it.
 | `LaserCortex/ConditionalMemory/EngramReference.lean` | **reference-semantics certs** (DeepSeek MIT `engram_demo_v1.py`): XOR fold + `xor_swap`, pad-fill windows (R2 resolved: reference LEFT-PADS; served qwen4exp truncates + EOS-cuts), **locality `refHash_congr_one_edit`** (= R1: one edit ≤ n windows/order-head/layer), sigmoid `gate_range`, and **`v41_table_recon`** — the reference prime search reproduces V4.1's `engram_num_embeddings = [384006168, 384016682]` EXACTLY |
 | `ConditionalMemory/SPEC.md` | **the spec**: formulation projected back onto #1's code blocks — semantic map (Lean ↔ demo block:line ↔ V4.1 config ↔ served stack), derived architecture (exactly TWO new components: commit gate + delta table; everything else reuse-with-pinned-semantics), open semantics, implementation queue |
 | `ConditionalMemory/ple_io.py` | **executable spec** — mirrors every Lean definition incl. the reference fold; exits nonzero if any certificate fails: `python3 ple_io.py` (12 groups, all pass) |
+| `ConditionalMemory/EXPERIMENTS.md` | **validation ladder → LUMI-G grant**: hypotheses H1–H4, stages S0–S3, pass criteria, compute sketches, risks; plain-torch/ROCm-safe constraint | 
+| `ConditionalMemory/toy/` | **S1 artifact** — mechanism demo importing the pinned fold semantics (self-checked against the spec at import); 3 ablation arms; smoke 2026-09-17: gram arm 1.00 acc up to 16× train length vs KV-chance, commit gate opens itself from 0 (see toy/README.md) |
 
 ## Base-architecture survey (Sep 2026)
 
