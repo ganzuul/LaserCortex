@@ -374,6 +374,110 @@ def cert_sinkhorn_mixer() -> None:
     assert all(abs(sp[i][j] - s[p[i]][p[j]]) < tol for i in range(3) for j in range(3))
 
 
+# ---------------------------------------------------------------------------
+# Reference semantics: deepseek-ai/Engram `engram_demo_v1.py` (Apache-2.0)
+# ---------------------------------------------------------------------------
+def _is_prime(n: int) -> bool:
+    if n < 2:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    d = 3
+    while d * d <= n:
+        if n % d == 0:
+            return False
+        d += 2
+    return True
+
+
+def _next_prime(start: int, seen: set) -> int:      # find_next_prime, demo L181
+    c = start + 1
+    while not (_is_prime(c) and c not in seen):
+        c += 1
+    return c
+
+
+def _collect_heads(seen: set, start: int, heads: int) -> list[int]:
+    ps = []
+    for _ in range(heads):
+        start = _next_prime(start, seen)
+        seen.add(start)
+        ps.append(start)
+    return ps
+
+
+def _layer_total(V: int, orders: int, heads: int, seen: set) -> int:
+    total = 0
+    for _ in range(orders):
+        total += sum(_collect_heads(seen, V - 1, heads))
+    return total
+
+
+def ref_tok(tokens: list[int], i: int, k: int, pad: int) -> int:
+    """shift_k with LEFT-PAD (the R2-resolving semantics): k > i ⇒ pad."""
+    return tokens[i - k] if k <= i else pad
+
+
+def ref_window(tokens: list[int], i: int, n: int, pad: int) -> list[int]:
+    return [ref_tok(tokens, i, k, pad) for k in range(n)]
+
+
+def ref_hash(tokens: list[int], i: int, n: int, mults: list[int],
+             p: int, pad: int) -> int:
+    """NgramHashMapping._get_ngram_hashes (demo L262): XOR-mix then prime mod."""
+    mix = 0
+    for k in range(n):
+        mix ^= mults[k] * ref_tok(tokens, i, k, pad)
+    return mix % p
+
+
+def cert_reference_fold() -> None:
+    """Cross-language tie to EngramReference.lean: pad-fill windows, XOR bag
+    commutativity, locality (R1), head-vs-truncate divergence (R2)."""
+    # interior agreement with the serving-kernel truncation:
+    assert ref_window([5, 9, 13], 2, 3, 2) == window_at(3, [5, 9, 13], 2)
+    # head divergence — the two conventions genuinely differ:
+    assert ref_window([5, 9], 1, 3, 2) == [9, 5, 2]
+    assert window_at(3, [5, 9], 1) == [9, 5]
+    # XOR bag commutativity (lean `xor_swap`): folding order is irrelevant
+    m = [8052911324071, 20109073645365, 23703573157769]   # served GGUF multipliers
+    prods = [m[0] * 13, m[1] * 9, m[2] * 5]
+    import functools
+    import operator
+    mix = functools.reduce(operator.xor, prods)
+    assert mix == functools.reduce(operator.xor, prods[::-1])
+    # locality (lean `refHash_congr_one_edit`): edit at q₀ moves hashes only
+    # inside [q₀, q₀+n−1]:
+    rng = random.Random(11)
+    for _ in range(30):
+        toks = [rng.randrange(5000) for _ in range(40)]
+        q0, n = rng.randrange(5, 30), 3
+        mults = [rng.randrange(1, 1 << 40) | 1 for _ in range(n)]
+        p = 16_000_019
+        toks2 = toks[:]
+        toks2[q0] = rng.randrange(5000)
+        assert toks2[q0] != toks[q0]
+        for i in range(40):
+            if not (q0 <= i <= q0 + n - 1):
+                assert ref_hash(toks, i, n, mults, p, 2) == ref_hash(toks2, i, n, mults, p, 2), \
+                    "locality violated outside the window"
+
+
+def cert_v41_prime_reconstruction() -> None:
+    """**Reconstruction**: the reference prime search (find_next_prime +
+    globally-distinct seen_primes) at V4.1 parameters reproduces BOTH
+    `engram_num_embeddings` EXACTLY — Lean twin `v41_table_recon`.
+    Residues 6,168 / 16,682 = accumulated prime overshoots; layer 14's
+    larger total = inherited seen-set."""
+    seen: set = set()
+    l1 = _layer_total(16_000_000, 3, 8, seen)      # orders{2,3,4} × 8 heads
+    l14 = _layer_total(16_000_000, 3, 8, seen)
+    assert (l1, l14) == (384_006_168, 384_016_682), (l1, l14)
+    # CRT content-address bound: an int64 mix is uniquely determined by the
+    # 8 prime residues of one (layer, order) — collision-free addressing:
+    assert 2**63 < 16_000_003**8
+
+
 def main() -> None:
     cert_head_arithmetic()
     cert_golden_vectors()
@@ -385,6 +489,8 @@ def main() -> None:
     cert_sqrtsoftplus_router()
     cert_sinkhorn_mixer()
     cert_v41_profile_consistency()
+    cert_reference_fold()
+    cert_v41_prime_reconstruction()
     print("ple_io: ALL CERTIFICATES PASS")
     print("  · head arithmetic (16 odd coprime moduli, exact tiling)")
     print("  · Lean golden vectors (probe contract R4)")
@@ -396,6 +502,8 @@ def main() -> None:
     print("  · sqrtsoftplus production router (V4.1 / sglang hash_topk)")
     print("  · Sinkhorn mHC mixer: doubly stochastic + permutation-equivariant")
     print("  · V4.1-Flash Engram profile self-consistency (196B arithmetic)")
+    print("  · reference fold: pad-fill windows, XOR bag, locality, R2 split")
+    print("  · V4.1 engram_num_embeddings EXACT reconstruction (prime search)")
 
 
 if __name__ == "__main__":

@@ -11,8 +11,10 @@ before any engine code was written; the executable spec now mirrors it.
 | file | role |
 |---|---|
 | `LaserCortex/ConditionalMemory/GramDictionary.lean` | machine-checked certs: positional fold (`gramVal/gramKey`), collision-free regime, bag channel (`writes_perm`, `noInterference`, `selfPresence`), real-model layout certs, `windowAt` + golden vectors = probe contract (R4) |
-| `LaserCortex/ConditionalMemory/YSystem.lean` | pentagonator certs: A₂ period-5 closure (Zamolodchikov), centered log-Y form closed for **all β**, draft-literal divergence, quaternion non-closure + ℂ-plane positive control (commutativity is load-bearing) |
-| `ConditionalMemory/ple_io.py` | **executable spec** — mirrors every Lean definition, exits nonzero if any certificate fails: `python3 ple_io.py` |
+| `LaserCortex/ConditionalMemory/YSystem.lean` | pentagonator certs: A₂ period-5 closure (Zamolodchikov), centered log-Y form closed for **all β**, draft-literal divergence, quaternion non-closure + ℂᵢ-plane positive control (commutativity is load-bearing) |
+| `LaserCortex/ConditionalMemory/EngramReference.lean` | **reference-semantics certs** (DeepSeek MIT `engram_demo_v1.py`): XOR fold + `xor_swap`, pad-fill windows (R2 resolved: reference LEFT-PADS; served qwen4exp truncates + EOS-cuts), **locality `refHash_congr_one_edit`** (= R1: one edit ≤ n windows/order-head/layer), sigmoid `gate_range`, and **`v41_table_recon`** — the reference prime search reproduces V4.1's `engram_num_embeddings = [384006168, 384016682]` EXACTLY |
+| `ConditionalMemory/SPEC.md` | **the spec**: formulation projected back onto #1's code blocks — semantic map (Lean ↔ demo block:line ↔ V4.1 config ↔ served stack), derived architecture (exactly TWO new components: commit gate + delta table; everything else reuse-with-pinned-semantics), open semantics, implementation queue |
+| `ConditionalMemory/ple_io.py` | **executable spec** — mirrors every Lean definition incl. the reference fold; exits nonzero if any certificate fails: `python3 ple_io.py` (12 groups, all pass) |
 
 ## Base-architecture survey (Sep 2026)
 
@@ -50,18 +52,33 @@ recombination we own: *test-time writes* into a gram delta-table
    doubly stochastic + permutation-equivariant) — completes the trichotomy:
    dictionary (Engram/PLE, read) · residual mixer (mHC/Sinkhorn, commutative)
    · commit rate (softplus/sqrtsoftplus, gate).
-4. **V4.1 profile self-consistency**: 3 orders × 8 heads × 16M = 384.0M slots
-   ≈ config's 384,006,168; × 2 layers × 256 dims ≈ 196B — the published
-   claim reconstructs from first principles.
+4. **V4.1 profile — EXACT reconstruction** (was: self-consistency): running
+   the MIT reference's prime search (`find_next_prime`, globally-distinct
+   `seen_primes`, 3 orders × 8 heads, layers [1,14]) at the config's 16M target
+   reproduces BOTH `engram_num_embeddings` to the unit. Residues 6,168/16,682
+   = accumulated prime overshoots; layer 14's larger total = inherited
+   seen-set. Certified twice: Lean `v41_table_recon` + Python
+   `cert_v41_prime_reconstruction`.
+5. **R2 CLOSED by #1, fold families DIVERGE**: the reference left-pads with
+   `pad_id` (V4.1 `engram_pad_token_id: 2`) while the served kernel truncates +
+   cuts at EOS — and the hash itself is a *different algebra*: XOR of
+   position-colored products mod **primes** (reference) vs positional
+   polynomial mod odd coprimes (qwen4exp). Both certified; PLE-I/O treats the
+   fold as a parameter (`SPEC.md` §2.1) — keys are NOT portable across families.
 
 ## Roadmap (canonical list lives in `GramDictionary.lean` §R)
 
-- **R5** multi-head CRT joint injectivity; **R6** Sinkhorn formal proofs
-  (convergence, equivariance, Birkhoff) — next Lean targets
-- **R1** delta-write locality bound; **R3** de Bruijn order reconstruction
-- Pull the MIT `inference/` + `deepseek-recipe` code → pin Engram's exact
-  windowing/moduli semantics (open: pad-in-window question)
-- Stage-0 probe: real tokenizer, real V4.1/qwen4exp constants → compression &
-  co-occurrence curves (gramdict already matches the golden vectors)
+- **R1 delta-write locality — DONE** (`refHash_congr_one_edit`; 40 keys/edit
+  served-class, 144 V4.1-class; ple_io locality spot-suite mirrors it)
+- **R5** multi-head CRT joint injectivity (concrete int64 bound certified:
+  `2^63 < Πp`; general theorem next) · **R6** formal Sinkhorn proofs
+  (convergence, equivariance, Birkhoff)
+- **R3** de Bruijn order reconstruction (membership sufficiency / chaining —
+  the anchored-window decoy in `ple_io` is the gap statement)
+- Settle open semantics from `DeepSeek-V4.1-Flash/inference/` + weights
+  (multiplier provenance: RNG-seeded vs published arrays; V4.1 pad-vs-truncate;
+  compressed-vocab artifact — it defines the keys)
+- Stage-0 probe: real tokenizer, both fold families × both head conventions →
+  compression & co-occurrence curves (golden vectors = regression suite)
 - Toy recombined model (torch, Apache parts): frozen gram table + softplus-gated
   side-table writer + mHC mixer → needle-membership eval vs KV baseline
