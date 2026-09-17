@@ -21,7 +21,8 @@ import torch.nn.functional as F
 from model import PleLM, make_batch
 
 
-def evaluate(model, lengths, bs, K, vocab, device, steps=6):
+def evaluate(model, lengths, bs, K, vocab, device, steps=8):
+    model.eval()  # otherwise trunk dropout (p=0.1) is ACTIVE during eval
     gen = torch.Generator(device="cpu").manual_seed(999)
     out = {}
     for L in lengths:

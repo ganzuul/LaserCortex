@@ -1,0 +1,40 @@
+{
+ "args": {
+  "steps": 1500,
+  "bs": 48,
+  "lr": 0.0003,
+  "d": 128,
+  "layers": 2,
+  "vocab": 4096,
+  "K": 8,
+  "Lmin": 48,
+  "Lmax": 128,
+  "max_len": 4200,
+  "eval_lengths": [
+   96,
+   512,
+   1024,
+   2048,
+   4096
+  ],
+  "eval_bs": 16,
+  "seed": 1,
+  "ablations": [
+   "gram"
+  ],
+  "device": "auto",
+  "out": "results_s1_gram_seed1.json"
+ },
+ "results": {
+  "gram": {
+   "train_loss": 3.69295958080329e-06,
+   "eval_acc_by_L": {
+    "96": 1.0,
+    "512": 1.0,
+    "1024": 1.0,
+    "2048": 1.0,
+    "4096": 1.0
+   }
+  }
+ }
+}

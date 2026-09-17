@@ -41,6 +41,14 @@ lengths; learned `commit_rate` visibly rises from 0.
 96/512/2048, rate 0→0.006 (self-opening); kv = 0.44/0.49/0.51. Design note
 from the smoke: the gate must be centered-softplus WITHOUT clamp_min —
 clamped-at-0 init is gradient-dead and keeps the channel permanently shut.
+**S1 FULL MATRIX PASS (rental RTX 3090 @ $0.192/h, 2026-09-17, ~9 min,
+~$0.03):** 3 seeds × {kv, gram_closed, gram} × 1500 steps — gram = **1.00 at
+every L ∈ {96,512,1024,2048,4096}, every seed**; control arms chance
+(0.42–0.57) at all lengths; gate self-opens 0→0.031–0.034 then loss→0.000.
+Artifacts + root-cause of the two harness bugs the rental exposed (missing
+`model.eval()`; untrained-position `N(0,1)` embedding noise out-scaling the
+channel — fixed by zero-init embeddings) in `toy/rental_3090/` +
+toy/README.md. Both lessons are now S2 code-review checklist items.
 Rental budget: ~2–8 GPUh, any 24GB card. Also: real-tokenizer variant
 (Qwen3 tokenizer, wiki streams, 32k vocab) as S1.5.
 

@@ -21,6 +21,33 @@ model answers whether the final query span was in the stream. The channel
 reads causal prefix counts of the span's XOR-fold gram keys (certified fold);
 attention must search instead.
 
+## S1 FULL MATRIX — rental RTX 3090, 2026-09-17 (`rental_3090/`, this run)
+
+3 seeds × 3 arms × 1500 steps, train L∈[48,128], eval 8×bs16 per length:
+
+| arm | L=96 | 512 | 1024 | 2048 | 4096 |
+|---|---|---|---|---|---|
+| `gram` (all 3 seeds) | **1.00** | **1.00** | **1.00** | **1.00** | **1.00** |
+| `kv` (seeds 0–2) | .44–.56 | .45–.56 | .46–.54 | .42–.57 | .48–.53 |
+| `gram_closed` | ≡ chance, commit pinned 0 (capacity control) | | | | |
+
+Commit rate 0 → 0.031–0.034 by ~700 steps, then **loss → 0.000** — the gate
+opens itself on cue. Remote regression gate: `ple_io.py` 12/12 groups on the
+rental before any training (spec semantics bit-identical across deploys).
+
+The rental exposed **two real training-harness bugs** (both fixed + root-
+caused here, worth carrying into S2 code review):
+1. `train.py` never called `model.eval()` → trunk dropout was ACTIVE during
+   eval, randomly collapsing weak-margin lengths (gram seed0 @1024 ≈ chance).
+2. **Untrained-position embedding noise**: default `N(0,1)` embeddings at
+   positions beyond the train horizon (~140) can out-scale the small channel
+   contribution (0.03·log1p2) at *specific* lengths — seed-dependent, and
+   invisible at other lengths (why only L=1024 failed). Fix: **zero-init
+   embeddings** — unseen positions/tokens stay 0 by construction, no eval-
+   time masking. After both fixes the matrix is uniformly 1.00. (Note: `torch`'s
+   `%` is floormod → fold keys never go negative → `prefix_counts` verified
+   against brute force at every eval length on the rental: mismatches 0.)
+
 ## Smoke result (RTX 2070 SUPER, 800 steps, 22 s/arm) — 2026-09-17
 
 | arm | acc @ L=96 | @512 | @2048 | commit rate |
