@@ -440,9 +440,9 @@ theorem grandfather_generation_survives_cd1 :
 --    "non-increases", which is exactly `potential_contraction_step` (proved,
 --    `:147`). The name was wrong, not the content. (A strict version is NOT
 --    available: `dcStep` only has `dcStep_contracts_one` : `dcStep s ≥ dcStep t`
---    and `dcStep_contracts_one_le` : `dcStep s ≤ dcStep t + 1`, which together leave
---    `dcStep s = dcStep t` open, so strict decrease is a genuine open question and
---    must not be asserted — see §10.1.)
+--    and `TamariMetric.dcStep_contracts_one_le` : `dcStep s ≤ dcStep t + 1`, which
+--    together leave `dcStep s = dcStep t` open — and §10.1 now REFUTES strict decrease
+--    outright, with an explicit size-4 plateau witness.)
 -- 3. `density_assoc_eq_dcStep` — MISSING ⟹ PROVED here.
 -- 4. `density_nonassoc_deflated` — MISSING ⟹ PROVED here.
 -- 5. `observationalSelection` — MISSING ⟹ DEFINED here. It is the *object* the
@@ -451,21 +451,69 @@ theorem grandfather_generation_survives_cd1 :
 --    excess potential"; the truth is the opposite polarity. See §10.2.
 
 /-- **§10.1 (item 2, for the record).** The two available bounds on `dcStep` under a
-    single contraction: `dcStep s ≥ dcStep t` and `dcStep s ≤ dcStep t + 1`. They
-    leave `dcStep s = dcStep t` open, so a STRICT decrease theorem is not derivable
-    from the corpus as it stands. Stated as an explicit two-sided bracket so the gap
-    is visible rather than assumed either way. -/
+    single contraction: `dcStep s ≥ dcStep t` and `dcStep s ≤ dcStep t + 1`. They leave
+    `dcStep s = dcStep t` open, and the two theorems below show that it is genuinely
+    REACHABLE: strict decrease is refuted (size-4 witness), so the potential plateaus. -/
 theorem dcStep_contracts_one_bracket {s t : EMLTree} (h : contracts_one s t) :
     dcStep t ≤ dcStep s ∧ dcStep s ≤ dcStep t + 1 :=
   ⟨dcStep_contracts_one h, TamariMetric.dcStep_contracts_one_le h⟩
 
-/-- **§10.1 — the missing statement, isolated.** Does a single contraction strictly
-    reduce `dcStep`? If this were provable, `coherencePotential` would strictly
-    decrease (strict Lyapunov); if it were refutable, a contraction could preserve the
-    potential (a plateau). Neither is currently known. This is an explicit formulation
-    of the gap, not a claim in either direction. -/
+/-- **§10.1 — the statement, which turns out to be REFUTABLE (see below).** Does a
+    single contraction strictly reduce `dcStep`? Formulated so the question is a named
+    object rather than an implicit hope. -/
 def dcStep_strictly_decreases_under_contraction : Prop :=
   ∀ s t : EMLTree, contracts_one s t → dcStep t < dcStep s
+
+/-- **STRICT DECREASE IS FALSE — the plateau witness.**
+
+    `dcStep` counts rotations toward `rightComb` (`foundations/Tamari.lean:239`), and
+    `contracts_one` is one rotation *anywhere* (`:62`: the `rotate` case plus left/right
+    congruence). A rotation at the root of a left-nested node reduces `dcStep` by exactly
+    one — but a rotation **inside a subtree** need not reduce the total at all, because
+    the count is global while the rewrite is local.
+
+    Witness (size 4, smallest possible; found by exhaustive search over all trees up to
+    size 7, which yields 209 such pairs):
+    `Node (Node (Node Leaf Leaf) Leaf) Leaf  →  Node (Node Leaf (Node Leaf Leaf)) Leaf`,
+    a single `contracts_one.left` step whose two ends both have `dcStep = 2`.
+
+    Consequence: `coherencePotential` can only ever be shown **non-increasing**, and a
+    strictly-decreasing Lyapunov functional for this contraction relation does not exist.
+    Contraction paths may PLATEAU. This is a proof of absence, not a gap. -/
+theorem dcStep_strictly_decreases_under_contraction_false :
+    ¬ dcStep_strictly_decreases_under_contraction := by
+  intro h
+  have hinner : contracts_one (EMLTree.Node (EMLTree.Node EMLTree.Leaf EMLTree.Leaf) EMLTree.Leaf)
+      (EMLTree.Node EMLTree.Leaf (EMLTree.Node EMLTree.Leaf EMLTree.Leaf)) :=
+    contracts_one.rotate EMLTree.Leaf EMLTree.Leaf EMLTree.Leaf
+  have hstep : contracts_one
+      (EMLTree.Node (EMLTree.Node (EMLTree.Node EMLTree.Leaf EMLTree.Leaf) EMLTree.Leaf) EMLTree.Leaf)
+      (EMLTree.Node (EMLTree.Node EMLTree.Leaf (EMLTree.Node EMLTree.Leaf EMLTree.Leaf)) EMLTree.Leaf) :=
+    contracts_one.left _ _ EMLTree.Leaf hinner
+  have hlt := h _ _ hstep
+  have e1 : dcStep (EMLTree.Node (EMLTree.Node (EMLTree.Node EMLTree.Leaf EMLTree.Leaf) EMLTree.Leaf) EMLTree.Leaf) = 2 := by
+    native_decide
+  have e2 : dcStep (EMLTree.Node (EMLTree.Node EMLTree.Leaf (EMLTree.Node EMLTree.Leaf EMLTree.Leaf)) EMLTree.Leaf) = 2 := by
+    native_decide
+  omega
+
+/-- **The potential plateaus on a contraction.** The same witness, carried through
+    `Φ = dcStep × frictionDensity`: the two ends of that one contraction have EQUAL
+    coherence potential at every CD step. So `Φ` is non-increasing along contraction
+    (proved: `excess_contraction_path`) but not strictly decreasing — the strict
+    version is refuted, not merely unproved.
+
+    This is the sharp form of §10.1 and it constrains any consumer: a monitor built on
+    `Φ` can detect "not at normal form" (via `excess_eq_zero_iff_rightComb`) but must not
+    assume that every contraction step moves it. -/
+theorem coherencePotential_plateau_witness (cd : ℕ) :
+    coherencePotential cd (EMLTree.Node (EMLTree.Node (EMLTree.Node EMLTree.Leaf EMLTree.Leaf) EMLTree.Leaf) EMLTree.Leaf)
+      = coherencePotential cd (EMLTree.Node (EMLTree.Node EMLTree.Leaf (EMLTree.Node EMLTree.Leaf EMLTree.Leaf)) EMLTree.Leaf) := by
+  have e1 : dcStep (EMLTree.Node (EMLTree.Node (EMLTree.Node EMLTree.Leaf EMLTree.Leaf) EMLTree.Leaf) EMLTree.Leaf) = 2 := by
+    native_decide
+  have e2 : dcStep (EMLTree.Node (EMLTree.Node EMLTree.Leaf (EMLTree.Node EMLTree.Leaf EMLTree.Leaf)) EMLTree.Leaf) = 2 := by
+    native_decide
+  simp only [coherencePotential, weightedCost, e1, e2]
 
 -- ---------------------------------------------------------------------------
 -- §10.2 Item 1: the sharp zero condition for the excess potential
