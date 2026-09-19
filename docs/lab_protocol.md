@@ -361,13 +361,18 @@ Each term is a question to ask of the system:
 | Pentagonator → order | Which rotation sequences are topologically permitted? |
 | Radon → pentagonator | What does the Radon inversion of a tree set look like? |
 | Non-violent = non-Newtonian | What changes when we drop the excluded-middle default? |
+| **Missing adjoint** (066) | Which law survives when the map that should carry it is provably not available? |
 
 ## References
 - `lab_notes/001_product_coupling_term.md` — product coupling for tensegrity
 - `lab_notes/002_brute_force_candidates.md` — brute force at n=4
 - `lab_notes/003_brute_force_complexity.md` — 3900X bounds (n=15 practical limit)
 - `lab_notes/019_develin_sturmfels_quantized_type.md` — Develin-Sturmfels correspondence via QuantizedType
-- `lab_notes/020_lean_doc_comment_lexer_bug.md` — Lean 4.31 `/-!` doc comment lexer inconsistency
+- `lab_notes/065_streamer_diagnostic_and_3d_track.md` — streamer diagnostic + Lean-first schedule
+- `lab_notes/066_missing_adjoint_cd3_distributor_obstruction.md` — the CD3 distributor
+  obstruction (sliding law fails on 18/512 basis triples, exactly three Fano lines; the
+  defect is **disjoint from the associator**), and the protocol change that **applications
+  assign LC work**
 - `lab_notes/021_develin_sturmfels_forward_proven.md` — Develin-Sturmfels forward direction PROVEN
 - `docs/topological_isomer_hypothesis.md` — atomic model / strong force analogy
 - `docs/approach.md` — geometry-motion overview

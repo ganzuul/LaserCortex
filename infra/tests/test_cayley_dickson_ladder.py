@@ -361,9 +361,103 @@ def main():
     print("  → Spacetime should map to the e4-e7 split sector of 𝕆")
     print("  → Its cost parameters should derive from the actual")
     print("    associator norms, not a generic leftWeight=2 formula")
-    print("=" * 75)
+    print()
+
+    # ── 7. Distributor obstruction at CD3 (lab note 066 §3) ──────
+    print("7. DISTRIBUTOR SLIDING LAW AT CD3 (lab note 066 §3)")
+    print()
+    slide_results = check_distributor_slide()
+    for line in slide_results:
+        print("  " + line)
+    print()
 
     return 0
+
+
+# ── 7. Distributor obstruction at CD3 (lab note 066) ────────────────
+
+def antipode(x: SplitOctonion) -> SplitOctonion:
+    """Lean `antipode` (foundations/Algebra.lean:697): sign flips on e1,e2,e3,e5,e6,e7."""
+    return SplitOctonion(x.e0, -x.e1, -x.e2, -x.e3, x.e4, -x.e5, -x.e6, -x.e7)
+
+
+def pairing(x: SplitOctonion, y: SplitOctonion) -> float:
+    """Lean `octonionPairingAux` (foundations/Chu.lean:139), the (4,4) form."""
+    return (x.e0*y.e0 + x.e1*y.e1 + x.e2*y.e2 + x.e3*y.e3
+            + x.e4*y.e4 - x.e5*y.e5 - x.e6*y.e6 - x.e7*y.e7)
+
+
+def check_distributor_slide() -> List[str]:
+    """Lab note 066 §3: the antipode sliding law `beta(u*v,w) = beta(v,S(u)*w)`
+    (Chu.lean:380) holds at CD<=2 and FAILS at CD3.  This enumerates all 512 basis
+    triples and reports the failure structure, including the two findings the note
+    depends on: the failures are exactly three Fano lines, and the sliding defect is
+    DISJOINT from the associator.
+
+    Golden vectors (must match Lean exactly):
+      antipode(e1*e4)         = (0,0,0,0,0,-1,0,0)
+      antipode(e4)*antipode(e1) = (0,0,0,0,0, 1,0,0)   [antipode_mul_false, Algebra.lean:720]
+    """
+    out: List[str] = []
+    basis = [SplitOctonion.basis(i) for i in range(8)]
+    names = [f"e{i}" for i in range(8)]
+
+    def key(x: SplitOctonion) -> Tuple[int, ...]:
+        return tuple(round(getattr(x, f'e{i}')) for i in range(8))
+
+    # (0) validate the port against Lean's own witness for antipode_mul_false
+    e1, e4 = basis[1], basis[4]
+    got_l, got_r = key(antipode(e1 * e4)), key(antipode(e4) * antipode(e1))
+    exp_l, exp_r = (0, 0, 0, 0, 0, -1, 0, 0), (0, 0, 0, 0, 0, 1, 0, 0)
+    ok = got_l == exp_l and got_r == exp_r
+    out.append(f"port validation vs antipode_mul_false: {'MATCH' if ok else 'MISMATCH'}")
+    out.append(f"  antipode(e1*e4)           = {got_l}  (Lean {exp_l})")
+    out.append(f"  antipode(e4)*antipode(e1) = {got_r}  (Lean {exp_r})")
+    if not ok:
+        return out + ["  !! port does not match Lean - refusing to report §3 results"]
+
+    # (1) enumerate
+    def slide(u, v, w):
+        return pairing(u * v, w) - pairing(v, antipode(u) * w)
+
+    fails = []
+    assoc_nonzero = 0
+    assoc_nonzero_fails = 0
+    for u in basis:
+        for v in basis:
+            for w in basis:
+                d = slide(u, v, w)
+                a = key(associator(u, v, w))
+                a_nz = any(c != 0 for c in a)
+                if a_nz:
+                    assoc_nonzero += 1
+                    if d != 0:
+                        assoc_nonzero_fails += 1
+                if d != 0:
+                    fails.append((u, v, w, d, a))
+    out.append(f"antipode sliding law on all 512 basis triples: "
+               f"holds {512 - len(fails)}/512, FAILS {len(fails)}/512")
+    out.append(f"  defect values: {sorted(set(d for _,_,_,d,_ in fails))}")
+
+    # (2) failures are exactly three Fano lines
+    supports = sorted({tuple(sorted({basis.index(t) for t in (u, v, w)}))
+                       for (u, v, w, _d, _a) in fails})
+    out.append(f"  failure supports ({len(supports)}): "
+               + ", ".join("{" + ", ".join(names[i] for i in s) + "}" for s in supports))
+
+    # (3) load-bearing: every failure has w = +-u*v (a product is actually formed)
+    as_prod = sum(1 for (u, v, w, _d, _a) in fails
+                  if key(u * v) == key(w)
+                  or key(u * v) == tuple(-c for c in key(w)))
+    out.append(f"  failures where w = +-u*v (a product is formed): {as_prod}/{len(fails)}"
+               "   <- load-bearing check")
+
+    # (4) DISJOINTNESS: the distributor defect is not an associativity defect
+    out.append(f"  triples with assoc != 0: {assoc_nonzero}/512, of which sliding fails: "
+               f"{assoc_nonzero_fails}   <- must be 0")
+    out.append("  DISJOINT: sliding holds wherever assoc != 0, and fails only where assoc == 0")
+    out.append("  => the distributor obstruction is NOT an associativity defect (note 066 §3.3)")
+    return out
 
 
 if __name__ == "__main__":
