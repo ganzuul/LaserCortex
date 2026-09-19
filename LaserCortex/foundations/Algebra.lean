@@ -42,7 +42,7 @@ structure SplitOctonion where
   e5 : Int
   e6 : Int
   e7 : Int
-  deriving Repr
+  deriving Repr, DecidableEq
 
 def split_zero : SplitOctonion := ⟨0, 0, 0, 0, 0, 0, 0, 0⟩
 def split_one : SplitOctonion := ⟨1, 0, 0, 0, 0, 0, 0, 0⟩

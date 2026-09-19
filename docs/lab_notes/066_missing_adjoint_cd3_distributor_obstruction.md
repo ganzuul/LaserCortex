@@ -239,16 +239,29 @@ unactionable as a remark and became a bounded enumeration the moment it had a co
 
 ## 6. Next units
 
-1. **Formalize §3 as a Lean unit** — `SpectrumOrder`-style module or a `Chu.lean` §7:
-   `antipode_slide_fails_at_cd3` (witness triple `(e1,e4,e5)`, matching
-   `antipode_mul_false`'s proof style) and the enumeration `slide_defect_fano_lines`
-   (`native_decide` over 512 triples). Then the disjointness pair:
-   `assoc_ne_zero_implies_slide_holds` and `slide_fails_implies_assoc_eq_zero`.
-   All `[V] → [P]`. **Effort: one session.**
-2. **Check §3.3 at CD 4** (sedenions) before the disjointness is believed in general. If it
-   holds, the distributor defect is a genuine second invariant of the tower — worth its own
-   note. If it fails, §3.3 is a CD-3 coincidence and must be labelled one. **Effort: one
-   sitting, same Python harness.**
+1. ~~**Formalize §3 as a Lean unit**~~ — **DONE**: `foundations/DistributorObstruction.lean`.
+   Promotes §3's `[V]` results to `[P]`: `slide_fails_at_cd3_witness` (defect `−2` at
+   `(e1,e4,e5)`), `slide_failure_count` (18/512), the locus as an exact sound+complete
+   pair (`slide_failure_locus_sound` ∧ `slide_failure_locus_complete`, both 18),
+   `slide_failures_are_product_triples` (18/18), and the disjointness
+   (`assoc_nontrivial_implies_slide_holds`, `slide_fails_implies_assoc_zero`,
+   `slideDefect_orthogonal_to_associator`). All `native_decide`, so they carry the
+   standard compiler-trust axiom — the same status as `GramDictionary.lean:258-260`, and
+   stated in the module header. Five mutation controls were run and all five fail,
+   including the *wrong* hypothesis "the associator explains the defect" (the §3.3
+   reading), so the formalization is non-vacuous.
+2. **Check §3.3 at CD 4 (sedenions) — BLOCKED, with the blocker identified.** The estimate
+   in the first draft ("one sitting, same Python harness") was **optimistic**. LC's dim-8
+   table is **not** the standard Cayley-Dickson doubling `(a,b)(c,d) = (ac + s·d̄b, ād + cb)`
+   with either `s = +1` or `s = −1` under the standard conjugation — both were tried and
+   neither reproduces the table (checked against all 64 basis products; the generator is in
+   the unit's scratch). Concretely, LC has `e4² = +e0` with `conj` *fixing* `e4`, and pairing
+   signature `(+,+,+,+,+,−,−,−)` on `e0…e7`. So the CD 4 analogue must be **derived from
+   LC's own convention**, not assumed from the textbook doubling. **Prerequisite:** pin the
+   convention LC actually used (derive it from `split_quat_mul` → `split_oct_mul`), then the
+   CD 4 test becomes mechanical. Until then §3.3 remains a CD 3 result and is labelled one.
+   *This is absence of proof, not proof of absence: no result here says the disjointness
+   fails at CD 4 — only that it is not yet demonstrated.*
 3. **Search the signed/braided adjoint** per §4 — the actual missing algorithm. `signCocycle`
    and `basisWord_eq_or_neg` are the existing sign machinery to start from.
 4. **Discharge the application's B1/B2** (ple-io's `LC-MINING-ROADMAP.md` §9.1): the `↔`
@@ -277,9 +290,14 @@ unactionable as a remark and became a bounded enumeration the moment it had a co
 - `LaserCortex/foundations/Chu.lean` — `ChuTensor` `:342`, `ChuSeq` `:347`,
   `splitQuatPairingAux_mul_slide` `:380`, `Chu_distributor` `:393`,
   `Distributor` `:471`, `cd2_distributor` `:490` (the CD ≤ 2 result and the documented gap)
-- `LaserCortex/foundations/Algebra.lean` — `split_oct_mul` `:79`, `associator_tensor` `:177`,
-  `signCocycle` `:247`, `antipode` `:697`, `antipode_involutive` `:714`,
-  **`antipode_mul_false` `:720`** (the proven obstruction)
+- `infra/tests/test_cayley_dickson_ladder.py` — `check_distributor_slide()` (the §3 harness;
+  validates against Lean's golden vectors for `antipode_mul_false` and refuses to report if
+  they differ)
+- `LaserCortex/foundations/DistributorObstruction.lean` — **the §3 formalization**
+  (`[V] → [P]`), including the five mutation controls' targets
+- `LaserCortex/foundations/Algebra.lean` — `SplitOctonion` gains `deriving DecidableEq`
+  (`:44`, needed for the enumeration), `split_oct_mul` `:79`, `antipode` `:697`,
+  `antipode_involutive` `:714`, **`antipode_mul_false` `:720`** (the proven obstruction)
 - `LaserCortex/Friction.lean` — `assocDefect` `:30`, `commDefect` `:35`,
   `frictionDensity` `:43` (the invariant §3.3 shows the distributor defect is *not*)
 - `LaserCortex/Coherence.lean` — `pentagonLoop` `:144`, `basisWord_eq_or_neg` `:300` (sign
