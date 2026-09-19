@@ -156,6 +156,72 @@ theorem lse_pentagon (a b c d : ℝ) :
   · rw [lse_split_1_3, lse_split_2_1]
   · rw [lse_split_1_3, lse_split_1_2]
 
+/-! ## The composition law: data-dependence is KEPT, the law is changed
+
+§11.7 (`ple-io/docs/LC-MINING-ROADMAP.md`) measured that a **data-dependent reweighting applied between
+composition steps** breaks associativity (1e-4 … 3.5e+02), while data-dependent *matrices* multiplied
+normally do not (5.6e-17). So coherence is a property of the **composition law**, not of
+data-independence — and "remove the data-dependence" is not the fix, since essentially every useful
+operation is data-dependent.
+
+The fix is the standard **affine / associative-scan** law: carry the transformation as a pair `(A, b)` and
+compose by
+
+    (A₂, b₂) · (A₁, b₁) = (A₂A₁, A₂b₁ + b₂)
+
+measured at the float floor (1e-16) with fully data-dependent `A` and `b`, because the pair *is* the
+affine map `x ↦ A x + b` and the law *is* function composition. This is the structure linear attention and
+state-space models are built on, and it is the composition law the unified pentagonator expert should use
+for its stream mixing. -/
+
+variable {n R : Type*} [Fintype n] [DecidableEq n] [Semiring R]
+
+open Matrix
+
+/-- An affine map carried as a pair `(A, b)`. **Data-dependent `A` and `b` are allowed** — that is the
+point: the law below is associative whatever they are. -/
+abbrev ScanPair (n R : Type*) [Fintype n] [DecidableEq n] [Semiring R] :=
+  Matrix n n R × (n → R)
+
+/-- The **affine / associative-scan product**. -/
+def scanComp (g f : ScanPair n R) : ScanPair n R :=
+  (g.1 * f.1, g.1 *ᵥ f.2 + g.2)
+
+/-- How a carried pair acts: `x ↦ A x + b`. -/
+def scanAct (p : ScanPair n R) (x : n → R) : n → R := p.1 *ᵥ x + p.2
+
+/-- **THE BRIDGE — `scanComp` IS function composition.** This is the *reason* the law is associative: the
+pair is not an encoding of an affine map, it **is** one, so composing pairs composes the maps. -/
+theorem scanAct_scanComp (g f : ScanPair n R) (x : n → R) :
+    scanAct (scanComp g f) x = scanAct g (scanAct f x) := by
+  obtain ⟨Ag, bg⟩ := g
+  obtain ⟨Af, bf⟩ := f
+  simp only [scanAct, scanComp]
+  rw [Matrix.mulVec_add, Matrix.mulVec_mulVec]
+  abel
+
+/-- **THE COHERENCE OF THE COMPOSITION LAW.** `scanComp` is associative with **fully data-dependent** `A`
+and `b`, and as an *identity in a semiring* rather than an approximation — no float caveat, unlike every
+measurement in roadmap §11.5–§11.7.
+
+This is the Lean form of §11.7's design answer: correctness of the composition is a property of the LAW,
+so the data-dependence can stay. -/
+theorem scanComp_assoc (h g f : ScanPair n R) :
+    scanComp (scanComp h g) f = scanComp h (scanComp g f) := by
+  obtain ⟨Ah, bh⟩ := h
+  obtain ⟨Ag, bg⟩ := g
+  obtain ⟨Af, bf⟩ := f
+  simp only [scanComp, Prod.mk.injEq]
+  refine ⟨?_, ?_⟩
+  · rw [Matrix.mul_assoc]
+  · rw [Matrix.mulVec_add, Matrix.mulVec_mulVec]
+    abel
+
+/-- The action inherits associativity, which is the statement a stack of carried pairs relies on. -/
+theorem scanAct_assoc (h g f : ScanPair n R) (x : n → R) :
+    scanAct (scanComp (scanComp h g) f) x = scanAct h (scanAct g (scanAct f x)) := by
+  simp only [scanAct_scanComp]
+
 /-! ## A negative control: the pentagon is not a tautology about lists
 
 `lse_pentagon` must be a property of **LSE**, not of list syntax. A non-associative combiner fails the
