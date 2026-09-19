@@ -202,4 +202,95 @@ theorem no_bag_only_reconstruction :
     edgeBag_does_not_determine_order.1
   exact edgeBag_does_not_determine_order.2 (h _ _ heq)
 
+
+
+/-! ## R3 sufficiency: the sliding law that holds, and the obstruction that does not
+
+Lab note 066 established (and `DistributorObstruction.lean` proved) that at CD 3 the
+duoidal distributor's content fails while its *adjoint for the pairing* still exists:
+`β(u*v, w) = β(v, S(u)*w)` is the sliding law, it holds at CD ≤ 2
+(`Chu.lean:380`), and it fails at CD 3 on exactly three Fano lines. The lesson there
+was that a shuffle **depending on the factorization of its input rather than its
+product** cannot be linear (`Chu.lean:451-470`).
+
+The theorems below are the spectrum-side analogue, and they come out the same way:
+the *sliding law holds* (a linear functional of the spectrum decomposes along a
+concatenation with the seam as the only extra term), while *reconstruction fails
+because the seam itself is factorization-dependent*. That is R3's sufficiency
+obstruction in LC's shape, not a new phenomenon. -/
+
+/-- **The spectrum pairing.** Pair a sequence's 2-gram spectrum against a test function
+    `φ : α × α → ℤ`, i.e. `∑_{e ∈ edges s} φ e`.
+
+    This is the bilinear form the readout's query/key product instantiates: a *linear
+    functional of the bag*. Everything the readout can see of a spectrum is one of
+    these, which is why the results below bound what any readout can recover. -/
+def pairing (s : List α) (φ : α × α → ℤ) : ℤ :=
+  ((edges s).map φ).sum
+
+/-- **THE SLIDING LAW (it holds).**
+
+    Property enforced: the spectrum form of `splitQuatPairingAux_mul_slide`
+    (`foundations/Chu.lean:380`, `β(u*v, w) = β(v, S(u)*w)`) — a factor can be carried
+    across the pairing, and a concatenation contributes its two fragments plus exactly
+    one extra term, the seam. Obtained by pushing `edges_append` through linearity of
+    `∑`, which is why it holds at *every* order rather than only CD ≤ 2: the spectrum
+    pairing has no associator to break it.
+
+    Read as a reconstruction handle: the seam is the *only* part of a concatenation a
+    linear functional cannot already see inside the fragments. That is simultaneously
+    the good news (the seam is a well-defined linear-functional object) and the bad news
+    (`seam_factorization_dependent` below). -/
+theorem pairing_append (s t : List α) (φ : α × α → ℤ) :
+    pairing (s ++ t) φ = pairing s φ + ((seam s t).map φ).sum + pairing t φ := by
+  unfold pairing
+  rw [edges_append, List.map_append, List.map_append, List.sum_append, List.sum_append]
+
+/-- **THE OBSTRUCTION: the seam is factorization-dependent.**
+
+    The same sequence, cut in two different places, has two different seams — for
+    `[1,2,3]` the cut `([1,2],[3])` gives seam `(2,3)` and the cut `([1],[2,3])` gives
+    seam `(1,2)`. So the seam is a function of the *cut*, not of the sequence, and hence
+    certainly not of the bag (`edgeBag` of the two concatenations is equal, since the
+    concatenations are equal).
+
+    Property enforced: this is the spectrum mirror of LC's documented obstruction that
+    *"no linear map on a non-commutative algebra can perform factorization-dependent
+    shuffles"* (`foundations/Chu.lean:451-470`) — and of `antipode_mul_false`
+    (`foundations/Algebra.lean:720`), which is what makes the CD 3 sliding law fail.
+    In LC the shuffle depends on the factorization of the input rather than its
+    product; here the seam depends on the cut rather than the sequence. Same defect,
+    and it is exactly what blocks R3's sufficiency: `pairing_append` says the seam is
+    the entire order content of a concatenation, and this theorem says the seam is not
+    recoverable from the concatenation's bag.
+
+    Witness is minimal (size 3), found by reading `seam`'s clauses rather than searching. -/
+theorem seam_factorization_dependent :
+    ∃ (s t s' t' : List ℕ), s ++ t = s' ++ t' ∧ seam s t ≠ seam s' t' :=
+  ⟨[1, 2], [3], [1], [2, 3], rfl, by decide⟩
+
+/-- **R3's sufficiency obstruction, as an absence result.**
+
+    There is **no** function of the bag that recovers the seam. Since the seam is the
+    whole order content of a concatenation (`pairing_append`, `edges_append`), this
+    sharpens `no_bag_only_reconstruction` (which ruled out recovery up to rotation and
+    reversal) to the stronger statement that even the *local* order datum is not a
+    function of the bag — no linear or nonlinear bag-only map can produce it.
+
+    Property enforced: the absence is written down as a named result, following the
+    corpus convention (`antipode_mul_false`, `draft_no_period5`, `free_not_quantized`,
+    `real_projection_blind_to_supercompleteness`). Note what it does **not** say: it
+    says nothing against the Eulerian-path route to R3 (lab note 066 §4), which supplies
+    ordering information *beyond* the bag — just as LC's distributor replacement must be
+    signed/braided rather than a bag-level adjoint. -/
+theorem no_bag_only_seam_recovery :
+    ¬ ∃ ψ : Multiset (ℕ × ℕ) → List (ℕ × ℕ), ∀ s t : List ℕ, ψ (edgeBag (s ++ t)) = seam s t := by
+  rintro ⟨ψ, h⟩
+  have key : seam [1, 2] [3] = seam [1] [2, 3] :=
+    calc seam [1, 2] [3] = ψ (edgeBag ([1, 2] ++ [3])) := (h [1, 2] [3]).symm
+      _ = ψ (edgeBag ([1] ++ [2, 3])) := by rfl
+      _ = seam [1] [2, 3] := h [1] [2, 3]
+  exact absurd key (by decide)
+
+
 end SpectrumOrder
