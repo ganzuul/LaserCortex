@@ -2,6 +2,7 @@ import Mathlib
 import LaserCortex.Friction
 import LaserCortex.SubdivisionClosure
 import LaserCortex.Generation
+import LaserCortex.TamariMetric
 
 open SubdivisionClosure EMLTree
 
@@ -36,22 +37,29 @@ The analogy to thermodynamic free energy F = U − TS:
 - `distinguishabilityDensity` — recoverable work per unit friction:
   η(cd, t) = dcStep(t) / frictionDensity(cd)  (as a ratio on ℕ, stored
   as a pair)
-- `observationalSelection` — the generation cycle's selection rule
-  formalized as a minimizer: the surviving cdStep after `revise` minimizes
-  the excess potential across the DescentInterval poles.
+- `observationalSelection` — the generation cycle's selection rule: the surviving
+  cdSteps after `revise`. It is a **vacuity** filter, not an energy minimizer — see the
+  correction in the key-theorems list below and in §10.
 
 ## Key theorems
 
 - `potential_min_at_rightComb` — rightComb minimizes Φ at every CD step
-- `potential_contraction_decreases` — each Tamari contraction step
-  non-increases Φ
-- `excess_eq_zero_iff_rightComb` — ΔΦ = 0 iff already at normal form
-- `density_assoc_eq_dcStep` — in the associative regime, η = dcStep / cd
-  (friction is cheap, density is high)
-- `density_nonassoc_deflated` — at cd ≥ 3, η drops by strut_weight² per
-  step (friction inflates, density drops)
-- `observational_selects_minimal` — `revise` selects the pole with
-  minimal excess potential
+- `potential_contraction_step` — each Tamari contraction step **non-increases** Φ.
+  ~~`potential_contraction_decreases`~~ retired 2026-09-18: the content was always the
+  non-strict statement and the name was a mismatch, not a missing theorem — §10.
+- `excess_eq_zero_iff_rightComb` — ΔΦ = 0 **iff** already at normal form. Requires
+  `frictionDensity cd ≠ 0`: at cd = 0 *every* tree has ΔΦ = 0, so the iff is false there
+  (`excessPotential_at_vacuous_cd`).
+- `density_assoc_eq_dcStep` — in the associative regime, η = ⟨dcStep t, cd⟩
+- `density_nonassoc_deflated` — at cd ≥ 3, η's denominator exceeds cd by exactly
+  strut_weight² (friction inflates, density drops)
+- `observationalSelection` — `revise`'s selection rule, as the list of surviving cdSteps
+- `observationalSelection_prefers_nonvacuous` — **what the rule actually does: it is
+  MAXIMAL excess, not minimal.** ~~`observational_selects_minimal`~~ retired 2026-09-18:
+  "`revise` selects the pole with minimal excess potential" is backwards — at cd = 0 the
+  friction density vanishes so ΔΦ = 0 for every tree, hence `revise` (which *drops* the
+  vacuous pole) keeps the pole with *greater* excess. The §6 prose already said "minimal
+  vacuity, not minimal total energy"; the bullet contradicted it. See §10.
 
 ## Cross-refs
 
@@ -417,3 +425,174 @@ theorem grandfather_generation_survives_cd1 :
 -- - The document's "observation is the minimal coherence-preserving projection"
 --   maps to `revise`: the vacuous pole is projected out, preserving the one
 --   that carries genuine work.
+
+-- ============================================================================
+-- SECTION 10: Header reconciliation (2026-09-18)
+-- ============================================================================
+--
+-- Six names were listed in the module header's "Key theorems" / "Key definitions"
+-- and did not resolve. Each is now either proved, defined, or shown to have been a
+-- *name* mismatch; the header bullets were corrected above accordingly. Summary of
+-- what each turned out to be:
+--
+-- 1. `excess_eq_zero_iff_rightComb`  — MISSING ⟹ PROVED here.
+-- 2. `potential_contraction_decreases` — ALIAS. The header's own gloss said
+--    "non-increases", which is exactly `potential_contraction_step` (proved,
+--    `:147`). The name was wrong, not the content. (A strict version is NOT
+--    available: `dcStep` only has `dcStep_contracts_one` : `dcStep s ≥ dcStep t`
+--    and `dcStep_contracts_one_le` : `dcStep s ≤ dcStep t + 1`, which together leave
+--    `dcStep s = dcStep t` open, so strict decrease is a genuine open question and
+--    must not be asserted — see §10.1.)
+-- 3. `density_assoc_eq_dcStep` — MISSING ⟹ PROVED here.
+-- 4. `density_nonassoc_deflated` — MISSING ⟹ PROVED here.
+-- 5. `observationalSelection` — MISSING ⟹ DEFINED here. It is the *object* the
+--    header promised; `observational_selects_minimal` was the theorem about it.
+-- 6. `observational_selects_minimal` — MIS-SPECIFIED. The header said "minimal
+--    excess potential"; the truth is the opposite polarity. See §10.2.
+
+/-- **§10.1 (item 2, for the record).** The two available bounds on `dcStep` under a
+    single contraction: `dcStep s ≥ dcStep t` and `dcStep s ≤ dcStep t + 1`. They
+    leave `dcStep s = dcStep t` open, so a STRICT decrease theorem is not derivable
+    from the corpus as it stands. Stated as an explicit two-sided bracket so the gap
+    is visible rather than assumed either way. -/
+theorem dcStep_contracts_one_bracket {s t : EMLTree} (h : contracts_one s t) :
+    dcStep t ≤ dcStep s ∧ dcStep s ≤ dcStep t + 1 :=
+  ⟨dcStep_contracts_one h, TamariMetric.dcStep_contracts_one_le h⟩
+
+/-- **§10.1 — the missing statement, isolated.** Does a single contraction strictly
+    reduce `dcStep`? If this were provable, `coherencePotential` would strictly
+    decrease (strict Lyapunov); if it were refutable, a contraction could preserve the
+    potential (a plateau). Neither is currently known. This is an explicit formulation
+    of the gap, not a claim in either direction. -/
+def dcStep_strictly_decreases_under_contraction : Prop :=
+  ∀ s t : EMLTree, contracts_one s t → dcStep t < dcStep s
+
+-- ---------------------------------------------------------------------------
+-- §10.2 Item 1: the sharp zero condition for the excess potential
+-- ---------------------------------------------------------------------------
+
+/-- **ΔΦ = 0 iff the tree is already at normal form.**
+
+    Property enforced: `weightedCost_eq_zero_iff` (`SubdivisionClosure.lean:137`),
+    i.e. the sharpness of the excess potential as a monitor. `Φ(cd, rightComb n) = 0`
+    for every `n`, so ΔΦ reduces to Φ itself and the zero set of ΔΦ is exactly the
+    normal forms.
+
+    The hypothesis `frictionDensity cd ≠ 0` is load-bearing, not incidental: at
+    `cd = 0` the friction density vanishes, every tree has ΔΦ = 0
+    (`excessPotential_at_vacuous_cd`), and the iff is then FALSE. So the sharp
+    monitor condition holds exactly in the non-vacuous regime — which is the regime
+    any monitor would be used in. -/
+theorem excess_eq_zero_iff_rightComb (cd : ℕ) (t : EMLTree)
+    (hf : frictionDensity cd ≠ 0) :
+    excessPotential cd t = 0 ↔ isRightComb t := by
+  have hmin : coherencePotential cd (rightComb t.size) = 0 := by
+    simp [coherencePotential, weightedCost, dcStep_rightComb]
+  unfold excessPotential
+  rw [hmin, Nat.sub_zero]
+  exact weightedCost_eq_zero_iff cd t hf
+
+/-- ΔΦ vanishes identically in the vacuous regime — for EVERY tree, at any size.
+    This is why `excess_eq_zero_iff_rightComb` needs its hypothesis, and it is the
+    fact that makes the header's "minimal excess" reading of `revise` backwards
+    (§10.3). -/
+theorem excessPotential_at_vacuous_cd (t : EMLTree) : excessPotential 0 t = 0 := by
+  simp [excessPotential, coherencePotential, weightedCost,
+        frictionDensity_eq_k_for_k_le_2 0 (by decide)]
+
+/-- The excess is strictly positive at a non-vacuous CD step for any tree that is not
+    at normal form. Together with the previous theorem this is the whole content of
+    the selection rule (§10.3). -/
+theorem excessPotential_pos_of_nonvacuous (cd : ℕ) (hcd : cd ≠ 0) (t : EMLTree)
+    (hnt : ¬ isRightComb t) : 0 < excessPotential cd t := by
+  have hf : frictionDensity cd ≠ 0 := by
+    intro hzero
+    have hge := frictionDensity_ge_k cd
+    omega
+  have hdc : dcStep t ≠ 0 := fun h => hnt ((isRightComb_iff_dcStep_zero t).mpr h)
+  have hmin : coherencePotential cd (rightComb t.size) = 0 := by
+    simp [coherencePotential, weightedCost, dcStep_rightComb]
+  unfold excessPotential
+  rw [hmin, Nat.sub_zero]
+  simp only [coherencePotential, weightedCost]
+  exact Nat.mul_pos (Nat.pos_of_ne_zero hdc) (Nat.pos_of_ne_zero hf)
+
+-- ---------------------------------------------------------------------------
+-- §10.3 Item 3/4: the density's two regimes, compared
+-- ---------------------------------------------------------------------------
+
+/-- **In the associative regime the density is exactly `⟨dcStep t, cd⟩`.**
+    Property enforced: `frictionDensity_eq_k_for_k_le_2` (`Friction.lean:58`) —
+    friction is cheap, so η's denominator is the CD step itself. This is the full
+    claim the header named; `density_assoc_regime` proves only the denominator half. -/
+theorem density_assoc_eq_dcStep (cd : ℕ) (t : EMLTree) (hcd : cd ≤ 2) :
+    distinguishabilityDensity cd t = ⟨dcStep t, cd⟩ := by
+  simp [distinguishabilityDensity, frictionDensity_eq_k_for_k_le_2 cd hcd]
+
+/-- **Non-associative deflation: the denominator exceeds `cd` by exactly
+    strut_weight².**
+
+    Property enforced: `frictionDensity_eq_k_plus_16_for_k_ge_3` (`Friction.lean:102`)
+    — the associator barrier. So at `cd ≥ 3` each flip costs `strut_weight²` more than
+    the associative regime at the same `cd`, and for a fixed numerator
+    (`dcStep t`) the recoverable work per unit friction strictly drops. Measured
+    against the associative baseline `density_assoc_eq_dcStep`, this is the
+    quantitative "density drops" claim the header named. -/
+theorem density_nonassoc_deflated (cd : ℕ) (t : EMLTree) (hcd : 3 ≤ cd) :
+    (distinguishabilityDensity cd t).denominator = cd + strut_weight * strut_weight ∧
+      (distinguishabilityDensity cd t).denominator > cd := by
+  have h := density_nonassoc_denominator cd t hcd
+  refine ⟨h, ?_⟩
+  rw [h]
+  have hpos : 0 < strut_weight * strut_weight := by
+    rw [strut_weight_eq_four]; norm_num
+  omega
+
+-- ---------------------------------------------------------------------------
+-- §10.4 Item 5/6: the selection rule, as an object and as the truth about it
+-- ---------------------------------------------------------------------------
+
+/-- **The observational selection rule, as an object.** The surviving cdSteps after
+    `revise` — i.e. the interval's poles with the vacuous ones removed. `Generation.lean`
+    defines `revise`; this is its image as a value a theorem can be stated about, which
+    is what the header promised by name. -/
+def observationalSelection (pair : DescentInterval) : List ℕ :=
+  (revise pair).candidates
+
+/-- Unfolding form: the rule keeps `target` and `source` iff each is non-vacuous
+    (`isVacuousCd cd = cd = 0`). -/
+theorem observationalSelection_eq (pair : DescentInterval) :
+    observationalSelection pair =
+      ((if pair.target = 0 then [] else [pair.target]) ++
+        (if pair.source = 0 then [] else [pair.source])) := by
+  simp [observationalSelection, revise, isVacuousCd]
+
+/-- **THE CORRECTED SELECTION RULE: it is MAXIMAL excess, not minimal.**
+
+    Property enforced: `excessPotential_at_vacuous_cd` — at `cd = 0` the friction
+    density vanishes, so ΔΦ = 0 for EVERY tree and size. A non-vacuous pole with a
+    tree not at normal form has ΔΦ > 0 strictly
+    (`excessPotential_pos_of_nonvacuous`). Hence for a `(target = 0, source ≠ 0)`
+    interval, `revise` — which DROPS the vacuous pole — retains the pole of *greater*
+    excess potential.
+
+    This refutes the module header's original bullet (`observational_selects_minimal`,
+    "minimal excess potential"), which was the opposite polarity, and vindicates the
+    §6 prose ("minimal vacuity, not minimal total energy"). The vacuous pole is not
+    the energy minimum here — it is the *content* minimum: zero excess because there is
+    zero friction, which is exactly why it carries no information. -/
+theorem observationalSelection_prefers_nonvacuous (pair : DescentInterval) (t : EMLTree)
+    (htgt : pair.target = 0) (hsrc : pair.source ≠ 0) (hnt : ¬ isRightComb t) :
+    excessPotential pair.target t < excessPotential pair.source t := by
+  rw [htgt, excessPotential_at_vacuous_cd]
+  exact excessPotential_pos_of_nonvacuous pair.source hsrc t hnt
+
+/-- The rule, instantiated: the barber interval `(0, 4)` keeps only the non-vacuous
+    pole, so the selection is `[4]` — the pole carrying the excess. -/
+theorem observationalSelection_barber : observationalSelection DescentInterval.barber = [4] := by
+  native_decide
+
+/-- And the grandfather interval `(0, 1)` keeps `[1]`. -/
+theorem observationalSelection_grandfather :
+    observationalSelection DescentInterval.grandfather = [1] := by
+  native_decide
