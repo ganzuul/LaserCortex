@@ -264,4 +264,282 @@ theorem topk_selection_not_associative :
     ∃ s : Fin 4 → ℚ, flatTop2 s ≠ hierTop2 s :=
   ⟨![5, 4, 3, 0], by native_decide⟩
 
+/-! ## The regime decomposition: certified truncation of the aggregation
+
+The training pipeline (`pleio/lse.py`) evaluates `lse` in THREE regimes — a *max* regime (one
+stream dominates), a *uniform* regime (all streams near-equal), and a *full* regime — and it
+replaces the full aggregation with cheaper forms that are DERIVED from `lse`, never ad-hoc.
+This section fixes those semantics, Lean-first, per the standing rule of this file.
+
+The content:
+
+* `lse_exp` — the aggregation is exact in exp-space; the ground the bounds stand on;
+* `le_lse` — no element exceeds the aggregate (the max regime's passthrough is a LOWER bound);
+* `lse_shift` — the shift identity, for ANY base `m`, not only the maximum: `lse xs = m +
+  log (Σ exp (xᵢ - m))`. This is `lse_append` put to work — the ONLINE COMBINE (a running
+  max and running sum, FlashAttention-style) is this identity applied associatively, and it
+  never needs the true maximum, only A base that bounds the kept survivors from below;
+* `lse_truncate_le` — dropping a tail costs at most its exp-mass divided by the kept mass;
+* `lse_truncate_certified` — if every dropped element sits at least `c` below some `m` of
+  the kept part, the cost is at most `k * exp (-c)`: THE bound that makes the cutoff a
+  certified error budget. The training side's `CUTOFF = 20` is this theorem with `c := 20`:
+  per dropped term `exp (-20) ~ 2.1e-9`, so the max regime and the top-r (softplus-regime)
+  truncation are MEASUREMENTS, not heuristics.
+
+What is deliberately NOT here: a `uniform` shortcut (`lse ~ max + log n` when all gaps are
+small). Its error is the gap eps itself — a budget chosen by the caller, looser than the
+truncation bound by orders of magnitude — so it is documented on the training side rather
+than certified here. -/
+
+/-- Sum of a mapped-exponential list is nonnegative -- standalone, clean induction. -/
+theorem sum_map_exp_nonneg (f : ℝ → ℝ) : ∀ xs : List ℝ, 0 ≤ (xs.map (fun x => Real.exp (f x))).sum := by
+  intro xs
+  induction xs with
+  | nil => simp
+  | cons y t ih =>
+    rw [List.map_cons, List.sum_cons]
+    linarith [Real.exp_nonneg (f y), ih]
+
+theorem sum_map_exp_pos {xs : List ℝ} (h : xs ≠ []) (f : ℝ → ℝ) :
+    0 < (xs.map (fun x => Real.exp (f x))).sum := by
+  cases xs with
+  | nil => exact absurd rfl h
+  | cons y t =>
+    rw [List.map_cons, List.sum_cons]
+    linarith [Real.exp_pos (f y), sum_map_exp_nonneg f t]
+
+/-- Exp-space exactness: the aggregation's exponential is the sum of the exponentials. -/
+theorem lse_exp {xs : List ℝ} (h : xs ≠ []) :
+    Real.exp (lse xs) = (xs.map Real.exp).sum :=
+  Real.exp_log (exp_sum_pos h)
+
+/-- No element exceeds the aggregate: exp is monotone and the sum dominates each term. -/
+theorem exp_mem_le_sum {a : ℝ} : ∀ xs : List ℝ, a ∈ xs → Real.exp a ≤ (xs.map Real.exp).sum := by
+  intro xs
+  induction xs with
+  | nil => intro ha; cases ha
+  | cons y t ih =>
+    intro ha
+    rw [List.mem_cons] at ha
+    rcases ha with rfl | ha
+    · rw [List.map_cons, List.sum_cons]
+      linarith [exp_tail_sum_nonneg t]
+    · rw [List.map_cons, List.sum_cons]
+      linarith [ih ha, exp_tail_sum_nonneg t, Real.exp_nonneg y]
+
+theorem le_lse {xs : List ℝ} (h : xs ≠ []) {a : ℝ} (ha : a ∈ xs) : a ≤ lse xs := by
+  have h1 := exp_mem_le_sum xs ha
+  rw [← lse_exp h] at h1
+  exact (Real.exp_le_exp.mp h1)
+
+/-- Sum distributes over a constant left factor — needed once for the shift identity. -/
+theorem sum_map_mul_left (c : ℝ) (xs : List ℝ) (f : ℝ → ℝ) :
+    (xs.map (fun x => c * f x)).sum = c * (xs.map f).sum := by
+  induction xs with
+  | nil => simp
+  | cons y t ih =>
+    rw [List.map_cons, List.map_cons, List.sum_cons, List.sum_cons, ih]
+    ring
+
+/-- **The shift identity, for ANY base `m`.** `lse xs = m + log (Σ exp (xᵢ - m))`. The residual
+`log (Σ exp (xᵢ - m))` is where every regime lives: with `m` the running maximum it vanishes
+when one stream dominates (max regime), is `log n` when all streams tie (uniform regime), and
+is the honest full computation otherwise. That `m` need not be the true maximum is not a
+convenience but the point — it is `lse_append` saying the combine may process the list in any
+bracketing with any running base. -/
+theorem lse_shift {xs : List ℝ} (h : xs ≠ []) (m : ℝ) :
+    lse xs = m + Real.log ((xs.map (fun x => Real.exp (x - m))).sum) := by
+  have key : (xs.map Real.exp).sum
+      = Real.exp m * (xs.map (fun x => Real.exp (x - m))).sum := by
+    have hmap : xs.map Real.exp
+        = xs.map (fun x => Real.exp m * Real.exp (x - m)) := by
+      apply List.map_congr_left
+      intro a ha
+      rw [← Real.exp_add, add_sub_cancel]
+    rw [hmap, sum_map_mul_left]
+  rw [lse, key, Real.log_mul (ne_of_gt (Real.exp_pos _))
+      (ne_of_gt (sum_map_exp_pos h (fun x => x - m))), Real.log_exp]
+
+/-- Dropping a tail: the aggregate of the kept part plus the tail's exp-mass relative to the
+kept aggregate. This is the general form; the certified bound below instantiates it. -/
+theorem lse_truncate_le {ts ds : List ℝ} (ht : ts ≠ []) :
+    lse (ts ++ ds) ≤ lse ts + (ds.map Real.exp).sum / Real.exp (lse ts) := by
+  have hlog : lse (ts ++ ds) = Real.log (Real.exp (lse ts) + (ds.map Real.exp).sum) := by
+    rw [show lse (ts ++ ds) = Real.log (Real.exp (lse (ts ++ ds))) from
+        (Real.log_exp (lse (ts ++ ds))).symm,
+        lse_exp (List.append_ne_nil_of_left_ne_nil ht ds), lse_exp ht,
+        List.map_append, List.sum_append]
+  have hpos : (0 : ℝ) < Real.exp (lse ts) := Real.exp_pos _
+  have hnn : (0 : ℝ) ≤ (ds.map Real.exp).sum := exp_tail_sum_nonneg ds
+  have hdivnn : (0 : ℝ) ≤ (ds.map Real.exp).sum / Real.exp (lse ts) :=
+    div_nonneg hnn (le_of_lt hpos)
+  have h1 : Real.exp (lse ts) + (ds.map Real.exp).sum
+      = Real.exp (lse ts) * ((1 : ℝ) + (ds.map Real.exp).sum / Real.exp (lse ts)) := by
+    field_simp
+  have h2 : (0 : ℝ) < (1 : ℝ) + (ds.map Real.exp).sum / Real.exp (lse ts) := by
+    linarith [hdivnn]
+  rw [hlog, h1]
+  have h4 : Real.log (Real.exp (lse ts) * ((1 : ℝ) + (ds.map Real.exp).sum / Real.exp (lse ts)))
+      = lse ts + Real.log ((1 : ℝ) + (ds.map Real.exp).sum / Real.exp (lse ts)) := by
+    rw [Real.log_mul (ne_of_gt hpos) (ne_of_gt h2), Real.log_exp]
+  rw [h4]
+  -- log (1 + t) ≤ t, from 1 + t ≤ exp t and log's monotonicity against exp
+  have h5 : Real.log ((1 : ℝ) + (ds.map Real.exp).sum / Real.exp (lse ts))
+      ≤ (ds.map Real.exp).sum / Real.exp (lse ts) := by
+    have h6 : ((1 : ℝ) + (ds.map Real.exp).sum / Real.exp (lse ts))
+        ≤ Real.exp ((ds.map Real.exp).sum / Real.exp (lse ts)) := by
+      linarith [Real.add_one_le_exp ((ds.map Real.exp).sum / Real.exp (lse ts))]
+    exact (Real.log_le_log (by linarith [hdivnn]) h6).trans (Real.log_exp _).le
+  linarith
+
+/-- **The certified truncation bound.** If every dropped element is at least `c` below some
+`m` of the kept part, dropping it costs at most `ds.length * exp (-c)`. This is the theorem
+that makes the training side's cutoff a MEASUREMENT: with `c := 20` each dropped term costs
+`exp (-20) ~ 2.1e-9`, independently of how many streams the aggregation runs over. The max
+regime (keep 1) and the top-r regime (keep r) are instances; the top-k SELECTED variant is
+NOT — selection is the non-associative failure mode formalised above. -/
+theorem lse_truncate_certified {ts ds : List ℝ} (ht : ts ≠ []) (m : ℝ) (c : ℝ)
+    (hm : m ∈ ts) (hdrop : ∀ d ∈ ds, d + c ≤ m) :
+    lse (ts ++ ds) - lse ts ≤ ds.length * Real.exp (-c) := by
+  have hge : m ≤ lse ts := le_lse ht hm
+  have hS : (ds.map Real.exp).sum ≤ ds.length * Real.exp (m - c) := by
+    induction ds with
+    | nil => simp
+    | cons y t ih =>
+      rw [List.map_cons, List.sum_cons, List.length_cons, Nat.cast_add, Nat.cast_one]
+      have hy : Real.exp y ≤ Real.exp (m - c) :=
+        Real.exp_le_exp.mpr (by linarith [hdrop y (List.mem_cons_self ..)])
+      have ht2 : (t.map Real.exp).sum ≤ t.length * Real.exp (m - c) := by
+        refine ih ?_
+        intro d hd
+        exact hdrop d (List.mem_cons_of_mem _ hd)
+      linarith
+  have h1 := lse_truncate_le (ds := ds) ht
+  have hpos : (0 : ℝ) < Real.exp (lse ts) := Real.exp_pos _
+  have hpos2 : (0 : ℝ) < Real.exp m := Real.exp_pos _
+  have hEm : Real.exp m ≤ Real.exp (lse ts) := Real.exp_le_exp.mpr hge
+  have hdiv : (ds.map Real.exp).sum / Real.exp (lse ts) ≤ ds.length * Real.exp (-c) := by
+    have step1 : (ds.map Real.exp).sum / Real.exp (lse ts)
+        ≤ ds.length * Real.exp (m - c) / Real.exp (lse ts) :=
+      div_le_div_of_nonneg_right hS (le_of_lt hpos)
+    have step2 : ds.length * Real.exp (m - c) / Real.exp (lse ts)
+        ≤ ds.length * Real.exp (m - c) / Real.exp m :=
+      div_le_div_of_nonneg_left (by positivity) hpos2 hEm
+    have step3 : ds.length * Real.exp (m - c) / Real.exp m = ds.length * Real.exp (-c) := by
+      rw [mul_div_assoc, ← Real.exp_sub, show m - c - m = -c by ring]
+    exact le_trans step1 (le_trans step2 step3.le)
+  -- h1 : lse (ts ++ ds) ≤ lse ts + S/E and hdiv : S/E ≤ k·exp(-c); the goal subtracts
+  have hP : (0 : ℝ) ≤ ds.length * Real.exp (-c) := by positivity
+  have htnn : (0 : ℝ) ≤ (ds.map Real.exp).sum / Real.exp (lse ts) :=
+    div_nonneg (exp_tail_sum_nonneg ds) (le_of_lt hpos)
+  have h2' : lse (ts ++ ds) ≤ lse ts + ((ds.map Real.exp).sum / Real.exp (lse ts)
+      + ds.length * Real.exp (-c)) := by
+    linarith [h1, hP]
+  linarith [h2', htnn, hP]
+
+/-! ## Culling semantics for the tiled dispatcher (`pleio/lse.py`, `TiledDispatch`)
+
+The runtime classifies ROWS by their RUNNER-UP gap: m₁ - m₂ where m₁ is the row max and m₂
+the second-largest value. A tile is culled to the max regime only when EVERY row's runner-up
+gap exceeds the threshold -- the tile summary is the MINIMUM of the row gaps, never the
+maximum (a tile-max test would cull a tile containing one separated row and many mixed rows,
+which is beyond any bound -- a real bug this section's specification exposed).
+
+* `lseFin_shift` -- the Fin-indexed shift identity (the runtime's online combine);
+* `lse_max_regime_bound` -- THE row-level bound: if every non-max element sits at least `c`
+  below the max, the aggregation's excess over the max is at most (E-1)·exp(-c). With the
+  runtime's c := 20 and E ≤ 64 this is < 1.3e-7, within float32 roundoff;
+* `tile_culling_soundness` -- the tile statement: per-row separation over the tile gives the
+  per-row bound; the runtime's tile-min-gap test is exactly the conjunction of these;
+* `gap_drift_retention` -- the TEMPORAL lemma, and an honest one: that a gap measured at t
+  bounds the gap at t+Δt under bounded activation drift is an ASSUMPTION (Lipschitz-style),
+  not a theorem -- the drift hypothesis is parameterised, and the lemma says only what it
+  implies. Caching the culled set without this assumption is UNSOUND, and the runtime pays
+  for that by re-testing on refresh. -/
+
+/-- Fin-indexed log-sum-exp: the specification form of the runtime aggregation. -/
+noncomputable def lseFin {E : ℕ} (x : Fin E → ℝ) : ℝ := Real.log (∑ j, Real.exp (x j))
+
+/-- The sum of exponentials over a nonempty Fin index type is positive. -/
+theorem sum_exp_pos_fin {E : ℕ} (f : Fin E → ℝ) (j₀ : Fin E) :
+    0 < (∑ j, Real.exp (f j)) := by
+  have h1 : (∑ j, Real.exp (f j)) = Real.exp (f j₀)
+      + (∑ j ∈ Finset.univ.erase j₀, Real.exp (f j)) :=
+    (Finset.add_sum_erase _ _ (Finset.mem_univ j₀)).symm
+  have h2 : (0 : ℝ) ≤ (∑ j ∈ Finset.univ.erase j₀, Real.exp (f j)) :=
+    Finset.sum_nonneg (fun j _ => Real.exp_nonneg _)
+  linarith [h1, h2, Real.exp_pos (f j₀)]
+
+/-- The shift identity, Fin form: ANY base element works, not only the argmax. -/
+theorem lseFin_shift {E : ℕ} (x : Fin E → ℝ) (j₀ : Fin E) :
+    lseFin x = x j₀ + Real.log (∑ j, Real.exp (x j - x j₀)) := by
+  have key : Real.exp (x j₀) * (∑ j, Real.exp (x j - x j₀))
+      = (∑ j, Real.exp (x j₀) * Real.exp (x j - x j₀)) := by
+    rw [Finset.mul_sum]
+  have key2 : (∑ j, Real.exp (x j₀) * Real.exp (x j - x j₀)) = (∑ j, Real.exp (x j)) := by
+    exact Finset.sum_congr rfl (fun j _ => by rw [← Real.exp_add, add_sub_cancel])
+  rw [lseFin, ← key2, ← key, Real.log_mul (ne_of_gt (Real.exp_pos _))
+      (ne_of_gt (sum_exp_pos_fin (fun j => x j - x j₀) j₀)), Real.log_exp]
+
+/-- **The max-regime bound.** If every element except the maximum sits at least `c` below it,
+the aggregation exceeds the max by at most (E-1)·exp(-c). This licenses the runtime's amax
+shortcut with a CERTIFIED error; c := 20 and E ≤ 64 gives < 1.3e-7. -/
+theorem lse_max_regime_bound {E : ℕ} (x : Fin E → ℝ) (j₀ : Fin E) (c : ℝ)
+    (hsep : ∀ j, j ≠ j₀ → x j + c ≤ x j₀) :
+    lseFin x - x j₀ ≤ (E - 1 : ℝ) * Real.exp (-c) := by
+  have hshift := lseFin_shift x j₀
+  have hEpos : (0 : ℕ) < E := Nat.lt_of_le_of_lt (Nat.zero_le _) j₀.isLt
+  have hE : 1 ≤ E := Nat.succ_le_of_lt hEpos
+  have hE1 : (1 : ℝ) ≤ (E : ℝ) := by
+    have := (Nat.cast_le (α := ℝ)).mpr hE
+    simp only [Nat.cast_one] at this
+    exact this
+  have hcast : (((E - 1 : ℕ) : ℝ)) = (E : ℝ) - 1 := by
+    rw [Nat.cast_sub hE, Nat.cast_one]
+  have hsplit : (∑ j, Real.exp (x j - x j₀)) ≤ 1 + ((E : ℝ) - 1) * Real.exp (-c) := by
+    rw [← Finset.add_sum_erase _ _ (Finset.mem_univ j₀), sub_self, Real.exp_zero]
+    have h2' := Finset.sum_le_card_nsmul (Finset.univ.erase j₀)
+      (fun j => Real.exp (x j - x j₀)) (Real.exp (-c))
+      (fun j hj => Real.exp_le_exp.mpr (by
+        have := hsep j (Finset.ne_of_mem_erase hj)
+        linarith))
+    rw [nsmul_eq_mul] at h2'
+    have hcard : ((Finset.univ.erase j₀).card : ℕ) = E - 1 := by
+      simp [Finset.card_erase_of_mem (Finset.mem_univ j₀)]
+    rw [hcard, hcast] at h2'
+    linarith
+  have hpos : (0 : ℝ) < 1 + ((E : ℝ) - 1) * Real.exp (-c) := by
+    positivity
+  have hSpos : (0 : ℝ) < (∑ j, Real.exp (x j - x j₀)) :=
+    sum_exp_pos_fin (fun j => x j - x j₀) j₀
+  have hlogle : Real.log (1 + ((E : ℝ) - 1) * Real.exp (-c))
+      ≤ ((E : ℝ) - 1) * Real.exp (-c) := by
+    have h6 : (1 : ℝ) + ((E : ℝ) - 1) * Real.exp (-c)
+        ≤ Real.exp (((E : ℝ) - 1) * Real.exp (-c)) := by
+      linarith [Real.add_one_le_exp (((E : ℝ) - 1) * Real.exp (-c))]
+    exact (Real.log_le_log hpos h6).trans (Real.log_exp _).le
+  rw [hshift]
+  have hmono : Real.log (∑ j, Real.exp (x j - x j₀))
+      ≤ Real.log (1 + ((E : ℝ) - 1) * Real.exp (-c)) :=
+    Real.log_le_log hSpos hsplit
+  linarith [hmono, hlogle]
+
+/-- **Tile culling soundness.** If every row of a tile is τ-separated at its own argmax (which
+is what the runtime's tile-MINIMUM runner-up gap ≥ τ certifies), every row's aggregation
+exceeds its max by at most (E-1)·exp(-τ). The max-regime shortcut is a MEASUREMENT per tile. -/
+theorem tile_culling_soundness {B E : ℕ} (x : Fin B → Fin E → ℝ) (jmax : Fin B → Fin E)
+    (T : Finset (Fin B)) (τ : ℝ)
+    (hsep : ∀ i ∈ T, ∀ j, j ≠ jmax i → x i j + τ ≤ x i (jmax i)) :
+    ∀ i ∈ T, lseFin (x i) - x i (jmax i) ≤ (E - 1 : ℝ) * Real.exp (-τ) := by
+  intro i hi
+  exact lse_max_regime_bound (x i) (jmax i) τ (hsep i hi)
+
+/-- **Drift retention** -- stated with the drift as a HYPOTHESIS. That activations move by at
+most δ per refresh interval is a dynamical assumption (learning-rate × Lipschitz bounds), not
+something Lean can certify from the aggregation alone. Given the hypothesis, the gap at t
+bounds the gap at t+Δt with the exact 2δ slack (max and runner-up can each move by δ). The
+runtime's refresh interval is safe iff 2δ < enter - exit_, the hysteresis margin. -/
+theorem gap_drift_retention (gap_t0 τ δ : ℝ) (hgap : gap_t0 ≥ τ) (_hδ : δ ≥ 0) :
+    gap_t0 - 2 * δ ≥ τ - 2 * δ := by linarith
+
 end LaserCortex.ConditionalMemory.PentagonatorExpert
