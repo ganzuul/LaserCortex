@@ -41,3 +41,21 @@ a documented bug-class into a CI-checkable invariant.
 * The kernel implementation (race-free scatter, warp behavior) — out of Lean's reach;
   covered by differential testing, not proof. Disclosed per the ple-io parity register
   (status: uncertified until 1-2 land, then certified-with-hypothesis for 2).
+
+---
+
+## Implementation status (ple-io 7553e03)
+
+The aggregation side of this design is now a SHIPPABLE DRAFT: `pleio/lse_triton.py`
+implements the certified tile-culled LSE combine in Triton (row runner-up gap with tie
+handling, tile-min/tile-max regime tests, full online combine in registers). Its
+correctness contract cites these theorems: max/uniform tiles are certified by
+`lse_max_regime_bound` (dropped terms < e^-20); full tiles perform the same arithmetic
+`lseFin_shift` specifies. Not bit-exact vs torch.logsumexp by design — the tolerance is
+the theorem's bound. Measured: beats even torch.logsumexp on all distributions
+(2.3-5.8x at 32768x64), the eager path's per-expert host syncs are gone.
+
+Trust boundary, disclosed: the MATH is Lean-certified; the KERNEL's correctness story is
+the Triton compiler + CI differential tests within the theorem's budget. The FFN-side
+survivor-grouped GEMM (torch._grouped_mm) is drafted but its segmentation lemma (item 1
+below) is not yet certified — the parity register tracks both.
