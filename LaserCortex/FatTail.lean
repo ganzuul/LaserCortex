@@ -32,9 +32,7 @@ theorem paretoTail_infiniteVariance {α : ℝ} (hα : 0 < α) (hα2 : α < 2)
 
 /-- Corollary: If Hill alpha < 2, the scale-factor distribution has infinite variance. /
 theorem hillAlpha_lt2_infiniteVariance {α : ℝ} (hα : 0 < α) (hα2 : α < 2) :
-    hasParetoTail (fun x => x ^ (-α)) α 1 1 →
-    ¬ (∫ x in Set.Ici 1, (x ^ 2) * x ^ (-α)) < infinity := by
+    hasParetoTail (fun x => x ^ (-α)) α 1 1 → ¬ (∫ x in Set.Ici 1, (x ^ 2) * x ^ (-α)) < infinity := by
   sorry
 
 end FatTail
-
