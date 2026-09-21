@@ -36,3 +36,4 @@ theorem hillAlpha_lt2_infiniteVariance {α : ℝ} (hα : 0 < α) (hα2 : α < 2)
   sorry
 
 end FatTail
+
